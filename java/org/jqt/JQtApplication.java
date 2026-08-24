@@ -6,6 +6,9 @@
  */
 package org.jqt;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * JQt 应用入口：封装 C++ 侧的 {@code QApplication}。
  * <p>
@@ -27,6 +30,8 @@ public class JQtApplication {
     /** C++ 侧 QApplication 指针。 */
     private final long nativeHandle;
 
+    private final List<Runnable> onAboutToQuitHandlers = new ArrayList<>();
+
     /**
      * 创建 QApplication（整个进程只能有一个）。
      */
@@ -47,4 +52,28 @@ public class JQtApplication {
 
     /** 延迟 {@code ms} 毫秒后自动退出事件循环（演示 / 自动化测试用）。 */
     public native void scheduleQuit(long ms);
+
+    /**
+     * 在 {@code delayMs} 毫秒后、于 Qt GUI 线程执行任务
+     * （内部使用 Qt 定时器，线程安全，可在任意线程调用）。
+     */
+    public void schedule(Runnable task, long delayMs) {
+        nativeSchedule(task, delayMs);
+    }
+    private native void nativeSchedule(Runnable task, long delayMs);
+
+    /**
+     * 注册退出前回调（对应 Qt 的 aboutToQuit 信号）。
+     * 事件循环结束前触发。
+     */
+    public void onAboutToQuit(Runnable handler) {
+        onAboutToQuitHandlers.add(handler);
+    }
+
+    /** 由 C++ 侧在应用退出前回调（JNI）。 */
+    void nativeHandleAboutToQuit() {
+        for (Runnable h : onAboutToQuitHandlers) {
+            h.run();
+        }
+    }
 }

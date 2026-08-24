@@ -27,8 +27,8 @@
 |------|------|------|
 | Phase 0 | JNI + Qt 最小 Demo（Java 弹出 Qt 窗口） | ✅ 完成 |
 | Phase 1 | QApplication / QWidget / QPushButton / QLabel | ✅ 完成 |
-| Phase 2 | 信号槽（点击事件、窗口关闭事件） | 🟡 点击 + 关闭已完成，更多信号待扩展 |
-| Phase 3 | 布局管理器（QVBoxLayout / QHBoxLayout） | ⬜ 未开始 |
+| Phase 2 | 信号槽（点击/按下/释放/勾选、窗口事件、退出前回调） | ✅ 完成 |
+| Phase 3 | 布局管理器（QVBoxLayout / QHBoxLayout + Stretch） | ✅ 完成 |
 | Phase 4 | 更多控件（QLineEdit / QComboBox / QListWidget） | ⬜ 未开始 |
 | Phase 5 | 内存管理优化、异常处理 | ⬜ 未开始 |
 | Phase 6 | Windows / Linux 跨平台编译 | ⬜ 未开始（Windows 已通） |
@@ -42,8 +42,11 @@ JQt - Dev/
 │   ├── JQtApplication.java  # QApplication 封装（exec/quit）
 │   ├── JQtWidget.java       # 控件基类（持有 nativeHandle 指针）
 │   ├── JQtWindow.java       # 窗口（show/hide/addWidget/onClose）
-│   ├── JQtButton.java       # 按钮（onClick 信号槽）
+│   ├── JQtButton.java       # 按钮（onClick/onPressed/onReleased/onToggled）
 │   ├── JQtLabel.java        # 标签（setText）
+│   ├── JQtLayout.java       # 布局基类（addWidget/setSpacing/addStretch）
+│   ├── JQtVBoxLayout.java   # 垂直布局（QVBoxLayout）
+│   ├── JQtHBoxLayout.java   # 水平布局（QHBoxLayout）
 │   └── JQtDemo.java         # 演示程序
 ├── native/
 │   ├── jqt_bridge.cpp       # JNI 胶水层（C++ 包装层）
@@ -70,15 +73,24 @@ JQt - Dev/
 
 ```java
 JQtApplication app = new JQtApplication();
-JQtWindow window = new JQtWindow("JQt 第一个窗口", 800, 600);
+JQtWindow window = new JQtWindow("JQt 窗口", 640, 480);
 JQtLabel label = new JQtLabel("Hello, JQt!");
 JQtButton button = new JQtButton("点我试试");
 
 button.onClick(() -> {          // Qt clicked 信号 → JNI 回调 → Java lambda
     label.setText("点击成功！");
 });
-window.addWidget(label);
-window.addWidget(button);
+button.onPressed(() -> System.out.println("pressed"));
+button.onReleased(() -> System.out.println("released"));
+window.onResized((w, h) -> System.out.println("resized: " + w + "x" + h));
+app.onAboutToQuit(() -> System.out.println("app quitting"));
+
+JQtVBoxLayout vbox = new JQtVBoxLayout();   // Phase 3：布局管理器
+vbox.setSpacing(12);
+vbox.addWidget(label);
+vbox.addWidget(button);
+vbox.addStretch(1);
+window.setLayout(vbox);
 window.show();
 app.exec();                     // 阻塞，最后一个窗口关闭后返回
 ```
@@ -149,8 +161,8 @@ JQt 采用 **JQt Source License v1.0（JSL-1.0）** 分层授权（详见 `LICEN
 |-------|-------|--------|
 | Phase 0 | Minimal JNI + Qt demo (a Qt window from Java) | ✅ Done |
 | Phase 1 | QApplication / QWidget / QPushButton / QLabel | ✅ Done |
-| Phase 2 | Signals & slots (click, window close) | 🟡 Click + close done, more signals pending |
-| Phase 3 | Layout managers (QVBoxLayout / QHBoxLayout) | ⬜ Not started |
+| Phase 2 | Signals & slots (click/press/release/toggle, window events, aboutToQuit) | ✅ Done |
+| Phase 3 | Layout managers (QVBoxLayout / QHBoxLayout + stretch) | ✅ Done |
 | Phase 4 | More widgets (QLineEdit / QComboBox / QListWidget) | ⬜ Not started |
 | Phase 5 | Memory management & exception handling | ⬜ Not started |
 | Phase 6 | Cross-platform builds (Windows / Linux) | ⬜ Not started (Windows works) |
@@ -164,8 +176,11 @@ JQt - Dev/
 │   ├── JQtApplication.java  # QApplication wrapper (exec/quit)
 │   ├── JQtWidget.java       # widget base class (holds nativeHandle)
 │   ├── JQtWindow.java       # window (show/hide/addWidget/onClose)
-│   ├── JQtButton.java       # button (onClick signal)
+│   ├── JQtButton.java       # button (onClick/onPressed/onReleased/onToggled)
 │   ├── JQtLabel.java        # label (setText)
+│   ├── JQtLayout.java       # layout base (addWidget/setSpacing/addStretch)
+│   ├── JQtVBoxLayout.java   # vertical layout (QVBoxLayout)
+│   ├── JQtHBoxLayout.java   # horizontal layout (QHBoxLayout)
 │   └── JQtDemo.java         # demo program
 ├── native/
 │   ├── jqt_bridge.cpp       # JNI bridge (C++ wrapper layer)
@@ -192,15 +207,24 @@ JQt - Dev/
 
 ```java
 JQtApplication app = new JQtApplication();
-JQtWindow window = new JQtWindow("JQt first window", 800, 600);
+JQtWindow window = new JQtWindow("JQt window", 640, 480);
 JQtLabel label = new JQtLabel("Hello, JQt!");
 JQtButton button = new JQtButton("Click me");
 
 button.onClick(() -> {          // Qt clicked signal → JNI callback → Java lambda
     label.setText("Clicked!");
 });
-window.addWidget(label);
-window.addWidget(button);
+button.onPressed(() -> System.out.println("pressed"));
+button.onReleased(() -> System.out.println("released"));
+window.onResized((w, h) -> System.out.println("resized: " + w + "x" + h));
+app.onAboutToQuit(() -> System.out.println("app quitting"));
+
+JQtVBoxLayout vbox = new JQtVBoxLayout();   // Phase 3: layout manager
+vbox.setSpacing(12);
+vbox.addWidget(label);
+vbox.addWidget(button);
+vbox.addStretch(1);
+window.setLayout(vbox);
 window.show();
 app.exec();                     // blocks until the last window closes
 ```
