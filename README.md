@@ -92,6 +92,20 @@ libjqt.dylib     ← macOS 版动态库（Phase 6）
 用户侧无需安装 C++ 编译器或 Qt SDK —— `lib/` 目录已自包含 Qt 运行时
 （Qt6*.dll + 平台插件 + qt.conf）。
 
+## 许可证（License）
+
+JQt 采用 **JQt Source License v1.0（JSL-1.0）** 分层授权（详见 `LICENSE`）：
+
+| 层 | 用户 | 义务 | 费用 |
+|----|------|------|------|
+| L1 | 非商业使用 | 署名 SilentStudio | 免费 |
+| L2 | 商业使用（累计营收 < $1M） | 应用开源（OSI 许可）+ 署名 | 免费 |
+| L3 | 商业使用（累计营收 ≥ $1M） | 开源 或 商业许可（年利润 5%） | 见 `COMMERCIAL.md` |
+
+- 贡献者须同意 CLA（`CONTRIBUTING.md`）
+- Qt 运行时为 LGPLv3（`THIRD-PARTY-NOTICES.md` + `LGPL-3.0.txt`）
+- 许可由 AI 协助起草，不构成法律意见
+
 ## 构建依赖（本机）
 
 | 组件 | 路径 |

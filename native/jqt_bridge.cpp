@@ -1,3 +1,8 @@
+// JQt - Java bindings for Qt.
+// Copyright (c) 2025 SilentStudio
+// SPDX-License-Identifier: LicenseRef-SilentStudio-JQt-1.0
+// Licensed under the JQt Source License v1.0 - see LICENSE.
+//
 // ============================================================================
 // jqt_bridge.cpp — JQt 的 JNI 胶水层（C++ 包装层）
 //

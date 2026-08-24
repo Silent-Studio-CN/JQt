@@ -1,3 +1,9 @@
+/*
+ * JQt - Java bindings for Qt.
+ * Copyright (c) 2025 SilentStudio
+ * SPDX-License-Identifier: LicenseRef-SilentStudio-JQt-1.0
+ * Licensed under the JQt Source License v1.0 - see LICENSE.
+ */
 package org.jqt;
 
 /**

@@ -76,6 +76,9 @@ Plugins = plugins
 "@
 Set-Content -Path (Join-Path $LibDir "qt.conf") -Value $qtConf -Encoding ascii
 
+Write-Host "==> [5/5] Deploying license notices into lib (LGPL compliance)"
+Copy-Item (Join-Path $Root "LGPL-3.0.txt"), (Join-Path $Root "THIRD-PARTY-NOTICES.md"), (Join-Path $Root "LICENSE") $LibDir -ErrorAction SilentlyContinue
+
 Write-Host ""
 Write-Host "Build OK"
 Write-Host "  Java bytecode : $OutDir"
