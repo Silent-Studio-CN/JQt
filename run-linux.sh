@@ -27,4 +27,4 @@ exec java \
   -Dstdout.encoding=UTF-8 \
   --enable-native-access=ALL-UNNAMED \
   -cp "$OUT" \
-  "${@:1}" org.jqt.JQtDemo
+  org.jqt.JQtDemo "$@"

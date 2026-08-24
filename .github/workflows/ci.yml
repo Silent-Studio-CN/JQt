@@ -51,7 +51,7 @@ jobs:
         run: |
           pip install aqtinstall
           python -m aqt install-qt windows desktop 6.11.2 win64_mingw -O D:/Qt --archives qtbase
-          python -m aqt install-tool windows desktop tools_mingw1310
+          python -m aqt install-tool windows desktop tools_mingw1310 -O D:/Qt
 
       - name: Build jqt.dll
         run: powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "D:/Qt/6.11.2" -Mingw "D:/Qt/Tools/mingw1310_64"
