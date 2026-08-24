@@ -72,32 +72,35 @@ jobs:
       - name: Install Qt 6.11.2 + MinGW 13.1 via aqtinstall
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.11.2 win64_mingw -O D:/Qt --archives qtbase
-          python -m aqt install-tool windows desktop tools_mingw1310 -O D:/Qt
+          python -m aqt install-qt windows desktop 6.11.2 win64_mingw --outputdir D:/Qt --archives qtbase
+          python -m aqt install-tool windows desktop tools_mingw1310 --outputdir D:/Qt
 
-      - name: Inspect installed toolchain (diagnostic)
+      - name: Locate Qt kit and MinGW
         shell: pwsh
-        continue-on-error: true
         run: |
-          "=== Qt layout ===" | Out-File inspect_log.txt
-          Get-ChildItem "D:/Qt" -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | Out-File -Append inspect_log.txt
-          Get-ChildItem "D:/Qt/6.11.2" -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | Out-File -Append inspect_log.txt
-          Get-ChildItem "D:/Qt/Tools" -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | Out-File -Append inspect_log.txt
-          "=== g++.exe search ===" | Out-File -Append inspect_log.txt
-          Get-ChildItem "D:/Qt" -Recurse -Depth 5 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | Out-File -Append inspect_log.txt
-          Get-Content inspect_log.txt
+          # aqt 的实际输出位置可能因版本而异：全盘定位 qmake.exe
+          $kit = Get-ChildItem "C:/Qt", "D:/Qt" -Recurse -Depth 5 -Filter "qmake.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $kit) {
+            Write-Host "qmake.exe NOT FOUND - dumping C:/Qt and D:/Qt:"
+            Get-ChildItem "C:/Qt", "D:/Qt" -Recurse -Depth 3 -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+            throw "qmake.exe not found after aqtinstall"
+          }
+          $qtRoot = Split-Path (Split-Path $kit.FullName)
+          Write-Host "QTROOT=$qtRoot (qmake: $($kit.FullName))"
+          "QTROOT=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
+          $gpp = Get-ChildItem "C:/Qt/Tools", "D:/Qt/Tools" -Recurse -Depth 4 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($gpp) {
+            $mingw = Split-Path (Split-Path $gpp.FullName)
+            Write-Host "MINGW=$mingw"
+            "MINGW=$mingw" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
+          } else {
+            Write-Host "g++.exe not found under C:/Qt/Tools or D:/Qt/Tools"
+          }
 
       - name: Build jqt.dll
         shell: pwsh
         run: |
-          # 自动探测 MinGW 真实位置（容错 aqt 布局差异）
-          $mingw = "D:/Qt/Tools/mingw1310_64"
-          if (-not (Test-Path "$mingw/bin/g++.exe")) {
-            $found = Get-ChildItem "D:/Qt" -Recurse -Depth 5 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($found) { $mingw = Split-Path (Split-Path $found.FullName) }
-            Write-Host "MinGW not at default path, adjusted to: $mingw"
-          }
-          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "D:/Qt/6.11.2" -Mingw $mingw *> build_log.txt
+          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "$env:QTROOT" -Mingw "$env:MINGW" *> build_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== BUILD FAILED, tail of build_log.txt ==="
             Get-Content build_log.txt -Tail 60
@@ -108,7 +111,7 @@ jobs:
         shell: pwsh
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
-          $env:QT_PLUGIN_PATH = "D:/Qt/6.11.2/mingw_64/plugins"
+          $env:QT_PLUGIN_PATH = "$env:QTROOT/mingw_64/plugins"
           powershell -File run.ps1 -AutoClose 2000 *> smoke_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
@@ -147,17 +150,24 @@ jobs:
       - name: Install Qt 6.11.2 for macOS via aqtinstall
         run: |
           pip3 install aqtinstall
-          python3 -m aqt install-qt mac desktop 6.11.2 macos -O $HOME/Qt --archives qtbase
+          python3 -m aqt install-qt mac desktop 6.11.2 macos --outputdir $HOME/Qt --archives qtbase
+
+      - name: Locate Qt for macOS
+        run: |
+          QTBASE=$(find "$HOME/Qt" -maxdepth 4 -type d -name "macos" | head -1)
+          if [ -z "$QTBASE" ]; then find "$HOME/Qt" -maxdepth 3 -type d | head -20; exit 1; fi
+          echo "QTBASE=$QTBASE"
+          echo "QTBASE=$QTBASE" >> $GITHUB_ENV
 
       - name: Build libjqt.dylib
         run: |
           chmod +x build-macos.sh
-          QT_BASE=$HOME/Qt/6.11.2/macos ./build-macos.sh
+          QT_BASE="$QTBASE" ./build-macos.sh
 
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
-          QT_BASE=$HOME/Qt/6.11.2/macos
+          QT_BASE="$QTBASE"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
 
       - name: Upload artifact
