@@ -1,32 +1,26 @@
-# Contributing to JQt（贡献指南）
+# Contributing to JQt（贡献政策）
 
-感谢你愿意为 JQt 贡献力量！
+## ⛔ 提交政策：仅限 SilentStudio 成员
 
-## ⚠️ 重要：贡献者协议（CLA）
+JQt **不接受外部贡献者的代码提交**——外部 pull request 不会被合并。
+只有 **SilentStudio 组织成员**可以直接提交代码。
 
-JQt 采用**分层授权**（JSL-1.0，见 `LICENSE`）+ **商业许可**双轨模式。
-为维持该模式在法律上有效，SilentStudio 必须对全部代码持有完整版权。
+这一政策是为了保证 JQt 分层授权模式（JSL-1.0，见 `LICENSE`）的
+版权完整性：SilentStudio 必须对全部代码持有完整版权，才能维持
+开源 + 商业许可双轨运作。
 
-因此，**任何贡献（代码、文档、示例、测试）均视为你同意以下条款**：
+## ✅ 外部人员如何参与
 
-1. 你保证所贡献的内容为你的原创作品，不侵犯任何第三方权利；
-2. 你不可撤销地将贡献的著作权（包括修改与演绎作品）转让给 SilentStudio；
-3. SilentStudio 有权以 JSL-1.0 及任何商业许可条款（含第 4 条营收分成
-   模式）授权、再许可你的贡献；
-4. 本条约定自贡献提交之时生效，不因贡献被合并或拒绝而失效。
+| 需求 | 渠道 |
+|------|------|
+| 报告 Bug / 建议功能 | GitHub **Issues** |
+| 提问 / 讨论 | GitHub Issues 或 Discussion |
+| 安全漏洞 | 不要公开提交——私信联系 SilentStudio |
 
-**不接受贡献，除非 PR 描述中明确声明：**
+## 📌 说明
 
-> I agree to the JQt Contributor Agreement (CLA) described in CONTRIBUTING.md.
-
-## 提交流程
-
-1. Fork 本仓库，创建功能分支；
-2. 遵循现有代码风格：4 空格缩进、UTF-8 编码、Java 17+ 语法；
-3. Java 源码与 C++ 胶水层的修改必须保持 JNI 符号一致（方法名 ↔ JNI 导出名）；
-4. 提交 PR，并在描述中附 CLA 声明；
-5. 维护者审查后合并。
-
-## 开发环境
-
-见 `README.md` 的构建依赖与 `build.ps1`。
+- 本政策随项目发展阶段可能调整；
+- 若将来开放外部贡献，贡献者须先签署 CLA
+  （贡献版权转让给 SilentStudio）才能被合并；
+- 内部成员提交时也须遵循：JNI 符号与 Java 方法名一致、
+  4 空格缩进、UTF-8 编码。
