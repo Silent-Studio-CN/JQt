@@ -149,8 +149,9 @@ jobs:
 
       - name: Install Qt 6.11.2 for macOS via aqtinstall
         run: |
-          pip3 install aqtinstall
-          python3 -m aqt install-qt mac desktop 6.11.2 macos --outputdir $HOME/Qt --archives qtbase
+          python3 -m venv /tmp/aqt-venv
+          /tmp/aqt-venv/bin/pip install aqtinstall
+          /tmp/aqt-venv/bin/python -m aqt install-qt mac desktop 6.11.2 macos --outputdir $HOME/Qt --archives qtbase
 
       - name: Locate Qt for macOS
         run: |
