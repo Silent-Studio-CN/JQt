@@ -1,0 +1,31 @@
+﻿===== qspinbox : 27 functions, 0 properties =====
+--- FUNCTIONS ---
+~QSpinBox
+cleanText
+displayIntegerBase
+event
+fixup
+maximum
+minimum
+prefix
+QSpinBox
+setDisplayIntegerBase
+setMaximum
+setMinimum
+setPrefix
+setRange
+setSingleStep
+setStepType
+setSuffix
+setValue
+singleStep
+stepType
+suffix
+textChanged
+textFromValue
+validate
+value
+valueChanged
+valueFromText
+--- PROPERTIES ---
+

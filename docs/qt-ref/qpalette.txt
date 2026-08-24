@@ -1,0 +1,42 @@
+﻿===== qpalette : 38 functions, 0 properties =====
+--- FUNCTIONS ---
+~QPalette
+accent
+alternateBase
+base
+brightText
+brush
+button
+buttonText
+cacheKey
+color
+ColorGroup
+ColorRole
+currentColorGroup
+dark
+highlight
+highlightedText
+isBrushSet
+isCopyOf
+isEqual
+light
+link
+linkVisited
+mid
+midlight
+placeholderText
+QPalette
+resolve
+setBrush
+setColor
+setColorGroup
+setCurrentColorGroup
+shadow
+swap
+text
+toolTipBase
+toolTipText
+window
+windowText
+--- PROPERTIES ---
+

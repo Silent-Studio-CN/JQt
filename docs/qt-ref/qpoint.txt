@@ -1,0 +1,17 @@
+﻿===== qpoint : 13 functions, 0 properties =====
+--- FUNCTIONS ---
+dotProduct
+isNull
+manhattanLength
+QPoint
+rx
+ry
+setX
+setY
+toCGPoint
+toPointF
+transposed
+x
+y
+--- PROPERTIES ---
+

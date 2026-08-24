@@ -1,0 +1,27 @@
+﻿===== qcolordialog : 23 functions, 0 properties =====
+--- FUNCTIONS ---
+~QColorDialog
+changeEvent
+ColorDialogOption
+ColorDialogOptions
+colorSelected
+currentColor
+currentColorChanged
+customColor
+customCount
+done
+getColor
+open
+options
+QColorDialog
+selectedColor
+setCurrentColor
+setCustomColor
+setOption
+setOptions
+setStandardColor
+setVisible
+standardColor
+testOption
+--- PROPERTIES ---
+

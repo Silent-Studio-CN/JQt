@@ -1,0 +1,28 @@
+﻿===== qtimer : 24 functions, 0 properties =====
+--- FUNCTIONS ---
+~QTimer
+bindableActive
+bindableInterval
+bindableSingleShot
+bindableTimerType
+callOnTimeout
+id
+interval
+intervalAsDuration
+isActive
+isSingleShot
+QTimer
+remainingTime
+remainingTimeAsDuration
+setInterval
+setSingleShot
+setTimerType
+singleShot
+start
+stop
+timeout
+timerEvent
+timerId
+timerType
+--- PROPERTIES ---
+

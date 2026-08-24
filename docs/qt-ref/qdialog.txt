@@ -1,0 +1,29 @@
+﻿===== qdialog : 25 functions, 0 properties =====
+--- FUNCTIONS ---
+~QDialog
+accept
+accepted
+closeEvent
+contextMenuEvent
+DialogCode
+done
+eventFilter
+exec
+finished
+isSizeGripEnabled
+keyPressEvent
+minimumSizeHint
+open
+QDialog
+reject
+rejected
+resizeEvent
+result
+setModal
+setResult
+setSizeGripEnabled
+setVisible
+showEvent
+sizeHint
+--- PROPERTIES ---
+

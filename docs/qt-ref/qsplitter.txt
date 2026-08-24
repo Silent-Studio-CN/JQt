@@ -1,0 +1,41 @@
+﻿===== qsplitter : 37 functions, 0 properties =====
+--- FUNCTIONS ---
+~QSplitter
+addWidget
+changeEvent
+childEvent
+childrenCollapsible
+closestLegalPosition
+count
+createHandle
+event
+getRange
+handle
+handleWidth
+indexOf
+insertWidget
+isCollapsible
+minimumSizeHint
+moveSplitter
+opaqueResize
+orientation
+QSplitter
+refresh
+replaceWidget
+resizeEvent
+restoreState
+saveState
+setChildrenCollapsible
+setCollapsible
+setHandleWidth
+setOpaqueResize
+setOrientation
+setRubberBand
+setSizes
+setStretchFactor
+sizeHint
+sizes
+splitterMoved
+widget
+--- PROPERTIES ---
+

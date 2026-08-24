@@ -1,0 +1,35 @@
+﻿===== qprogressbar : 31 functions, 0 properties =====
+--- FUNCTIONS ---
+~QProgressBar
+alignment
+Direction
+event
+format
+initStyleOption
+invertedAppearance
+isTextVisible
+maximum
+minimum
+minimumSizeHint
+orientation
+paintEvent
+QProgressBar
+reset
+resetFormat
+setAlignment
+setFormat
+setInvertedAppearance
+setMaximum
+setMinimum
+setOrientation
+setRange
+setTextDirection
+setTextVisible
+setValue
+sizeHint
+text
+textDirection
+value
+valueChanged
+--- PROPERTIES ---
+

@@ -1,0 +1,43 @@
+﻿===== qmenubar : 39 functions, 0 properties =====
+--- FUNCTIONS ---
+~QMenuBar
+actionAt
+actionEvent
+actionGeometry
+activeAction
+addMenu
+addSeparator
+changeEvent
+clear
+cornerWidget
+event
+eventFilter
+focusInEvent
+focusOutEvent
+heightForWidth
+hovered
+initStyleOption
+insertMenu
+insertSeparator
+isDefaultUp
+isNativeMenuBar
+keyPressEvent
+leaveEvent
+minimumSizeHint
+mouseMoveEvent
+mousePressEvent
+mouseReleaseEvent
+paintEvent
+QMenuBar
+resizeEvent
+setActiveAction
+setCornerWidget
+setDefaultUp
+setNativeMenuBar
+setVisible
+sizeHint
+timerEvent
+toNSMenu
+triggered
+--- PROPERTIES ---
+

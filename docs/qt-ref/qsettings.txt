@@ -1,0 +1,41 @@
+﻿===== qsettings : 37 functions, 0 properties =====
+--- FUNCTIONS ---
+~QSettings
+allKeys
+applicationName
+beginGroup
+beginReadArray
+beginWriteArray
+childGroups
+childKeys
+clear
+contains
+defaultFormat
+endArray
+endGroup
+event
+fallbacksEnabled
+fileName
+format
+group
+isAtomicSyncRequired
+isWritable
+organizationName
+QSettings
+ReadFunc
+registerFormat
+remove
+scope
+setArrayIndex
+setAtomicSyncRequired
+setDefaultFormat
+setFallbacksEnabled
+setPath
+SettingsMap
+setValue
+status
+sync
+value
+WriteFunc
+--- PROPERTIES ---
+

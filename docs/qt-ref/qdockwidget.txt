@@ -1,0 +1,32 @@
+﻿===== qdockwidget : 28 functions, 0 properties =====
+--- FUNCTIONS ---
+~QDockWidget
+allowedAreas
+allowedAreasChanged
+changeEvent
+closeEvent
+dockLocation
+dockLocationChanged
+DockWidgetFeature
+DockWidgetFeatures
+event
+features
+featuresChanged
+initStyleOption
+isAreaAllowed
+isFloating
+paintEvent
+QDockWidget
+setAllowedAreas
+setDockLocation
+setFeatures
+setFloating
+setTitleBarWidget
+setWidget
+titleBarWidget
+toggleViewAction
+topLevelChanged
+visibilityChanged
+widget
+--- PROPERTIES ---
+

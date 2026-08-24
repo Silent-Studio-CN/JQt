@@ -16,7 +16,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '26'
 
       - name: Install Qt6 + g++
         run: |
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '26'
 
       - name: Install Qt 6.11.2 + MinGW 13.1 via aqtinstall
         run: |
@@ -142,7 +142,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '26'
 
       - name: Install Qt 6.11.2 for macOS via aqtinstall
         run: |

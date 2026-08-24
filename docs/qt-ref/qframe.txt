@@ -1,0 +1,27 @@
+﻿===== qframe : 23 functions, 0 properties =====
+--- FUNCTIONS ---
+~QFrame
+changeEvent
+event
+frameRect
+frameShadow
+frameShape
+frameStyle
+frameWidth
+initStyleOption
+lineWidth
+midLineWidth
+paintEvent
+QFrame
+setFrameRect
+setFrameShadow
+setFrameShape
+setFrameStyle
+setLineWidth
+setMidLineWidth
+Shadow
+Shape
+sizeHint
+StyleMask
+--- PROPERTIES ---
+

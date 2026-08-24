@@ -1,0 +1,22 @@
+﻿===== qscrollarea : 18 functions, 0 properties =====
+--- FUNCTIONS ---
+~QScrollArea
+alignment
+ensureVisible
+ensureWidgetVisible
+event
+eventFilter
+focusNextPrevChild
+QScrollArea
+resizeEvent
+scrollContentsBy
+setAlignment
+setWidget
+setWidgetResizable
+sizeHint
+takeWidget
+viewportSizeHint
+widget
+widgetResizable
+--- PROPERTIES ---
+
