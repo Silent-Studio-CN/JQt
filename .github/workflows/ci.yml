@@ -1,0 +1,103 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  # ================= Linux (Ubuntu + apt Qt6) =================
+  linux:
+    name: Linux x64
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Qt6 + g++
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qt6-base-dev libgl1-mesa-dev g++
+
+      - name: Build libjqt.so
+        run: chmod +x build-linux.sh && ./build-linux.sh
+
+      - name: Smoke test (offscreen, headless)
+        run: QT_QPA_PLATFORM=offscreen ./run-linux.sh -AutoClose 2000
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libjqt-linux-x64
+          path: lib/libjqt.so
+
+  # ================= Windows (aqtinstall Qt + MinGW) =================
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Qt 6.11.2 + MinGW 13.1 via aqtinstall
+        run: |
+          pip install aqtinstall
+          python -m aqt install-qt windows desktop 6.11.2 win64_mingw -O D:/Qt --archives qtbase
+          python -m aqt install-tool windows desktop tools_mingw1310
+
+      - name: Build jqt.dll
+        run: powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "D:/Qt/6.11.2" -Mingw "D:/Qt/Tools/mingw1310_64"
+
+      - name: Smoke test (offscreen, headless)
+        shell: powershell
+        run: |
+          $env:QT_QPA_PLATFORM = "offscreen"
+          $env:QT_PLUGIN_PATH = "D:/Qt/6.11.2/mingw_64/plugins"
+          powershell -File run.ps1 -AutoClose 2000
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jqt-windows-x64
+          path: lib/
+
+  # ================= macOS (aqtinstall Qt) =================
+  macos:
+    name: macOS x64
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Qt 6.11.2 for macOS via aqtinstall
+        run: |
+          pip3 install aqtinstall
+          python3 -m aqt install-qt mac desktop 6.11.2 macos -O $HOME/Qt --archives qtbase
+
+      - name: Build libjqt.dylib
+        run: |
+          chmod +x build-macos.sh
+          QT_BASE=$HOME/Qt/6.11.2/macos ./build-macos.sh
+
+      - name: Smoke test (offscreen, headless)
+        run: |
+          QT_BASE=$HOME/Qt/6.11.2/macos
+          QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libjqt-macos-x64
+          path: lib/libjqt.dylib

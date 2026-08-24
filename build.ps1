@@ -14,13 +14,16 @@
 #       BOM-less files as ANSI and would garble non-ASCII text).
 # ============================================================================
 
+param(
+    [string]$JDK    = "C:\Program Files\Java\latest\jdk-26",
+    [string]$QtRoot = "D:\Qt\6.11.2",
+    [string]$Mingw  = "D:\Qt\Tools\mingw1310_64"
+)
+
 $ErrorActionPreference = "Stop"
 
 $Root      = Split-Path -Parent $MyInvocation.MyCommand.Path
-$JDK       = "C:\Program Files\Java\latest\jdk-26"
-$QtRoot    = "D:\Qt\6.11.2"
 $Kit       = Join-Path $QtRoot "mingw_64"
-$Mingw     = "D:\Qt\Tools\mingw1310_64"
 
 $OutDir    = Join-Path $Root "out"             # Java bytecode
 $LibDir    = Join-Path $Root "lib"             # jqt.dll + Qt runtime
