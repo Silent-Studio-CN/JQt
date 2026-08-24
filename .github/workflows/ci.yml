@@ -65,18 +65,29 @@ jobs:
           python -m aqt install-qt windows desktop 6.11.2 win64_mingw -O D:/Qt --archives qtbase
           python -m aqt install-tool windows desktop tools_mingw1310 -O D:/Qt
 
-      - name: Inspect installed toolchain
+      - name: Inspect installed toolchain (diagnostic)
         shell: pwsh
+        continue-on-error: true
         run: |
-          Get-ChildItem "D:/Qt/6.11.2" -Directory | Select-Object -ExpandProperty Name
-          Get-ChildItem "D:/Qt/Tools" -Directory | Select-Object -ExpandProperty Name
-          Get-ChildItem "D:/Qt/Tools" -Recurse -Filter "g++.exe" | Select-Object -ExpandProperty FullName
-          Get-ChildItem "D:/Qt/6.11.2/mingw_64/lib" -Filter "libQt6Widgets*" | Select-Object -ExpandProperty Name
+          "=== Qt layout ===" | Out-File inspect_log.txt
+          Get-ChildItem "D:/Qt" -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | Out-File -Append inspect_log.txt
+          Get-ChildItem "D:/Qt/6.11.2" -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | Out-File -Append inspect_log.txt
+          Get-ChildItem "D:/Qt/Tools" -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | Out-File -Append inspect_log.txt
+          "=== g++.exe search ===" | Out-File -Append inspect_log.txt
+          Get-ChildItem "D:/Qt" -Recurse -Depth 5 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | Out-File -Append inspect_log.txt
+          Get-Content inspect_log.txt
 
       - name: Build jqt.dll
         shell: pwsh
         run: |
-          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "D:/Qt/6.11.2" -Mingw "D:/Qt/Tools/mingw1310_64" *> build_log.txt
+          # 自动探测 MinGW 真实位置（容错 aqt 布局差异）
+          $mingw = "D:/Qt/Tools/mingw1310_64"
+          if (-not (Test-Path "$mingw/bin/g++.exe")) {
+            $found = Get-ChildItem "D:/Qt" -Recurse -Depth 5 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($found) { $mingw = Split-Path (Split-Path $found.FullName) }
+            Write-Host "MinGW not at default path, adjusted to: $mingw"
+          }
+          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "D:/Qt/6.11.2" -Mingw $mingw *> build_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== BUILD FAILED, tail of build_log.txt ==="
             Get-Content build_log.txt -Tail 60
@@ -103,6 +114,7 @@ jobs:
           path: |
             build_log.txt
             smoke_log.txt
+            inspect_log.txt
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
