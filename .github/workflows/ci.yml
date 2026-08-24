@@ -27,7 +27,19 @@ jobs:
         run: chmod +x build-linux.sh && ./build-linux.sh
 
       - name: Smoke test (offscreen, headless)
-        run: QT_QPA_PLATFORM=offscreen ./run-linux.sh -AutoClose 2000
+        run: |
+          chmod +x run-linux.sh
+          set +e
+          QT_QPA_PLATFORM=offscreen ./run-linux.sh -AutoClose 2000
+          CODE=$?
+          if [ $CODE -ne 0 ]; then
+            echo "=== DIAG ==="
+            java -version 2>&1
+            ls -la "$PWD/lib"
+            ldd "$PWD/lib/libjqt.so" 2>&1 | head -20
+            find /usr/lib -name "*qoffscreen*" 2>/dev/null
+            exit $CODE
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -53,15 +65,44 @@ jobs:
           python -m aqt install-qt windows desktop 6.11.2 win64_mingw -O D:/Qt --archives qtbase
           python -m aqt install-tool windows desktop tools_mingw1310 -O D:/Qt
 
+      - name: Inspect installed toolchain
+        shell: pwsh
+        run: |
+          Get-ChildItem "D:/Qt/6.11.2" -Directory | Select-Object -ExpandProperty Name
+          Get-ChildItem "D:/Qt/Tools" -Directory | Select-Object -ExpandProperty Name
+          Get-ChildItem "D:/Qt/Tools" -Recurse -Filter "g++.exe" | Select-Object -ExpandProperty FullName
+          Get-ChildItem "D:/Qt/6.11.2/mingw_64/lib" -Filter "libQt6Widgets*" | Select-Object -ExpandProperty Name
+
       - name: Build jqt.dll
-        run: powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "D:/Qt/6.11.2" -Mingw "D:/Qt/Tools/mingw1310_64"
+        shell: pwsh
+        run: |
+          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "D:/Qt/6.11.2" -Mingw "D:/Qt/Tools/mingw1310_64" *> build_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== BUILD FAILED, tail of build_log.txt ==="
+            Get-Content build_log.txt -Tail 60
+            exit $LASTEXITCODE
+          }
 
       - name: Smoke test (offscreen, headless)
-        shell: powershell
+        shell: pwsh
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_PLUGIN_PATH = "D:/Qt/6.11.2/mingw_64/plugins"
-          powershell -File run.ps1 -AutoClose 2000
+          powershell -File run.ps1 -AutoClose 2000 *> smoke_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
+            Get-Content smoke_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build-logs
+          path: |
+            build_log.txt
+            smoke_log.txt
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -93,6 +134,7 @@ jobs:
 
       - name: Smoke test (offscreen, headless)
         run: |
+          chmod +x run-macos.sh
           QT_BASE=$HOME/Qt/6.11.2/macos
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
 
