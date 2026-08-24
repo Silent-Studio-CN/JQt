@@ -27,17 +27,27 @@ jobs:
         run: chmod +x build-linux.sh && ./build-linux.sh
 
       - name: Smoke test (offscreen, headless)
+        timeout-minutes: 4
         run: |
           chmod +x run-linux.sh
+          java -version 2>&1
           set +e
-          QT_QPA_PLATFORM=offscreen ./run-linux.sh -AutoClose 2000
+          QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -AutoClose 2000 > smoke_out.txt 2>&1
           CODE=$?
+          echo "smoke exit code: $CODE"
+          cat smoke_out.txt
           if [ $CODE -ne 0 ]; then
             echo "=== DIAG ==="
-            java -version 2>&1
             ls -la "$PWD/lib"
             ldd "$PWD/lib/libjqt.so" 2>&1 | head -20
             find /usr/lib -name "*qoffscreen*" 2>/dev/null
+            # 若超时挂起，抓 Java 线程栈
+            JPID=$(pgrep -f "org.jqt.JQtDemo" | head -1)
+            if [ -n "$JPID" ]; then
+              echo "=== jstack of $JPID ==="
+              jcmd "$JPID" Thread.print 2>&1 | head -80
+              kill -9 "$JPID"
+            fi
             exit $CODE
           fi
 
@@ -125,7 +135,7 @@ jobs:
   # ================= macOS (aqtinstall Qt) =================
   macos:
     name: macOS x64
-    runs-on: macos-13
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
