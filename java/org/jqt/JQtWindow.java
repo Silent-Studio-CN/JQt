@@ -34,6 +34,7 @@ public class JQtWindow extends JQtWidget {
     /** 创建一个指定大小的新窗口。 */
     public JQtWindow(String title, int width, int height) {
         nativeHandle = nativeCreate(title, width, height);
+        registerCleaner();
     }
 
     private native long nativeCreate(String title, int width, int height);

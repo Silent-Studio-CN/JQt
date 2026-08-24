@@ -13,6 +13,7 @@ public class JQtVBoxLayout extends JQtLayout {
 
     public JQtVBoxLayout() {
         nativeHandle = nativeCreate();
+        registerCleaner();
     }
 
     private native long nativeCreate();

@@ -6,6 +6,8 @@
  */
 package org.jqt;
 
+import java.lang.ref.Cleaner;
+
 /**
  * 布局管理器基类（Phase 3）：封装 C++ 侧的 {@code QBoxLayout}。
  * <p>
@@ -18,18 +20,49 @@ package org.jqt;
  * </pre>
  * 布局接管子控件的位置与大小；控件加入布局后不要再调用
  * {@link JQtWindow#addWidget(JQtWidget)} 重复添加。
+ * <p>
+ * 内存管理（Phase 5）：与 {@link JQtWidget} 相同——未安装到窗口前由
+ * {@link Cleaner} 回收；{@code setLayout} 后归窗口管理。
  */
 public abstract class JQtLayout {
 
-    /** C++ 侧布局对象指针。 */
+    private static final Cleaner CLEANER = Cleaner.create();
+
+    /** C++ 侧布局对象句柄 ID。 */
     protected long nativeHandle;
 
-    /** 布局是否已在 C++ 侧创建。 */
-    public boolean isCreated() {
-        return nativeHandle != 0;
+    private volatile boolean disposed;
+
+    /** 子类构造器在 {@code nativeHandle} 赋值后调用。 */
+    protected final void registerCleaner() {
+        final long handle = nativeHandle;
+        CLEANER.register(this, () -> nativeDispose(handle));
     }
 
-    /** C++ 侧布局对象指针（仅供内部 / 高级用法）。 */
+    private static native void nativeDispose(long handle);
+
+    /** 手动释放（通常无需调用）。释放后任何方法调用将抛出 {@link IllegalStateException}。 */
+    public final void dispose() {
+        if (disposed) {
+            return;
+        }
+        disposed = true;
+        final long handle = nativeHandle;
+        nativeHandle = 0;
+        nativeDispose(handle);
+    }
+
+    /** 是否已释放。 */
+    public final boolean isDisposed() {
+        return disposed;
+    }
+
+    /** 布局是否已在 C++ 侧创建且未释放。 */
+    public boolean isCreated() {
+        return nativeHandle != 0 && !disposed;
+    }
+
+    /** C++ 侧句柄 ID（仅供内部 / 高级用法）。 */
     public long nativeHandle() {
         return nativeHandle;
     }

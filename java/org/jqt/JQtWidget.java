@@ -6,23 +6,67 @@
  */
 package org.jqt;
 
+import java.lang.ref.Cleaner;
+
 /**
  * JQt 所有控件的基类。
  * <p>
- * 每个控件内部持有一个 C++ 侧 Qt 对象的内存指针（{@code nativeHandle}），
- * 由 native 方法（JNI 胶水层）创建和操作。
+ * 每个控件内部持有 C++ 侧 Qt 对象的内存句柄（{@code nativeHandle}）。
+ *
+ * <h3>内存管理（Phase 5）</h3>
+ * <ul>
+ *   <li>句柄为自增 ID（非裸指针），由 C++ 注册表管理，永不复用；
+ *       对已销毁对象调用方法会抛出 {@link IllegalStateException}，不会 native 崩溃。</li>
+ *   <li>Java 对象不可达时，由 {@link Cleaner} 自动回收 C++ 对象（GUI 线程安全删除）。</li>
+ *   <li>控件加入窗口/布局后，生命周期由 Qt 父子关系管理，Cleaner 不再干预。</li>
+ *   <li>也可调用 {@link #dispose()} 手动提前释放。</li>
+ * </ul>
  */
 public abstract class JQtWidget {
 
-    /** C++ 侧 Qt 对象的内存地址（jlong 指针），0 表示尚未创建。 */
+    private static final Cleaner CLEANER = Cleaner.create();
+
+    /** C++ 侧 Qt 对象的句柄 ID（自增、不复用），0 表示尚未创建或已释放。 */
     protected long nativeHandle;
 
-    /** 控件是否已在 C++ 侧创建。 */
-    public boolean isCreated() {
-        return nativeHandle != 0;
+    private volatile boolean disposed;
+
+    /**
+     * 注册清理器：对象不可达时由 Cleaner 线程调用 native 释放 C++ 对象。
+     * 子类构造器在 {@code nativeHandle} 赋值后调用。
+     */
+    protected final void registerCleaner() {
+        final long handle = nativeHandle;
+        CLEANER.register(this, () -> nativeDispose(handle));
     }
 
-    /** C++ 侧 Qt 对象指针（仅供内部 / 高级用法）。 */
+    private static native void nativeDispose(long handle);
+
+    /**
+     * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
+     * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。
+     */
+    public final void dispose() {
+        if (disposed) {
+            return;
+        }
+        disposed = true;
+        final long handle = nativeHandle;
+        nativeHandle = 0;
+        nativeDispose(handle);
+    }
+
+    /** 是否已释放（调用过 {@link #dispose()} 或对象已不可达）。 */
+    public final boolean isDisposed() {
+        return disposed;
+    }
+
+    /** 控件是否已在 C++ 侧创建且未释放。 */
+    public boolean isCreated() {
+        return nativeHandle != 0 && !disposed;
+    }
+
+    /** C++ 侧句柄 ID（仅供内部 / 高级用法）。 */
     public long nativeHandle() {
         return nativeHandle;
     }

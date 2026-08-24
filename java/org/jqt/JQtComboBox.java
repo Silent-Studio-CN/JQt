@@ -24,6 +24,7 @@ public class JQtComboBox extends JQtWidget {
 
     public JQtComboBox() {
         nativeHandle = nativeCreate();
+        registerCleaner();
     }
 
     private native long nativeCreate();

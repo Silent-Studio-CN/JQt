@@ -36,6 +36,17 @@ public class JQtDemo {
             app.schedule(() -> edit.setText("JQt 自动填充（textChanged）"), 2000);
             // 2.5 秒后程序化切换下拉框选项（验证 currentIndexChanged）
             app.schedule(() -> combo.setCurrentIndex(1), 2500);
+            // 3 秒后演示悬垂保护（Phase 5）：dispose 后调用 → IllegalStateException
+            app.schedule(() -> {
+                JQtButton ghost = new JQtButton("临时按钮");
+                ghost.dispose();
+                try {
+                    ghost.setText("应该失败");
+                    System.out.println("[JQt] ⚠️ 悬垂保护未生效！");
+                } catch (IllegalStateException ex) {
+                    System.out.println("[JQt] ✅ 悬垂保护：dispose 后调用抛异常 → " + ex.getMessage());
+                }
+            }, 3000);
         }
         edit.onTextChanged(text -> System.out.println("[JQt] textChanged → " + text));
         edit.onReturnPressed(() -> {

@@ -8,10 +8,14 @@
 //
 // 职责：
 //   1. 把 Java 层的 JQt* 调用翻译成 Qt 的 C++ 调用；
-//   2. 把 Qt 的信号（clicked/pressed/released/toggled/aboutToQuit 等）与
-//      事件（closeEvent/resizeEvent/moveEvent）通过 JNI 回调回 Java 层，
-//      实现 "C++ 信号 → JNI → Java lambda" 的伪信号槽机制；
-//   3. 布局管理器（QVBoxLayout/QHBoxLayout）的封装。
+//   2. 把 Qt 的信号与事件通过 JNI 回调回 Java 层（伪信号槽）；
+//   3. 布局管理器（QVBoxLayout/QHBoxLayout）的封装；
+//   4. 内存管理（Phase 5）：
+//      - 句柄注册表：Java 持有自增 ID，native 查表得指针（ID 不复用 → 悬垂检测可靠）
+//      - 生命周期同步：Qt 对象 destroyed 时自动注销（父删子/布局删除等一律覆盖）
+//      - 所有权模型：addWidget/setLayout 后归 Qt 管理，否则由 Java Cleaner 回收
+//      - 回收线程安全：Cleaner 线程 → QMetaObject::invokeMethod 排队到 GUI 线程删除
+//      - 悬垂保护：调用已销毁对象 → 抛 IllegalStateException，不再 native crash
 //
 // 构建：项目根目录 build.ps1（MinGW 13.1 + Qt 6.11.2 mingw_64 kit）
 // ============================================================================
@@ -27,6 +31,7 @@
 #include <QLayout>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMetaObject>
 #include <QMoveEvent>
 #include <QPushButton>
 #include <QResizeEvent>
@@ -34,9 +39,13 @@
 #include <QVBoxLayout>
 #include <QWidget>
 
+#include <atomic>
 #include <functional>
+#include <mutex>
+#include <unordered_map>
 
 #include "generated/org_jqt_JQtApplication.h"
+#include "generated/org_jqt_JQtWidget.h"
 #include "generated/org_jqt_JQtWindow.h"
 #include "generated/org_jqt_JQtButton.h"
 #include "generated/org_jqt_JQtLabel.h"
@@ -54,9 +63,15 @@
 static JavaVM* g_jvm = nullptr;        // 缓存的 JVM 句柄（供 C++ → Java 回调）
 static QApplication* g_app = nullptr;  // 进程级唯一的 QApplication
 
+// 句柄注册表：Java 侧持有自增 ID（从 1 开始，永不复用），native 查表获得指针。
+// destroyed 信号保证注册表与 Qt 对象生命周期严格同步。
+static std::mutex g_handleMutex;
+static std::unordered_map<int64_t, void*> g_handles;          // id -> QObject*
+static std::unordered_map<int64_t, bool> g_javaOwned;         // id -> 是否归 Java（Cleaner）管理
+static std::atomic<int64_t> g_nextHandleId{1};
+
 // 取得当前线程的 JNIEnv：已附加 JVM 则复用，否则挂载。
-// Qt 信号总是在 GUI（主）线程发出，而主线程执行 app.exec() 前已被 JVM 附加，
-// 因此回调是线程安全的。
+// Qt 信号总是在 GUI（主）线程发出，而主线程执行 app.exec() 前已被 JVM 附加。
 static JNIEnv* callbackEnv() {
     JNIEnv* env = nullptr;
     if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) == JNI_EDETACHED) {
@@ -65,9 +80,77 @@ static JNIEnv* callbackEnv() {
     return env;
 }
 
+// JNI 回调中 Java 抛出的异常：打印并清除，避免悬挂污染后续 JNI 调用
+static void checkJniException(JNIEnv* env) {
+    if (env->ExceptionCheck()) {
+        env->ExceptionDescribe();
+        env->ExceptionClear();
+    }
+}
+
 // ----------------------------------------------------------------------------
-// 窗口壳：在 C++ 侧继承 QWidget，拦截 closeEvent / resizeEvent / moveEvent，
-// 把窗口事件回调给 Java 层（对应 JQtWindow.onClose / onResized / onMoved）。
+// 句柄注册表 API
+// ----------------------------------------------------------------------------
+
+// 注册对象并返回 Java 侧句柄 ID。javaOwned=true 表示归 Java 管理（GC 时回收）。
+static jlong registerHandle(void* ptr, bool javaOwned) {
+    const int64_t id = g_nextHandleId.fetch_add(1);
+    {
+        std::lock_guard<std::mutex> lock(g_handleMutex);
+        g_handles[id] = ptr;
+        g_javaOwned[id] = javaOwned;
+    }
+    // Qt 对象销毁（含父删子、布局清理、deleteLater 等一切途径）→ 自动注销
+    QObject* obj = static_cast<QObject*>(ptr);
+    QObject::connect(obj, &QObject::destroyed, [id](QObject*) {
+        std::lock_guard<std::mutex> lock(g_handleMutex);
+        g_handles.erase(id);
+        g_javaOwned.erase(id);
+    });
+    return static_cast<jlong>(id);
+}
+
+// 句柄 → 指针；无效/已销毁 → 抛 IllegalStateException 并返回 nullptr
+static void* requireHandle(JNIEnv* env, jlong handle) {
+    if (handle <= 0) {
+        env->ThrowNew(env->FindClass("java/lang/IllegalStateException"),
+                      "JQt: invalid native handle (never created or already disposed)");
+        return nullptr;
+    }
+    std::lock_guard<std::mutex> lock(g_handleMutex);
+    auto it = g_handles.find(static_cast<int64_t>(handle));
+    if (it == g_handles.end()) {
+        env->ThrowNew(env->FindClass("java/lang/IllegalStateException"),
+                      "JQt: native object already destroyed");
+        return nullptr;
+    }
+    return it->second;
+}
+
+// 标记对象归 Qt 管理（addWidget/setLayout 后）：Java Cleaner 不再回收
+static void markQtOwned(jlong handle) {
+    std::lock_guard<std::mutex> lock(g_handleMutex);
+    auto it = g_javaOwned.find(static_cast<int64_t>(handle));
+    if (it != g_javaOwned.end()) {
+        it->second = false;
+    }
+}
+
+// QApplication 保护：控件创建前必须先创建 JQtApplication
+static QApplication* requireApp(JNIEnv* env) {
+    if (g_app == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/IllegalStateException"),
+                      "JQt: QApplication not created - construct JQtApplication first");
+        return nullptr;
+    }
+    return g_app;
+}
+
+// 回调宏：JNI 调用后清理 Java 异常，避免污染
+#define JQT_CALL_VOID(env, obj, mid, ...)     do {         (env)->CallVoidMethod((obj), (mid), ##__VA_ARGS__);         checkJniException((env));     } while (0)
+
+// ----------------------------------------------------------------------------
+// 窗口壳：拦截 closeEvent / resizeEvent / moveEvent，回调给 Java 层
 // ----------------------------------------------------------------------------
 
 class JQtWindowShell : public QWidget {
@@ -113,15 +196,14 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtApplication_nativeCreateApp(JNIEnv* env,
         g_app = new QApplication(argc, argv);
     }
 
-    // 连接 aboutToQuit 信号 → Java nativeHandleAboutToQuit()
-    // gRef 不删除：JVM 退出时统一清理
+    // aboutToQuit 信号 → Java nativeHandleAboutToQuit()；gRef 由 JVM 退出时统一清理
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(g_app, &QApplication::aboutToQuit, [gRef]() {
         JNIEnv* e = callbackEnv();
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleAboutToQuit", "()V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid);
+            JQT_CALL_VOID(e, gRef, mid);
         }
     });
 
@@ -154,10 +236,37 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSchedule(JNIEnv* env, j
         jclass cls = e->GetObjectClass(gTask);
         jmethodID mid = e->GetMethodID(cls, "run", "()V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gTask, mid);
+            JQT_CALL_VOID(e, gTask, mid);
         }
         e->DeleteGlobalRef(gTask);
     });
+}
+
+// ----------------------------------------------------------------------------
+// JQtWidget：清理器入口（Java Cleaner 线程回调）
+// ----------------------------------------------------------------------------
+
+// Java 对象不可达时（或显式 dispose()）：若对象仍归 Java 管理则排队到 GUI 线程删除
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeDispose(JNIEnv* /*env*/, jclass /*cls*/, jlong handle) {
+    QObject* obj = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_handleMutex);
+        auto it = g_handles.find(static_cast<int64_t>(handle));
+        if (it == g_handles.end()) {
+            return;  // 已销毁或从未注册
+        }
+        auto oit = g_javaOwned.find(static_cast<int64_t>(handle));
+        if (oit == g_javaOwned.end() || !oit->second) {
+            return;  // 归 Qt 管理（父/布局接管），不回收
+        }
+        obj = static_cast<QObject*>(it->second);
+        g_handles.erase(it);
+        g_javaOwned.erase(oit);
+    }
+    if (obj != nullptr && g_app != nullptr) {
+        // Cleaner 线程不是 GUI 线程：排队到事件循环中删除（destroyed 时注册表自动注销）
+        QMetaObject::invokeMethod(g_app, [obj]() { delete obj; }, Qt::QueuedConnection);
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -165,20 +274,23 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSchedule(JNIEnv* env, j
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jlong JNICALL Java_org_jqt_JQtWindow_nativeCreate(JNIEnv* env, jobject thiz, jstring title, jint width, jint height) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
     const char* utf = env->GetStringUTFChars(title, nullptr);
     JQtWindowShell* win = new JQtWindowShell();
     win->setWindowTitle(QString::fromUtf8(utf));
     win->resize(static_cast<int>(width), static_cast<int>(height));
     env->ReleaseStringUTFChars(title, utf);
 
-    // 持有 Java 窗口对象的全局引用，供窗口事件回调使用（进程退出时统一清理，不手动删除）
+    // 持有 Java 窗口对象的全局引用，供窗口事件回调使用（JVM 退出时统一清理）
     jobject gRef = env->NewGlobalRef(thiz);
     win->onClose = [gRef]() {
         JNIEnv* e = callbackEnv();
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleClose", "()V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid);
+            JQT_CALL_VOID(e, gRef, mid);
         }
     };
     win->onResized = [gRef](int w, int h) {
@@ -186,7 +298,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtWindow_nativeCreate(JNIEnv* env, jobject
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleResized", "(II)V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid, static_cast<jint>(w), static_cast<jint>(h));
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(w), static_cast<jint>(h));
         }
     };
     win->onMoved = [gRef](int x, int y) {
@@ -194,38 +306,60 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtWindow_nativeCreate(JNIEnv* env, jobject
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleMoved", "(II)V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid, static_cast<jint>(x), static_cast<jint>(y));
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(x), static_cast<jint>(y));
         }
     };
 
-    return reinterpret_cast<jlong>(win);
+    return registerHandle(win, /*javaOwned=*/true);
 }
 
-JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeShow(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
-    reinterpret_cast<QWidget*>(handle)->show();
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeShow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    widget->show();
 }
 
-JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeHide(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
-    reinterpret_cast<QWidget*>(handle)->hide();
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeHide(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    widget->hide();
 }
 
-JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeResize(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jint width, jint height) {
-    reinterpret_cast<QWidget*>(handle)->resize(static_cast<int>(width), static_cast<int>(height));
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeResize(JNIEnv* env, jobject /*thiz*/, jlong handle, jint width, jint height) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    widget->resize(static_cast<int>(width), static_cast<int>(height));
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetTitle(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring title) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
     const char* utf = env->GetStringUTFChars(title, nullptr);
-    reinterpret_cast<QWidget*>(handle)->setWindowTitle(QString::fromUtf8(utf));
+    widget->setWindowTitle(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(title, utf);
 }
 
 // 把子控件加入窗口（未设置布局时）：建立 Qt 父子关系并按顺序自动摆放。
-// 设置了布局管理器后应改用布局的 addWidget（Phase 3）。
-JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeAddWidget(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jlong childHandle) {
-    QWidget* parent = reinterpret_cast<QWidget*>(handle);
-    QWidget* child = reinterpret_cast<QWidget*>(childHandle);
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeAddWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, handle));
+    if (parent == nullptr) {
+        return;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return;
+    }
 
     child->setParent(parent);
+    markQtOwned(childHandle);  // 归 Qt 父子关系管理
 
     int n = 0;
     const QList<QObject*>& children = parent->children();
@@ -238,11 +372,18 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeAddWidget(JNIEnv* /*env*/, j
     child->show();
 }
 
-// 设置布局管理器：布局接管子控件的位置与大小（Qt 6 重复设置会删除旧布局）
-JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetLayout(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jlong layoutHandle) {
-    QWidget* widget = reinterpret_cast<QWidget*>(handle);
-    QLayout* layout = reinterpret_cast<QLayout*>(layoutHandle);
+// 设置布局管理器：布局接管子控件排列（Qt 6 重复设置会删除旧布局）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetLayout(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong layoutHandle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QLayout* layout = static_cast<QLayout*>(requireHandle(env, layoutHandle));
+    if (layout == nullptr) {
+        return;
+    }
     widget->setLayout(layout);
+    markQtOwned(layoutHandle);  // 归窗口管理
 }
 
 // ----------------------------------------------------------------------------
@@ -250,19 +391,20 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetLayout(JNIEnv* /*env*/, j
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jlong JNICALL Java_org_jqt_JQtButton_nativeCreate(JNIEnv* env, jobject thiz, jstring text) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
     QPushButton* btn = new QPushButton(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
 
-    // 把 Qt 的四个信号接回 Java 层：C++ lambda → JNI → Java nativeHandleXxx()
-    // gRef 是全局引用，保证 Java 按钮对象不被 GC，lambda 生命周期内始终有效
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(btn, &QPushButton::clicked, [gRef]() {
         JNIEnv* e = callbackEnv();
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleClick", "()V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid);
+            JQT_CALL_VOID(e, gRef, mid);
         }
     });
     QObject::connect(btn, &QPushButton::pressed, [gRef]() {
@@ -270,7 +412,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtButton_nativeCreate(JNIEnv* env, jobject
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandlePressed", "()V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid);
+            JQT_CALL_VOID(e, gRef, mid);
         }
     });
     QObject::connect(btn, &QPushButton::released, [gRef]() {
@@ -278,7 +420,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtButton_nativeCreate(JNIEnv* env, jobject
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleReleased", "()V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid);
+            JQT_CALL_VOID(e, gRef, mid);
         }
     });
     QObject::connect(btn, &QPushButton::toggled, [gRef](bool checked) {
@@ -286,25 +428,37 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtButton_nativeCreate(JNIEnv* env, jobject
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleToggled", "(Z)V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid, static_cast<jboolean>(checked));
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jboolean>(checked));
         }
     });
 
-    return reinterpret_cast<jlong>(btn);
+    return registerHandle(btn, /*javaOwned=*/true);
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtButton_nativeSetText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QPushButton* btn = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (btn == nullptr) {
+        return;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
-    reinterpret_cast<QPushButton*>(handle)->setText(QString::fromUtf8(utf));
+    btn->setText(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
 }
 
-JNIEXPORT void JNICALL Java_org_jqt_JQtButton_nativeSetCheckable(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jboolean checkable) {
-    reinterpret_cast<QPushButton*>(handle)->setCheckable(checkable == JNI_TRUE);
+JNIEXPORT void JNICALL Java_org_jqt_JQtButton_nativeSetCheckable(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean checkable) {
+    QPushButton* btn = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (btn == nullptr) {
+        return;
+    }
+    btn->setCheckable(checkable == JNI_TRUE);
 }
 
-JNIEXPORT void JNICALL Java_org_jqt_JQtButton_nativeSetChecked(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jboolean checked) {
-    reinterpret_cast<QPushButton*>(handle)->setChecked(checked == JNI_TRUE);
+JNIEXPORT void JNICALL Java_org_jqt_JQtButton_nativeSetChecked(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean checked) {
+    QPushButton* btn = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (btn == nullptr) {
+        return;
+    }
+    btn->setChecked(checked == JNI_TRUE);
 }
 
 // ----------------------------------------------------------------------------
@@ -312,44 +466,23 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtButton_nativeSetChecked(JNIEnv* /*env*/, 
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jlong JNICALL Java_org_jqt_JQtLabel_nativeCreate(JNIEnv* env, jobject /*thiz*/, jstring text) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
     QLabel* label = new QLabel(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
-    return reinterpret_cast<jlong>(label);
+    return registerHandle(label, /*javaOwned=*/true);
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtLabel_nativeSetText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QLabel* label = static_cast<QLabel*>(requireHandle(env, handle));
+    if (label == nullptr) {
+        return;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
-    reinterpret_cast<QLabel*>(handle)->setText(QString::fromUtf8(utf));
+    label->setText(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
-}
-
-// ----------------------------------------------------------------------------
-// JQtLayout / JQtVBoxLayout / JQtHBoxLayout：布局管理器（Phase 3）
-// ----------------------------------------------------------------------------
-
-JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeAddWidget(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jlong childHandle) {
-    QBoxLayout* layout = reinterpret_cast<QBoxLayout*>(handle);
-    QWidget* child = reinterpret_cast<QWidget*>(childHandle);
-    layout->addWidget(child);
-    child->show();
-}
-
-JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeSetSpacing(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jint spacing) {
-    reinterpret_cast<QBoxLayout*>(handle)->setSpacing(static_cast<int>(spacing));
-}
-
-JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeAddStretch(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jint stretch) {
-    reinterpret_cast<QBoxLayout*>(handle)->addStretch(static_cast<int>(stretch));
-}
-
-JNIEXPORT jlong JNICALL Java_org_jqt_JQtVBoxLayout_nativeCreate(JNIEnv* /*env*/, jobject /*thiz*/) {
-    // 布局对象由窗口 setLayout 后归 Qt 父子关系管理；未设置前由进程退出回收
-    return reinterpret_cast<jlong>(new QVBoxLayout());
-}
-
-JNIEXPORT jlong JNICALL Java_org_jqt_JQtHBoxLayout_nativeCreate(JNIEnv* /*env*/, jobject /*thiz*/) {
-    return reinterpret_cast<jlong>(new QHBoxLayout());
 }
 
 // ----------------------------------------------------------------------------
@@ -357,6 +490,9 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtHBoxLayout_nativeCreate(JNIEnv* /*env*/,
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jlong JNICALL Java_org_jqt_JQtLineEdit_nativeCreate(JNIEnv* env, jobject thiz, jstring text) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
     QLineEdit* edit = new QLineEdit(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
@@ -368,7 +504,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtLineEdit_nativeCreate(JNIEnv* env, jobje
         jmethodID mid = e->GetMethodID(cls, "nativeHandleTextChanged", "(Ljava/lang/String;)V");
         if (mid != nullptr) {
             jstring js = e->NewStringUTF(t.toUtf8().constData());
-            e->CallVoidMethod(gRef, mid, js);
+            JQT_CALL_VOID(e, gRef, mid, js);
             e->DeleteLocalRef(js);
         }
     });
@@ -377,27 +513,39 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtLineEdit_nativeCreate(JNIEnv* env, jobje
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleReturnPressed", "()V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid);
+            JQT_CALL_VOID(e, gRef, mid);
         }
     });
 
-    return reinterpret_cast<jlong>(edit);
+    return registerHandle(edit, /*javaOwned=*/true);
 }
 
 JNIEXPORT jstring JNICALL Java_org_jqt_JQtLineEdit_nativeText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
-    const QString t = reinterpret_cast<QLineEdit*>(handle)->text();
+    QLineEdit* edit = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return nullptr;
+    }
+    const QString t = edit->text();
     return env->NewStringUTF(t.toUtf8().constData());
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtLineEdit_nativeSetText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QLineEdit* edit = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
-    reinterpret_cast<QLineEdit*>(handle)->setText(QString::fromUtf8(utf));
+    edit->setText(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtLineEdit_nativeSetPlaceholderText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QLineEdit* edit = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
-    reinterpret_cast<QLineEdit*>(handle)->setPlaceholderText(QString::fromUtf8(utf));
+    edit->setPlaceholderText(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
 }
 
@@ -406,6 +554,9 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtLineEdit_nativeSetPlaceholderText(JNIEnv*
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jlong JNICALL Java_org_jqt_JQtComboBox_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
     QComboBox* combo = new QComboBox();
 
     jobject gRef = env->NewGlobalRef(thiz);
@@ -414,30 +565,46 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtComboBox_nativeCreate(JNIEnv* env, jobje
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleCurrentIndexChanged", "(I)V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid, static_cast<jint>(index));
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(index));
         }
     });
 
-    return reinterpret_cast<jlong>(combo);
+    return registerHandle(combo, /*javaOwned=*/true);
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtComboBox_nativeAddItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QComboBox* combo = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (combo == nullptr) {
+        return;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
-    reinterpret_cast<QComboBox*>(handle)->addItem(QString::fromUtf8(utf));
+    combo->addItem(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
 }
 
-JNIEXPORT jint JNICALL Java_org_jqt_JQtComboBox_nativeCurrentIndex(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
-    return static_cast<jint>(reinterpret_cast<QComboBox*>(handle)->currentIndex());
+JNIEXPORT jint JNICALL Java_org_jqt_JQtComboBox_nativeCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* combo = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (combo == nullptr) {
+        return -1;
+    }
+    return static_cast<jint>(combo->currentIndex());
 }
 
 JNIEXPORT jstring JNICALL Java_org_jqt_JQtComboBox_nativeCurrentText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
-    const QString t = reinterpret_cast<QComboBox*>(handle)->currentText();
+    QComboBox* combo = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (combo == nullptr) {
+        return nullptr;
+    }
+    const QString t = combo->currentText();
     return env->NewStringUTF(t.toUtf8().constData());
 }
 
-JNIEXPORT void JNICALL Java_org_jqt_JQtComboBox_nativeSetCurrentIndex(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jint index) {
-    reinterpret_cast<QComboBox*>(handle)->setCurrentIndex(static_cast<int>(index));
+JNIEXPORT void JNICALL Java_org_jqt_JQtComboBox_nativeSetCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle, jint index) {
+    QComboBox* combo = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (combo == nullptr) {
+        return;
+    }
+    combo->setCurrentIndex(static_cast<int>(index));
 }
 
 // ----------------------------------------------------------------------------
@@ -445,6 +612,9 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtComboBox_nativeSetCurrentIndex(JNIEnv* /*
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jlong JNICALL Java_org_jqt_JQtListWidget_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
     QListWidget* list = new QListWidget();
 
     jobject gRef = env->NewGlobalRef(thiz);
@@ -454,7 +624,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtListWidget_nativeCreate(JNIEnv* env, job
         jmethodID mid = e->GetMethodID(cls, "nativeHandleItemClicked", "(I)V");
         if (mid != nullptr) {
             int row = (item != nullptr) ? list->row(item) : -1;
-            e->CallVoidMethod(gRef, mid, static_cast<jint>(row));
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(row));
         }
     });
     QObject::connect(list, &QListWidget::currentRowChanged, [gRef](int row) {
@@ -462,19 +632,76 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtListWidget_nativeCreate(JNIEnv* env, job
         jclass cls = e->GetObjectClass(gRef);
         jmethodID mid = e->GetMethodID(cls, "nativeHandleCurrentRowChanged", "(I)V");
         if (mid != nullptr) {
-            e->CallVoidMethod(gRef, mid, static_cast<jint>(row));
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(row));
         }
     });
 
-    return reinterpret_cast<jlong>(list);
+    return registerHandle(list, /*javaOwned=*/true);
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtListWidget_nativeAddItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QListWidget* list = static_cast<QListWidget*>(requireHandle(env, handle));
+    if (list == nullptr) {
+        return;
+    }
     const char* utf = env->GetStringUTFChars(text, nullptr);
-    reinterpret_cast<QListWidget*>(handle)->addItem(QString::fromUtf8(utf));
+    list->addItem(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
 }
 
-JNIEXPORT jint JNICALL Java_org_jqt_JQtListWidget_nativeCurrentRow(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
-    return static_cast<jint>(reinterpret_cast<QListWidget*>(handle)->currentRow());
+JNIEXPORT jint JNICALL Java_org_jqt_JQtListWidget_nativeCurrentRow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QListWidget* list = static_cast<QListWidget*>(requireHandle(env, handle));
+    if (list == nullptr) {
+        return -1;
+    }
+    return static_cast<jint>(list->currentRow());
+}
+
+// ----------------------------------------------------------------------------
+// JQtLayout / JQtVBoxLayout / JQtHBoxLayout：布局管理器
+// ----------------------------------------------------------------------------
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeAddWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle) {
+    QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
+    if (layout == nullptr) {
+        return;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return;
+    }
+    layout->addWidget(child);
+    markQtOwned(childHandle);  // 布局加入后归 Qt 管理（最终 reparent 到窗口）
+    child->show();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeSetSpacing(JNIEnv* env, jobject /*thiz*/, jlong handle, jint spacing) {
+    QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
+    if (layout == nullptr) {
+        return;
+    }
+    layout->setSpacing(static_cast<int>(spacing));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeAddStretch(JNIEnv* env, jobject /*thiz*/, jlong handle, jint stretch) {
+    QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
+    if (layout == nullptr) {
+        return;
+    }
+    layout->addStretch(static_cast<int>(stretch));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtVBoxLayout_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    // 未 setLayout 前归 Java 管理（Cleaner 回收）；setLayout 后 markQtOwned
+    return registerHandle(new QVBoxLayout(), /*javaOwned=*/true);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtHBoxLayout_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    return registerHandle(new QHBoxLayout(), /*javaOwned=*/true);
 }

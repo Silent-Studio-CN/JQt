@@ -30,7 +30,7 @@
 | Phase 2 | 信号槽（点击/按下/释放/勾选、窗口事件、退出前回调） | ✅ 完成 |
 | Phase 3 | 布局管理器（QVBoxLayout / QHBoxLayout + Stretch） | ✅ 完成 |
 | Phase 4 | 更多控件（QLineEdit / QComboBox / QListWidget） | ✅ 完成 |
-| Phase 5 | 内存管理优化、异常处理 | ⬜ 未开始 |
+| Phase 5 | 内存管理优化、异常处理 | ✅ 完成（句柄注册表 + Cleaner 回收 + 悬垂保护） |
 | Phase 6 | Windows / Linux 跨平台编译 | ⬜ 未开始（Windows 已通） |
 | Phase 7 | Alpha 发布 | ⬜ 未开始 |
 
@@ -109,10 +109,17 @@ app.exec();                     // 阻塞，最后一个窗口关闭后返回
 ```
 
 要点：
-- Java 对象通过 `long nativeHandle` 持有 C++ 对象指针
+- Java 对象通过 `long nativeHandle` 持有 C++ 对象句柄
 - C++ 侧通过 `NewGlobalRef` 持有 Java 对象引用（防止 GC）
 - 回调必然发生在 GUI 主线程（Qt 信号线程），该线程已附加 JVM，无需额外同步
 - 控件内存由 Qt 父子关系管理：父窗口销毁时自动销毁子控件
+
+**内存管理（Phase 5）**：
+- 句柄注册表：自增 ID（不复用），Qt 对象 `destroyed` 时自动注销
+- 所有权模型：`addWidget`/`setLayout` 后归 Qt 管理；否则由 Java `Cleaner` 回收（GUI 线程安全删除）
+- 悬垂保护：调用已销毁对象 → `IllegalStateException`，不再 native 崩溃
+- 防护：未创建 `JQtApplication` 就建控件 → `IllegalStateException`
+- 可手动 `dispose()` 提前释放；`isDisposed()` 查询状态
 
 ### 发布形态（目标）
 
@@ -167,7 +174,7 @@ JQt 采用 **JQt Source License v1.0（JSL-1.0）** 分层授权（详见 `LICEN
 | Phase 2 | Signals & slots (click/press/release/toggle, window events, aboutToQuit) | ✅ Done |
 | Phase 3 | Layout managers (QVBoxLayout / QHBoxLayout + stretch) | ✅ Done |
 | Phase 4 | More widgets (QLineEdit / QComboBox / QListWidget) | ✅ Done |
-| Phase 5 | Memory management & exception handling | ⬜ Not started |
+| Phase 5 | Memory management & exception handling | ✅ Done (handle registry + Cleaner + dangling guard) |
 | Phase 6 | Cross-platform builds (Windows / Linux) | ⬜ Not started (Windows works) |
 | Phase 7 | Alpha release | ⬜ Not started |
 
@@ -246,10 +253,17 @@ User clicks the button
 ```
 
 Key points:
-- Java objects hold C++ object pointers via `long nativeHandle`
+- Java objects hold C++ object handles via `long nativeHandle`
 - The C++ side holds Java object references via `NewGlobalRef` (prevents GC)
 - Callbacks always occur on the GUI main thread (Qt signal thread), which is already attached to the JVM — no extra synchronization needed
 - Widget memory is managed by the Qt parent-child relationship: children are destroyed when the parent is destroyed
+
+**Memory management (Phase 5)**:
+- Handle registry: incrementing IDs (never reused); auto-unregistered on Qt `destroyed`
+- Ownership model: after `addWidget`/`setLayout` objects belong to Qt; otherwise reclaimed by the Java `Cleaner` (GUI-thread safe delete)
+- Dangling guard: calling a destroyed object throws `IllegalStateException` instead of a native crash
+- Guard: creating widgets before `JQtApplication` throws `IllegalStateException`
+- Manual `dispose()` for early release; `isDisposed()` to query state
 
 ### Distribution Target
 

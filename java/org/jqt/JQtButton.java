@@ -30,6 +30,7 @@ public class JQtButton extends JQtWidget {
 
     public JQtButton(String text) {
         nativeHandle = nativeCreate(text);
+        registerCleaner();
     }
 
     private native long nativeCreate(String text);

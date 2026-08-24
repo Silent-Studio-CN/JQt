@@ -26,6 +26,7 @@ public class JQtListWidget extends JQtWidget {
 
     public JQtListWidget() {
         nativeHandle = nativeCreate();
+        registerCleaner();
     }
 
     private native long nativeCreate();

@@ -26,6 +26,7 @@ public class JQtLineEdit extends JQtWidget {
 
     public JQtLineEdit(String text) {
         nativeHandle = nativeCreate(text);
+        registerCleaner();
     }
 
     private native long nativeCreate(String text);

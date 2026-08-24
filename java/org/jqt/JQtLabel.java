@@ -13,6 +13,7 @@ public class JQtLabel extends JQtWidget {
 
     public JQtLabel(String text) {
         nativeHandle = nativeCreate(text);
+        registerCleaner();
     }
 
     private native long nativeCreate(String text);
