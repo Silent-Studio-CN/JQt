@@ -29,7 +29,7 @@
 | Phase 1 | QApplication / QWidget / QPushButton / QLabel | ✅ 完成 |
 | Phase 2 | 信号槽（点击/按下/释放/勾选、窗口事件、退出前回调） | ✅ 完成 |
 | Phase 3 | 布局管理器（QVBoxLayout / QHBoxLayout + Stretch） | ✅ 完成 |
-| Phase 4 | 更多控件（QLineEdit / QComboBox / QListWidget） | ⬜ 未开始 |
+| Phase 4 | 更多控件（QLineEdit / QComboBox / QListWidget） | ✅ 完成 |
 | Phase 5 | 内存管理优化、异常处理 | ⬜ 未开始 |
 | Phase 6 | Windows / Linux 跨平台编译 | ⬜ 未开始（Windows 已通） |
 | Phase 7 | Alpha 发布 | ⬜ 未开始 |
@@ -47,6 +47,9 @@ JQt - Dev/
 │   ├── JQtLayout.java       # 布局基类（addWidget/setSpacing/addStretch）
 │   ├── JQtVBoxLayout.java   # 垂直布局（QVBoxLayout）
 │   ├── JQtHBoxLayout.java   # 水平布局（QHBoxLayout）
+│   ├── JQtLineEdit.java     # 输入框（onTextChanged/onReturnPressed）
+│   ├── JQtComboBox.java     # 下拉框（addItem/onCurrentIndexChanged）
+│   ├── JQtListWidget.java   # 列表（addItem/onItemClicked）
 │   └── JQtDemo.java         # 演示程序
 ├── native/
 │   ├── jqt_bridge.cpp       # JNI 胶水层（C++ 包装层）
@@ -163,7 +166,7 @@ JQt 采用 **JQt Source License v1.0（JSL-1.0）** 分层授权（详见 `LICEN
 | Phase 1 | QApplication / QWidget / QPushButton / QLabel | ✅ Done |
 | Phase 2 | Signals & slots (click/press/release/toggle, window events, aboutToQuit) | ✅ Done |
 | Phase 3 | Layout managers (QVBoxLayout / QHBoxLayout + stretch) | ✅ Done |
-| Phase 4 | More widgets (QLineEdit / QComboBox / QListWidget) | ⬜ Not started |
+| Phase 4 | More widgets (QLineEdit / QComboBox / QListWidget) | ✅ Done |
 | Phase 5 | Memory management & exception handling | ⬜ Not started |
 | Phase 6 | Cross-platform builds (Windows / Linux) | ⬜ Not started (Windows works) |
 | Phase 7 | Alpha release | ⬜ Not started |
@@ -181,6 +184,9 @@ JQt - Dev/
 │   ├── JQtLayout.java       # layout base (addWidget/setSpacing/addStretch)
 │   ├── JQtVBoxLayout.java   # vertical layout (QVBoxLayout)
 │   ├── JQtHBoxLayout.java   # horizontal layout (QHBoxLayout)
+│   ├── JQtLineEdit.java     # line edit (onTextChanged/onReturnPressed)
+│   ├── JQtComboBox.java     # combo box (addItem/onCurrentIndexChanged)
+│   ├── JQtListWidget.java   # list widget (addItem/onItemClicked)
 │   └── JQtDemo.java         # demo program
 ├── native/
 │   ├── jqt_bridge.cpp       # JNI bridge (C++ wrapper layer)

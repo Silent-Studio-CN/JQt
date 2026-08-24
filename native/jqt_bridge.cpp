@@ -21,9 +21,12 @@
 #include <QApplication>
 #include <QBoxLayout>
 #include <QCloseEvent>
+#include <QComboBox>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLayout>
+#include <QLineEdit>
+#include <QListWidget>
 #include <QMoveEvent>
 #include <QPushButton>
 #include <QResizeEvent>
@@ -40,6 +43,9 @@
 #include "generated/org_jqt_JQtLayout.h"
 #include "generated/org_jqt_JQtVBoxLayout.h"
 #include "generated/org_jqt_JQtHBoxLayout.h"
+#include "generated/org_jqt_JQtLineEdit.h"
+#include "generated/org_jqt_JQtComboBox.h"
+#include "generated/org_jqt_JQtListWidget.h"
 
 // ----------------------------------------------------------------------------
 // 全局状态
@@ -344,4 +350,131 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtVBoxLayout_nativeCreate(JNIEnv* /*env*/,
 
 JNIEXPORT jlong JNICALL Java_org_jqt_JQtHBoxLayout_nativeCreate(JNIEnv* /*env*/, jobject /*thiz*/) {
     return reinterpret_cast<jlong>(new QHBoxLayout());
+}
+
+// ----------------------------------------------------------------------------
+// JQtLineEdit：QLineEdit 的封装（textChanged / returnPressed 信号）
+// ----------------------------------------------------------------------------
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtLineEdit_nativeCreate(JNIEnv* env, jobject thiz, jstring text) {
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    QLineEdit* edit = new QLineEdit(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(edit, &QLineEdit::textChanged, [gRef](const QString& t) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleTextChanged", "(Ljava/lang/String;)V");
+        if (mid != nullptr) {
+            jstring js = e->NewStringUTF(t.toUtf8().constData());
+            e->CallVoidMethod(gRef, mid, js);
+            e->DeleteLocalRef(js);
+        }
+    });
+    QObject::connect(edit, &QLineEdit::returnPressed, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleReturnPressed", "()V");
+        if (mid != nullptr) {
+            e->CallVoidMethod(gRef, mid);
+        }
+    });
+
+    return reinterpret_cast<jlong>(edit);
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_JQtLineEdit_nativeText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    const QString t = reinterpret_cast<QLineEdit*>(handle)->text();
+    return env->NewStringUTF(t.toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtLineEdit_nativeSetText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    reinterpret_cast<QLineEdit*>(handle)->setText(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtLineEdit_nativeSetPlaceholderText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    reinterpret_cast<QLineEdit*>(handle)->setPlaceholderText(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+// ----------------------------------------------------------------------------
+// JQtComboBox：QComboBox 的封装（currentIndexChanged 信号）
+// ----------------------------------------------------------------------------
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtComboBox_nativeCreate(JNIEnv* env, jobject thiz) {
+    QComboBox* combo = new QComboBox();
+
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(combo, &QComboBox::currentIndexChanged, [gRef](int index) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleCurrentIndexChanged", "(I)V");
+        if (mid != nullptr) {
+            e->CallVoidMethod(gRef, mid, static_cast<jint>(index));
+        }
+    });
+
+    return reinterpret_cast<jlong>(combo);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtComboBox_nativeAddItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    reinterpret_cast<QComboBox*>(handle)->addItem(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtComboBox_nativeCurrentIndex(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
+    return static_cast<jint>(reinterpret_cast<QComboBox*>(handle)->currentIndex());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_JQtComboBox_nativeCurrentText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    const QString t = reinterpret_cast<QComboBox*>(handle)->currentText();
+    return env->NewStringUTF(t.toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtComboBox_nativeSetCurrentIndex(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle, jint index) {
+    reinterpret_cast<QComboBox*>(handle)->setCurrentIndex(static_cast<int>(index));
+}
+
+// ----------------------------------------------------------------------------
+// JQtListWidget：QListWidget 的封装（itemClicked / currentRowChanged 信号）
+// ----------------------------------------------------------------------------
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtListWidget_nativeCreate(JNIEnv* env, jobject thiz) {
+    QListWidget* list = new QListWidget();
+
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(list, &QListWidget::itemClicked, [gRef, list](QListWidgetItem* item) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleItemClicked", "(I)V");
+        if (mid != nullptr) {
+            int row = (item != nullptr) ? list->row(item) : -1;
+            e->CallVoidMethod(gRef, mid, static_cast<jint>(row));
+        }
+    });
+    QObject::connect(list, &QListWidget::currentRowChanged, [gRef](int row) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleCurrentRowChanged", "(I)V");
+        if (mid != nullptr) {
+            e->CallVoidMethod(gRef, mid, static_cast<jint>(row));
+        }
+    });
+
+    return reinterpret_cast<jlong>(list);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtListWidget_nativeAddItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    reinterpret_cast<QListWidget*>(handle)->addItem(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtListWidget_nativeCurrentRow(JNIEnv* /*env*/, jobject /*thiz*/, jlong handle) {
+    return static_cast<jint>(reinterpret_cast<QListWidget*>(handle)->currentRow());
 }

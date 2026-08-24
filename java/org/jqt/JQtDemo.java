@@ -7,7 +7,7 @@
 package org.jqt;
 
 /**
- * JQt Phase 0-3 演示程序：布局管理器 + 信号槽补全。
+ * JQt Phase 0-4 演示程序：布局 + 信号槽 + 常用控件。
  * <p>
  * 运行方式：{@code .\run.ps1}
  * 自动化演示：{@code .\run.ps1 -AutoClose 5000}（5 秒后自动关闭）
@@ -20,29 +20,60 @@ public class JQtDemo {
         JQtApplication app = new JQtApplication();
         app.onAboutToQuit(() -> System.out.println("[JQt] aboutToQuit 信号触发（应用即将退出）"));
 
-        JQtWindow window = new JQtWindow("JQt Phase 2+3 演示", 640, 480);
-        JQtLabel label = new JQtLabel("JQt 布局 + 信号槽演示");
+        JQtWindow window = new JQtWindow("JQt Phase 4 演示", 720, 600);
+        JQtLabel label = new JQtLabel("JQt 控件 + 布局 + 信号槽演示");
+        JQtLineEdit edit = new JQtLineEdit("");
+        JQtComboBox combo = new JQtComboBox();
+        JQtListWidget list = new JQtListWidget();
         JQtButton clickBtn = new JQtButton("点击我（clicked/pressed/released）");
         JQtButton checkBtn = new JQtButton("开关按钮（toggled）");
         checkBtn.setCheckable(true);
 
-        // ---- Phase 2：信号槽（均可注册多个监听器）----
-        clickBtn.onClick(() -> {
-            System.out.println("[JQt] ✅ clicked 信号（C++ → JNI → Java）");
-            label.setText("已点击！clicked 信号触发");
+        // ---- 输入框（Phase 4）----
+        edit.setPlaceholderText("输入文字，回车确认...");
+        // 自动化演示 textChanged：2 秒后程序化填充文本（-Djqt.demoAutoEdit=0 关闭）
+        if (Long.getLong("jqt.demoAutoEdit", 1L) > 0) {
+            app.schedule(() -> edit.setText("JQt 自动填充（textChanged）"), 2000);
+            // 2.5 秒后程序化切换下拉框选项（验证 currentIndexChanged）
+            app.schedule(() -> combo.setCurrentIndex(1), 2500);
+        }
+        edit.onTextChanged(text -> System.out.println("[JQt] textChanged → " + text));
+        edit.onReturnPressed(() -> {
+            System.out.println("[JQt] returnPressed：确认输入 '" + edit.text() + "'");
+            label.setText("已输入：" + edit.text());
         });
+
+        // ---- 下拉框（Phase 4）----
+        combo.addItem("主题：深色");
+        combo.addItem("主题：浅色");
+        combo.addItem("主题：跟随系统");
+        combo.onCurrentIndexChanged(index ->
+                System.out.println("[JQt] currentIndexChanged → " + index + " (" + combo.currentText() + ")"));
+
+        // ---- 列表（Phase 4）----
+        list.addItem("列表项 1");
+        list.addItem("列表项 2");
+        list.addItem("列表项 3");
+        list.onItemClicked(row -> System.out.println("[JQt] itemClicked → 第 " + row + " 行"));
+
+        // ---- 按钮信号（Phase 2）----
+        clickBtn.onClick(() -> System.out.println("[JQt] ✅ clicked 信号"));
         clickBtn.onPressed(() -> System.out.println("[JQt] pressed 信号"));
         clickBtn.onReleased(() -> System.out.println("[JQt] released 信号"));
         checkBtn.onToggled(checked -> System.out.println("[JQt] toggled 信号，选中状态 = " + checked));
 
+        // ---- 窗口事件（Phase 2）----
         window.onResized((w, h) -> System.out.println("[JQt] window resized → " + w + "x" + h));
         window.onMoved((x, y) -> System.out.println("[JQt] window moved → " + x + "," + y));
         window.onClose(() -> System.out.println("[JQt] window close 事件"));
 
-        // ---- Phase 3：布局管理器 ----
+        // ---- 布局（Phase 3）----
         JQtVBoxLayout vbox = new JQtVBoxLayout();
-        vbox.setSpacing(12);
+        vbox.setSpacing(10);
         vbox.addWidget(label);
+        vbox.addWidget(edit);
+        vbox.addWidget(combo);
+        vbox.addWidget(list);
         vbox.addWidget(clickBtn);
         vbox.addWidget(checkBtn);
         vbox.addStretch(1);
@@ -59,8 +90,8 @@ public class JQtDemo {
             if (Long.getLong("jqt.demoResize", 1L) > 0) {
                 // 1 秒后演示 resize 事件（Qt 定时器 → Java 回调）
                 app.schedule(() -> {
-                    System.out.println("[JQt] 定时器触发：resize 到 800x500");
-                    window.resize(800, 500);
+                    System.out.println("[JQt] 定时器触发：resize 到 800x640");
+                    window.resize(800, 640);
                 }, 1000);
             }
             app.scheduleQuit(autoClose);
