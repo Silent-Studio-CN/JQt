@@ -72,25 +72,40 @@ jobs:
       - name: Install Qt 6.11.2 + MinGW 13.1 via aqtinstall
         run: |
           pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.11.2 win64_mingw --outputdir D:/Qt --archives qtbase
-          python -m aqt install-tool windows desktop tools_mingw1310 --outputdir D:/Qt
+          python -m aqt install-qt windows desktop 6.11.2 win64_mingw --outputdir C:/Qt --archives qtbase
+          python -m aqt install-tool windows desktop tools_mingw1310 --outputdir C:/Qt
 
       - name: Locate Qt kit and MinGW
         shell: pwsh
         run: |
-          # aqt 的实际输出位置可能因版本而异：全盘定位 qmake.exe
-          $kit = Get-ChildItem "C:/Qt", "D:/Qt" -Recurse -Depth 5 -Filter "qmake.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          # 候选路径优先（快），再递归兜底；工作目录也查（防 aqt 输出到 cwd）
+          $candidates = @(
+            "C:/Qt/6.11.2/mingw_64/bin/qmake.exe",
+            "D:/Qt/6.11.2/mingw_64/bin/qmake.exe",
+            "$env:GITHUB_WORKSPACE/6.11.2/mingw_64/bin/qmake.exe"
+          )
+          $kit = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
           if (-not $kit) {
-            Write-Host "qmake.exe NOT FOUND - dumping C:/Qt and D:/Qt:"
-            Get-ChildItem "C:/Qt", "D:/Qt" -Recurse -Depth 3 -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
+            $kit = Get-ChildItem "C:/Qt", "D:/Qt", "$env:GITHUB_WORKSPACE" -Recurse -Depth 5 -Filter "qmake.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          if (-not $kit) {
+            Write-Host "qmake.exe NOT FOUND - dumping likely roots:"
+            Get-ChildItem "C:/Qt", "D:/Qt", "$env:GITHUB_WORKSPACE" -Recurse -Depth 3 -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
             throw "qmake.exe not found after aqtinstall"
           }
-          $qtRoot = Split-Path (Split-Path $kit.FullName)
-          Write-Host "QTROOT=$qtRoot (qmake: $($kit.FullName))"
+          $qtRoot = Split-Path (Split-Path $kit)
+          Write-Host "QTROOT=$qtRoot (qmake: $kit)"
           "QTROOT=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
-          $gpp = Get-ChildItem "C:/Qt/Tools", "D:/Qt/Tools" -Recurse -Depth 4 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          $gppCandidates = @(
+            "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
+            "D:/Qt/Tools/mingw1310_64/bin/g++.exe"
+          )
+          $gpp = $gppCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if (-not $gpp) {
+            $gpp = Get-ChildItem "C:/Qt/Tools", "D:/Qt/Tools" -Recurse -Depth 4 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
           if ($gpp) {
-            $mingw = Split-Path (Split-Path $gpp.FullName)
+            $mingw = Split-Path (Split-Path $gpp)
             Write-Host "MINGW=$mingw"
             "MINGW=$mingw" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
           } else {
@@ -151,7 +166,7 @@ jobs:
         run: |
           python3 -m venv /tmp/aqt-venv
           /tmp/aqt-venv/bin/pip install aqtinstall
-          /tmp/aqt-venv/bin/python -m aqt install-qt mac desktop 6.11.2 macos --outputdir $HOME/Qt --archives qtbase
+          /tmp/aqt-venv/bin/python -m aqt install-qt mac desktop 6.11.2 macos --outputdir $HOME/Qt --archives qt_base
 
       - name: Locate Qt for macOS
         run: |
