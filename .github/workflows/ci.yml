@@ -45,12 +45,25 @@ jobs:
           rm -rf /tmp/qt7z /tmp/qtbase.7z /tmp/icu.7z
           test -f /opt/6.11.2/gcc_64/bin/qmake || (echo "qmake missing"; find /opt/6.11.2 -maxdepth 3 -type d | head -20; exit 1)
 
-      - name: Build libjqt.so
+      - name: Install Qt 6.8.3 (aqt, old repo layout)
+        run: |
+          pip install "aqtinstall==3.2.*"
+          printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
+          python3 -m aqt -c /tmp/aqt.ini install-qt linux desktop 6.8.3 gcc_64 --outputdir /opt/Qt683 --archives qtbase
+          test -f /opt/Qt683/6.8.3/gcc_64/bin/qmake || exit 1
+
+      - name: Build libjqt.so (Qt 6.8.3)
         run: |
           chmod +x build-linux.sh
-          QT_BASE=/opt/6.11.2/gcc_64 ./build-linux.sh
+          QT_BASE=/opt/Qt683/6.8.3/gcc_64 ./build-linux.sh
+          mv lib/libjqt.so lib/libjqt-6.8.3.so
 
-      - name: Smoke test (offscreen, headless)
+      - name: Build libjqt.so (Qt 6.11.2)
+        run: |
+          QT_BASE=/opt/6.11.2/gcc_64 ./build-linux.sh
+          mv lib/libjqt.so lib/libjqt-6.11.2.so
+
+      - name: Smoke test (Qt 6.11.2, offscreen)
         timeout-minutes: 4
         run: |
           chmod +x run-linux.sh
@@ -78,7 +91,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: libjqt-linux-x64
-          path: lib/libjqt.so
+          path: lib/libjqt-*.so
   # ================= Windows (install-qt-action Qt + MinGW) =================
   windows:
     name: Windows x64
@@ -170,10 +183,21 @@ jobs:
           /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.11.2 clang_64 --outputdir $HOME/Qt
           test -f "$HOME/Qt/6.11.2/macos/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
 
-      - name: Build libjqt.dylib
+      - name: Install Qt 6.8.3 for macOS (clang_64)
+        run: |
+          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.8.3 clang_64 --outputdir $HOME/Qt683
+          test -f "$HOME/Qt683/6.8.3/macos/lib/QtWidgets.framework/Headers/QWidget" || exit 1
+
+      - name: Build libjqt.dylib (Qt 6.8.3)
         run: |
           chmod +x build-macos.sh
+          QT_BASE="$HOME/Qt683/6.8.3/macos" ./build-macos.sh
+          mv lib/libjqt.dylib lib/libjqt-6.8.3.dylib
+
+      - name: Build libjqt.dylib (Qt 6.11.2)
+        run: |
           QT_BASE="$HOME/Qt/6.11.2/macos" ./build-macos.sh
+          mv lib/libjqt.dylib lib/libjqt-6.11.2.dylib
 
       - name: Smoke test (offscreen, headless)
         run: |
@@ -184,7 +208,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: libjqt-macos-x64
-          path: lib/libjqt.dylib
+          path: lib/libjqt-*.dylib
 
   # ================= Release package (jar + 3 platform libs + docs) =================
   release-package:
@@ -216,9 +240,11 @@ jobs:
         run: |
           VERSION=$(cat VERSION)
           mkdir -p dist/native
-          cp artifacts/libjqt-linux-x64/libjqt.so dist/native/
-          cp artifacts/jqt-windows-x64/jqt.dll dist/native/
-          cp artifacts/libjqt-macos-x64/libjqt.dylib dist/native/
+          cp artifacts/libjqt-linux-x64/libjqt-6.11.2.so dist/native/libjqt-linux-6.11.2.so
+          cp artifacts/libjqt-linux-x64/libjqt-6.8.3.so dist/native/libjqt-linux-6.8.3.so
+          cp artifacts/jqt-windows-x64/jqt.dll dist/native/jqt-windows-6.8.3.dll
+          cp artifacts/libjqt-macos-x64/libjqt-6.11.2.dylib dist/native/libjqt-macos-6.11.2.dylib
+          cp artifacts/libjqt-macos-x64/libjqt-6.8.3.dylib dist/native/libjqt-macos-6.8.3.dylib
           cp README.md LICENSE.md LICENSE LGPL-3.0.txt THIRD-PARTY-NOTICES.md CHANGELOG.md VERSION dist/
           cp docs/getting-started.md dist/
           ls -la dist dist/native
