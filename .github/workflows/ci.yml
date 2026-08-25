@@ -69,11 +69,8 @@ jobs:
       - name: Configure aqt (skip checksum verification)
         shell: pwsh
         run: |
-          $cfg = @"
-[mirrors]
-trusted_mirrors = https://download.qt.io
-"@
-          Set-Content -Path "D:/aqt.ini" -Value $cfg -Encoding ascii
+          Set-Content -Path "D:/aqt.ini" -Value "[mirrors]" -Encoding ascii
+          Add-Content -Path "D:/aqt.ini" -Value "trusted_mirrors = https://download.qt.io"
 
       - name: Install Qt 6.11.2 + MinGW 13.1
         shell: pwsh
