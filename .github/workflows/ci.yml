@@ -76,7 +76,13 @@ jobs:
         shell: pwsh
         run: |
           pip install aqtinstall
-          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.11.2 win64_mingw --outputdir C:/Qt --archives qtbase
+          Write-Host "=== Updates.xml probe ==="
+          curl.exe -s -o NUL -w 'HTTP %{http_code}\n' "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6112/qt6_6112/Updates.xml"
+          Write-Host "=== install-qt (with config) ==="
+          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.11.2 win64_mingw --outputdir C:/Qt --archives qtbase *> aqt_qt.log
+          Write-Host "install-qt exit=$LASTEXITCODE"
+          Get-Content aqt_qt.log -Tail 12
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m aqt -c D:/aqt.ini install-tool windows desktop tools_mingw1310 --outputdir C:/Qt
           if (-not (Test-Path "C:/Qt/6.11.2/mingw_64/bin/qmake.exe")) { throw "qmake.exe missing after aqt install" }
 
@@ -137,17 +143,17 @@ jobs:
           /tmp/aqt-venv/bin/pip install aqtinstall
           printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
           /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.11.2 clang_64 --outputdir $HOME/Qt
-          test -f "$HOME/Qt/6.11.2/clang_64/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
+          test -f "$HOME/Qt/6.11.2/macos/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
 
       - name: Build libjqt.dylib
         run: |
           chmod +x build-macos.sh
-          QT_BASE="$HOME/Qt/6.11.2/clang_64" ./build-macos.sh
+          QT_BASE="$HOME/Qt/6.11.2/macos" ./build-macos.sh
 
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
-          QT_BASE="$HOME/Qt/6.11.2/clang_64"
+          QT_BASE="$HOME/Qt/6.11.2/macos"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
       - name: Upload artifact
         uses: actions/upload-artifact@v4
