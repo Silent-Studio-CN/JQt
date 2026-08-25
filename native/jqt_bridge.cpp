@@ -44,6 +44,8 @@
 #include <QVariantAnimation>
 #include <QCloseEvent>
 #include <QComboBox>
+#include <QEnterEvent>
+#include <QParallelAnimationGroup>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLayout>
@@ -64,6 +66,8 @@
 #include <unordered_map>
 
 #include "generated/org_jqt_JQtApplication.h"
+#include "generated/org_jqt_JQtAnimations.h"
+#include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_JQtWidget.h"
 #include "generated/org_jqt_JQtWindow.h"
 #include "generated/org_jqt_JQtButton.h"
@@ -784,6 +788,64 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetObjectName(JNIEnv* env, j
 }
 
 // ----------------------------------------------------------------------------
+// Fluent 按钮：QPushButton + 悬停高亮过渡动画（clean-room 独立实现）
+// 150ms OutCubic 高亮叠加层（白色 8.5%），Fluent 公开动效规范参数。
+// ----------------------------------------------------------------------------
+static bool g_hoverEnabled = true;
+
+class JQtButtonWidget : public QPushButton {
+public:
+    explicit JQtButtonWidget(const QString& text) : QPushButton(text) {
+        m_hoverAnim = new QVariantAnimation(this);
+        m_hoverAnim->setDuration(150);
+        m_hoverAnim->setEasingCurve(QEasingCurve::OutCubic);
+        QObject::connect(m_hoverAnim, &QVariantAnimation::valueChanged, this,
+                         [this](const QVariant& v) {
+                             m_hover = v.toDouble();
+                             update();
+                         });
+    }
+
+protected:
+    void enterEvent(QEnterEvent* event) override {
+        QPushButton::enterEvent(event);
+        if (g_hoverEnabled && isEnabled() && !isDown()) {
+            startHover(1.0);
+        }
+    }
+
+    void leaveEvent(QEvent* event) override {
+        QPushButton::leaveEvent(event);
+        if (g_hoverEnabled) {
+            startHover(0.0);
+        }
+    }
+
+    void paintEvent(QPaintEvent* event) override {
+        QPushButton::paintEvent(event);
+        if (m_hover > 0.01 && !isDown()) {
+            QPainter p(this);
+            p.setRenderHint(QPainter::Antialiasing);
+            const QColor overlay(255, 255, 255, qRound(255.0 * 0.085 * m_hover));
+            QPainterPath path;
+            path.addRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), 5.0, 5.0);
+            p.fillPath(path, overlay);
+        }
+    }
+
+private:
+    void startHover(double target) {
+        m_hoverAnim->stop();
+        m_hoverAnim->setStartValue(m_hover);
+        m_hoverAnim->setEndValue(target);
+        m_hoverAnim->start();
+    }
+
+    double m_hover = 0.0;
+    QVariantAnimation* m_hoverAnim;
+};
+
+// ----------------------------------------------------------------------------
 // JQtButton：QPushButton 的封装（clicked/pressed/released/toggled 信号）
 // ----------------------------------------------------------------------------
 
@@ -792,7 +854,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtButton_nativeCreate(JNIEnv* env, jobject
         return 0;
     }
     const char* utf = env->GetStringUTFChars(text, nullptr);
-    QPushButton* btn = new QPushButton(QString::fromUtf8(utf));
+    QPushButton* btn = new JQtButtonWidget(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
 
     jobject gRef = env->NewGlobalRef(thiz);
@@ -1429,6 +1491,141 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeRegisterAnimation(JNIEnv* en
 }
 
 // ----------------------------------------------------------------------------
+// JQtPivot：Fluent 选项卡（文本项 + 底部滑动指示器，200ms OutCubic）
+// 纯自绘（clean-room 独立实现）；文本色跟随 palette，指示器用 Highlight 色。
+// ----------------------------------------------------------------------------
+
+class JQtPivotWidget : public QWidget {
+public:
+    explicit JQtPivotWidget() {
+        setFixedHeight(36);
+        setCursor(Qt::PointingHandCursor);
+        m_anim = new QVariantAnimation(this);
+        m_anim->setDuration(200);
+        m_anim->setEasingCurve(QEasingCurve::OutCubic);
+        QObject::connect(m_anim, &QVariantAnimation::valueChanged, this,
+                         [this](const QVariant& v) {
+                             m_indicatorX = v.toDouble();
+                             update();
+                         });
+    }
+
+    std::function<void(int)> onChanged;
+
+    void addItem(const QString& text) {
+        m_items.push_back(text);
+        update();
+    }
+
+    int currentIndex() const { return m_current; }
+
+    void setCurrentIndex(int index) {
+        if (index < 0 || index >= static_cast<int>(m_items.size()) || index == m_current) {
+            return;
+        }
+        m_current = index;
+        if (onChanged) {
+            onChanged(index);
+        }
+        const double from = m_indicatorX;
+        const double to = cellWidth() * m_current;
+        m_anim->stop();
+        m_anim->setStartValue(from);
+        m_anim->setEndValue(to);
+        m_anim->start();
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        const int n = static_cast<int>(m_items.size());
+        if (n == 0) {
+            return;
+        }
+        const double cw = cellWidth();
+        const QColor accent = palette().color(QPalette::Highlight);
+        const QColor dim = palette().color(QPalette::Text);
+        QColor dimFaded = dim;
+        dimFaded.setAlpha(160);
+
+        p.setFont(font());
+        for (int i = 0; i < n; ++i) {
+            const QRectF r(i * cw, 0, cw, height());
+            p.setPen(i == m_current ? accent : dimFaded);
+            p.drawText(r, Qt::AlignCenter, m_items[i]);
+        }
+        const double iw = cw * 0.4;
+        const double ix = m_indicatorX + (cw - iw) / 2.0;
+        p.fillRect(QRectF(ix, height() - 3.0, iw, 3.0), accent);
+    }
+
+    void mousePressEvent(QMouseEvent* event) override {
+        if (m_items.empty()) {
+            return;
+        }
+        const int idx = static_cast<int>(event->position().x() / cellWidth());
+        if (idx >= 0 && idx < static_cast<int>(m_items.size())) {
+            setCurrentIndex(idx);
+        }
+    }
+
+private:
+    double cellWidth() const {
+        const int n = static_cast<int>(m_items.size());
+        return n == 0 ? width() : width() / static_cast<double>(n);
+    }
+
+    std::vector<QString> m_items;
+    int m_current = 0;
+    double m_indicatorX = 0.0;
+    QVariantAnimation* m_anim;
+};
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtPivot_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    JQtPivotWidget* pivot = new JQtPivotWidget();
+    jobject gRef = env->NewGlobalRef(thiz);
+    pivot->onChanged = [gRef](int index) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleChanged", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(index));
+        }
+    };
+    return registerHandle(pivot, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtPivot_nativeAddItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    JQtPivotWidget* pivot = static_cast<JQtPivotWidget*>(requireHandle(env, handle));
+    if (pivot == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    pivot->addItem(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtPivot_nativeCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    JQtPivotWidget* pivot = static_cast<JQtPivotWidget*>(requireHandle(env, handle));
+    if (pivot == nullptr) {
+        return 0;
+    }
+    return static_cast<jint>(pivot->currentIndex());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtPivot_nativeSetCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle, jint index) {
+    JQtPivotWidget* pivot = static_cast<JQtPivotWidget*>(requireHandle(env, handle));
+    if (pivot == nullptr) {
+        return;
+    }
+    pivot->setCurrentIndex(static_cast<int>(index));
+}
+
+// ----------------------------------------------------------------------------
 // JQtSwitch：自定义开关控件（轨道 + 滑块 + 位移动画）
 // 纯 paintEvent 绘制（不依赖 QSS 子控件），滑块位置由属性动画驱动。
 // ----------------------------------------------------------------------------
@@ -1656,5 +1853,50 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeFadeOut(JNIEnv* env, jclass 
     anim->setStartValue(1.0);
     anim->setEndValue(0.0);
     anim->setEasingCurve(QEasingCurve::InCubic);
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// ----------------------------------------------------------------------------
+// Fluent 动效库（JQtAnimations）：hover 开关 / 入场 / 退场
+// clean-room 独立实现；视觉参数参考微软 Fluent 公开动效规范。
+// ----------------------------------------------------------------------------
+
+// 全局按钮悬停动画开关（跟随 JQtAnimationTheme）
+JNIEXPORT void JNICALL Java_org_jqt_JQtAnimations_nativeSetHoverEnabled(JNIEnv* /*env*/, jclass /*cls*/, jboolean on) {
+    g_hoverEnabled = (on == JNI_TRUE);
+}
+
+// 控件入场：下方 dy 滑入（纯位移动画）。
+// 注意：不用 QGraphicsOpacityEffect —— QSS 样式化控件 + 透明度特效是 Qt 已知崩溃
+// 组合（渲染样式表时空指针）；Fluent 入场动效以位移为主，淡入由窗口级实现。
+JNIEXPORT void JNICALL Java_org_jqt_JQtAnimations_nativeEntrance(JNIEnv* env, jclass /*cls*/, jlong handle, jint dy, jlong ms, jint easing) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    const QPoint base = widget->pos();
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "pos", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(base + QPoint(0, dy));
+    anim->setEndValue(base);
+    anim->setEasingCurve(static_cast<QEasingCurve::Type>(easing));
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// 控件退场：下移 + 动画结束后隐藏（纯位移，同上规避 effect 崩溃）
+JNIEXPORT void JNICALL Java_org_jqt_JQtAnimations_nativeExit(JNIEnv* env, jclass /*cls*/, jlong handle, jint dy, jlong ms, jint easing) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    const QPoint base = widget->pos();
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "pos", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(base);
+    anim->setEndValue(base + QPoint(0, dy));
+    anim->setEasingCurve(static_cast<QEasingCurve::Type>(easing));
+    QObject::connect(anim, &QPropertyAnimation::finished, widget, [widget]() {
+        widget->hide();
+    });
     anim->start(QAbstractAnimation::DeleteWhenStopped);
 }

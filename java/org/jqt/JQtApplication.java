@@ -35,6 +35,26 @@ public class JQtApplication {
 
     private final List<Runnable> onAboutToQuitHandlers = new ArrayList<>();
 
+    /** 全局动画主题（动效节奏 + 默认缓动）。 */
+    private static volatile JQtAnimationTheme animationTheme = JQtAnimationTheme.DEFAULT;
+
+    /**
+     * 设置全局动画主题：所有 JQt 动效（hover / 入场 / 退场 / pivot 指示器）
+     * 的时长按 {@link JQtAnimationTheme#speed} 缩放，默认缓动取 {@link JQtAnimationTheme#easing}。
+     * <p>
+     * 预设：{@link JQtAnimationTheme#DEFAULT} / {@link JQtAnimationTheme#FAST} /
+     * {@link JQtAnimationTheme#RELAXED} / {@link JQtAnimationTheme#OFF}（禁用全部动效）。
+     */
+    public static void setAnimationTheme(JQtAnimationTheme theme) {
+        animationTheme = (theme == null) ? JQtAnimationTheme.DEFAULT : theme;
+        JQtAnimations.setHoverEnabled(animationTheme.enabled());
+    }
+
+    /** 当前全局动画主题。 */
+    public static JQtAnimationTheme getAnimationTheme() {
+        return animationTheme;
+    }
+
     /**
      * 创建 QApplication（整个进程只能有一个）。
      * 若 JVM 参数包含 {@code -Djqt.lightMode=true}，自动切换浅色配色。
