@@ -183,10 +183,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Temurin windows-aarch64 尚无 JDK 26，用 23（源码为 Java 17 语法，兼容）
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '26'
+          java-version: '23'
 
       - name: Install Qt 6.8.3 win64_arm64 (manual 7z, parse Updates.xml)
         shell: pwsh
