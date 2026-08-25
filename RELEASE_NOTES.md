@@ -51,5 +51,6 @@ java -Djava.library.path=lib -cp jqt-0.1.0-alpha.jar Hello
 
 ## 已知限制
 
-- 控件集为 Phase 4 规模（菜单/树/滚动区在第二批发货，见 docs/api-tiering.md）
-- Windows CI 使用 Qt 6.8.3（官方仓库缺 Windows 6.11.2 在线包；Windows 6.11.2 由本机构建提供）
+- 控件集为 Phase 4 规模（菜单/树/滚动区在后续版本发布，见 docs/api-tiering.md）
+- Windows 的 6.11.2 与 6.8.3 完整包功能一致；若你的环境需要 Qt 6.8.3 LTS 请选择 `jqt-windows-6.8.3-full.zip`
+- 详细使用方法见 docs/user-guide.md，已实现 API 见 docs/api-implemented.md
