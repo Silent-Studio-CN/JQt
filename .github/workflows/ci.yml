@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 on:
   push:
@@ -30,7 +30,6 @@ jobs:
         timeout-minutes: 4
         run: |
           chmod +x run-linux.sh
-          java -version 2>&1
           set +e
           QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -AutoClose 2000 > smoke_out.txt 2>&1
           CODE=$?
@@ -41,10 +40,8 @@ jobs:
             ls -la "$PWD/lib"
             ldd "$PWD/lib/libjqt.so" 2>&1 | head -20
             find /usr/lib -name "*qoffscreen*" 2>/dev/null
-            # 若超时挂起，抓 Java 线程栈
             JPID=$(pgrep -f "org.jqt.JQtDemo" | head -1)
             if [ -n "$JPID" ]; then
-              echo "=== jstack of $JPID ==="
               jcmd "$JPID" Thread.print 2>&1 | head -80
               kill -9 "$JPID"
             fi
@@ -57,7 +54,7 @@ jobs:
           name: libjqt-linux-x64
           path: lib/libjqt.so
 
-  # ================= Windows (aqtinstall Qt + MinGW) =================
+  # ================= Windows (install-qt-action Qt + MinGW) =================
   windows:
     name: Windows x64
     runs-on: windows-latest
@@ -69,53 +66,26 @@ jobs:
           distribution: temurin
           java-version: '26'
 
-      - name: Install Qt 6.11.2 + MinGW 13.1 via aqtinstall
-        run: |
-          pip install aqtinstall
-          python -m aqt install-qt windows desktop 6.11.2 win64_mingw --outputdir C:/Qt --archives qtbase
-          python -m aqt install-tool windows desktop tools_mingw1310 --outputdir C:/Qt
-
-      - name: Locate Qt kit and MinGW
-        shell: pwsh
-        run: |
-          # 候选路径优先（快），再递归兜底；工作目录也查（防 aqt 输出到 cwd）
-          $candidates = @(
-            "C:/Qt/6.11.2/mingw_64/bin/qmake.exe",
-            "D:/Qt/6.11.2/mingw_64/bin/qmake.exe",
-            "$env:GITHUB_WORKSPACE/6.11.2/mingw_64/bin/qmake.exe"
-          )
-          $kit = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $kit) {
-            $kit = Get-ChildItem "C:/Qt", "D:/Qt", "$env:GITHUB_WORKSPACE" -Recurse -Depth 5 -Filter "qmake.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-          }
-          if (-not $kit) {
-            Write-Host "qmake.exe NOT FOUND - dumping likely roots:"
-            Get-ChildItem "C:/Qt", "D:/Qt", "$env:GITHUB_WORKSPACE" -Recurse -Depth 3 -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName
-            throw "qmake.exe not found after aqtinstall"
-          }
-          $qtRoot = Split-Path (Split-Path $kit)
-          Write-Host "QTROOT=$qtRoot (qmake: $kit)"
-          "QTROOT=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
-          $gppCandidates = @(
-            "C:/Qt/Tools/mingw1310_64/bin/g++.exe",
-            "D:/Qt/Tools/mingw1310_64/bin/g++.exe"
-          )
-          $gpp = $gppCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-          if (-not $gpp) {
-            $gpp = Get-ChildItem "C:/Qt/Tools", "D:/Qt/Tools" -Recurse -Depth 4 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-          }
-          if ($gpp) {
-            $mingw = Split-Path (Split-Path $gpp)
-            Write-Host "MINGW=$mingw"
-            "MINGW=$mingw" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
-          } else {
-            Write-Host "g++.exe not found under C:/Qt/Tools or D:/Qt/Tools"
-          }
+      - name: Install Qt 6.11.2 + MinGW 13.1
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_mingw'
+          dir: 'C:/Qt'
+          archives: 'qtbase'
+          tools: 'tools_mingw1310'
 
       - name: Build jqt.dll
         shell: pwsh
         run: |
-          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "$env:QTROOT" -Mingw "$env:MINGW" *> build_log.txt
+          $qtRoot = Split-Path $env:Qt6_DIR
+          Write-Host "Qt6_DIR=$env:Qt6_DIR QTROOT=$qtRoot"
+          $gpp = Get-ChildItem (Join-Path (Split-Path $qtRoot) "Tools") -Recurse -Depth 3 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          $mingw = if ($gpp) { Split-Path (Split-Path $gpp.FullName) } else { "C:/Qt/Tools/mingw1310_64" }
+          Write-Host "MINGW=$mingw"
+          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot $qtRoot -Mingw $mingw *> build_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== BUILD FAILED, tail of build_log.txt ==="
             Get-Content build_log.txt -Tail 60
@@ -126,7 +96,7 @@ jobs:
         shell: pwsh
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
-          $env:QT_PLUGIN_PATH = "$env:QTROOT/mingw_64/plugins"
+          $env:QT_PLUGIN_PATH = "$env:Qt6_DIR/plugins"
           powershell -File run.ps1 -AutoClose 2000 *> smoke_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
@@ -142,7 +112,6 @@ jobs:
           path: |
             build_log.txt
             smoke_log.txt
-            inspect_log.txt
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -150,7 +119,7 @@ jobs:
           name: jqt-windows-x64
           path: lib/
 
-  # ================= macOS (aqtinstall Qt) =================
+  # ================= macOS (install-qt-action) =================
   macos:
     name: macOS x64
     runs-on: macos-14
@@ -162,28 +131,24 @@ jobs:
           distribution: temurin
           java-version: '26'
 
-      - name: Install Qt 6.11.2 for macOS via aqtinstall
-        run: |
-          python3 -m venv /tmp/aqt-venv
-          /tmp/aqt-venv/bin/pip install aqtinstall
-          /tmp/aqt-venv/bin/python -m aqt install-qt mac desktop 6.11.2 macos --outputdir $HOME/Qt --archives qt_base
-
-      - name: Locate Qt for macOS
-        run: |
-          QTBASE=$(find "$HOME/Qt" -maxdepth 4 -type d -name "macos" | head -1)
-          if [ -z "$QTBASE" ]; then find "$HOME/Qt" -maxdepth 3 -type d | head -20; exit 1; fi
-          echo "QTBASE=$QTBASE"
-          echo "QTBASE=$QTBASE" >> $GITHUB_ENV
+      - name: Install Qt 6.11.2 for macOS
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.2'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'macos'
+          archives: 'qt_base'
 
       - name: Build libjqt.dylib
         run: |
           chmod +x build-macos.sh
-          QT_BASE="$QTBASE" ./build-macos.sh
+          QT_BASE="$Qt6_DIR" ./build-macos.sh
 
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
-          QT_BASE="$QTBASE"
+          QT_BASE="$Qt6_DIR"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
 
       - name: Upload artifact
