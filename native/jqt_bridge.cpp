@@ -33,6 +33,7 @@
 #endif
 
 #include <QApplication>
+#include <QAbstractNativeEventFilter>
 #include <QBoxLayout>
 #include <QCheckBox>
 #include <QFrame>
@@ -175,6 +176,44 @@ static QApplication* requireApp(JNIEnv* env) {
 // 窗口壳：拦截 closeEvent / resizeEvent / moveEvent，回调给 Java 层
 // ----------------------------------------------------------------------------
 
+#ifdef _WIN32
+// 全局 POINTER→鼠标合成过滤器：覆盖所有 Qt 顶层窗口
+// （含 QComboBox 弹层等 Qt 内部创建的独立窗口——弹层里点不动就是缺这个）。
+class JQtPointerFilter : public QAbstractNativeEventFilter {
+public:
+    bool nativeEventFilter(const QByteArray& eventType, void* message, qintptr* result) override {
+        Q_UNUSED(eventType);
+        Q_UNUSED(result);
+        MSG* msg = static_cast<MSG*>(message);
+        if (msg->hwnd == nullptr) {
+            return false;
+        }
+        if (msg->message == WM_POINTERDOWN || msg->message == WM_POINTERUP
+            || msg->message == WM_POINTERUPDATE) {
+            POINTER_INFO pi;
+            if (GetPointerInfo(GET_POINTERID_WPARAM(msg->wParam), &pi)) {
+                POINT pt = pi.ptPixelLocation;   // 物理屏幕坐标
+                if (ScreenToClient(msg->hwnd, &pt)) {
+                    const LONG lp = MAKELPARAM(pt.x, pt.y);
+                    if (msg->message == WM_POINTERDOWN) {
+                        fprintf(stderr, "[JQt] POINTERDOWN at client (%d,%d) -> mouse\n",
+                                static_cast<int>(pt.x), static_cast<int>(pt.y));
+                        PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
+                    } else if (msg->message == WM_POINTERUP) {
+                        fprintf(stderr, "[JQt] POINTERUP\n");
+                        PostMessageW(msg->hwnd, WM_LBUTTONUP, 0, lp);
+                    } else {
+                        PostMessageW(msg->hwnd, WM_MOUSEMOVE, 0, lp);
+                    }
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+};
+#endif
+
 class JQtWindowShell : public QWidget {
 public:
     std::function<void()> onClose;
@@ -292,31 +331,6 @@ protected:
             // 无边框：客户区铺满（避免系统边框占位）
             *result = 0;
             return true;
-        } else if (msg->message == WM_POINTERDOWN || msg->message == WM_POINTERUP
-                   || msg->message == WM_POINTERUPDATE) {
-            // 触摸/触笔（HiteVision 一体机等）→ 显式合成鼠标消息。
-            // Qt 默认的触摸→鼠标合成在无边框窗口上不可靠（按钮/自绘控件收不到点击），
-            // 这里在消息层兜底：单点触摸转发为 WM_LBUTTONDOWN/UP/MOUSEMOVE。
-            // 注意：坐标必须取自 POINTER 消息本身（GetPointerInfo），
-            // 不能用 GetCursorPos —— 环境可能注入固定位置的幽灵光标，会丢失真实触摸位置。
-            POINTER_INFO pi;
-            if (GetPointerInfo(GET_POINTERID_WPARAM(msg->wParam), &pi)) {
-                POINT pt = pi.ptPixelLocation;   // 物理屏幕坐标
-                if (ScreenToClient(msg->hwnd, &pt)) {
-                    const LONG lp = MAKELPARAM(pt.x, pt.y);
-                    if (msg->message == WM_POINTERDOWN) {
-                        fprintf(stderr, "[JQt] POINTERDOWN at client (%d,%d) -> mouse\n",
-                                static_cast<int>(pt.x), static_cast<int>(pt.y));
-                        PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
-                    } else if (msg->message == WM_POINTERUP) {
-                        fprintf(stderr, "[JQt] POINTERUP\n");
-                        PostMessageW(msg->hwnd, WM_LBUTTONUP, 0, lp);
-                    } else {
-                        PostMessageW(msg->hwnd, WM_MOUSEMOVE, 0, lp);
-                    }
-                }
-            }
-            return true;
         }
 
         return QWidget::nativeEvent(eventType, message, result);
@@ -367,6 +381,11 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtApplication_nativeCreateApp(JNIEnv* env,
         static char arg0[] = "jqt";
         static char* argv[] = { arg0, nullptr };
         g_app = new QApplication(argc, argv);
+#ifdef _WIN32
+        // 全局触摸→鼠标合成（覆盖所有窗口含弹层）
+        static JQtPointerFilter g_pointerFilter;
+        g_app->installNativeEventFilter(&g_pointerFilter);
+#endif
     }
 
     // aboutToQuit 信号 → Java nativeHandleAboutToQuit()；gRef 由 JVM 退出时统一清理

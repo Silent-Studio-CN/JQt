@@ -38,6 +38,7 @@ public class JQtTitleBar extends JQtWidget {
     public JQtTitleBar(String title, JQtWindow window) {
         nativeHandle = nativeCreate();
         registerCleaner();
+        setObjectName("titleBar");   // QSS: QFrame#titleBar 可单独定制标题栏背景
 
         JQtHBoxLayout bar = new JQtHBoxLayout();
         bar.setSpacing(4);
