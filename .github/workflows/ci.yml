@@ -153,7 +153,7 @@ jobs:
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
-          QT_BASE="$HOME/Qt/6.8.3/macos"
+          export QT_BASE="$HOME/Qt/6.8.3/macos"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
       - name: Upload artifact
         uses: actions/upload-artifact@v4
