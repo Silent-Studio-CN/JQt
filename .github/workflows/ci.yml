@@ -45,12 +45,24 @@ jobs:
           rm -rf /tmp/qt7z /tmp/qtbase.7z /tmp/icu.7z
           test -f /opt/6.11.2/gcc_64/bin/qmake || (echo "qmake missing"; find /opt/6.11.2 -maxdepth 3 -type d | head -20; exit 1)
 
-      - name: Install Qt 6.8.3 (aqt, old repo layout)
+      - name: Install Qt 6.8.3 (manual 7z - aqt cannot parse Linux XML)
         run: |
-          pip install "aqtinstall==3.2.*"
-          printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
-          python3 -m aqt -c /tmp/aqt.ini install-qt linux desktop 6.8.3 gcc_64 --outputdir /opt/Qt683 --archives qtbase
-          test -f /opt/Qt683/6.8.3/gcc_64/bin/qmake || exit 1
+          mkdir -p /tmp/qt683/qt /tmp/qt683/icu
+          curl -fsSL -o /tmp/qtbase683.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_683/qt6_683/qt.qt6.683.linux_gcc_64/6.8.3-0-202503201345qtbase-Linux-RHEL_8_10-GCC-Linux-RHEL_8_10-X86_64.7z"
+          curl -fsSL -o /tmp/icu683.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_683/qt6_683/qt.qt6.683.linux_gcc_64/6.8.3-0-202503201345icu-linux-Rhel8.6-x86_64.7z"
+          7z x -y -o/tmp/qt683/qt /tmp/qtbase683.7z > /dev/null
+          7z x -y -o/tmp/qt683/icu /tmp/icu683.7z > /dev/null
+          sudo mkdir -p /opt/Qt683/6.8.3
+          if [ -f /tmp/qt683/qt/bin/qmake ]; then
+            sudo mv /tmp/qt683/qt /opt/Qt683/6.8.3/gcc_64
+          else
+            GCC_DIR=$(find /tmp/qt683/qt -type d -name gcc_64 | head -1)
+            if [ -z "$GCC_DIR" ]; then echo "gcc_64 NOT FOUND"; exit 1; fi
+            sudo mv "$GCC_DIR" /opt/Qt683/6.8.3/gcc_64
+          fi
+          find /tmp/qt683/icu -name "libicu*" -exec sudo cp {} /opt/Qt683/6.8.3/gcc_64/lib/ \;
+          rm -rf /tmp/qt683 /tmp/qtbase683.7z /tmp/icu683.7z
+          test -f /opt/Qt683/6.8.3/gcc_64/bin/qmake || { echo "qmake missing"; exit 1; }
 
       - name: Build libjqt.so (Qt 6.8.3)
         run: |
