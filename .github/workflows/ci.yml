@@ -130,7 +130,7 @@ jobs:
           distribution: temurin
           java-version: '26'
 
-      - name: Install Qt 6.11.2 for macOS (arch: clang_64)
+      - name: Install Qt 6.11.2 for macOS (clang_64)
         run: |
           python3 -m venv /tmp/aqt-venv
           /tmp/aqt-venv/bin/pip install aqtinstall
