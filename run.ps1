@@ -11,13 +11,13 @@
 
 param(
     [int]$AutoClose = -1,
-    [string]$Class = "org.jqt.JQtDemo"
+    [string]$Class = "org.jqt.JQtDemo",
+    [string]$JDK = "C:\Program Files\Java\latest\jdk-26"
 )
 
 $ErrorActionPreference = "Stop"
 
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
-$JDK  = "C:\Program Files\Java\latest\jdk-26"
 $Lib  = Join-Path $Root "lib"
 $Out  = Join-Path $Root "out"
 

@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -104,7 +104,7 @@ jobs:
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_PLUGIN_PATH = "C:/Qt/6.8.3/mingw_64/plugins"
-          powershell -File run.ps1 -AutoClose 2000 *> smoke_log.txt
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -AutoClose 2000 *> smoke_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
             Get-Content smoke_log.txt -Tail 40

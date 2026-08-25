@@ -28,6 +28,8 @@ QT_BASE="${QT_BASE:?set QT_BASE to the Qt for macOS install dir}"
 QTLIB="$QT_BASE/lib"
 QTINC="$QTLIB/QtWidgets.framework/Headers $QTLIB/QtGui.framework/Headers $QTLIB/QtCore.framework/Headers"
 
+echo "QTINC=$QTINC"
+ls "$QTLIB/QtGui.framework/Headers/qevent.h" && echo "QtGui headers OK"
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
