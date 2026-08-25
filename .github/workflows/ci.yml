@@ -103,7 +103,8 @@ jobs:
             Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
             Get-Content smoke_log.txt -Tail 40
             exit $LASTEXITCODE
-          }      - name: Upload build log on failure
+          }
+      - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
