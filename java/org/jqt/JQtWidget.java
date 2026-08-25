@@ -125,6 +125,9 @@ public abstract class JQtWidget {
     /** 注册 Java 侧完成回调（JQtAnimation 构造时调用）。 */
     static native void nativeRegisterAnimation(long animHandle, JQtAnimation anim);
 
+    /** 自动化命中测试：向窗口发送真实 WM_LBUTTONDOWN/UP 点击目标控件中心（诊断用）。 */
+    static native void nativePostClickAt(long targetHandle, long winHandle);
+
     /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
      * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。
