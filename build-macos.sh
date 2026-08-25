@@ -25,8 +25,8 @@ rm -f "$ROOT/.jqt_sources.txt"
 
 # ---- 2. Qt layout ----
 QT_BASE="${QT_BASE:?set QT_BASE to the Qt for macOS install dir}"
-QTINC="$QT_BASE/lib/QtWidgets.framework/Headers"
 QTLIB="$QT_BASE/lib"
+QTINC="$QTLIB/QtWidgets.framework/Headers $QTLIB/QtGui.framework/Headers $QTLIB/QtCore.framework/Headers"
 
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \

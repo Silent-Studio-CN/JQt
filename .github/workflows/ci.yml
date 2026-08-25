@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 on:
   push:
@@ -72,19 +72,19 @@ jobs:
           Set-Content -Path "D:/aqt.ini" -Value "[mirrors]" -Encoding ascii
           Add-Content -Path "D:/aqt.ini" -Value "trusted_mirrors = https://download.qt.io"
 
-      - name: Install Qt 6.11.2 + MinGW 13.1
+      - name: Install Qt 6.8.3 + MinGW 13.1
         shell: pwsh
         run: |
           pip install aqtinstall
           Write-Host "=== Updates.xml probe ==="
           curl.exe -s -o NUL -w 'HTTP %{http_code}\n' "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6112/qt6_6112/Updates.xml"
           Write-Host "=== install-qt (with config) ==="
-          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.11.2 win64_mingw --outputdir C:/Qt --archives qtbase *> aqt_qt.log
+          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_mingw --outputdir C:/Qt --archives qtbase *> aqt_qt.log
           Write-Host "install-qt exit=$LASTEXITCODE"
           Get-Content aqt_qt.log -Tail 12
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python -m aqt -c D:/aqt.ini install-tool windows desktop tools_mingw1310 --outputdir C:/Qt
-          if (-not (Test-Path "C:/Qt/6.11.2/mingw_64/bin/qmake.exe")) { throw "qmake.exe missing after aqt install" }
+          if (-not (Test-Path "C:/Qt/6.8.3/mingw_64/bin/qmake.exe")) { throw "qmake.exe missing after aqt install" }
 
       - name: Build jqt.dll
         shell: pwsh
@@ -92,7 +92,7 @@ jobs:
           $gpp = Get-ChildItem "C:/Qt/Tools" -Recurse -Depth 3 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           $mingw = if ($gpp) { Split-Path (Split-Path $gpp.FullName) } else { "C:/Qt/Tools/mingw1310_64" }
           Write-Host "MINGW=$mingw"
-          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "C:/Qt/6.11.2" -Mingw $mingw *> build_log.txt
+          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "C:/Qt/6.8.3" -Mingw $mingw *> build_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== BUILD FAILED, tail of build_log.txt ==="
             Get-Content build_log.txt -Tail 60
@@ -103,7 +103,7 @@ jobs:
         shell: pwsh
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
-          $env:QT_PLUGIN_PATH = "C:/Qt/6.11.2/mingw_64/plugins"
+          $env:QT_PLUGIN_PATH = "C:/Qt/6.8.3/mingw_64/plugins"
           powershell -File run.ps1 -AutoClose 2000 *> smoke_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
@@ -137,23 +137,23 @@ jobs:
           distribution: temurin
           java-version: '26'
 
-      - name: Install Qt 6.11.2 for macOS (clang_64)
+      - name: Install Qt 6.8.3 for macOS (clang_64)
         run: |
           python3 -m venv /tmp/aqt-venv
           /tmp/aqt-venv/bin/pip install aqtinstall
           printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
-          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.11.2 clang_64 --outputdir $HOME/Qt
-          test -f "$HOME/Qt/6.11.2/macos/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
+          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.8.3 clang_64 --outputdir $HOME/Qt
+          test -f "$HOME/Qt/6.8.3/macos/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
 
       - name: Build libjqt.dylib
         run: |
           chmod +x build-macos.sh
-          QT_BASE="$HOME/Qt/6.11.2/macos" ./build-macos.sh
+          QT_BASE="$HOME/Qt/6.8.3/macos" ./build-macos.sh
 
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
-          QT_BASE="$HOME/Qt/6.11.2/macos"
+          QT_BASE="$HOME/Qt/6.8.3/macos"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
       - name: Upload artifact
         uses: actions/upload-artifact@v4
