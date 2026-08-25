@@ -30,6 +30,21 @@ QTINC="$QTLIB/QtWidgets.framework/Headers $QTLIB/QtGui.framework/Headers $QTLIB/
 
 echo "QTINC=$QTINC"
 ls "$QTLIB/QtGui.framework/Headers/qevent.h" && echo "QtGui headers OK"
+# Qt 6 mac frameworks in 7z may lack extension-less forwarding headers (QCloseEvent etc.)
+# Generate them if missing (Qt's own forwarding header is just: #include "qevent.h")
+echo "==> Ensuring forwarding headers"
+for dir in QtWidgets QtGui QtCore; do
+  H="$QTLIB/$dir.framework/Headers"
+  [ -d "$H" ] || continue
+  for f in "$H"/*.h; do
+    [ -f "$f" ] || continue
+    base=$(basename "$f" .h)
+    if [ ! -f "$H/$base" ]; then
+      echo "#include \"$(basename "$f")\"" > "$H/$base"
+    fi
+  done
+done
+echo "forwarding headers ensured"
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
