@@ -45,9 +45,11 @@ public class JQtQfDemo {
         nav.addItem("设置");
         nav.addItem("关于");
         nav.setStyleSheet("font-size: 14px;");
+        nav.onItemClicked(i -> System.out.println("[Qf] nav item " + i));
 
         // ---- 卡片 1：qf 按钮族 ----
         JQtPanel card1 = new JQtPanel();
+        card1.setObjectName("card");
         JQtVBoxLayout c1 = new JQtVBoxLayout();
         c1.setSpacing(10);
         JQtButton primary = new JQtButton("主按钮");
@@ -65,14 +67,19 @@ public class JQtQfDemo {
 
         // ---- 卡片 2：qf 输入族 ----
         JQtPanel card2 = new JQtPanel();
+        card2.setObjectName("card");
         JQtVBoxLayout c2 = new JQtVBoxLayout();
         c2.setSpacing(10);
         JQtLineEdit edit = new JQtLineEdit("");
         edit.setPlaceholderText("输入内容...");
+        edit.onTextChanged(t -> System.out.println("[Qf] edit: " + t));
         JQtComboBox combo = new JQtComboBox();
         combo.addItem("选项 A");
         combo.addItem("选项 B");
+        combo.addItem("选项 C");
+        combo.onCurrentIndexChanged(i -> System.out.println("[Qf] combo -> " + i));
         JQtCheckBox cb = new JQtCheckBox("启用 qf 复选框");
+        cb.onToggled(on -> System.out.println("[Qf] checkbox = " + on));
         c2.addWidget(edit);
         c2.addWidget(combo);
         c2.addWidget(cb);
@@ -80,6 +87,7 @@ public class JQtQfDemo {
 
         // ---- 卡片 3：开关 + 动画（JQt 自绘开关不受 qf QSS 影响）----
         JQtPanel card3 = new JQtPanel();
+        card3.setObjectName("card");
         JQtVBoxLayout c3 = new JQtVBoxLayout();
         c3.setSpacing(10);
         JQtSwitch sw = new JQtSwitch(true);
