@@ -49,11 +49,15 @@ lib/
 
 **第 3 步**：让程序找到动态库——
 
-- **Windows**：`-Djava.library.path=lib`，且把 `lib` 加入 `PATH`（Qt 运行库在 lib 下）：
+- **Windows**：`-Djava.library.path=lib`，把 `lib` 加入 `PATH`，并**必须**设置平台插件路径：
   ```powershell
   set PATH=%CD%\lib;%PATH%
-  java -Djava.library.path=lib -cp "lib\jqt-0.1.0-alpha.jar;." Hello
+  set QT_QPA_PLATFORM_PLUGIN_PATH=%CD%\lib\platforms
+  java -Djava.library.path=lib --enable-native-access=ALL-UNNAMED -cp "lib\jqt-0.1.0-alpha.jar;." Hello
   ```
+  > ⚠️ **新手必踩**：不设 `QT_QPA_PLATFORM_PLUGIN_PATH` 会报 `Could not find the Qt platform plugin "windows"`——
+  > Java 进程中的 Qt **不会读取**包内的 qt.conf，必须显式指定 `<包目录>\platforms`。
+  > Java 26 建议加 `--enable-native-access=ALL-UNNAMED`（`System::loadLibrary` 在 Java 26 是受限方法，将来会直接拦截）。
 - **Linux**：`-Djava.library.path=lib`，且 `LD_LIBRARY_PATH` 包含 `lib` 与 Qt 库目录：
   ```bash
   export LD_LIBRARY_PATH=$PWD/lib:/usr/lib/x86_64-linux-gnu
@@ -151,7 +155,8 @@ window.setLayout(hbox);
 → 动态库路径没配对：确认 `-Djava.library.path` 指向含 `jqt.dll`（或 `.so`/`.dylib`）的目录。
 
 **Q2：Windows 报错 `Could not find the Qt platform plugin "windows"`**
-→ `PATH` 未包含发布包 `lib` 目录（Qt6*.dll 与平台插件在 `lib\platforms`）。Windows 完整包已内置，把 `lib` 加入 `PATH` 即可。
+→ **必须**设置 `QT_QPA_PLATFORM_PLUGIN_PATH` 指向发布包的 `platforms` 目录（如 `set QT_QPA_PLATFORM_PLUGIN_PATH=%CD%\lib\platforms`）。
+  包内的 qt.conf 在 Java 进程中不生效，只有显式环境变量有效。
 
 **Q3：Linux/macOS 报 Qt 库找不到**
 → 系统需安装 Qt 6 运行库（`sudo apt install libqt6widgets6` 等 / brew install qt），并设置 `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH`。
@@ -164,6 +169,12 @@ window.setLayout(hbox);
 
 **Q6：程序退出前想保存数据？**
 → `app.onAboutToQuit(() -> 保存...)`。
+
+**Q7：Java 26 提示 `WARNING: Restricted method System::loadLibrary`？**
+→ 正常警告。建议运行参数加 `--enable-native-access=ALL-UNNAMED`（Java 26 起 loadLibrary 是受限方法，未来版本会默认拦截）。
+
+**Q8：控制台中文乱码？**
+→ 纯显示问题：运行前执行 `chcp 65001` 切换 UTF-8 代码页即可。
 
 ### 8. 许可提醒
 
@@ -210,11 +221,15 @@ lib/
 
 **Step 3**: let the JVM find the native library —
 
-- **Windows**: `-Djava.library.path=lib` and add `lib` to `PATH`:
+- **Windows**: `-Djava.library.path=lib`, add `lib` to `PATH`, and **must** set the plugin path:
   ```powershell
   set PATH=%CD%\lib;%PATH%
-  java -Djava.library.path=lib -cp "lib\jqt-0.1.0-alpha.jar;." Hello
+  set QT_QPA_PLATFORM_PLUGIN_PATH=%CD%\lib\platforms
+  java -Djava.library.path=lib --enable-native-access=ALL-UNNAMED -cp "lib\jqt-0.1.0-alpha.jar;." Hello
   ```
+  > ⚠️ **Newbie trap**: without `QT_QPA_PLATFORM_PLUGIN_PATH` you get `Could not find the Qt platform plugin "windows"` —
+  > Qt inside a Java process **does not read** the bundled qt.conf; set it to `<pkg>\platforms` explicitly.
+  > On Java 26 add `--enable-native-access=ALL-UNNAMED` (`System::loadLibrary` is restricted and will be blocked).
 - **Linux**: `-Djava.library.path=lib` and `LD_LIBRARY_PATH` includes `lib` + Qt dirs:
   ```bash
   export LD_LIBRARY_PATH=$PWD/lib:/usr/lib/x86_64-linux-gnu
@@ -304,7 +319,7 @@ window.setLayout(hbox);
 
 **Q1: `UnsatisfiedLinkError: no jqt in java.library.path`** — point `-Djava.library.path` at the folder containing `jqt.dll`/`.so`/`.dylib`.
 
-**Q2: Windows `Could not find the Qt platform plugin "windows"`** — add the `lib` folder to `PATH` (Qt6*.dll and `lib\platforms` live there).
+**Q2: Windows `Could not find the Qt platform plugin "windows"`** — you **must** set `QT_QPA_PLATFORM_PLUGIN_PATH` to the package `platforms` folder (e.g. `set QT_QPA_PLATFORM_PLUGIN_PATH=%CD%\lib\platforms`). The bundled qt.conf is ignored inside a Java process.
 
 **Q3: Linux/macOS Qt libs missing** — install Qt 6 runtime (`sudo apt install libqt6widgets6` / `brew install qt`) and set `LD_LIBRARY_PATH`/`DYLD_LIBRARY_PATH`.
 
@@ -313,6 +328,10 @@ window.setLayout(hbox);
 **Q5: Multiple click callbacks?** — yes: `onClick(a); onClick(b);` both fire.
 
 **Q6: Save data before exit?** — `app.onAboutToQuit(() -> save())`.
+
+**Q7: Java 26 warns `Restricted method System::loadLibrary`?** — add `--enable-native-access=ALL-UNNAMED` to the java command (loadLibrary is restricted on Java 26 and will be blocked in future releases).
+
+**Q8: Chinese text garbled in console?** — display-only issue: run `chcp 65001` before launching.
 
 ### 8. License Notes
 
