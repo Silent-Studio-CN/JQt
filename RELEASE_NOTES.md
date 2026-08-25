@@ -7,7 +7,8 @@ JQt 第二个 Alpha —— Fluent 全家桶：开关 / 动画 / 标题栏 / 触�
 | 资产 | 说明 |
 |------|------|
 | `jqt-0.2.0-alpha.jar` | Java API（平台无关） |
-| `jqt-0.2.0-alpha-windows-x64.zip` | Windows 完整包（jar + jqt.dll + Qt 6.11.2 运行时 + 文档） |
+| `jqt-0.2.0-alpha-windows-x64.zip` | Windows x64 完整包（jar + jqt.dll + Qt 6.11.2 运行时 + 文档） |
+| `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 动态库（CI 构建，MSVC + Qt 6.8.3 win64_arm64） |
 
 ## 功能
 
