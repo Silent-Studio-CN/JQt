@@ -31,7 +31,7 @@
 | Phase 3 | 布局管理器（QVBoxLayout / QHBoxLayout + Stretch） | ✅ 完成 |
 | Phase 4 | 更多控件（QLineEdit / QComboBox / QListWidget） | ✅ 完成 |
 | Phase 5 | 内存管理优化、异常处理 | ✅ 完成（句柄注册表 + Cleaner 回收 + 悬垂保护） |
-| Phase 6 | Windows / Linux 跨平台编译 | ⬜ 未开始（Windows 已通） |
+| Phase 6 | 跨平台编译（Windows / Linux / macOS 三平台 CI） | ✅ 完成 |
 | Phase 7 | Alpha 发布 | ⬜ 未开始 |
 
 ### 项目结构
@@ -175,7 +175,7 @@ JQt 采用 **JQt Source License v1.0（JSL-1.0）** 分层授权（详见 `LICEN
 | Phase 3 | Layout managers (QVBoxLayout / QHBoxLayout + stretch) | ✅ Done |
 | Phase 4 | More widgets (QLineEdit / QComboBox / QListWidget) | ✅ Done |
 | Phase 5 | Memory management & exception handling | ✅ Done (handle registry + Cleaner + dangling guard) |
-| Phase 6 | Cross-platform builds (Windows / Linux) | ⬜ Not started (Windows works) |
+| Phase 6 | Cross-platform builds (Windows / Linux / macOS CI matrix) | ✅ Done |
 | Phase 7 | Alpha release | ⬜ Not started |
 
 ### Project Layout
