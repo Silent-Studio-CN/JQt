@@ -29,6 +29,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <dwmapi.h>
+#include <objbase.h>
 #endif
 
 #include <QApplication>
@@ -863,15 +864,85 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtLabel_nativeSetText(JNIEnv* env, jobject 
 }
 
 // ----------------------------------------------------------------------------
+// 触摸键盘（TabTip）支持
+// 无边框窗口下 Windows 的 TSF 焦点检测失效，输入框聚焦时不会自动弹出
+// 屏幕键盘（Qt frameless 已知缺陷）。这里在聚焦/失焦时显式 Toggle TabTip。
+// 仅当系统检测到触摸设备时生效（普通桌面不受影响）。
+// ----------------------------------------------------------------------------
+#ifdef _WIN32
+// MinGW 无 itipinvocation.h：手动声明 ITipInvocation COM 接口
+#define JQT_CLSID_TipInvocation {0x4ce576fa, 0x83dc, 0x4f88, {0x95, 0x1c, 0x9d, 0x07, 0x82, 0xb4, 0xe3, 0x76}}
+#define JQT_IID_ITipInvocation  {0x37c994e7, 0x432b, 0x4834, {0xa2, 0xf7, 0xdc, 0xe1, 0xf1, 0x3b, 0x83, 0x46}}
+
+struct JQtITipInvocation;
+struct JQtITipInvocationVtbl {
+    BEGIN_INTERFACE
+    HRESULT (STDMETHODCALLTYPE* QueryInterface)(JQtITipInvocation*, REFIID, void**) = nullptr;
+    ULONG   (STDMETHODCALLTYPE* AddRef)(JQtITipInvocation*) = nullptr;
+    ULONG   (STDMETHODCALLTYPE* Release)(JQtITipInvocation*) = nullptr;
+    HRESULT (STDMETHODCALLTYPE* Toggle)(JQtITipInvocation*, HWND) = nullptr;
+    END_INTERFACE
+};
+struct JQtITipInvocation {
+    JQtITipInvocationVtbl* lpVtbl;
+};
+
+static bool g_tabtipVisible = false;
+
+static void jqtShowTouchKeyboard(bool show, HWND hwnd) {
+    static const bool hasTouch = []() { return GetSystemMetrics(SM_MAXIMUMTOUCHES) > 0; }();
+    if (!hasTouch) {
+        return;
+    }
+    if (show == g_tabtipVisible) {
+        return;
+    }
+    const HRESULT hrInit = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    JQtITipInvocation* tip = nullptr;
+    const IID clsid = JQT_CLSID_TipInvocation;
+    const IID iid = JQT_IID_ITipInvocation;
+    const HRESULT hr = CoCreateInstance(clsid, nullptr, CLSCTX_INPROC_SERVER,
+                                        iid, reinterpret_cast<void**>(&tip));
+    if (SUCCEEDED(hr) && tip != nullptr && tip->lpVtbl != nullptr && tip->lpVtbl->Toggle != nullptr) {
+        tip->lpVtbl->Toggle(tip, hwnd);
+        tip->lpVtbl->Release(tip);
+        g_tabtipVisible = show;
+    }
+    if (hrInit == S_OK) {
+        CoUninitialize();
+    }
+}
+#endif
+
+// ----------------------------------------------------------------------------
 // JQtLineEdit：QLineEdit 的封装（textChanged / returnPressed 信号）
 // ----------------------------------------------------------------------------
+
+class JQtLineEditWidget : public QLineEdit {
+public:
+    explicit JQtLineEditWidget(const QString& text) : QLineEdit(text) {}
+
+protected:
+    void focusInEvent(QFocusEvent* event) override {
+        QLineEdit::focusInEvent(event);
+#ifdef _WIN32
+        jqtShowTouchKeyboard(true, reinterpret_cast<HWND>(window()->winId()));
+#endif
+    }
+    void focusOutEvent(QFocusEvent* event) override {
+        QLineEdit::focusOutEvent(event);
+#ifdef _WIN32
+        jqtShowTouchKeyboard(false, reinterpret_cast<HWND>(window()->winId()));
+#endif
+    }
+};
 
 JNIEXPORT jlong JNICALL Java_org_jqt_JQtLineEdit_nativeCreate(JNIEnv* env, jobject thiz, jstring text) {
     if (requireApp(env) == nullptr) {
         return 0;
     }
     const char* utf = env->GetStringUTFChars(text, nullptr);
-    QLineEdit* edit = new QLineEdit(QString::fromUtf8(utf));
+    QLineEdit* edit = new JQtLineEditWidget(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
 
     jobject gRef = env->NewGlobalRef(thiz);
