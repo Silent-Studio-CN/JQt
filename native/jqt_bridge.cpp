@@ -228,6 +228,26 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_scheduleQuit(JNIEnv* /*env*/,
     }
 }
 
+// 设置全局样式表（QSS，QApplication::setStyleSheet）
+JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetStyleSheet(JNIEnv* env, jobject /*thiz*/, jstring qss) {
+    if (g_app == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(qss, nullptr);
+    g_app->setStyleSheet(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(qss, utf);
+}
+
+// 切换风格（QApplication::setStyle，如 "Fusion" / "Windows" / "macOS"）
+JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetStyle(JNIEnv* env, jobject /*thiz*/, jstring style) {
+    if (g_app == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(style, nullptr);
+    g_app->setStyle(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(style, utf);
+}
+
 // 在 ms 毫秒后于 GUI 线程执行 Java Runnable（Qt 定时器 → JNI → Runnable.run()）
 JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSchedule(JNIEnv* env, jobject /*thiz*/, jobject task, jlong ms) {
     jobject gTask = env->NewGlobalRef(task);
@@ -267,6 +287,17 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeDispose(JNIEnv* /*env*/, jcl
         // Cleaner 线程不是 GUI 线程：排队到事件循环中删除（destroyed 时注册表自动注销）
         QMetaObject::invokeMethod(g_app, [obj]() { delete obj; }, Qt::QueuedConnection);
     }
+}
+
+// 设置控件级样式表（QSS，QWidget::setStyleSheet；控件与全局样式可叠加）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetStyleSheet(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring qss) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(qss, nullptr);
+    widget->setStyleSheet(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(qss, utf);
 }
 
 // ----------------------------------------------------------------------------

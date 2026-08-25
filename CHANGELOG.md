@@ -22,6 +22,8 @@
   点击 / 按下 / 释放 / 勾选切换 / 文本变化 / 回车 / 选项切换 / 列表点击 / 窗口关闭 / 尺寸变化 / 位置变化 / 退出前回调
 - 布局：JQtVBoxLayout / JQtHBoxLayout（间距、弹性空间）
 - 应用：exec / quit / schedule（Qt 定时器 → Java 回调）/ scheduleQuit
+- 样式：QSS 全局样式表（JQtApplication.setStyleSheet）、控件级 QSS（JQtWidget.setStyleSheet）、
+  风格切换（setStyle("Fusion") 等）
 - 内存管理：句柄注册表（自增 ID）、Qt destroyed 同步注销、所有权模型（Qt vs Java Cleaner）、
   GUI 线程安全回收、悬垂保护（IllegalStateException）
 - 异常处理：未创建 QApplication 保护、JNI 异常清理

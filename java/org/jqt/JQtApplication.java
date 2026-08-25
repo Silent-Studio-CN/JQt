@@ -63,6 +63,29 @@ public class JQtApplication {
     private native void nativeSchedule(Runnable task, long delayMs);
 
     /**
+     * 设置全局样式表（QSS，Qt Style Sheets）。
+     * <p>
+     * 示例：
+     * <pre>
+     * app.setStyleSheet("QPushButton { background: #3c3f41; color: white; }");
+     * </pre>
+     * 语法详见 Qt 文档 "Qt Style Sheets Reference"。
+     */
+    public void setStyleSheet(String qss) {
+        nativeSetStyleSheet(qss);
+    }
+    private native void nativeSetStyleSheet(String qss);
+
+    /**
+     * 切换控件风格（QApplication::setStyle）。
+     * 常见值：{@code "Fusion"}（经典 Qt 扁平风）、{@code "Windows"}、{@code "macOS"}。
+     */
+    public void setStyle(String style) {
+        nativeSetStyle(style);
+    }
+    private native void nativeSetStyle(String style);
+
+    /**
      * 注册退出前回调（对应 Qt 的 aboutToQuit 信号）。
      * 事件循环结束前触发。
      */
