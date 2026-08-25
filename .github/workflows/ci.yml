@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -25,7 +25,7 @@ jobs:
 
       - name: Install Qt 6.11.2 (aqt)
         run: |
-          pip install aqtinstall
+          pip install "aqtinstall==3.2.*"
           printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
           python3 -m aqt -c /tmp/aqt.ini install-qt linux desktop 6.11.2 gcc_64 --outputdir /opt/Qt --archives qtbase
           test -f /opt/Qt/6.11.2/gcc_64/include/QtWidgets/QWidget || (find /opt/Qt -maxdepth 4 -type d | head -20 && exit 1)
