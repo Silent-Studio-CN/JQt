@@ -1,0 +1,1984 @@
+﻿/* ============================================================
+ * qfluentwidgets (zhiyiYo, GPLv3) dark QSS - merged + class-mapped for JQt.
+ * TEST ONLY - not shipped with JQt. Source: PyQt-Fluent-Widgets/_rc/qss/dark
+ * ============================================================
+QFrame, QFrame {
+    background-color: transparent;
+}
+
+StackedWidget[isTransparent=true] {
+    background-color: transparent;
+    border: none;
+}
+
+QFrame>QLabel#titleLabel,
+QFrame>QLabel#titleLabel {
+    background: transparent;
+    font: 13px Microsoft YaHei UI;
+    padding: 0 4px;
+    color: white;
+}
+
+QFrame>QLabel#titleLabel {
+    padding: 0 10px
+}
+
+QFrame>QLabel#titleLabel {
+    padding: 0 5px
+}
+
+QPushButton#titlebarBtn {
+    qproperty-normalColor: white;
+    qproperty-hoverColor: white;
+    qproperty-pressedColor: white;
+    qproperty-normalBackgroundColor: transparent;
+    qproperty-hoverBackgroundColor: rgba(255, 255, 255, 26);
+    qproperty-pressedBackgroundColor: rgba(255, 255, 255, 51);
+}
+
+QPushButton#titlebarBtn {
+    qproperty-normalColor: white;
+    qproperty-normalBackgroundColor: transparent;
+    qproperty-hoverColor: white;
+    qproperty-hoverBackgroundColor: rgba(255, 255, 255, 26);
+    qproperty-pressedColor: white;
+    qproperty-pressedBackgroundColor: rgba(255, 255, 255, 51)
+}
+
+
+QPushButton#titlebarBtn {
+    qproperty-normalColor: white;
+    qproperty-normalBackgroundColor: transparent;
+    qproperty-hoverColor: white;
+    qproperty-hoverBackgroundColor: rgba(255, 255, 255, 26);
+    qproperty-pressedColor: white;
+    qproperty-pressedBackgroundColor: rgba(255, 255, 255, 51)
+}
+
+QPushButton#titlebarClose {
+    qproperty-normalColor: white;
+    qproperty-normalBackgroundColor: transparent;
+    qproperty-hoverColor: white;
+    qproperty-hoverBackgroundColor: rgb(232, 17, 35);
+    qproperty-pressedColor: white;
+    qproperty-pressedBackgroundColor: rgb(241, 112, 122);
+}
+
+StackedWidget {
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-right: none;
+    border-bottom: none;
+    border-top-left-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.0314);
+}
+
+SplitFluentWindow > StackedWidget {
+    border-top-left-radius: 0px;
+    border-top: none;
+}
+
+FluentWindowBase {
+    background-color: transparent;
+}
+
+QListWidget#nav {
+    background-color: rgb(32, 32, 32);
+    border: 1px solid rgb(57, 57, 57);
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+
+QListWidget#nav {
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+
+NavigationPanel[transparent=true] {
+    background-color: transparent;
+}
+
+QScrollArea,
+#scrollWidget {
+    border: none;
+    background-color: transparent;
+}
+
+/* NavigationInterface {
+    background-color: rgb(32, 32, 32);
+} */
+
+QFrame #headerLabel {
+    color: white;
+}
+
+QFrame > #headerView,
+QFrame > #view {
+    background-color: transparent;
+}
+
+QPushButton, ToolButton, QPushButton, QPushButton {
+    background: rgba(255, 255, 255, 0.0605);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    color: white;
+    /* font: 14px Microsoft YaHei UI; */
+    padding: 5px 12px 6px 12px;
+    outline: none;
+}
+
+ToolButton {
+    padding: 5px 9px 6px 8px;
+}
+
+QPushButton[isPlaceholderText=true] {
+    color: rgba(255, 255, 255, 0.6063);
+}
+
+QPushButton[hasIcon=false] {
+    padding: 5px 12px 6px 12px;
+}
+
+QPushButton[hasIcon=true] {
+    padding: 5px 12px 6px 36px;
+}
+
+DropDownToolButton,
+PrimaryDropDownToolButton {
+    padding: 5px 31px 6px 8px;
+}
+
+QPushButton[hasIcon=false],
+QPushButton#primary[hasIcon=false] {
+    padding: 5px 31px 6px 12px;
+}
+
+QPushButton[hasIcon=true],
+QPushButton#primary[hasIcon=true] {
+    padding: 5px 31px 6px 36px;
+}
+
+QPushButton:hover, ToolButton:hover, QPushButton:hover,QPushButton:hover {
+    background: rgba(255, 255, 255, 0.0837);
+}
+
+QPushButton:pressed, ToolButton:pressed, QPushButton:pressed, QPushButton:pressed {
+    color: rgba(255, 255, 255, 0.786);
+    background: rgba(255, 255, 255, 0.0326);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+QPushButton:disabled, ToolButton:disabled, QPushButton:disabled, QPushButton:disabled {
+    color: rgba(255, 255, 255, 0.3628);
+    background: rgba(255, 255, 255, 0.0419);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+#splitPushButton:pressed,
+#splitToolButton:pressed,
+SplitDropButton:pressed {
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+
+QPushButton#primary,
+QPushButton#primary,
+QPushButton:checked,
+QPushButton:checked {
+    color: black;
+    background-color: #009faa;
+    border: 1px solid #28b8c2;
+    border-bottom: 1px solid #48ccd4;
+}
+
+QPushButton#primary:hover,
+QPushButton#primary:hover,
+QPushButton:checked:hover,
+QPushButton:checked:hover {
+    background-color: #008794;
+    border: 1px solid #28b8c2;
+    border-bottom: 1px solid #48ccd4;
+}
+
+QPushButton#primary:pressed,
+QPushButton#primary:pressed,
+QPushButton:checked:pressed,
+QPushButton:checked:pressed {
+    color: rgba(0, 0, 0, 0.63);
+    background-color: #006f7a;
+    border: 1px solid #006f7a;
+}
+
+QPushButton#primary:disabled,
+QPushButton#primary:disabled,
+QPushButton:checked:disabled,
+QPushButton:checked:disabled {
+    color: rgba(255, 255, 255, 0.43);
+    background-color: rgb(52, 52, 52);
+    border: 1px solid rgb(52, 52, 52);
+}
+
+SplitDropButton,
+PrimarySplitDropButton {
+    border-left: none;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
+#splitPushButton,
+#splitToolButton,
+#primarySplitPushButton,
+#primarySplitToolButton {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right-color: rgba(255, 255, 255, 0.08);
+}
+
+#primarySplitPushButton,
+#primarySplitToolButton {
+    border-right-color: #00575f;
+}
+
+#primarySplitPushButton:pressed,
+#primarySplitToolButton:pressed {
+    border-right: 1px solid #48ccd4;
+}
+
+#primarySplitPushButton:disabled,
+#primarySplitToolButton:disabled {
+    border-right: 1px solid rgb(70, 70, 70);
+}
+
+QPushButton#hyperlink {
+    /* font: 14px Microsoft YaHei UI; */
+    padding: 5px 12px 6px 12px;
+    color: #009faa;
+    border: none;
+    border-radius: 6px;
+    background-color: transparent;
+}
+
+QPushButton#hyperlink[hasIcon=false] {
+    padding: 5px 12px 6px 12px;
+}
+
+QPushButton#hyperlink[hasIcon=true] {
+    padding: 5px 12px 6px 36px;
+}
+
+QPushButton#hyperlink:hover {
+    color: #009faa;
+    background-color: rgba(255, 255, 255, 10);
+    border: none;
+}
+
+QPushButton#hyperlink:pressed {
+    color: #008794;
+    background-color: rgba(255, 255, 255, 7);
+    border: none;
+}
+
+QPushButton#hyperlink:disabled {
+    color: rgba(255, 255, 255, 0.43);
+    background-color: transparent;
+    border: none;
+}
+
+RadioButton {
+    min-height: 24px;
+    max-height: 24px;
+    background-color: transparent;
+    font: 14px Microsoft YaHei UI;
+    color: white;
+}
+
+RadioButton::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 11px;
+    border: 2px solid #848484;
+    background-color: transparent;
+    margin-right: 4px;
+}
+
+RadioButton::indicator:hover {
+    background-color: rgba(255, 255, 255, 16);
+}
+
+RadioButton::indicator:pressed {
+    border: 2px solid #434343;
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 rgb(0, 0, 0),
+            stop:0.5 rgb(0, 0, 0),
+            stop:0.6 rgb(43, 42, 42),
+            stop:1 rgb(43, 42, 42));
+}
+
+RadioButton::indicator:checked {
+    height: 22px;
+    width: 22px;
+    border: none;
+    border-radius: 11px;
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 rgb(0, 0, 0),
+            stop:0.5 rgb(0, 0, 0),
+            stop:0.6 #009faa,
+            stop:1 #009faa);
+}
+
+RadioButton::indicator:checked:hover {
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 rgb(0, 0, 0),
+            stop:0.6 rgb(0, 0, 0),
+            stop:0.7 #009faa,
+            stop:1 #009faa);
+}
+
+RadioButton::indicator:checked:pressed {
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 rgb(0, 0, 0),
+            stop:0.5 rgb(0, 0, 0),
+            stop:0.6 #009faa,
+            stop:1 #009faa);
+}
+
+RadioButton:disabled {
+    color: rgba(255, 255, 255, 0.3628);
+}
+
+RadioButton::indicator:disabled {
+    border: 2px solid #646464;
+    background-color: transparent;
+}
+
+RadioButton::indicator:disabled:checked {
+    border: none;
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 rgb(0, 0, 0),
+            stop:0.5 rgb(0, 0, 0),
+            stop:0.6 rgba(255, 255, 255, 0.158),
+            stop:1 rgba(255, 255, 255, 0.158));
+}
+
+TransparentToolButton,
+TransparentToggleToolButton,
+TransparentDropDownToolButton,
+QPushButton#transparent,
+QPushButton#transparent,
+QPushButton#transparent {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    margin: 0;
+}
+
+TransparentToolButton:hover,
+TransparentToggleToolButton:hover,
+TransparentDropDownToolButton:hover,
+QPushButton#transparent:hover,
+QPushButton#transparent:hover,
+QPushButton#transparent:hover {
+    background-color: rgba(255, 255, 255, 9);
+    border: none;
+}
+
+TransparentToolButton:pressed,
+TransparentToggleToolButton:pressed,
+TransparentDropDownToolButton:pressed,
+QPushButton#transparent:pressed,
+QPushButton#transparent:pressed,
+QPushButton#transparent:pressed {
+    background-color: rgba(255, 255, 255, 6);
+    border: none;
+}
+
+TransparentToolButton:disabled,
+TransparentToggleToolButton:disabled,
+TransparentDropDownToolButton:disabled,
+QPushButton#transparent:disabled,
+QPushButton#transparent:disabled,
+QPushButton#transparent:disabled {
+    background-color: transparent;
+    border: none;
+}
+
+QPushButton#pill,
+QPushButton#pill:hover,
+QPushButton#pill:pressed,
+QPushButton#pill:disabled,
+QPushButton#pill:checked,
+QPushButton#pill:checked:hover,
+QPushButton#pill:checked:pressed,
+QPushButton#pill:disabled:checked,
+PillToolButton,
+PillToolButton:hover,
+PillToolButton:pressed,
+PillToolButton:disabled,
+PillToolButton:checked,
+PillToolButton:checked:hover,
+PillToolButton:checked:pressed,
+PillToolButton:disabled:checked {
+    background-color: transparent;
+    border: none;
+}
+
+QCheckBox {
+    color: white;
+    /* font: 14px Microsoft YaHei UI; */
+    spacing: 8px;
+    min-width: 28px;
+    min-height: 22px;
+    outline: none;
+    margin-left: 1px;
+}
+
+QCheckBox::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background-color: transparent;
+}
+
+QCheckBox:disabled {
+    color: rgba(255, 255, 255, 0.36);
+}
+
+QComboBox, QComboBox {
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-radius: 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 5px 31px 6px 11px;
+    /* font: 14px Microsoft YaHei UI; */
+    color: white;
+    background-color: rgba(255, 255, 255, 0.0605);
+    text-align: left;
+    outline: none;
+}
+
+QComboBox:hover, QComboBox:hover {
+    background-color: rgba(255, 255, 255, 0.0837);
+}
+
+QComboBox:pressed, QComboBox:pressed {
+    background-color: rgba(255, 255, 255, 0.0326);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+    color: rgba(255, 255, 255, 0.63);
+}
+
+QComboBox:disabled, QComboBox:disabled {
+    color: rgba(255, 255, 255, 0.3628);
+    background: rgba(255, 255, 255, 0.0419);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+QComboBox[isPlaceholderText=true], QComboBox[isPlaceholderText=true] {
+    color: rgba(255, 255, 255, 0.6063);
+}
+
+QLineEdit, TextEdit, PlainTextEdit, TextBrowser {
+    background-color: rgba(255, 255, 255, 0.0605);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5442);
+    border-radius: 5px;
+    padding: 0px 10px;
+    color: white;
+    selection-background-color: #009faa;
+    selection-color: black;
+}
+
+TextEdit, PlainTextEdit, TextBrowser  {
+    padding: 2px 3px 2px 8px;
+}
+
+QLineEdit:hover, TextEdit:hover, PlainTextEdit:hover, TextBrowser:hover {
+    background: rgba(255, 255, 255, 0.0837);
+}
+
+QLineEdit:focus[transparent=true] {
+    background: rgba(30, 30, 30, 0.7);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+QLineEdit[transparent=false]:focus {
+    background: rgb(31, 31, 31);
+}
+
+TextEdit:focus, PlainTextEdit:focus, TextBrowser:focus {
+    border-bottom: 1px solid #009faa;
+    background-color: rgba(30, 30, 30, 0.7);
+}
+
+QLineEdit:disabled, TextEdit:disabled, PlainTextEdit:disabled, TextBrowser:disabled {
+    color: rgba(255, 255, 255, 92);
+    background-color: rgba(255, 255, 255, 0.0419);
+    border: 1px solid rgba(255, 255, 255, 0.0698);
+}
+
+#lineEditButton {
+    background-color: transparent;
+    border-radius: 4px;
+    margin: 0;
+}
+
+#lineEditButton:hover {
+    background-color: rgba(255, 255, 255, 9);
+}
+
+#lineEditButton:pressed {
+    background-color: rgba(255, 255, 255, 6);
+}
+
+QListView,
+QListWidget {
+    background: transparent;
+    outline: none;
+    border: none;
+    selection-background-color: transparent;
+    alternate-background-color: transparent;
+    padding-left: 4px;
+    padding-right: 4px;
+}
+
+QListView::item,
+QListWidget::item {
+    background: transparent;
+    border: 0px;
+    padding-left: 11px;
+    padding-right: 11px;
+    height: 35px;
+}
+
+QListView::indicator,
+QListWidget::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: none;
+    background-color: transparent;
+    margin-right: 4px;
+}
+
+QLabel {
+    color: white;
+}
+
+HyperlinkLabel {
+    color: #009faa;
+    border: none;
+    background-color: transparent;
+    text-align: left;
+    padding: 0;
+    margin: 0;
+}
+
+HyperlinkLabel[underline=true] {
+    text-decoration: underline;
+}
+
+HyperlinkLabel[underline=false] {
+    text-decoration: none;
+}
+
+HyperlinkLabel:hover {
+    color: #008794;
+}
+
+HyperlinkLabel:pressed {
+    color: #28b8c2;
+}
+
+QToolTip {
+    border-radius: 4px;
+}
+
+QToolTip > #container {
+    background-color: rgb(43, 43, 43);
+    border: 1px solid rgb(28, 28, 28);
+    border-radius: 4px;
+}
+
+QToolTip>#container[transparent=true] {
+    background-color: transparent;
+    border: 1px solid rgba(0, 0, 0, 50);
+}
+
+QLabel {
+    background-color: transparent;
+    font: 12px Microsoft YaHei UI;
+    color: white;
+    border: none;
+}
+
+QWidget {
+    background-color: transparent;
+}
+
+QPushButton#switch {
+    qproperty-spacing: 12;
+    background-color: transparent;
+}
+
+QPushButton#switch>QLabel {
+    font: 14px Microsoft YaHei UI;
+    color: white;
+    background-color: transparent;
+    border: none;
+}
+
+QPushButton#switch>QLabel:disabled {
+    color: rgba(255, 255, 255, 0.36);
+}
+
+
+RoundMenu {
+    background-color: transparent;
+    border: none;
+}
+
+
+MenuActionListWidget {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9px;
+    background-color: rgb(43, 43, 43);
+    outline: none;
+    font: 14px Microsoft YaHei UI;
+}
+
+MenuActionListWidget[transparent=true] {
+    background-color: transparent;
+}
+
+MenuActionListWidget::item {
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+    margin-left: 6px;
+    margin-right: 6px;
+    border: none;
+    color: white;
+}
+
+MenuActionListWidget::item:disabled {
+    padding-left: 10px;
+    padding-right: 10px;
+    border-radius: 5px;
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+MenuActionListWidget::item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+MenuActionListWidget::item:selected {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+MenuActionListWidget::item:selected:active {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+#completerListWidget[dropDown=true],
+#commandListWidget[dropDown=true][long=false] {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+
+#commandListWidget[dropDown=true][long=true] {
+    border-top-left-radius: 9px;
+    border-top-right-radius: 0px;
+}
+
+#commandListWidget[dropDown=false][long=true] {
+    border-bottom-left-radius: 9px;
+    border-bottom-right-radius: 0px;
+}
+
+#completerListWidget[dropDown=false],
+#commandListWidget[dropDown=false][long=false] {
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+#completerListWidget::item,
+#comboListWidget::item {
+    margin-top: 4px;
+}
+
+#checkableListWidget::item {
+    padding-left: 36px;
+}
+
+QDialog {
+    background-color: rgb(43, 43, 43);
+}
+
+#buttonGroup {
+    background-color: rgb(32, 32, 32);
+    border-top: 1px solid rgb(29, 29, 29);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+}
+
+MessageBoxBase #buttonGroup,
+MessageBox #buttonGroup {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+#centerWidget {
+    border: 1px solid rgb(58, 58, 58);
+    border-radius: 10px;
+    background-color: rgb(43, 43, 43);
+}
+
+QLabel {
+    background-color: transparent;
+    color: white;
+    border: none;
+}
+
+QLabel#titleLabel {
+    font: 20px Microsoft YaHei UI;
+    padding: 0;
+}
+
+#contentLabel {
+    padding: 0;
+    font: 14px Microsoft YaHei UI;
+    border: none;
+    selection-background-color: #009faa;
+    selection-color: black;
+}
+
+QLabel#windowTitleLabel {
+    font: 12px Microsoft YaHei UI;
+    padding: 6px 6px;
+    background-color: rgb(32, 32, 32);
+}
+
+#cancelButton {
+    background: rgb(45, 45, 45);
+    border: 1px solid rgb(48, 48, 48);
+    border-top: 1px solid rgb(53, 53, 53);
+    border-radius: 5px;
+    color: white;
+    font: 14px Microsoft YaHei UI;
+    padding: 5px 9px 6px 9px;
+    outline: none;
+}
+
+#cancelButton:hover {
+    background: rgb(50, 50, 50);
+}
+
+#cancelButton:pressed {
+    color: rgba(255, 255, 255, 0.63);
+    background: rgb(39, 39, 39);
+    border: 1px solid rgb(48, 48, 48);
+}
+
+#cancelButton:disabled {
+    color: rgba(255, 255, 255, 0.63);
+    background: rgb(59, 59, 59);
+    border: 1px solid rgb(80, 80, 80);
+}
+
+QWidget {
+    background-color: rgb(23, 23, 23);
+    border: 1px solid rgb(55, 55, 55);
+}
+
+QWidget#windowMask {
+    background-color: rgba(0, 0, 0, 0.6);
+    border: none;
+}
+
+QLabel {
+    background-color: transparent;
+    color: white;
+    font-family: Microsoft YaHei UI;
+    border: none;
+}
+
+QLabel#titleLabel {
+    font-size: 18px;
+}
+
+QLabel#contentLabel {
+    font-size: 14px;
+}
+
+QPushButton {
+    background-color: rgb(51, 51, 51);
+    font: 15px Microsoft YaHei UI;
+    border: transparent;
+    color: white;
+}
+
+QPushButton:pressed:hover {
+    background-color: rgb(102, 102, 102);
+}
+
+QPushButton:hover {
+    background-color: rgb(35, 35, 35);
+}
+
+QPushButton:disabled {
+    background-color: rgb(51, 51, 51);
+    color: rgb(133, 133, 133);
+}
+
+PivotItem {
+    padding: 10px 12px;
+    color: white;
+    background-color: transparent;
+    border: none;
+    outline: none;
+}
+
+PivotItem[isSelected=true]:hover {
+    color: rgba(255, 255, 255, 0.63);
+}
+
+PivotItem[isSelected=true]:pressed {
+    color: rgba(255, 255, 255, 0.53);
+}
+
+PivotItem[isSelected=false]:pressed {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+PivotItem[hasIcon=false] {
+    padding-left: 12px;
+    padding-right: 12px;
+}
+
+PivotItem[hasIcon=true] {
+    padding-left: 36px;
+    padding-right: 12px;
+}
+
+Pivot {
+    border: none;
+    background-color: transparent;
+}
+
+#view {
+    background-color: transparent;
+}
+
+SegmentedToolItem {
+    padding: 5px 9px 6px 8px;
+}
+
+SegmentedWidget,
+SegmentedToolWidget {
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+}
+
+SegmentedItem[isSelected=false], SegmentedToolItem[isSelected=false] {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    background-color: transparent;
+    border: none;
+    border-radius: 6px;
+    margin: 3px 0px;
+}
+
+SegmentedItem[isSelected=false]:hover,
+SegmentedToolItem[isSelected=false]:hover {
+    background-color: rgba(255, 255, 255, 9);
+}
+
+SegmentedItem[isSelected=false]:pressed,
+SegmentedToolItem[isSelected=false]:pressed {
+    background-color: rgba(255, 255, 255, 6);
+}
+
+SegmentedItem[isSelected=true],
+SegmentedToolItem[isSelected=true] {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    margin: 0px;
+    color: white;
+    background-color: transparent;
+}
+
+QSlider:horizontal {
+    min-height: 24px;
+}
+
+QSlider::groove:horizontal {
+    height: 4px;
+    background-color: rgb(158, 159, 159);
+    border-radius: 2px;
+}
+
+QSlider::sub-page:horizontal {
+    background: #009faa;
+    height: 4px;
+    border-radius: 2px;
+}
+
+QSlider::handle:horizontal {
+    border: 1px solid rgb(58, 58, 58);
+    width: 21px;
+    min-height: 22px;
+    margin: -9px 0;
+    border-radius: 11px;
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+        stop:0 #009faa,
+        stop:0.5 #009faa,
+        stop:0.6 rgb(69, 69, 69),
+        stop:1 rgb(69, 69, 69));
+}
+
+QSlider::handle:horizontal:hover {
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+        stop:0 #009faa,
+        stop:0.6 #009faa,
+        stop:0.7 rgb(69, 69, 69),
+        stop:1 rgb(69, 69, 69));
+}
+
+QSlider::handle:horizontal:pressed {
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+        stop:0 #009faa,
+        stop:0.4 #009faa,
+        stop:0.5 rgb(69, 69, 69),
+        stop:1 rgb(69, 69, 69));
+}
+
+
+QSlider:vertical {
+    min-width: 24px;
+}
+
+QSlider::groove:vertical {
+    width: 4px;
+    background-color: rgb(158, 159, 159);
+    border-radius: 2px;
+}
+
+QSlider::add-page:vertical {
+    background: #009faa;
+    width: 4px;
+    border-radius: 2px;
+}
+
+QSlider::handle:vertical {
+    border: 1px solid rgb(58, 58, 58);
+    height: 20px;
+    min-width: 22px;
+    margin: 0 -9px;
+    border-radius: 11px;
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 #009faa,
+            stop:0.5 #009faa,
+            stop:0.6 rgb(69, 69, 69),
+            stop:1 rgb(69, 69, 69));
+}
+
+QSlider::handle:vertical:hover {
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 #009faa,
+            stop:0.6 #009faa,
+            stop:0.7 rgb(69, 69, 69),
+            stop:1 rgb(69, 69, 69));
+}
+
+QSlider::handle:vertical:pressed {
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 #009faa,
+            stop:0.4 #009faa,
+            stop:0.5 rgb(69, 69, 69),
+            stop:1 rgb(69, 69, 69));
+}
+
+SpinBox,
+DoubleSpinBox,
+DateEdit,
+DateTimeEdit,
+TimeEdit,
+CompactSpinBox,
+CompactDoubleSpinBox,
+CompactDateEdit,
+CompactDateTimeEdit,
+CompactTimeEdit {
+    background-color: rgba(255, 255, 255, 0.0605);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.5442);
+    border-radius: 5px;
+    padding: 0px 80px 0 10px;
+    color: white;
+    selection-background-color: #009faa;
+    selection-color: black;
+}
+
+CompactSpinBox,
+CompactDoubleSpinBox,
+CompactDateEdit,
+CompactDateTimeEdit,
+CompactTimeEdit {
+    padding: 0px 26px 0 10px;
+}
+
+SpinBox:read-only,
+DoubleSpinBox:read-only,
+DateEdit:read-only,
+DateTimeEdit:read-only,
+TimeEdit:read-only,
+CompactSpinBox:read-only,
+CompactDoubleSpinBox:read-only,
+CompactDateEdit:read-only,
+CompactDateTimeEdit:read-only,
+CompactTimeEdit:read-only,
+SpinBox[symbolVisible=false],
+DoubleSpinBox[symbolVisible=false],
+DateEdit[symbolVisible=false],
+DateTimeEdit[symbolVisible=false],
+TimeEdit[symbolVisible=false],
+CompactSpinBox[symbolVisible=false],
+CompactDoubleSpinBox[symbolVisible=false],
+CompactDateEdit[symbolVisible=false],
+CompactDateTimeEdit[symbolVisible=false],
+CompactTimeEdit[symbolVisible=false] {
+    padding: 0px 10px 0 10px;
+}
+
+SpinBox:hover,
+DoubleSpinBox:hover,
+DateEdit:hover,
+DateTimeEdit:hover,
+TimeEdit:hover,
+CompactSpinBox:hover,
+CompactDoubleSpinBox:hover,
+CompactDateEdit:hover,
+CompactDateTimeEdit:hover,
+CompactTimeEdit:hover {
+    background-color: rgba(255, 255, 255, 0.0837);
+}
+
+SpinBox[transparent=true]:focus,
+DoubleSpinBox[transparent=true]:focus,
+DateEdit[transparent=true]:focus,
+DateTimeEdit[transparent=true]:focus,
+TimeEdit[transparent=true]:focus,
+CompactSpinBox[transparent=true]:focus,
+CompactDoubleSpinBox[transparent=true]:focus,
+CompactDateEdit[transparent=true]:focus,
+CompactDateTimeEdit[transparent=true]:focus,
+CompactTimeEdit[transparent=true]:focus {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(30, 30, 30, 0.7);
+}
+
+SpinBox:disabled,
+DoubleSpinBox:disabled,
+DateEdit:disabled,
+DateTimeEdit:disabled,
+TimeEdit:disabled,
+CompactSpinBox:disabled,
+CompactDoubleSpinBox:disabled,
+CompactDateEdit:disabled,
+CompactDateTimeEdit:disabled,
+CompactTimeEdit:disabled {
+    color: rgba(255, 255, 255, 92);
+    background-color: rgba(255, 255, 255, 0.0837);
+    border: 1px solid rgba(255, 255, 255, 0.0698);
+}
+
+SpinBox[transparent=false]:focus,
+DoubleSpinBox[transparent=false]:focus,
+DateEdit[transparent=false]:focus,
+DateTimeEdit[transparent=false]:focus,
+TimeEdit[transparent=false]:focus,
+CompactSpinBox[transparent=false]:focus,
+CompactDoubleSpinBox[transparent=false]:focus,
+CompactDateEdit[transparent=false]:focus,
+CompactDateTimeEdit[transparent=false]:focus,
+CompactTimeEdit[transparent=false]:focus {
+    background: rgb(31, 31, 31);
+}
+
+SpinButton {
+    background-color: transparent;
+    border-radius: 4px;
+    margin: 0;
+}
+
+SpinButton:hover {
+    background-color: rgba(255, 255, 255, 9);
+}
+
+SpinButton:pressed {
+    background-color: rgba(255, 255, 255, 6);
+}
+
+TabBar {
+    border: none;
+    background-color: transparent;
+}
+
+#view {
+    background-color: transparent;
+}
+
+QTableView {
+    background: transparent;
+    outline: none;
+    border: none;
+    /* font: 13px Microsoft YaHei UI; */
+    selection-background-color: transparent;
+    alternate-background-color: transparent;
+}
+
+QTableView[isBorderVisible=true] {
+    border: 1px solid rgba(255, 255, 255, 21);
+}
+
+QTableView::item {
+    background: transparent;
+    border: 0px;
+    padding-left: 16px;
+    padding-right: 16px;
+    height: 35px;
+}
+
+QTableView::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: none;
+    background-color: transparent;
+}
+
+
+QHeaderView {
+    background-color: transparent;
+}
+
+QHeaderView::section {
+    background-color: transparent;
+    color: rgb(203, 203, 203);
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid rgba(255, 255, 255, 21);
+    font: 13px Microsoft YaHei UI;
+}
+
+QHeaderView::section:horizontal {
+    border-left: none;
+    height: 33px;
+}
+
+QTableView[isBorderVisible=true] QHeaderView::section:horizontal {
+    border-top: none;
+}
+
+QHeaderView::section:horizontal:last {
+    border-right: none;
+}
+
+QHeaderView::section:vertical {
+    border-top: none;
+}
+
+QHeaderView::section:checked {
+    background-color: transparent;
+}
+
+QHeaderView::down-arrow {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    margin-right: 6px;
+    image: url(:/qfluentwidgets/images/table_view/Down_white.svg);
+}
+
+QHeaderView::up-arrow {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    margin-right: 6px;
+    image: url(:/qfluentwidgets/images/table_view/Up_white.svg);
+}
+
+QTableCornerButton::section {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 21);
+}
+
+QTableCornerButton::section:pressed {
+    background-color: rgba(255, 255, 255, 16);
+}
+
+QTreeView {
+    background-color: transparent;
+    border: none;
+    border-radius: 5px;
+    outline: 0;
+    padding-right: 5px;
+    selection-background-color: transparent;
+}
+
+QTableView[isBorderVisible=true] {
+    border: 1px solid rgba(255, 255, 255, 21);
+}
+
+QTreeView::item {
+    padding: 4px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    padding-left: 20px;
+    border-radius: 5px;
+    /* color: white; */
+}
+
+
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+    image: url(:/qfluentwidgets/images/tree_view/TreeViewClose_white.svg);
+}
+
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings {
+    image: url(:/qfluentwidgets/images/tree_view/TreeViewOpen_white.svg);
+}
+
+QTreeView:disabled {
+    color: rgba(255, 255, 255, 110);
+}
+
+QTreeView::indicator {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    border: none;
+    background-color: transparent;
+}
+
+QHeaderView {
+    background-color: transparent;
+}
+
+QHeaderView::section {
+    background-color: transparent;
+    color: rgb(203, 203, 203);
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid rgba(0, 0, 0, 21);
+    font: 13px Microsoft YaHei UI;
+}
+
+QHeaderView::section:horizontal {
+    border-left: none;
+    height: 33px;
+}
+
+QTreeView[isBorderVisible=true] QHeaderView::section:horizontal {
+    border-top: none;
+}
+
+QHeaderView::section:horizontal:last {
+    border-right: none;
+}
+
+QHeaderView::section:vertical {
+    border-top: none;
+}
+
+QHeaderView::section:checked {
+    background-color: transparent;
+}
+
+QHeaderView::down-arrow {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    margin-right: 6px;
+    image: url(:/qfluentwidgets/images/table_view/Down_white.svg);
+}
+
+QHeaderView::up-arrow {
+    subcontrol-origin: padding;
+    subcontrol-position: center right;
+    margin-right: 6px;
+    image: url(:/qfluentwidgets/images/table_view/Up_white.svg);
+}
+
+QTableCornerButton::section {
+    background-color: transparent;
+    border: 1px solid rgba(0, 0, 0, 21);
+}
+
+QTableCornerButton::section:pressed {
+    background-color: rgba(255, 255, 255, 16);
+}
+
+ScrollButton {
+    background-color: rgb(44, 44, 44);
+    border: none;
+    border-radius: 7px;
+}
+
+CycleListWidget {
+    background-color: transparent;
+    border: none;
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    outline: none;
+    font: 14px Microsoft YaHei UI;
+}
+
+CycleListWidget::item {
+    color: white;
+    background-color: transparent;
+    border: none;
+    border-radius: 5px;
+    margin: 0 4px;
+    padding-left: 11px;
+    padding-right: 11px;
+}
+
+CycleListWidget::item:hover {
+    background-color: rgba(255, 255, 255, 9);
+}
+
+CycleListWidget::item:selected {
+    background-color: rgba(255, 255, 255, 9);
+}
+
+CycleListWidget::item:selected:active {
+    background-color: rgba(255, 255, 255, 6);
+}
+
+PickerPanel > #view {
+    background-color: rgb(44, 44, 44);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+}
+
+SeparatorWidget {
+    background-color: rgb(61, 61, 61);
+}
+
+ItemMaskWidget {
+    font: 14px Microsoft YaHei UI;
+}
+
+PickerBase {
+    font: 14px Microsoft YaHei UI;
+    background: rgba(255, 255, 255, 0.0605);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    outline: none;
+}
+
+PickerBase:hover {
+    background: rgba(255, 255, 255, 0.0837);
+}
+
+PickerBase:pressed {
+    color: rgba(255, 255, 255, 0.786);
+    background: rgba(255, 255, 255, 0.0326);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+PickerBase:disabled {
+    color: rgba(255, 255, 255, 0.3628);
+    background: rgba(255, 255, 255, 0.0419);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+#pickerButton {
+    font: 14px Microsoft YaHei UI;
+    color: rgba(255, 255, 255, 0.786);
+    background-color: transparent;
+    border: none;
+    outline: none;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#pickerButton:disabled {
+    color: rgba(255, 255, 255, 0.3628);
+}
+
+#pickerButton[hasBorder=true] {
+    border-right: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+#pickerButton[hasBorder=true]:disabled {
+    border-right: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+#pickerButton[hasBorder=false] {
+    border-right: transparent;
+}
+
+#pickerButton[enter=true]:enabled,
+#pickerButton[hasValue=true]:enabled {
+    color: rgba(255, 255, 255, 1);
+}
+
+#pickerButton[pressed=true] {
+    color: rgba(255, 255, 255, 0.786);
+}
+
+#pickerButton[align="center"] {
+    text-align: center;
+}
+
+#pickerButton[align="left"] {
+    text-align: left;
+}
+
+#pickerButton[align="right"] {
+    text-align: right;
+}
+
+#titleButton {
+    font: 14px Microsoft YaHei UI;
+    font-weight: 500;
+    color: white;
+    background-color: transparent;
+    border: none;
+    margin: 0;
+    padding-left: 8px;
+    text-align: left;
+    border-radius: 5px;
+}
+
+#titleButton:hover {
+    background-color: rgba(255, 255, 255, 9);
+}
+
+#titleButton:pressed {
+    background-color: rgba(255, 255, 255, 6);
+}
+
+#titleButton:disabled {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+#weekDayLabel {
+    font: 12px Microsoft YaHei UI;
+    font-weight: 500;
+    color: white;
+    background-color: transparent;
+    border: none;
+    text-align: center;
+}
+
+#weekDayGroup {
+    background-color: rgb(32, 32, 32);
+}
+
+CalendarViewBase {
+    background-color: rgb(37, 37, 37);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+}
+
+ScrollViewBase {
+    border: none;
+    padding: 0px 1px 0px 1px;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-top: 1px solid rgb(52, 52, 52);
+    background-color: transparent;
+}
+
+CalendarPicker {
+    background: rgba(255, 255, 255, 0.0605);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    color: rgba(255, 255, 255, 0.6063);
+    font: 14px Microsoft YaHei UI;
+    padding: 5px 32px 6px 12px;
+    outline: none;
+    text-align: left;
+}
+
+
+CalendarPicker:hover {
+    background: rgba(255, 255, 255, 0.0837);
+}
+
+CalendarPicker:pressed {
+    background: rgba(255, 255, 255, 0.0326);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+CalendarPicker:disabled {
+    color: rgba(255, 255, 255, 0.3628);
+    background: rgba(255, 255, 255, 0.0419);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+CalendarPicker[hasDate=true] {
+    color: white;
+}
+
+#titleLabel {
+    font: 14px Microsoft YaHei UI;
+    font-weight: bold;
+    color: white;
+    background-color: transparent;
+}
+
+#contentLabel {
+    font: 14px Microsoft YaHei UI;
+    color: white;
+    background-color: transparent;
+}
+
+StateToolTip,
+ToastToolTip {
+    background-color: #008794;
+    border: none;
+    border-radius: 7px;
+}
+
+QLabel {
+    color: black;
+    background-color: transparent;
+    font-family: Microsoft YaHei UI;
+    border: none;
+}
+
+QLabel#titleLabel {
+    font-size: 14px;
+}
+
+QLabel#contentLabel {
+    font-size: 13px ;
+}
+
+ExpandSettingCard {
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background-color: transparent;
+}
+
+#view {
+    background: rgba(255, 255, 255, 0.051);
+    border: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+#scrollWidget {
+    border: none;
+    background-color: transparent;
+}
+
+
+QLabel#titleLabel {
+    font: 14px Microsoft YaHei UI;
+    color: white;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+QLabel#contentLabel {
+    font: 11px Microsoft YaHei UI;
+    color: rgb(208, 208, 208);
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+QLabel#titleLabel:disabled,
+QLabel#contentLabel:disabled {
+    color: rgba(255, 255, 255, 0.36);
+}
+
+FolderItem>QLabel {
+    font: 14px Microsoft YaHei UI;
+}
+
+
+QPushButton {
+    background: rgba(255, 255, 255, 0.0605);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    padding: 5px 36px 5px 36px;
+    font: 14px Microsoft YaHei UI;
+    color: white;
+    outline: none;
+}
+
+QPushButton:hover {
+    background: rgba(255, 255, 255, 0.0837);
+}
+
+QPushButton:pressed {
+    color: rgba(255, 255, 255, 0.786);
+    background: rgba(255, 255, 255, 0.0326);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+QPushButton:disabled {
+    color: rgba(255, 255, 255, 0.3628);
+    background: rgba(255, 255, 255, 0.0419);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+#chooseColorButton {
+    padding: 5px 17px 5px 17px;
+}
+
+QLabel {
+    font: 14px Microsoft YaHei UI;
+    color: white;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+}
+
+QLabel#contentLabel {
+    font: 11px Microsoft YaHei UI;
+    color: rgb(208, 208, 208);
+    padding: 0;
+}
+
+RangeSettingCard > QLabel#valueLabel{
+    color: rgb(159, 159, 159);
+}
+
+QLabel:disabled,
+QLabel#contentLabel:disabled,
+RangeSettingCard>QLabel#valueLabel:disabled {
+    color: rgba(255, 255, 255, 0.36);
+}
+
+
+QPushButton {
+    background: rgba(255, 255, 255, 0.0605);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 5px;
+    padding: 5px 36px 5px 36px;
+    font: 14px Microsoft YaHei UI;
+    color: white;
+    outline: none;
+}
+
+QPushButton:hover {
+    background: rgba(255, 255, 255, 0.0837);
+}
+
+QPushButton:pressed {
+    color: rgba(255, 255, 255, 0.786);
+    background: rgba(255, 255, 255, 0.0326);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+QPushButton:disabled {
+    color: rgba(255, 255, 255, 0.3628);
+    background: rgba(255, 255, 255, 0.0419);
+    border: 1px solid rgba(255, 255, 255, 0.053);
+    border-top: 1px solid rgba(255, 255, 255, 0.053);
+}
+
+#primaryButton {
+    color: black;
+    background-color: #009faa;
+    border: 1px solid #28b8c2;
+    border-bottom: 1px solid #48ccd4;
+    padding: 5px 12px 5px 12px;
+    outline: none;
+}
+
+#primaryButton:hover {
+    background-color: #008794;
+    border: 1px solid #28b8c2;
+    border-bottom: 1px solid #48ccd4;
+}
+
+#primaryButton:pressed {
+    color: rgba(0, 0, 0, 0.63);
+    background-color: #006f7a;
+    border: 1px solid #006f7a;
+}
+
+ColorPickerButton {
+    border: 1px solid rgba(255, 255, 255, 10);
+    border-radius: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 7);
+}
+
+SettingCardGroup {
+    background-color: transparent;
+}
+
+SettingCardGroup>QLabel {
+    background-color: transparent;
+    color: white;
+    border: none;
+}
+
+InfoBar {
+    border: 1px solid rgb(29, 29, 29);
+    border-radius: 6px;
+    background-color: rgb(39, 39, 39);
+}
+
+#titleLabel {
+    font: 14px Microsoft YaHei UI;
+    font-weight: bold;
+    color: white;
+    background-color: transparent;
+}
+
+#contentLabel {
+    font: 14px Microsoft YaHei UI;
+    color: white;
+    background-color: transparent;
+}
+
+InfoBar[type="Info"] {
+    background-color: rgb(39, 39, 39);
+}
+
+InfoBar[type="Success"] {
+    background-color: rgb(57, 61, 27);
+}
+
+InfoBar[type="Warning"] {
+    background-color: rgb(67, 53, 25);
+}
+
+InfoBar[type="Error"] {
+    background-color: rgb(68, 39, 38);
+}
+
+InfoBarCloseButton {
+    background-color: transparent;
+    border-radius: 5px;
+}
+
+InfoBarCloseButton:hover {
+    background-color: rgba(255, 255, 255, 9);
+}
+
+InfoBarCloseButton:pressed {
+    background-color: rgba(255, 255, 255, 6);
+}
+
+InfoBadge {
+    padding: 1px 3px 1px 3px;
+    color: black;
+}
+
+FlipView {
+    background-color: transparent;
+    border: none;
+}
+
+PipsPager {
+    border: none;
+    background-color: transparent;
+}
+
+CaptionLabel {
+    color: white;
+}
+
+QGraphicsView {
+    background: transparent;
+    border: none
+}
+
+QWidget {
+    background-color: rgb(23, 23, 23);
+    border: 1px solid rgb(53, 53, 53);
+}
+
+QWidget#windowMask {
+    background-color: rgba(0, 0, 0, 0.6);
+    border: none;
+}
+
+QLabel {
+    border: none;
+    color: white;
+    background-color: transparent;
+}
+
+QLabel#titleLabel {
+    font: 25px Microsoft YaHei UI;
+}
+
+QLabel#contentLabel {
+    font: 18px Microsoft YaHei UI;
+}
+
+QPushButton#completeButton {
+    background-color: rgb(51, 51, 51);
+    padding: 11px 64px 11px 64px;
+    font: 19px Microsoft YaHei UI;
+    border: none;
+    height: 20px;
+    width: 55px;
+    color: white;
+}
+
+QPushButton#completeButton:pressed:hover {
+    background-color: rgb(102, 102, 102);
+}
+
+QPushButton#completeButton:hover {
+    background-color: rgb(35, 35, 35);
+}
+
+QPushButton#completeButton:disabled {
+    background-color: rgb(51, 51, 51);
+    color: rgb(122, 122, 122);
+}
+
+QScrollArea{
+    border: none;
+    background-color: rgb(23, 23, 23);
+}
+
+
+#scrollWidget{
+    border: none;
+}
+
+ColorDialog,
+QScrollArea,
+QWidget {
+    background-color: transparent;
+}
+
+QScrollArea {
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background-color: transparent;
+}
+
+#centerWidget {
+    border: 1px solid rgb(58, 58, 58);
+    border-radius: 10px;
+    background-color: rgb(43, 43, 43);
+}
+
+#buttonGroup {
+    background-color: rgb(32, 32, 32);
+    border-top: 1px solid rgb(29, 29, 29);
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+QLabel {
+    font: 14px Microsoft YaHei UI;
+    color: white;
+    background-color: transparent;
+    border: none;
+}
+
+#titleLabel {
+    font-size: 19px;
+}
+
+#editLabel {
+    font-size: 16px;
+}
+
+#prefixLabel, #suffixLabel  {
+    padding: 0;
+    font-size: 14px;
+}
+
+
+QSlider:horizontal {
+    min-width: 332px;
+    min-height: 24px;
+}
+
+QSlider::groove:horizontal {
+    height: 12px;
+    border-radius: 6px;
+    background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:0, x3:2, y3:0,
+            stop:0 hsv(--slider-hue, --slider-saturation, 0),
+            stop:1 hsv(--slider-hue, --slider-saturation, 255));
+
+}
+
+
+QSlider::handle:horizontal {
+    border: 1px solid rgb(55, 55, 55);
+    width: 16px;
+    min-height: 10px;
+    margin: -3px 0;
+    border-radius: 9px;
+    background-color: qradialgradient(spread:pad, cx:0.5, cy:0.5, radius:0.5, fx:0.5, fy:0.5,
+            stop:0 rgb(255, 255, 255),
+            stop:0.55 rgb(255, 255, 255),
+            stop:0.6 rgb(69, 69, 69),
+            stop:1 rgb(69, 69, 69));
+}
+
+
+QSlider::groove:horizontal:disabled {
+    background-color: rgba(0, 0, 0, 75);
+}
+
+QSlider::handle:horizontal:disabled {
+    background-color: #808080;
+    border: 6px solid #cccccc;
+}
+
+
+#cancelButton {
+    background: rgb(45, 45, 45);
+    border: 1px solid rgb(48, 48, 48);
+    border-top: 1px solid rgb(53, 53, 53);
+    border-radius: 5px;
+    color: white;
+    font: 14px Microsoft YaHei UI;
+    padding: 5px 9px 6px 9px;
+    outline: none;
+}
+
+#cancelButton:hover {
+    background: rgb(50, 50, 50);
+}
+
+#cancelButton:pressed {
+    color: rgba(255, 255, 255, 0.63);
+    background: rgb(39, 39, 39);
+    border: 1px solid rgb(48, 48, 48);
+}
+
+#cancelButton:disabled {
+    color: rgba(255, 255, 255, 0.63);
+    background: rgb(59, 59, 59);
+    border: 1px solid rgb(80, 80, 80);
+}
+
+/* window background (JQt demo addition) */
+QWidget { background-color: #1f1f1f; }
+

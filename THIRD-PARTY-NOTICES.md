@@ -57,6 +57,18 @@ Fluent Design 公开设计规范，代码为独立编写）：
 Win32 API knowledge and Microsoft's public Fluent Design guidelines, with independently
 written code).
 
+### qfluentwidgets QSS 皮肤（测试引用，不随 JQt 分发）
+
+`themes/qf/` 目录下的 QSS 文件从 [PyQt-Fluent-Widgets](https://github.com/zhiyiYo/PyQt-Fluent-Widgets)
+（作者 zhiyiYo，GPLv3 / 商业许可）的 `qfluentwidgets/_rc/qss/dark/` 完整下载合并而来，
+**仅用于本地测试**「JQt 作为 QSS 引擎可渲染任意第三方皮肤」的能力验证，**不包含在任何
+JQt 发布包中**。`qf-dark-jqt.qss` 为测试用途做了类名映射（qf 自定义类名 → JQt 实际
+控件类名）与主题变量（`--ThemeColor*`）内联替换。
+
+使用这些文件需自行遵守其 GPLv3 许可。**与 JQt 的边界**：QSS 是数据而非代码——
+JQt 只负责解析渲染，用户在自己的应用里导入任何第三方 QSS 皮肤（含 GPL 皮肤），
+责任与合规由用户自行承担（与导入字体、图标资源同理）。
+
 ---
 
 <a id="en"></a>
