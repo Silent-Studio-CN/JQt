@@ -29,6 +29,8 @@ JQt **不接受外部贡献者的代码提交**——外部 pull request 不会�
 | 提问 / 讨论 | GitHub Issues 或 Discussion |
 | 安全漏洞 | 不要公开提交——私信联系 SilentStudio |
 
+> Email: SilentStudio@Home.email.cn
+
 ### 📌 内部成员提交规范
 
 - 遵循现有代码风格：4 空格缩进、UTF-8 编码、Java 17+ 语法；
@@ -62,6 +64,8 @@ This policy ensures the copyright integrity required by JQt's layered licensing 
 | Report bugs / suggest features | GitHub **Issues** |
 | Questions / discussion | GitHub Issues or Discussion |
 | Security vulnerabilities | Do not post publicly — contact SilentStudio privately |
+
+> Email: SilentStudio@Home.email.cn
 
 ### 📌 Internal Member Guidelines
 
