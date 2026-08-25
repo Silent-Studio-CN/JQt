@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # ============================================================================
 # build-macos.sh - JQt macOS one-click build
 #   Produces lib/libjqt.dylib + deploys license notices.
@@ -33,7 +33,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
     -install_name @rpath/libjqt.dylib \
     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/darwin" \
-    -I \
+    -I$QTINC \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
     -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore
