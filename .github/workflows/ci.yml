@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -23,12 +23,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y qt6-base-dev libgl1-mesa-dev g++
 
-      - name: Install Qt 6.11.2 (aqt)
+      - name: Install Qt 6.11.2 (manual 7z - aqt cannot parse new repo XML)
         run: |
-          pip install "aqtinstall==3.2.*"
-          printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
-          python3 -m aqt -c /tmp/aqt.ini install-qt linux desktop 6.11.2 gcc_64 --outputdir /opt/Qt --archives qtbase
-          test -f /opt/6.11.2/gcc_64/include/QtWidgets/QWidget || (find /opt/Qt -maxdepth 4 -type d | head -20 && exit 1)
+          sudo apt-get install -y p7zip-full libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libegl1 libfontconfig1 libglib2.0-0 libdbus-1-3
+          mkdir -p /tmp/qt7z
+          curl -fsSL -o /tmp/qtbase.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6112/qt6_6112/6.11.2-0-202608131018/qtbase-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
+          7z x -y -o/tmp/qt7z /tmp/qtbase.7z > /dev/null
+          sudo mv /tmp/qt7z/6.11.2 /opt/
+          rm -rf /tmp/qt7z /tmp/qtbase.7z
+          test -f /opt/6.11.2/gcc_64/bin/qmake || (find /opt -maxdepth 3 -type d | head -20 && exit 1)
 
       - name: Build libjqt.so
         run: |
