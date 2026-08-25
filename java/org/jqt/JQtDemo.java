@@ -20,6 +20,26 @@ public class JQtDemo {
         JQtApplication app = new JQtApplication();
         app.onAboutToQuit(() -> System.out.println("[JQt] aboutToQuit 信号触发（应用即将退出）"));
 
+        // ---- QSS 样式（Qt Style Sheets，-Djqt.demoQss=0 关闭）----
+        if (Long.getLong("jqt.demoQss", 1L) > 0) {
+            app.setStyle("Fusion");
+            app.setStyleSheet("""
+                * { font-family: "Microsoft YaHei"; font-size: 13px; }
+                QPushButton { background: #3c3f41; color: #ffffff; border: 1px solid #555555;
+                              border-radius: 4px; padding: 6px 16px; }
+                QPushButton:hover { background: #4c5052; }
+                QPushButton:pressed { background: #2d2f31; }
+                QLineEdit { background: #2d2f31; color: #ffffff; border: 1px solid #555555;
+                            border-radius: 4px; padding: 4px 8px; }
+                QComboBox { background: #3c3f41; color: #ffffff; border: 1px solid #555555;
+                            border-radius: 4px; padding: 4px 8px; }
+                QListWidget { background: #2d2f31; color: #dddddd; border: 1px solid #555555;
+                              border-radius: 4px; }
+                QLabel { color: #cccccc; }
+                """);
+            System.out.println("[JQt] QSS 样式已应用（Fusion 深色主题）");
+        }
+
         JQtWindow window = new JQtWindow("JQt Phase 4 演示", 720, 600);
         JQtLabel label = new JQtLabel("JQt 控件 + 布局 + 信号槽演示");
         JQtLineEdit edit = new JQtLineEdit("");

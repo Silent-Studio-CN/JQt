@@ -23,6 +23,7 @@
 | `void dispose()` | 手动释放 C++ 对象（一般无需调用，GC 自动回收） |
 | `boolean isDisposed()` | 是否已释放 |
 | `long nativeHandle()` | C++ 句柄（高级用途） |
+| `void setStyleSheet(String qss)` | 控件级 QSS（与全局样式可叠加，控件级优先） |
 
 ### 1.1 JQtApplication —— 应用入口
 
@@ -33,6 +34,8 @@
 | `void quit()` | 退出事件循环 |
 | `void scheduleQuit(long ms)` | 延迟 ms 毫秒后自动退出 |
 | `void schedule(Runnable task, long delayMs)` | 延迟在 GUI 线程执行任务（线程安全） |
+| `void setStyleSheet(String qss)` | 设置全局样式表（QSS，Qt Style Sheets） |
+| `void setStyle(String style)` | 切换风格（如 `"Fusion"` 经典 Qt 扁平风） |
 | `void onAboutToQuit(Runnable)` | 退出前回调（Qt aboutToQuit 信号） |
 
 ### 1.2 JQtWindow —— 窗口
@@ -141,6 +144,7 @@
 | `void dispose()` | release the C++ object manually (usually not needed; GC handles it) |
 | `boolean isDisposed()` | whether disposed |
 | `long nativeHandle()` | native handle (advanced) |
+| `void setStyleSheet(String qss)` | widget-level QSS (layers over the global style) |
 
 ### 1.1 JQtApplication
 
@@ -151,6 +155,8 @@
 | `void quit()` | quit the event loop |
 | `void scheduleQuit(long ms)` | auto-quit after ms |
 | `void schedule(Runnable task, long delayMs)` | run a task on the GUI thread after delay (thread-safe) |
+| `void setStyleSheet(String qss)` | set global style sheet (QSS) |
+| `void setStyle(String style)` | switch style (e.g. `"Fusion"`) |
 | `void onAboutToQuit(Runnable)` | callback before app quits (aboutToQuit signal) |
 
 ### 1.2 JQtWindow

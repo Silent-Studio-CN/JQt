@@ -43,6 +43,15 @@ public abstract class JQtWidget {
     private static native void nativeDispose(long handle);
 
     /**
+     * 设置控件级样式表（QSS），只影响本控件及其子控件。
+     * 与 {@link JQtApplication#setStyleSheet(String)} 的全局样式可叠加（控件级优先）。
+     */
+    public void setStyleSheet(String qss) {
+        nativeSetStyleSheet(nativeHandle, qss);
+    }
+    private static native void nativeSetStyleSheet(long handle, String qss);
+
+    /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
      * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。
      */
