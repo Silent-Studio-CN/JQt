@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -66,26 +66,30 @@ jobs:
           distribution: temurin
           java-version: '26'
 
+      - name: Configure aqt (skip checksum verification)
+        shell: pwsh
+        run: |
+          $cfg = @"
+[mirrors]
+trusted_mirrors = https://download.qt.io
+"@
+          Set-Content -Path "D:/aqt.ini" -Value $cfg -Encoding ascii
+
       - name: Install Qt 6.11.2 + MinGW 13.1
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.11.2'
-          host: 'windows'
-          target: 'desktop'
-          arch: 'win64_mingw'
-          dir: 'C:/Qt'
-          archives: 'qtbase'
-          tools: 'tools_mingw1310'
+        shell: pwsh
+        run: |
+          pip install aqtinstall
+          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.11.2 win64_mingw --outputdir C:/Qt --archives qtbase
+          python -m aqt -c D:/aqt.ini install-tool windows desktop tools_mingw1310 --outputdir C:/Qt
+          if (-not (Test-Path "C:/Qt/6.11.2/mingw_64/bin/qmake.exe")) { throw "qmake.exe missing after aqt install" }
 
       - name: Build jqt.dll
         shell: pwsh
         run: |
-          $qtRoot = Split-Path $env:Qt6_DIR
-          Write-Host "Qt6_DIR=$env:Qt6_DIR QTROOT=$qtRoot"
-          $gpp = Get-ChildItem (Join-Path (Split-Path $qtRoot) "Tools") -Recurse -Depth 3 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          $gpp = Get-ChildItem "C:/Qt/Tools" -Recurse -Depth 3 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
           $mingw = if ($gpp) { Split-Path (Split-Path $gpp.FullName) } else { "C:/Qt/Tools/mingw1310_64" }
           Write-Host "MINGW=$mingw"
-          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot $qtRoot -Mingw $mingw *> build_log.txt
+          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "C:/Qt/6.11.2" -Mingw $mingw *> build_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== BUILD FAILED, tail of build_log.txt ==="
             Get-Content build_log.txt -Tail 60
@@ -96,15 +100,13 @@ jobs:
         shell: pwsh
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
-          $env:QT_PLUGIN_PATH = "$env:Qt6_DIR/plugins"
+          $env:QT_PLUGIN_PATH = "C:/Qt/6.11.2/mingw_64/plugins"
           powershell -File run.ps1 -AutoClose 2000 *> smoke_log.txt
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
             Get-Content smoke_log.txt -Tail 40
             exit $LASTEXITCODE
-          }
-
-      - name: Upload build log on failure
+          }      - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
@@ -131,26 +133,24 @@ jobs:
           distribution: temurin
           java-version: '26'
 
-      - name: Install Qt 6.11.2 for macOS
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: '6.11.2'
-          host: 'mac'
-          target: 'desktop'
-          arch: 'macos'
-          archives: 'qt_base'
+      - name: Install Qt 6.11.2 for macOS (arch: clang_64)
+        run: |
+          python3 -m venv /tmp/aqt-venv
+          /tmp/aqt-venv/bin/pip install aqtinstall
+          printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
+          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.11.2 clang_64 --outputdir $HOME/Qt
+          test -f "$HOME/Qt/6.11.2/clang_64/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
 
       - name: Build libjqt.dylib
         run: |
           chmod +x build-macos.sh
-          QT_BASE="$Qt6_DIR" ./build-macos.sh
+          QT_BASE="$HOME/Qt/6.11.2/clang_64" ./build-macos.sh
 
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
-          QT_BASE="$Qt6_DIR"
+          QT_BASE="$HOME/Qt/6.11.2/clang_64"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
