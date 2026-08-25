@@ -1,4 +1,4 @@
-﻿name: CI
+name: CI
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  # ================= Linux (Ubuntu + apt Qt6) =================
+  # ================= Linux (aqt Qt 6.11.2 + apt system deps) =================
   linux:
     name: Linux x64
     runs-on: ubuntu-22.04
@@ -18,18 +18,29 @@ jobs:
           distribution: temurin
           java-version: '26'
 
-      - name: Install Qt6 + g++
+      - name: Install system deps (Qt6 + g++)
         run: |
           sudo apt-get update
           sudo apt-get install -y qt6-base-dev libgl1-mesa-dev g++
 
+      - name: Install Qt 6.11.2 (aqt)
+        run: |
+          pip install aqtinstall
+          printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
+          python3 -m aqt -c /tmp/aqt.ini install-qt linux desktop 6.11.2 gcc_64 --outputdir /opt/Qt
+          test -f /opt/Qt/6.11.2/gcc_64/include/QtWidgets/QWidget || (find /opt/Qt -maxdepth 4 -type d | head -20 && exit 1)
+
       - name: Build libjqt.so
-        run: chmod +x build-linux.sh && ./build-linux.sh
+        run: |
+          chmod +x build-linux.sh
+          QT_BASE=/opt/Qt/6.11.2/gcc_64 ./build-linux.sh
 
       - name: Smoke test (offscreen, headless)
         timeout-minutes: 4
         run: |
           chmod +x run-linux.sh
+          export QT_BASE=/opt/Qt/6.11.2/gcc_64
+          export QT_PLUGIN_PATH=/opt/Qt/6.11.2/gcc_64/plugins
           set +e
           QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -AutoClose 2000 > smoke_out.txt 2>&1
           CODE=$?
@@ -39,7 +50,7 @@ jobs:
             echo "=== DIAG ==="
             ls -la "$PWD/lib"
             ldd "$PWD/lib/libjqt.so" 2>&1 | head -20
-            find /usr/lib -name "*qoffscreen*" 2>/dev/null
+            find /opt/Qt -name "*qoffscreen*" 2>/dev/null
             JPID=$(pgrep -f "org.jqt.JQtDemo" | head -1)
             if [ -n "$JPID" ]; then
               jcmd "$JPID" Thread.print 2>&1 | head -80
@@ -53,7 +64,6 @@ jobs:
         with:
           name: libjqt-linux-x64
           path: lib/libjqt.so
-
   # ================= Windows (install-qt-action Qt + MinGW) =================
   windows:
     name: Windows x64
