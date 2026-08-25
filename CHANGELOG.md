@@ -12,6 +12,17 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.2.0-alpha（2026-08-26）— Fluent 三件套：开关 / 动画 / 标题栏
+
+**功能**：
+- 新控件 **JQtSwitch**：Fluent 风格开关（轨道 + 滑块 + 位移动画，纯自绘）
+- 新动画 API：**JQtEasing**（40 种缓动函数，映射 QEasingCurve）、
+  **JQtAnimation**（任意属性动画：loopCount / onFinished 回调 / 弱引用防泄漏）
+- 动画重载：JQtWidget.animateMove / animateResize、JQtWindow.fadeIn / fadeOut 均支持指定缓动
+- 标题栏打磨：Windows 用 Segoe MDL2 Assets 原生字形（最小化/最大化/关闭），
+  最大化 ↔ 还原图标随状态切换；macOS 交通灯保持
+- 演示升级：JQtFluentDemo 集成开关联动、弹性移动（OutBounce）、透明度脉冲（无限循环）
+
 ### v0.1.0-alpha（2026-08-25）— 首个 Alpha
 
 **里程碑**：Phase 0-6 全部完成，三平台 CI 构建全绿。
@@ -43,6 +54,18 @@
 
 <a id="en"></a>
 ## English Version
+
+### v0.2.0-alpha (2026-08-26) — Fluent Trio: Switch / Animation / Titlebar
+
+**Features**:
+- New widget **JQtSwitch**: Fluent-style switch (track + thumb + slide animation, custom painted)
+- New animation APIs: **JQtEasing** (40 easing functions mapping QEasingCurve),
+  **JQtAnimation** (arbitrary property animation: loopCount / onFinished callback / weak-ref leak guard)
+- Easing overloads: JQtWidget.animateMove / animateResize, JQtWindow.fadeIn / fadeOut
+- Titlebar polish: native Segoe MDL2 Assets glyphs on Windows (min/max/close),
+  maximize <-> restore icon switches with state; macOS traffic lights kept
+- Demo upgraded: JQtFluentDemo integrates switch binding, bounce move (OutBounce),
+  opacity pulse (infinite loop)
 
 ### v0.1.0-alpha (2026-08-25) — First Alpha
 
