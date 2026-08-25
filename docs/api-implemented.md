@@ -156,6 +156,44 @@
 
 > 实现说明：C++ 侧 QPropertyAnimation + DeleteWhenStopped 自清理；
 > Java 侧用 **弱引用** 注册回调，动画完成后自动注销，不泄漏、不钉住 GC。
+
+### 1.12 JQtAnimations —— Fluent 动效库【新增 v0.2.0】
+
+| 方法 | 说明 |
+|------|------|
+| `entrance(JQtWidget)` / `(w, ms, easing)` | 控件入场：下方 24px 滑入（时长经动画主题缩放） |
+| `exit(JQtWidget)` / `(w, ms, easing)` | 控件退场：下移，动画结束后隐藏 |
+| `setHoverEnabled(boolean)` | 全局按钮悬停动画开关（跟随动画主题） |
+
+**hover**：所有 JQtButton 默认带 150ms OutCubic 悬停高亮过渡（白色 8.5% 叠加层，
+clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hover 不受影响。
+
+> 实现说明：入场/退场用纯位移动画（QPropertyAnimation pos）。
+> 踩坑记录：QSS 样式化控件 + QGraphicsOpacityEffect 组合会触发 Qt 空指针崩溃，故不使用透明度特效。
+
+### 1.13 JQtPivot —— Fluent 选项卡（滑动指示器）【新增 v0.2.0】
+
+| 方法 | 说明 |
+|------|------|
+| `JQtPivot()` | 创建选项卡组（高 36px，纯自绘） |
+| `addItem(String)` | 追加选项卡 |
+| `currentIndex()` / `setCurrentIndex(int)` | 当前选中项（指示器 200ms OutCubic 滑动） |
+| `onChanged(Consumer<Integer>)` | 选中项变化回调（参数：新索引） |
+
+> 文本色跟随 QPalette，指示器用 Highlight 色（可被主题定制）。
+
+### 1.14 JQtAnimationTheme —— 动画主题【新增 v0.2.0】
+
+| 常量 / 方法 | 说明 |
+|------|------|
+| `DEFAULT`（1.0x, OutCubic） | 标准节奏 |
+| `FAST`（0.65x） | 轻快（触摸屏/演示） |
+| `RELAXED`（1.6x, OutQuint） | 舒缓（桌面沉浸） |
+| `OFF`（0x） | 禁用全部动效（无障碍/低配） |
+| `new JQtAnimationTheme(speed, easing)` | 自定义（speed=时长倍率，0=禁用） |
+| `JQtApplication.setAnimationTheme(theme)` | 全局应用（所有动效统一跟随） |
+
+> 启动参数 `-Djqt.animTheme=fast|relaxed|off|default`（或启动脚本 `-AnimTheme`）。
 ### 1.9 JQtCheckBox —— 复选框（QSS 可呈现 Fluent 开关）
 
 | 方法 | 说明 |
@@ -338,6 +376,44 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 > Impl: QPropertyAnimation + DeleteWhenStopped on the C++ side;
 > Java callback registered via **weak reference**, auto-unregistered after finish — no leaks, no GC pinning.
+
+### 1.12 JQtAnimations — Fluent motion library [v0.2.0]
+
+| Method | Description |
+|--------|-------------|
+| `entrance(JQtWidget)` / `(w, ms, easing)` | entrance: slide up 24px from below (duration scaled by animation theme) |
+| `exit(JQtWidget)` / `(w, ms, easing)` | exit: slide down, hides when finished |
+| `setHoverEnabled(boolean)` | global button hover animation toggle (follows theme) |
+
+**hover**: every JQtButton has a 150ms OutCubic hover highlight by default
+(white 8.5% overlay; clean-room implementation, Fluent public motion spec).
+
+> Impl: entrance/exit use pure position animation (QPropertyAnimation pos).
+> Pitfall: QSS-styled widgets + QGraphicsOpacityEffect crash Qt (null deref), so no opacity effects.
+
+### 1.13 JQtPivot — Fluent tabs with sliding indicator [v0.2.0]
+
+| Method | Description |
+|--------|-------------|
+| `JQtPivot()` | create tab group (36px high, custom painted) |
+| `addItem(String)` | append a tab |
+| `currentIndex()` / `setCurrentIndex(int)` | current tab (indicator slides 200ms OutCubic) |
+| `onChanged(Consumer<Integer>)` | tab change callback (new index) |
+
+> Text color follows QPalette, indicator uses Highlight color (themeable).
+
+### 1.14 JQtAnimationTheme — animation themes [v0.2.0]
+
+| Constant / Method | Description |
+|------------------|-------------|
+| `DEFAULT` (1.0x, OutCubic) | standard pace |
+| `FAST` (0.65x) | snappy (touch panels / demos) |
+| `RELAXED` (1.6x, OutQuint) | relaxed (desktop immersion) |
+| `OFF` (0x) | disable all motion (accessibility / low-end) |
+| `new JQtAnimationTheme(speed, easing)` | custom (speed = duration multiplier, 0 = off) |
+| `JQtApplication.setAnimationTheme(theme)` | apply globally (all motion follows) |
+
+> Startup: `-Djqt.animTheme=fast|relaxed|off|default` (or `-AnimTheme` in launchers).
 ### 1.9 JQtCheckBox — check box (QSS can render a Fluent switch)
 
 | Method | Description |
