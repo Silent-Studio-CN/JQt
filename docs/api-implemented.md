@@ -110,7 +110,25 @@
 | `void onItemClicked(Consumer<Integer>)` | 点击回调（参数：行号） |
 | `void onCurrentRowChanged(Consumer<Integer>)` | 当前行切换回调 |
 
-### 1.8 布局：JQtVBoxLayout / JQtHBoxLayout（继承 JQtLayout）
+### 1.8 JQtPanel —— 卡片/容器（Fluent 卡片基座）
+
+| 方法 | 说明 |
+|------|------|
+| `JQtPanel()` | 创建面板（QFrame，QSS 可样式化：圆角/边框/背景） |
+| `addWidget(widget)` | 直接添加子控件 |
+| `setLayout(layout)`（继承） | 内部布局 |
+
+### 1.9 JQtCheckBox —— 复选框（QSS 可呈现 Fluent 开关）
+
+| 方法 | 说明 |
+|------|------|
+| `JQtCheckBox(String text)` | 创建 |
+| `isChecked()` / `setChecked(boolean)` | 勾选状态 |
+| `onToggled(Consumer<Boolean>)` | 状态切换回调 |
+
+### 1.10 布局：JQtVBoxLayout / JQtHBoxLayout（继承 JQtLayout）
+
+> 新增：`addLayout(JQtLayout)` —— **布局嵌套**（VBox 中嵌 HBox，可自绘标题栏/工具行）
 
 | 方法 | 说明 |
 |------|------|
@@ -238,7 +256,25 @@
 | `void onItemClicked(Consumer<Integer>)` | item clicked (row) |
 | `void onCurrentRowChanged(Consumer<Integer>)` | current row changed |
 
-### 1.8 Layouts: JQtVBoxLayout / JQtHBoxLayout (extend JQtLayout)
+### 1.8 JQtPanel — card/container (Fluent card base)
+
+| Method | Description |
+|--------|-------------|
+| `JQtPanel()` | create a panel (QFrame, QSS-stylable) |
+| `addWidget(widget)` | add a child directly |
+| `setLayout(layout)` (inherited) | inner layout |
+
+### 1.9 JQtCheckBox — check box (QSS can render a Fluent switch)
+
+| Method | Description |
+|--------|-------------|
+| `JQtCheckBox(String text)` | create |
+| `isChecked()` / `setChecked(boolean)` | checked state |
+| `onToggled(Consumer<Boolean>)` | toggle callback |
+
+### 1.10 Layouts: JQtVBoxLayout / JQtHBoxLayout (extend JQtLayout)
+
+> New: `addLayout(JQtLayout)` — **layout nesting** (HBox inside VBox for custom title bars / tool rows)
 
 | Method | Description |
 |--------|-------------|

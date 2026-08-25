@@ -452,7 +452,7 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeDispose(JNIEnv* /*env*/, jcl
 }
 
 // 设置控件级样式表（QSS，QWidget::setStyleSheet；控件与全局样式可叠加）
-JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetStyleSheet(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring qss) {
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetStyleSheet(JNIEnv* env, jclass /*cls*/, jlong handle, jstring qss) {
     QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
     if (widget == nullptr) {
         return;
@@ -691,7 +691,7 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetLayout(JNIEnv* env, jobje
 }
 
 // JQtWidget：通用 setLayout（任何控件可装布局）
-JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetLayout(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong layoutHandle) {
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetLayout(JNIEnv* env, jclass /*cls*/, jlong handle, jlong layoutHandle) {
     QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
     if (widget == nullptr) {
         return;
