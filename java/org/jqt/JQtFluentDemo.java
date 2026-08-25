@@ -30,25 +30,8 @@ public class JQtFluentDemo {
         window.setAcrylic(true);
         window.setRoundedCorners(true);
 
-        // ---- 自绘标题栏（HBox 嵌入 VBox——布局嵌套）----
-        JQtHBoxLayout titleBar = new JQtHBoxLayout();
-        titleBar.setSpacing(6);
-        JQtLabel title = new JQtLabel("  JQt Fluent");
-        title.setStyleSheet("font-size: 14px; font-weight: bold;");
-        JQtButton minBtn = new JQtButton("—");
-        JQtButton maxBtn = new JQtButton("▢");
-        JQtButton closeBtn = new JQtButton("✕");
-        minBtn.setStyleSheet("background: transparent; padding: 2px 10px;");
-        maxBtn.setStyleSheet("background: transparent; padding: 2px 10px;");
-        closeBtn.setStyleSheet("background: transparent; padding: 2px 10px;");
-        closeBtn.onClick(() -> window.close());
-        minBtn.onClick(() -> window.minimize());
-        maxBtn.onClick(() -> window.toggleMaximize());
-        titleBar.addWidget(title);
-        titleBar.addStretch(1);
-        titleBar.addWidget(minBtn);
-        titleBar.addWidget(maxBtn);
-        titleBar.addWidget(closeBtn);
+        // ---- 跨平台标题栏（Windows 三件套 / macOS 交通灯）----
+        JQtTitleBar titleBar = new JQtTitleBar("JQt Fluent", window);
 
         // ---- 导航（列表）----
         JQtListWidget nav = new JQtListWidget();
@@ -101,7 +84,7 @@ public class JQtFluentDemo {
 
         JQtVBoxLayout main = new JQtVBoxLayout();
         main.setSpacing(8);
-        main.addLayout(titleBar);
+        main.addWidget(titleBar);
         main.addLayout(body);
         window.setLayout(main);
 

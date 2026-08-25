@@ -52,6 +52,16 @@ public abstract class JQtWidget {
     private static native void nativeSetStyleSheet(long handle, String qss);
 
     /**
+     * 设置控件对象名（QSS 选择器 {@code #objectName} 用）。
+     * 如 {@code button.setObjectName("titlebarClose")} 后，
+     * QSS 中 {@code QPushButton#titlebarClose { ... }} 生效。
+     */
+    public void setObjectName(String name) {
+        nativeSetObjectName(nativeHandle, name);
+    }
+    private static native void nativeSetObjectName(long handle, String name);
+
+    /**
      * 给本控件设置布局管理器（任何控件都可用，如面板/卡片内部布局）。
      * 设置后由布局接管子控件排列。
      */

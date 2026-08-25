@@ -112,13 +112,99 @@ public class JQtApplication {
     public void setTheme(String name) {
         switch (name == null ? "" : name) {
             case "fluent-dark":
-                applyThemeFile("themes/fluent-dark.qss", false);
+                setTheme("themes/fluent.qss.tpl", FLUENT_DARK, false);
                 break;
             case "fluent-light":
-                applyThemeFile("themes/fluent-light.qss", true);
+                setTheme("themes/fluent.qss.tpl", FLUENT_LIGHT, true);
                 break;
             default:
                 throw new IllegalArgumentException("未知主题: " + name + "（内置: fluent-dark / fluent-light）");
+        }
+    }
+
+    // ==================== QSS 模板变量系统 ====================
+
+    /** Fluent 深色变量集（模板 themes/fluent.qss.tpl + 本变量集 = fluent-dark）。 */
+    public static final java.util.Map<String, String> FLUENT_DARK = java.util.Map.ofEntries(
+        java.util.Map.entry("win-bg", "#1f1f1f"),
+        java.util.Map.entry("fg", "#e8e8e8"),
+        java.util.Map.entry("fg-strong", "#ffffff"),
+        java.util.Map.entry("fg-hint", "#9a9a9a"),
+        java.util.Map.entry("fg-disabled", "#6a6a6a"),
+        java.util.Map.entry("card-bg", "#2b2b2b"),
+        java.util.Map.entry("card-border", "#3a3a3a"),
+        java.util.Map.entry("btn-bg", "#3b3b3b"),
+        java.util.Map.entry("btn-fg", "#ffffff"),
+        java.util.Map.entry("btn-hover", "#484848"),
+        java.util.Map.entry("btn-pressed", "#2e2e2e"),
+        java.util.Map.entry("btn-disabled", "#2a2a2a"),
+        java.util.Map.entry("accent", "#4cc2ff"),
+        java.util.Map.entry("accent-hover", "#5acbff"),
+        java.util.Map.entry("accent-fg", "#ffffff"),
+        java.util.Map.entry("switch-off", "#4a4a4a"),
+        java.util.Map.entry("switch-off-hover", "#555555"),
+        java.util.Map.entry("nav-fg", "#d8d8d8"),
+        java.util.Map.entry("nav-hover", "#2b2b2b"),
+        java.util.Map.entry("nav-selected", "#333333"),
+        java.util.Map.entry("input-bg", "#2b2b2b"),
+        java.util.Map.entry("input-border", "#3a3a3a"),
+        java.util.Map.entry("titlebar-hover", "#3a3a3a"),
+        java.util.Map.entry("titlebar-pressed", "#2e2e2e")
+    );
+
+    /** Fluent 浅色变量集。 */
+    public static final java.util.Map<String, String> FLUENT_LIGHT = java.util.Map.ofEntries(
+        java.util.Map.entry("win-bg", "#f3f3f3"),
+        java.util.Map.entry("fg", "#1f1f1f"),
+        java.util.Map.entry("fg-strong", "#000000"),
+        java.util.Map.entry("fg-hint", "#6a6a6a"),
+        java.util.Map.entry("fg-disabled", "#9a9a9a"),
+        java.util.Map.entry("card-bg", "#ffffff"),
+        java.util.Map.entry("card-border", "#e0e0e0"),
+        java.util.Map.entry("btn-bg", "#f0f0f0"),
+        java.util.Map.entry("btn-fg", "#1f1f1f"),
+        java.util.Map.entry("btn-hover", "#e5e5e5"),
+        java.util.Map.entry("btn-pressed", "#d8d8d8"),
+        java.util.Map.entry("btn-disabled", "#f5f5f5"),
+        java.util.Map.entry("accent", "#0078d4"),
+        java.util.Map.entry("accent-hover", "#1a86d8"),
+        java.util.Map.entry("accent-fg", "#ffffff"),
+        java.util.Map.entry("switch-off", "#c8c8c8"),
+        java.util.Map.entry("switch-off-hover", "#b8b8b8"),
+        java.util.Map.entry("nav-fg", "#333333"),
+        java.util.Map.entry("nav-hover", "#ececec"),
+        java.util.Map.entry("nav-selected", "#e0e0e0"),
+        java.util.Map.entry("input-bg", "#ffffff"),
+        java.util.Map.entry("input-border", "#d0d0d0"),
+        java.util.Map.entry("titlebar-hover", "#e0e0e0"),
+        java.util.Map.entry("titlebar-pressed", "#d0d0d0")
+    );
+
+    /**
+     * 用 QSS 模板 + 变量集渲染主题（一套模板，任意主题色）。
+     * 模板内 {@code %变量名%} 占位符会被替换为变量值。
+     */
+    public void setTheme(String qssTemplatePath, java.util.Map<String, String> variables) {
+        setTheme(qssTemplatePath, variables, true);
+    }
+
+    /** 模板 + 变量集 + 配色方案（light/dark palette）。 */
+    public void setTheme(String qssTemplatePath, java.util.Map<String, String> variables, boolean light) {
+        try {
+            Path p = Path.of(qssTemplatePath);
+            if (!Files.exists(p)) {
+                throw new IllegalArgumentException("主题文件不存在: " + qssTemplatePath);
+            }
+            String qss = Files.readString(p, StandardCharsets.UTF_8);
+            if (variables != null) {
+                for (java.util.Map.Entry<String, String> e : variables.entrySet()) {
+                    qss = qss.replace("%" + e.getKey() + "%", e.getValue());
+                }
+            }
+            setColorScheme(light);
+            setStyleSheet(qss);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("读取主题失败: " + qssTemplatePath, e);
         }
     }
 

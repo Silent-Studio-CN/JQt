@@ -71,6 +71,7 @@
 #include "generated/org_jqt_JQtListWidget.h"
 #include "generated/org_jqt_JQtPanel.h"
 #include "generated/org_jqt_JQtCheckBox.h"
+#include "generated/org_jqt_JQtTitleBar.h"
 
 // ----------------------------------------------------------------------------
 // 全局状态
@@ -717,6 +718,17 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetLayout(JNIEnv* env, jclas
     markQtOwned(layoutHandle);
 }
 
+// JQtWidget：设置 objectName（QSS #name 选择器）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetObjectName(JNIEnv* env, jclass /*cls*/, jlong handle, jstring name) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(name, nullptr);
+    widget->setObjectName(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(name, utf);
+}
+
 // ----------------------------------------------------------------------------
 // JQtButton：QPushButton 的封装（clicked/pressed/released/toggled 信号）
 // ----------------------------------------------------------------------------
@@ -1133,6 +1145,19 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtCheckBox_nativeSetChecked(JNIEnv* env, jo
         return;
     }
     box->setChecked(checked == JNI_TRUE);
+}
+
+// ----------------------------------------------------------------------------
+// JQtTitleBar：跨平台标题栏容器（Windows 三件套 / macOS 交通灯）
+// ----------------------------------------------------------------------------
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtTitleBar_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QFrame* frame = new QFrame();
+    frame->setFixedHeight(36);
+    return registerHandle(frame, /*javaOwned=*/true);
 }
 
 // ----------------------------------------------------------------------------
