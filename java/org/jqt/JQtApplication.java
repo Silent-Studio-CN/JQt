@@ -34,10 +34,26 @@ public class JQtApplication {
 
     /**
      * 创建 QApplication（整个进程只能有一个）。
+     * 若 JVM 参数包含 {@code -Djqt.lightMode=true}，自动切换浅色配色。
      */
     public JQtApplication() {
         nativeHandle = nativeCreateApp();
+        if (Boolean.getBoolean("jqt.lightMode")) {
+            setLightMode(true);
+        }
     }
+
+    /**
+     * 切换浅色 / 默认配色（运行时生效，立即刷新全部控件）。
+     * <p>
+     * 背景：Qt 在 Java 进程中可能误判系统暗色模式（深色系统下默认深色），
+     * 调用 {@code setLightMode(true)} 可恢复经典浅色外观；
+     * 也可用 JVM 参数 {@code -Djqt.lightMode=true} 在启动时自动开启。
+     */
+    public void setLightMode(boolean on) {
+        nativeSetLightMode(on);
+    }
+    private native void nativeSetLightMode(boolean on);
 
     private native long nativeCreateApp();
 

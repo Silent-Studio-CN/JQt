@@ -176,6 +176,11 @@ window.setLayout(hbox);
 **Q8：控制台中文乱码？**
 → 纯显示问题：运行前执行 `chcp 65001` 切换 UTF-8 代码页即可。
 
+**Q9：窗口是深色的，和原生 Qt 程序（白色）不一样？**
+→ 这是 Qt 在 Java 进程中的暗色检测差异（系统深色模式下 Qt 误判 java.exe 为深色应用）。
+  想要经典浅色：运行加 `-Djqt.lightMode=true`，或代码里 `app.setLightMode(true)`。
+  想要深色主题：配合 QSS 自定义（见 docs/api-implemented.md）。
+
 ### 8. 许可提醒
 
 - JQt 采用 **JSL-1.0 分层授权**（详见 `LICENSE.md`）；
@@ -332,6 +337,8 @@ window.setLayout(hbox);
 **Q7: Java 26 warns `Restricted method System::loadLibrary`?** — add `--enable-native-access=ALL-UNNAMED` to the java command (loadLibrary is restricted on Java 26 and will be blocked in future releases).
 
 **Q8: Chinese text garbled in console?** — display-only issue: run `chcp 65001` before launching.
+
+**Q9: Window is dark, unlike native Qt (white)?** — Qt's dark-mode detection differs inside a Java process (with a dark system theme it mistakes java.exe for a dark app). For the classic light look: add `-Djqt.lightMode=true` or call `app.setLightMode(true)`. For a custom dark theme, combine with QSS.
 
 ### 8. License Notes
 

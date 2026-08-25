@@ -25,3 +25,6 @@ _pureqt_*
 _pq_*
 ghost_test.log
 qss_test.log
+_pureqt*
+_pq_*
+_jqt_diag.txt
