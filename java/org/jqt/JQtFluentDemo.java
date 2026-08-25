@@ -47,13 +47,20 @@ public class JQtFluentDemo {
         JQtLabel card1Title = new JQtLabel("开关组");
         card1Title.setStyleSheet("font-size: 14px; font-weight: bold;");
         card1L.addWidget(card1Title);
-        JQtCheckBox switch1 = new JQtCheckBox("自动更新");
-        JQtCheckBox switch2 = new JQtCheckBox("开机自启");
+        JQtSwitch switch1 = new JQtSwitch(true);
+        JQtSwitch switch2 = new JQtSwitch(false);
         switch1.onToggled(on -> System.out.println("[Fluent] 自动更新 = " + on));
         switch2.onToggled(on -> System.out.println("[Fluent] 开机自启 = " + on));
+        JQtLabel switchRow = new JQtLabel("");
+        // 深色主题下固定前景色（模板变量仅用于 setTheme 渲染，此处直接写字面值）
+        switchRow.setStyleSheet("font-size: 13px; color: #e6e6e6;");
+        card1L.addWidget(switchRow);
         card1L.addWidget(switch1);
         card1L.addWidget(switch2);
         card1.setLayout(card1L);
+        // 开关行标签（联动演示）
+        switch1.onToggled(on -> switchRow.setText("自动更新：" + (on ? "开" : "关") + "（滑块动画）"));
+        switchRow.setText("自动更新：开（滑块动画）");
 
         // ---- 卡片 2：输入与按钮 ----
         JQtPanel card2 = new JQtPanel();
@@ -70,6 +77,32 @@ public class JQtFluentDemo {
         card2L.addWidget(ok);
         card2.setLayout(card2L);
 
+        // ---- 卡片 3：动画演示（easing + JQtAnimation）----
+        JQtPanel card3 = new JQtPanel();
+        JQtVBoxLayout card3L = new JQtVBoxLayout();
+        card3L.setSpacing(10);
+        JQtLabel card3Title = new JQtLabel("动画演示");
+        card3Title.setStyleSheet("font-size: 14px; font-weight: bold;");
+        JQtButton bounceBtn = new JQtButton("弹性移动 (OutBounce)");
+        JQtButton fadePulse = new JQtButton("透明度脉冲 (InOutSine)");
+        JQtLabel ball = new JQtLabel("●");
+        ball.setStyleSheet("font-size: 20px; color: #4cc2ff;");
+        card3L.addWidget(card3Title);
+        card3L.addWidget(ball);
+        card3L.addWidget(bounceBtn);
+        card3L.addWidget(fadePulse);
+        card3.setLayout(card3L);
+
+        // 弹性移动：easing 重载
+        bounceBtn.onClick(() -> {
+            ball.animateMove(0, 40, 700, JQtEasing.OUT_BOUNCE);
+            ball.animateMove(0, 0, 700, JQtEasing.OUT_BOUNCE);
+        });
+        // 无限循环透明度脉冲：JQtAnimation 高级 API
+        JQtAnimation pulse = new JQtAnimation(ball, "windowOpacity", 1.0, 0.25, 900, JQtEasing.IN_OUT_SINE);
+        pulse.setLoopCount(-1);
+        pulse.start();
+
         // ---- 主布局：标题栏 + 导航 + 卡片 ----
         JQtHBoxLayout body = new JQtHBoxLayout();
         body.setSpacing(12);
@@ -78,6 +111,7 @@ public class JQtFluentDemo {
         cards.setSpacing(12);
         cards.addWidget(card1);
         cards.addWidget(card2);
+        cards.addWidget(card3);
         cards.addStretch(1);
         body.addLayout(cards);
         body.addStretch(1);

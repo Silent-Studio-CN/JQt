@@ -137,6 +137,18 @@ public class JQtWindow extends JQtWidget {
     }
     private native void nativeFadeOut(long handle, long ms);
 
+    /** 窗口淡入，可指定缓动函数。 */
+    public void fadeIn(long ms, JQtEasing easing) {
+        nativeFadeInEasing(nativeHandle, ms, easing.qtType);
+    }
+    private native void nativeFadeInEasing(long handle, long ms, int easing);
+
+    /** 窗口淡出，可指定缓动函数。 */
+    public void fadeOut(long ms, JQtEasing easing) {
+        nativeFadeOutEasing(nativeHandle, ms, easing.qtType);
+    }
+    private native void nativeFadeOutEasing(long handle, long ms, int easing);
+
     /** 修改窗口标题。 */
     public void setTitle(String title) {
         nativeSetTitle(nativeHandle, title);

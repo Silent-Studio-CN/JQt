@@ -21,6 +21,14 @@ public class JQtTitleBar extends JQtWidget {
 
     private static final boolean IS_MAC =
             System.getProperty("os.name", "").toLowerCase().contains("mac");
+    private static final boolean IS_WIN =
+            System.getProperty("os.name", "").toLowerCase().contains("win");
+
+    // Segoe MDL2 Assets 字形（Windows 10/11 原生窗口按钮图标）
+    private static final String GLYPH_MINIMIZE = "\uE921";
+    private static final String GLYPH_MAXIMIZE = "\uE922";
+    private static final String GLYPH_RESTORE   = "\uE923";
+    private static final String GLYPH_CLOSE     = "\uE8BB";
 
     /**
      * 创建标题栏。
@@ -64,8 +72,27 @@ public class JQtTitleBar extends JQtWidget {
             bar.addWidget(green);
             bar.addWidget(titleLabel);
             bar.addStretch(1);
+        } else if (IS_WIN) {
+            // Windows：Segoe MDL2 Assets 原生字形（与系统窗口按钮一致）
+            minBtn.setText(GLYPH_MINIMIZE);
+            maxBtn.setText(GLYPH_MAXIMIZE);
+            closeBtn.setText(GLYPH_CLOSE);
+            String glyphQss = "font-family: \"Segoe MDL2 Assets\"; font-size: 10px;";
+            minBtn.setStyleSheet(glyphQss);
+            maxBtn.setStyleSheet(glyphQss);
+            closeBtn.setStyleSheet(glyphQss);
+            // 最大化 ↔ 还原 图标随状态切换
+            maxBtn.onClick(() -> {
+                window.toggleMaximize();
+                maxBtn.setText(window.isMaximized() ? GLYPH_RESTORE : GLYPH_MAXIMIZE);
+            });
+            bar.addWidget(titleLabel);
+            bar.addStretch(1);
+            bar.addWidget(minBtn);
+            bar.addWidget(maxBtn);
+            bar.addWidget(closeBtn);
         } else {
-            // Windows/Linux：标题在左，三件套在右
+            // Linux：标题在左，三件套在右（字符图标）
             bar.addWidget(titleLabel);
             bar.addStretch(1);
             bar.addWidget(minBtn);

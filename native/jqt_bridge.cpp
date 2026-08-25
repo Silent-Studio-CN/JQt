@@ -36,7 +36,10 @@
 #include <QCheckBox>
 #include <QFrame>
 #include <QGraphicsOpacityEffect>
+#include <QPainter>
+#include <QPainterPath>
 #include <QPropertyAnimation>
+#include <QVariantAnimation>
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -72,6 +75,7 @@
 #include "generated/org_jqt_JQtPanel.h"
 #include "generated/org_jqt_JQtCheckBox.h"
 #include "generated/org_jqt_JQtTitleBar.h"
+#include "generated/org_jqt_JQtSwitch.h"
 
 // ----------------------------------------------------------------------------
 // 全局状态
@@ -1158,6 +1162,267 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtTitleBar_nativeCreate(JNIEnv* env, jobje
     QFrame* frame = new QFrame();
     frame->setFixedHeight(36);
     return registerHandle(frame, /*javaOwned=*/true);
+}
+
+// ----------------------------------------------------------------------------
+// 动画扩展：带缓动函数的版本（JQtEasing 枚举 → QEasingCurve）
+// ----------------------------------------------------------------------------
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeAnimateMoveEasing(JNIEnv* env, jclass /*cls*/, jlong handle, jint x, jint y, jlong ms, jint easing) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "pos", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setEndValue(QPoint(static_cast<int>(x), static_cast<int>(y)));
+    anim->setEasingCurve(static_cast<QEasingCurve::Type>(easing));
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeAnimateResizeEasing(JNIEnv* env, jclass /*cls*/, jlong handle, jint w, jint h, jlong ms, jint easing) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "size", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setEndValue(QSize(static_cast<int>(w), static_cast<int>(h)));
+    anim->setEasingCurve(static_cast<QEasingCurve::Type>(easing));
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeFadeInEasing(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong ms, jint easing) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "windowOpacity", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(0.0);
+    anim->setEndValue(1.0);
+    anim->setEasingCurve(static_cast<QEasingCurve::Type>(easing));
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeFadeOutEasing(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong ms, jint easing) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "windowOpacity", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(widget->windowOpacity());
+    anim->setEndValue(0.0);
+    anim->setEasingCurve(static_cast<QEasingCurve::Type>(easing));
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// 通用数字属性动画（JQtAnimation 的核心 native）
+// 属性名如 "windowOpacity"；值范围 from → to（double）
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtWidget_nativeCreateAnimation(JNIEnv* env, jclass /*cls*/, jlong handle, jstring property, jdouble from, jdouble to, jlong ms, jint easing) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return 0;
+    }
+    const char* utf = env->GetStringUTFChars(property, nullptr);
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, QByteArray(utf), widget);
+    env->ReleaseStringUTFChars(property, utf);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(from);
+    anim->setEndValue(to);
+    anim->setEasingCurve(static_cast<QEasingCurve::Type>(easing));
+    return registerHandle(anim, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeAnimationSetLoopCount(JNIEnv* env, jclass /*cls*/, jlong animHandle, jint loops) {
+    QPropertyAnimation* anim = static_cast<QPropertyAnimation*>(requireHandle(env, animHandle));
+    if (anim == nullptr) {
+        return;
+    }
+    anim->setLoopCount(static_cast<int>(loops));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeAnimationStart(JNIEnv* env, jclass /*cls*/, jlong animHandle) {
+    QPropertyAnimation* anim = static_cast<QPropertyAnimation*>(requireHandle(env, animHandle));
+    if (anim == nullptr) {
+        return;
+    }
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeAnimationStop(JNIEnv* env, jclass /*cls*/, jlong animHandle) {
+    QPropertyAnimation* anim = static_cast<QPropertyAnimation*>(requireHandle(env, animHandle));
+    if (anim == nullptr) {
+        return;
+    }
+    anim->stop();
+}
+
+// 动画完成回调注册表：animHandle → Java 弱引用（JQtAnimation 构造时注册）
+// 弱引用不阻止 Java 对象 GC；finished 回调一次性（触发后即注销并释放）。
+// 动画对象自身带 DeleteWhenStopped（自清理），finished 信号触发 Java 侧回调。
+static std::unordered_map<int64_t, jweak> g_animCallbacks;
+static std::mutex g_animMutex;
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeRegisterAnimation(JNIEnv* env, jclass /*cls*/, jlong animHandle, jobject animObj) {
+    QPropertyAnimation* anim = static_cast<QPropertyAnimation*>(requireHandle(env, animHandle));
+    if (anim == nullptr) {
+        return;
+    }
+    jweak wRef = env->NewWeakGlobalRef(animObj);
+    {
+        std::lock_guard<std::mutex> lock(g_animMutex);
+        g_animCallbacks[static_cast<int64_t>(animHandle)] = wRef;
+    }
+    QObject::connect(anim, &QPropertyAnimation::finished, [animHandle]() {
+        JNIEnv* e = callbackEnv();
+        jweak wRef = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(g_animMutex);
+            auto it = g_animCallbacks.find(static_cast<int64_t>(animHandle));
+            if (it != g_animCallbacks.end()) {
+                wRef = it->second;
+                g_animCallbacks.erase(it);
+            }
+        }
+        if (wRef == nullptr) {
+            return;
+        }
+        // 弱引用 → 局部强引用；Java 对象已被 GC 则跳过回调
+        jobject local = e->NewLocalRef(wRef);
+        e->DeleteWeakGlobalRef(wRef);
+        if (local == nullptr) {
+            return;
+        }
+        jclass cls = e->GetObjectClass(local);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleFinished", "()V");
+        if (mid != nullptr) {
+            e->CallVoidMethod(local, mid);
+            if (e->ExceptionCheck()) {
+                e->ExceptionDescribe();
+                e->ExceptionClear();
+            }
+        }
+        e->DeleteLocalRef(local);
+    });
+}
+
+// ----------------------------------------------------------------------------
+// JQtSwitch：自定义开关控件（轨道 + 滑块 + 位移动画）
+// 纯 paintEvent 绘制（不依赖 QSS 子控件），滑块位置由属性动画驱动。
+// ----------------------------------------------------------------------------
+
+class JQtSwitchWidget : public QWidget {
+public:
+    explicit JQtSwitchWidget(bool checked)
+        : m_checked(checked), m_progress(checked ? 1.0 : 0.0) {
+        setFixedSize(44, 22);
+        setCursor(Qt::PointingHandCursor);
+        // 滑块位移动画（progress 0~1，QVariantAnimation 免 moc）
+        m_anim = new QVariantAnimation(this);
+        m_anim->setDuration(180);
+        m_anim->setEasingCurve(QEasingCurve::OutCubic);
+        QObject::connect(m_anim, &QVariantAnimation::valueChanged, this,
+                         [this](const QVariant& v) { setProgress(v.toDouble()); });
+    }
+
+    std::function<void(bool)> onToggled;
+
+    bool isChecked() const { return m_checked; }
+
+    void setChecked(bool checked) {
+        if (m_checked == checked) {
+            return;
+        }
+        m_checked = checked;
+        m_anim->stop();
+        m_anim->setStartValue(m_progress);
+        m_anim->setEndValue(checked ? 1.0 : 0.0);
+        m_anim->start();
+        if (onToggled) {
+            onToggled(checked);
+        }
+    }
+
+    double progress() const { return m_progress; }
+    void setProgress(double p) {
+        m_progress = p;
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter painter(this);
+        painter.setRenderHint(QPainter::Antialiasing);
+
+        const double w = width();
+        const double h = height();
+
+        // 轨道颜色随进度渐变：关=灰 → 开=accent
+        const QColor offColor(0x4a, 0x4a, 0x4a);
+        const QColor onColor(0x4c, 0xc2, 0xff);
+        const double t = m_progress;
+        const QColor trackColor(
+            int(offColor.red()   + (onColor.red()   - offColor.red())   * t),
+            int(offColor.green() + (onColor.green() - offColor.green()) * t),
+            int(offColor.blue()  + (onColor.blue()  - offColor.blue())  * t));
+        QPainterPath track;
+        track.addRoundedRect(0.5, 0.5, w - 1, h - 1, h / 2.0, h / 2.0);
+        painter.fillPath(track, trackColor);
+
+        // 滑块（按 progress 平滑移动）
+        const double r = h - 4;
+        const double x = 2 + m_progress * (w - r - 4);
+        painter.setBrush(Qt::white);
+        painter.setPen(Qt::NoPen);
+        painter.drawEllipse(QPointF(x + r / 2.0, h / 2.0), r / 2.0, r / 2.0);
+    }
+
+    void mousePressEvent(QMouseEvent* event) override {
+        if (event->button() == Qt::LeftButton) {
+            setChecked(!m_checked);
+        }
+        QWidget::mousePressEvent(event);
+    }
+
+private:
+    bool m_checked;
+    double m_progress;
+    QVariantAnimation* m_anim;
+};
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtSwitch_nativeCreate(JNIEnv* env, jobject thiz, jboolean checked) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    JQtSwitchWidget* sw = new JQtSwitchWidget(checked == JNI_TRUE);
+    jobject gRef = env->NewGlobalRef(thiz);
+    sw->onToggled = [gRef](bool on) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleToggled", "(Z)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jboolean>(on));
+        }
+    };
+    return registerHandle(sw, /*javaOwned=*/true);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_JQtSwitch_nativeIsChecked(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    JQtSwitchWidget* sw = static_cast<JQtSwitchWidget*>(requireHandle(env, handle));
+    if (sw == nullptr) {
+        return JNI_FALSE;
+    }
+    return sw->isChecked() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtSwitch_nativeSetChecked(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean checked) {
+    JQtSwitchWidget* sw = static_cast<JQtSwitchWidget*>(requireHandle(env, handle));
+    if (sw == nullptr) {
+        return;
+    }
+    sw->setChecked(checked == JNI_TRUE);
 }
 
 // ----------------------------------------------------------------------------

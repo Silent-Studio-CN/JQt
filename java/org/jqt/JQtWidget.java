@@ -78,11 +78,23 @@ public abstract class JQtWidget {
     }
     private static native void nativeAnimateMove(long handle, int x, int y, long ms);
 
+    /** 平滑移动到目标位置，可指定缓动函数。 */
+    public void animateMove(int x, int y, long ms, JQtEasing easing) {
+        nativeAnimateMoveEasing(nativeHandle, x, y, ms, easing.qtType);
+    }
+    static native void nativeAnimateMoveEasing(long handle, int x, int y, long ms, int easing);
+
     /** 平滑缩放到目标尺寸。 */
     public void animateResize(int w, int h, long ms) {
         nativeAnimateResize(nativeHandle, w, h, ms);
     }
     private static native void nativeAnimateResize(long handle, int w, int h, long ms);
+
+    /** 平滑缩放到目标尺寸，可指定缓动函数。 */
+    public void animateResize(int w, int h, long ms, JQtEasing easing) {
+        nativeAnimateResizeEasing(nativeHandle, w, h, ms, easing.qtType);
+    }
+    static native void nativeAnimateResizeEasing(long handle, int w, int h, long ms, int easing);
 
     /** 淡入（透明度 0 → 1，QGraphicsOpacityEffect）。 */
     public void fadeIn(long ms) {
@@ -95,6 +107,23 @@ public abstract class JQtWidget {
         nativeFadeOut(nativeHandle, ms);
     }
     private static native void nativeFadeOut(long handle, long ms);
+
+    // ---- 高级动画系统（JQtAnimation 使用；native 符号归属本类）----
+
+    /** 创建属性动画并返回动画句柄（供 JQtAnimation 内部使用）。 */
+    static native long nativeCreateAnimation(long handle, String property, double from, double to, long ms, int easing);
+
+    /** 设置动画循环次数（-1 表示无限循环）。 */
+    static native void nativeAnimationSetLoopCount(long animHandle, int loops);
+
+    /** 启动动画（结束后自动销毁 C++ 对象）。 */
+    static native void nativeAnimationStart(long animHandle);
+
+    /** 停止动画（不销毁）。 */
+    static native void nativeAnimationStop(long animHandle);
+
+    /** 注册 Java 侧完成回调（JQtAnimation 构造时调用）。 */
+    static native void nativeRegisterAnimation(long animHandle, JQtAnimation anim);
 
     /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。

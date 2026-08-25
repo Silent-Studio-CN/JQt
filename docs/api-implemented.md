@@ -1,4 +1,4 @@
-# JQt 已实现 API 清单（v0.1.0-alpha）
+# JQt 已实现 API 清单（v0.2.0-alpha）
 
 <details>
 <summary>🌐 语言 / Language</summary>
@@ -12,7 +12,7 @@
 <a id="zh"></a>
 ## 中文版
 
-> 本清单从源码自动提取，与 v0.1.0-alpha 发布包一一对应。
+> 本清单从源码自动提取，与 v0.2.0-alpha 发布包一一对应。
 > 所有控件继承 `JQtWidget`，共享其基础方法（见 1.0）。
 
 ### 1.0 基类 JQtWidget（所有控件共享）
@@ -23,6 +23,10 @@
 | `void dispose()` | 手动释放 C++ 对象（一般无需调用，GC 自动回收） |
 | `boolean isDisposed()` | 是否已释放 |
 | `long nativeHandle()` | C++ 句柄（高级用途） |
+| `void animateMove(x,y,ms)` | 平滑移动（OutCubic 缓动） |
+| `void animateMove(x,y,ms,JQtEasing)` | 平滑移动，指定缓动函数 |
+| `void animateResize(w,h,ms)` | 平滑缩放（OutCubic 缓动） |
+| `void animateResize(w,h,ms,JQtEasing)` | 平滑缩放，指定缓动函数 |
 | `void setStyleSheet(String qss)` | 控件级 QSS（与全局样式可叠加，控件级优先） |
 
 ### 1.1 JQtApplication —— 应用入口
@@ -118,6 +122,40 @@
 | `addWidget(widget)` | 直接添加子控件 |
 | `setLayout(layout)`（继承） | 内部布局 |
 
+### 1.9 JQtSwitch —— Fluent 开关（自绘 + 滑块动画）【新增 v0.2.0】
+
+| 方法 | 说明 |
+|------|------|
+| `JQtSwitch()` / `JQtSwitch(boolean checked)` | 创建开关（默认关 / 指定初始状态） |
+| `isChecked()` / `setChecked(boolean)` | 状态查询 / 设置（滑块位移动画，轨道颜色随进度渐变） |
+| `onToggled(Consumer<Boolean>)` | 状态切换回调（参数：新状态） |
+
+### 1.10 JQtEasing —— 缓动函数（40 种）【新增 v0.2.0】
+
+| 常量 | 说明 |
+|------|------|
+| `LINEAR` | 线性 |
+| `IN_QUAD` ~ `OUT_IN_QUINT` | 二次 ~ 五次曲线 |
+| `IN_SINE` / `OUT_SINE` / `IN_OUT_SINE` | 正弦 |
+| `IN_EXPO` ~ `OUT_IN_EXPO` | 指数 |
+| `IN_CIRC` ~ `OUT_IN_CIRC` | 圆形 |
+| `IN_ELASTIC` ~ `OUT_IN_ELASTIC` | 弹性 |
+| `IN_BACK` ~ `OUT_IN_BACK` | 回退 |
+| `IN_BOUNCE` / `OUT_BOUNCE` / `IN_OUT_BOUNCE` / `OUT_IN_BOUNCE` | 弹跳 |
+
+映射 Qt `QEasingCurve::Type` 0~40，可作为所有动画方法的可选参数。
+
+### 1.11 JQtAnimation —— 高级属性动画【新增 v0.2.0】
+
+| 方法 | 说明 |
+|------|------|
+| `JQtAnimation(widget, property, from, to, ms, easing)` | 创建动画（如 `windowOpacity` 1.0→0.2） |
+| `setLoopCount(int)` | 循环次数（-1 = 无限循环） |
+| `start()` / `stop()` | 启动 / 停止 |
+| `onFinished(Consumer<JQtAnimation>)` | 完成回调（finished 信号，GUI 线程，一次性） |
+
+> 实现说明：C++ 侧 QPropertyAnimation + DeleteWhenStopped 自清理；
+> Java 侧用 **弱引用** 注册回调，动画完成后自动注销，不泄漏、不钉住 GC。
 ### 1.9 JQtCheckBox —— 复选框（QSS 可呈现 Fluent 开关）
 
 | 方法 | 说明 |
@@ -159,7 +197,7 @@
 <a id="en"></a>
 ## English Version
 
-> Extracted from the v0.1.0-alpha sources. All widgets extend `JQtWidget` (base methods in 1.0).
+> Extracted from the v0.2.0-alpha sources. All widgets extend `JQtWidget` (base methods in 1.0).
 
 ### 1.0 JQtWidget (base, shared by all widgets)
 
@@ -170,6 +208,8 @@
 | `boolean isDisposed()` | whether disposed |
 | `long nativeHandle()` | native handle (advanced) |
 | `void setStyleSheet(String qss)` | widget-level QSS (layers over the global style) |
+| `void animateMove(x,y,ms)` / `(x,y,ms,JQtEasing)` | animated move (OutCubic / custom easing) |
+| `void animateResize(w,h,ms)` / `(w,h,ms,JQtEasing)` | animated resize (OutCubic / custom easing) |
 
 ### 1.1 JQtApplication
 
@@ -264,6 +304,40 @@
 | `addWidget(widget)` | add a child directly |
 | `setLayout(layout)` (inherited) | inner layout |
 
+### 1.9 JQtSwitch — Fluent switch (custom painted + slide animation) [v0.2.0]
+
+| Method | Description |
+|--------|-------------|
+| `JQtSwitch()` / `JQtSwitch(boolean checked)` | create switch (off by default / given state) |
+| `isChecked()` / `setChecked(boolean)` | query / set state (slide animation, track color eases with progress) |
+| `onToggled(Consumer<Boolean>)` | state change callback (new state) |
+
+### 1.10 JQtEasing — easing functions (40 types) [v0.2.0]
+
+| Constant | Description |
+|----------|-------------|
+| `LINEAR` | linear |
+| `IN_QUAD` ~ `OUT_IN_QUINT` | quad .. quint curves |
+| `IN_SINE` / `OUT_SINE` / `IN_OUT_SINE` | sine |
+| `IN_EXPO` ~ `OUT_IN_EXPO` | exponential |
+| `IN_CIRC` ~ `OUT_IN_CIRC` | circular |
+| `IN_ELASTIC` ~ `OUT_IN_ELASTIC` | elastic |
+| `IN_BACK` ~ `OUT_IN_BACK` | back |
+| `IN_BOUNCE` / `OUT_BOUNCE` / `IN_OUT_BOUNCE` / `OUT_IN_BOUNCE` | bounce |
+
+Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
+
+### 1.11 JQtAnimation — advanced property animation [v0.2.0]
+
+| Method | Description |
+|--------|-------------|
+| `JQtAnimation(widget, property, from, to, ms, easing)` | create animation (e.g. `windowOpacity` 1.0→0.2) |
+| `setLoopCount(int)` | loop count (-1 = infinite) |
+| `start()` / `stop()` | start / stop |
+| `onFinished(Consumer<JQtAnimation>)` | finished callback (GUI thread, one-shot) |
+
+> Impl: QPropertyAnimation + DeleteWhenStopped on the C++ side;
+> Java callback registered via **weak reference**, auto-unregistered after finish — no leaks, no GC pinning.
 ### 1.9 JQtCheckBox — check box (QSS can render a Fluent switch)
 
 | Method | Description |
