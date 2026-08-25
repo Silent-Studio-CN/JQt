@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 on:
   push:
@@ -137,23 +137,23 @@ jobs:
           distribution: temurin
           java-version: '26'
 
-      - name: Install Qt 6.8.3 for macOS (clang_64)
+      - name: Install Qt 6.11.2 for macOS (clang_64)
         run: |
           python3 -m venv /tmp/aqt-venv
           /tmp/aqt-venv/bin/pip install aqtinstall
           printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
-          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.8.3 clang_64 --outputdir $HOME/Qt
-          test -f "$HOME/Qt/6.8.3/macos/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
+          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.11.2 clang_64 --outputdir $HOME/Qt
+          test -f "$HOME/Qt/6.11.2/macos/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
 
       - name: Build libjqt.dylib
         run: |
           chmod +x build-macos.sh
-          QT_BASE="$HOME/Qt/6.8.3/macos" ./build-macos.sh
+          QT_BASE="$HOME/Qt/6.11.2/macos" ./build-macos.sh
 
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
-          export QT_BASE="$HOME/Qt/6.8.3/macos"
+          export QT_BASE="$HOME/Qt/6.11.2/macos"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
       - name: Upload artifact
         uses: actions/upload-artifact@v4
