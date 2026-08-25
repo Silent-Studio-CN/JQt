@@ -26,14 +26,23 @@ jobs:
       - name: Install Qt 6.11.2 (manual 7z - aqt cannot parse new repo XML)
         run: |
           sudo apt-get install -y p7zip-full libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libegl1 libfontconfig1 libglib2.0-0 libdbus-1-3
-          mkdir -p /tmp/qt7z
+          mkdir -p /tmp/qt7z/qt /tmp/qt7z/icu
           # Qt 6.11.2 uses the NEW repo layout: <module-dir>/<build-id><filename> (no slash)
           curl -fsSL -o /tmp/qtbase.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.linux_gcc_64/6.11.2-0-202608131018qtbase-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
           curl -fsSL -o /tmp/icu.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.linux_gcc_64/6.11.2-0-202608131018icu-linux-Rhel8.6-x86_64.7z"
-          7z x -y -o/tmp/qt7z /tmp/qtbase.7z /tmp/icu.7z > /dev/null
-          sudo mv /tmp/qt7z/6.11.2 /opt/
+          7z x -y -o/tmp/qt7z/qt /tmp/qtbase.7z > /dev/null
+          7z x -y -o/tmp/qt7z/icu /tmp/icu.7z > /dev/null
+          echo "=== qt archive structure ==="
+          find /tmp/qt7z/qt -maxdepth 3 -type d | head -15
+          echo "=== icu archive structure ==="
+          find /tmp/qt7z/icu -maxdepth 3 | head -15
+          GCC_DIR=$(find /tmp/qt7z/qt -type d -name gcc_64 | head -1)
+          if [ -z "$GCC_DIR" ]; then echo "gcc_64 NOT FOUND in qt archive"; exit 1; fi
+          sudo mkdir -p /opt/6.11.2
+          sudo mv "$GCC_DIR" /opt/6.11.2/gcc_64
+          find /tmp/qt7z/icu -name "libicu*" -exec sudo cp {} /opt/6.11.2/gcc_64/lib/ \;
           rm -rf /tmp/qt7z /tmp/qtbase.7z /tmp/icu.7z
-          test -f /opt/6.11.2/gcc_64/bin/qmake || (find /opt -maxdepth 3 -type d | head -20 && exit 1)
+          test -f /opt/6.11.2/gcc_64/bin/qmake || (echo "qmake missing"; find /opt/6.11.2 -maxdepth 3 -type d | head -20; exit 1)
 
       - name: Build libjqt.so
         run: |
