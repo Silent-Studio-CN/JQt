@@ -160,3 +160,46 @@ jobs:
         with:
           name: libjqt-macos-x64
           path: lib/libjqt.dylib
+
+  # ================= Release package (jar + 3 platform libs + docs) =================
+  release-package:
+    name: Release package
+    needs: [ linux, windows, macos ]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+
+      - name: Build jqt.jar (platform-independent)
+        run: |
+          find java -name "*.java" | sed 's/.*/"&"/' > /tmp/jqt_srcs.txt
+          mkdir -p out dist
+          javac -encoding UTF-8 -d out @/tmp/jqt_srcs.txt
+          VERSION=$(cat VERSION)
+          jar --create --file "dist/jqt-$VERSION.jar" -C out .
+
+      - name: Download platform artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Assemble release package
+        run: |
+          VERSION=$(cat VERSION)
+          mkdir -p dist/native
+          cp artifacts/libjqt-linux-x64/libjqt.so dist/native/
+          cp artifacts/jqt-windows-x64/jqt.dll dist/native/
+          cp artifacts/libjqt-macos-x64/libjqt.dylib dist/native/
+          cp README.md LICENSE.md LICENSE LGPL-3.0.txt THIRD-PARTY-NOTICES.md CHANGELOG.md VERSION dist/
+          cp docs/getting-started.md dist/
+          ls -la dist dist/native
+
+      - name: Upload release package
+        uses: actions/upload-artifact@v4
+        with:
+          name: jqt-release
+          path: dist/
