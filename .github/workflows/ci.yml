@@ -67,6 +67,7 @@ jobs:
         timeout-minutes: 4
         run: |
           chmod +x run-linux.sh
+          cp lib/libjqt-6.11.2.so lib/libjqt.so
           export QT_BASE=/opt/6.11.2/gcc_64
           export QT_PLUGIN_PATH=/opt/6.11.2/gcc_64/plugins
           set +e
@@ -202,6 +203,7 @@ jobs:
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
+          cp lib/libjqt-6.11.2.dylib lib/libjqt.dylib
           export QT_BASE="$HOME/Qt/6.11.2/macos"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
       - name: Upload artifact
