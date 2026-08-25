@@ -296,17 +296,23 @@ protected:
             // 触摸/触笔（HiteVision 一体机等）→ 显式合成鼠标消息。
             // Qt 默认的触摸→鼠标合成在无边框窗口上不可靠（按钮/自绘控件收不到点击），
             // 这里在消息层兜底：单点触摸转发为 WM_LBUTTONDOWN/UP/MOUSEMOVE。
-            POINT pt;
-            if (GetCursorPos(&pt) && ScreenToClient(msg->hwnd, &pt)) {
-                const LONG lp = MAKELPARAM(pt.x, pt.y);
-                if (msg->message == WM_POINTERDOWN) {
-                    fprintf(stderr, "[JQt] POINTERDOWN -> mouse click\n");
-                    PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
-                } else if (msg->message == WM_POINTERUP) {
-                    fprintf(stderr, "[JQt] POINTERUP\n");
-                    PostMessageW(msg->hwnd, WM_LBUTTONUP, 0, lp);
-                } else {
-                    PostMessageW(msg->hwnd, WM_MOUSEMOVE, 0, lp);
+            // 注意：坐标必须取自 POINTER 消息本身（GetPointerInfo），
+            // 不能用 GetCursorPos —— 环境可能注入固定位置的幽灵光标，会丢失真实触摸位置。
+            POINTER_INFO pi;
+            if (GetPointerInfo(GET_POINTERID_WPARAM(msg->wParam), &pi)) {
+                POINT pt = pi.ptPixelLocation;   // 物理屏幕坐标
+                if (ScreenToClient(msg->hwnd, &pt)) {
+                    const LONG lp = MAKELPARAM(pt.x, pt.y);
+                    if (msg->message == WM_POINTERDOWN) {
+                        fprintf(stderr, "[JQt] POINTERDOWN at client (%d,%d) -> mouse\n",
+                                static_cast<int>(pt.x), static_cast<int>(pt.y));
+                        PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
+                    } else if (msg->message == WM_POINTERUP) {
+                        fprintf(stderr, "[JQt] POINTERUP\n");
+                        PostMessageW(msg->hwnd, WM_LBUTTONUP, 0, lp);
+                    } else {
+                        PostMessageW(msg->hwnd, WM_MOUSEMOVE, 0, lp);
+                    }
                 }
             }
             return true;
