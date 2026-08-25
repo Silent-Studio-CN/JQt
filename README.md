@@ -1,299 +1,185 @@
 # JQt — Java 绑定 Qt 框架 / Java Bindings for Qt
 
-> 让 Java 程序员能用 Qt 写桌面应用：Java 写业务逻辑，底层渲染和事件由 Qt（C++）完成。
-> Java developers write desktop apps with Qt: Java for the logic, Qt (C++) for rendering and events.
-
-<details>
-<summary>🌐 语言 / Language</summary>
-
-- [中文版](#zh) · [English Version](#en)
-
-</details>
+> 让 Java 程序员用最优雅的方式写出漂亮的桌面应用：Java 写业务逻辑，Qt（C++）负责渲染与事件。
+> Write desktop apps in Java with the Qt engine underneath — no C++, no Qt SDK required.
 
 ---
 
-<a id="zh"></a>
-## 中文版
-
-### 架构（三层结构）
-
-- **Java 层**：你写的代码（`JQtButton btn = new JQtButton("点我")`）
-- **JNI 胶水层**：`native/jqt_bridge.cpp`，把 Java 调用翻译成 Qt 调用，并把 Qt 信号回调回 Java
-- **Qt 底层**：Qt 6.11.2（mingw_64 kit）
-
-### 当前进度（路线图）
+## 🚀 路线图 / Roadmap
 
 | 阶段 | 内容 | 状态 |
 |------|------|------|
-| Phase 0 | JNI + Qt 最小 Demo（Java 弹出 Qt 窗口） | ✅ 完成 |
+| Phase 0 | JNI + Qt 最小 Demo | ✅ 完成 |
 | Phase 1 | QApplication / QWidget / QPushButton / QLabel | ✅ 完成 |
-| Phase 2 | 信号槽（点击/按下/释放/勾选、窗口事件、退出前回调） | ✅ 完成 |
-| Phase 3 | 布局管理器（QVBoxLayout / QHBoxLayout + Stretch） | ✅ 完成 |
+| Phase 2 | 信号槽（点击/按下/释放/勾选/文本/选项/窗口事件/退出前） | ✅ 完成 |
+| Phase 3 | 布局管理器（VBox / HBox + 弹性空间） | ✅ 完成 |
 | Phase 4 | 更多控件（QLineEdit / QComboBox / QListWidget） | ✅ 完成 |
-| Phase 5 | 内存管理优化、异常处理 | ✅ 完成（句柄注册表 + Cleaner 回收 + 悬垂保护） |
+| Phase 5 | 内存管理（句柄注册表 + Cleaner + 悬垂保护） | ✅ 完成 |
 | Phase 6 | 跨平台编译（Windows / Linux / macOS 三平台 CI） | ✅ 完成 |
-| Phase 7 | Alpha 发布 | ⬜ 未开始 |
-
-### 项目结构
-
-```
-JQt - Dev/
-├── java/org/jqt/          # Java API 层
-│   ├── JQtApplication.java  # QApplication 封装（exec/quit）
-│   ├── JQtWidget.java       # 控件基类（持有 nativeHandle 指针）
-│   ├── JQtWindow.java       # 窗口（show/hide/addWidget/onClose）
-│   ├── JQtButton.java       # 按钮（onClick/onPressed/onReleased/onToggled）
-│   ├── JQtLabel.java        # 标签（setText）
-│   ├── JQtLayout.java       # 布局基类（addWidget/setSpacing/addStretch）
-│   ├── JQtVBoxLayout.java   # 垂直布局（QVBoxLayout）
-│   ├── JQtHBoxLayout.java   # 水平布局（QHBoxLayout）
-│   ├── JQtLineEdit.java     # 输入框（onTextChanged/onReturnPressed）
-│   ├── JQtComboBox.java     # 下拉框（addItem/onCurrentIndexChanged）
-│   ├── JQtListWidget.java   # 列表（addItem/onItemClicked）
-│   └── JQtDemo.java         # 演示程序
-├── native/
-│   ├── jqt_bridge.cpp       # JNI 胶水层（C++ 包装层）
-│   └── generated/           # javac -h 生成的 JNI 头（构建时生成）
-├── build.ps1              # 一键构建（Java + C++ + Qt 部署）
-├── run.ps1                # 运行演示
-├── LICENSE.md             # JSL-1.0 分层许可（双语）
-├── CONTRIBUTING.md        # 贡献政策（双语）
-├── THIRD-PARTY-NOTICES.md # Qt LGPLv3 第三方声明（双语）
-├── COMMERCIAL.md          # 商业许可说明（双语）
-├── out/                   # Java 字节码（构建产物）
-└── lib/                   # jqt.dll + Qt 运行时（构建产物，可整体分发）
-```
-
-### 快速开始
-
-```powershell
-.uild.ps1        # 编译 Java、生成 JNI 头、编译 jqt.dll、部署 Qt 运行时
-.un.ps1          # 弹出 Qt 窗口（点击按钮验证 C++→Java 回调）
-.un.ps1 -AutoClose 3000   # 3 秒后自动关闭（自动化验证用）
-```
-
-### 演示代码（JQtDemo.java）
-
-```java
-JQtApplication app = new JQtApplication();
-JQtWindow window = new JQtWindow("JQt 窗口", 640, 480);
-JQtLabel label = new JQtLabel("Hello, JQt!");
-JQtButton button = new JQtButton("点我试试");
-
-button.onClick(() -> {          // Qt clicked 信号 → JNI 回调 → Java lambda
-    label.setText("点击成功！");
-});
-button.onPressed(() -> System.out.println("pressed"));
-button.onReleased(() -> System.out.println("released"));
-window.onResized((w, h) -> System.out.println("resized: " + w + "x" + h));
-app.onAboutToQuit(() -> System.out.println("app quitting"));
-
-JQtVBoxLayout vbox = new JQtVBoxLayout();   // Phase 3：布局管理器
-vbox.setSpacing(12);
-vbox.addWidget(label);
-vbox.addWidget(button);
-vbox.addStretch(1);
-window.setLayout(vbox);
-window.show();
-app.exec();                     // 阻塞，最后一个窗口关闭后返回
-```
-
-### 事件回调机制（伪信号槽）
-
-```
-用户点击按钮
-   → Qt 发出 clicked 信号
-   → C++ lambda（jqt_bridge.cpp 中 connect）
-   → JNI CallVoidMethod 调用 JQtButton.nativeHandleClick()
-   → 执行 Java 侧 onClickHandler.run()
-```
-
-要点：
-- Java 对象通过 `long nativeHandle` 持有 C++ 对象句柄
-- C++ 侧通过 `NewGlobalRef` 持有 Java 对象引用（防止 GC）
-- 回调必然发生在 GUI 主线程（Qt 信号线程），该线程已附加 JVM，无需额外同步
-- 控件内存由 Qt 父子关系管理：父窗口销毁时自动销毁子控件
-
-**内存管理（Phase 5）**：
-- 句柄注册表：自增 ID（不复用），Qt 对象 `destroyed` 时自动注销
-- 所有权模型：`addWidget`/`setLayout` 后归 Qt 管理；否则由 Java `Cleaner` 回收（GUI 线程安全删除）
-- 悬垂保护：调用已销毁对象 → `IllegalStateException`，不再 native 崩溃
-- 防护：未创建 `JQtApplication` 就建控件 → `IllegalStateException`
-- 可手动 `dispose()` 提前释放；`isDisposed()` 查询状态
-
-### 发布形态（目标）
-
-```
-jqt.jar          ← Java 侧全部代码
-jqt.dll          ← Windows 版动态库（当前已产出）
-libjqt.so        ← Linux 版动态库（Phase 6）
-libjqt.dylib     ← macOS 版动态库（Phase 6）
-```
-
-用户侧无需安装 C++ 编译器或 Qt SDK —— `lib/` 目录已自包含 Qt 运行时（Qt6*.dll + 平台插件 + qt.conf）。
-
-### 许可证
-
-JQt 采用 **JQt Source License v1.0（JSL-1.0）** 分层授权（详见 `LICENSE.md`，中英双语，歧义以中文为准）：
-
-| 层 | 用户 | 义务 | 费用 |
-|----|------|------|------|
-| L1 | 非商业使用 | 署名 SilentStudio | 免费 |
-| L2 | 商业使用（累计营收 < $1M） | 应用开源（OSI 许可）+ 署名 | 免费 |
-| L3 | 商业使用（累计营收 ≥ $1M） | 开源 或 商业许可（年利润 5%） | 见 COMMERCIAL.md |
-
-- 提交政策：仅限 SilentStudio 成员（`CONTRIBUTING.md`）
-- Qt 运行时为 LGPLv3（`THIRD-PARTY-NOTICES.md` + `LGPL-3.0.txt`）
-- 许可由 AI 协助起草，不构成法律意见
-
-### 构建依赖（本机）
-
-| 组件 | 路径 |
-|------|------|
-| JDK 26 | `C:\Program Files\Java\latest\jdk-26` |
-| Qt 6.11.2 (mingw_64) | `D:\Qt\6.11.2\mingw_64` |
-| MinGW 13.1 | `D:\Qt\Tools\mingw1310_64` |
+| Phase 7 | Alpha 发布（v0.1.0-alpha） | ✅ 已发布 |
+| Phase 8 | 第二批控件（菜单/树/滚动区/对话框，见 docs/api-tiering.md） | ⬜ 规划中 |
+| Phase 9 | HtmlWorkbench（JQt 旗舰应用） | ⬜ 规划中 |
 
 ---
 
-<a id="en"></a>
-## English Version
-
-### Architecture (Three Layers)
-
-- **Java layer**: the code you write (`JQtButton btn = new JQtButton("Click me")`)
-- **JNI bridge**: `native/jqt_bridge.cpp`, translates Java calls into Qt calls and forwards Qt signals back to Java
-- **Qt underneath**: Qt 6.11.2 (mingw_64 kit)
-
-### Roadmap Status
-
-| Phase | Scope | Status |
-|-------|-------|--------|
-| Phase 0 | Minimal JNI + Qt demo (a Qt window from Java) | ✅ Done |
-| Phase 1 | QApplication / QWidget / QPushButton / QLabel | ✅ Done |
-| Phase 2 | Signals & slots (click/press/release/toggle, window events, aboutToQuit) | ✅ Done |
-| Phase 3 | Layout managers (QVBoxLayout / QHBoxLayout + stretch) | ✅ Done |
-| Phase 4 | More widgets (QLineEdit / QComboBox / QListWidget) | ✅ Done |
-| Phase 5 | Memory management & exception handling | ✅ Done (handle registry + Cleaner + dangling guard) |
-| Phase 6 | Cross-platform builds (Windows / Linux / macOS CI matrix) | ✅ Done |
-| Phase 7 | Alpha release | ⬜ Not started |
-
-### Project Layout
+## 📁 项目结构 / Structure
 
 ```
 JQt - Dev/
-├── java/org/jqt/          # Java API layer
-│   ├── JQtApplication.java  # QApplication wrapper (exec/quit)
-│   ├── JQtWidget.java       # widget base class (holds nativeHandle)
-│   ├── JQtWindow.java       # window (show/hide/addWidget/onClose)
-│   ├── JQtButton.java       # button (onClick/onPressed/onReleased/onToggled)
-│   ├── JQtLabel.java        # label (setText)
-│   ├── JQtLayout.java       # layout base (addWidget/setSpacing/addStretch)
-│   ├── JQtVBoxLayout.java   # vertical layout (QVBoxLayout)
-│   ├── JQtHBoxLayout.java   # horizontal layout (QHBoxLayout)
-│   ├── JQtLineEdit.java     # line edit (onTextChanged/onReturnPressed)
-│   ├── JQtComboBox.java     # combo box (addItem/onCurrentIndexChanged)
-│   ├── JQtListWidget.java   # list widget (addItem/onItemClicked)
-│   └── JQtDemo.java         # demo program
-├── native/
-│   ├── jqt_bridge.cpp       # JNI bridge (C++ wrapper layer)
-│   └── generated/           # JNI headers from javac -h (build-time)
-├── build.ps1              # one-click build (Java + C++ + Qt deploy)
-├── run.ps1                # run the demo
-├── LICENSE.md             # JSL-1.0 layered license (bilingual)
-├── CONTRIBUTING.md        # contribution policy (bilingual)
-├── THIRD-PARTY-NOTICES.md # Qt LGPLv3 third-party notices (bilingual)
-├── COMMERCIAL.md          # commercial license info (bilingual)
-├── out/                   # Java bytecode (build artifact)
-└── lib/                   # jqt.dll + Qt runtime (build artifact, distributable)
+├── java/org/jqt/          # Java API（11 个类：应用/窗口/按钮/标签/输入框/下拉/列表/布局）
+├── native/jqt_bridge.cpp  # JNI 胶水层（C++ → Qt，信号回调回 Java）
+├── build.ps1              # Windows 一键构建
+├── build-linux.sh         # Linux 构建
+├── build-macos.sh         # macOS 构建
+├── build-release.ps1      # 发布包打包（jar + 动态库 + 运行时 + 文档）
+├── .github/workflows/ci.yml  # 三平台 CI + 发布包自动构建
+├── docs/
+│   ├── user-guide.md        # 📘 用户指南（安装/配置/FAQ）
+│   ├── api-implemented.md   # 📄 已实现 API 完整清单
+│   ├── api-tiering.md       # API 分级设计蓝图（L1/L2/L3）
+│   ├── getting-started.md   # 快速上手
+│   └── qt-ref/              # Qt 官方方法原始数据（45 类）
+├── 114514.md              # Qt 全部 2172 方法分级清单
+├── LICENSE.md             # JSL-1.0 分层许可（双语）
+├── LGPL-3.0.txt           # Qt 运行时许可
+├── CHANGELOG.md           # 变更日志
+└── VERSION                # 0.1.0-alpha
 ```
 
-### Quick Start
+---
+
+## ⚡ 快速开始 / Quick Start
 
 ```powershell
-.uild.ps1        # compile Java, generate JNI headers, build jqt.dll, deploy Qt runtime
-.un.ps1          # show a Qt window (click the button to verify C++→Java callback)
-.un.ps1 -AutoClose 3000   # auto close after 3 s (for automation)
+# 1. 下载发布包（GitHub Releases）：jqt-0.1.0-alpha.jar + 对应平台动态库
+# 2. 把 jar 加入 classpath，动态库目录加入 java.library.path
+java -Djava.library.path=lib -cp "lib/jqt-0.1.0-alpha.jar;." Hello
 ```
-
-### Demo Code (JQtDemo.java)
 
 ```java
-JQtApplication app = new JQtApplication();
-JQtWindow window = new JQtWindow("JQt window", 640, 480);
-JQtLabel label = new JQtLabel("Hello, JQt!");
-JQtButton button = new JQtButton("Click me");
+import org.jqt.*;
 
-button.onClick(() -> {          // Qt clicked signal → JNI callback → Java lambda
-    label.setText("Clicked!");
-});
-button.onPressed(() -> System.out.println("pressed"));
-button.onReleased(() -> System.out.println("released"));
-window.onResized((w, h) -> System.out.println("resized: " + w + "x" + h));
-app.onAboutToQuit(() -> System.out.println("app quitting"));
-
-JQtVBoxLayout vbox = new JQtVBoxLayout();   // Phase 3: layout manager
-vbox.setSpacing(12);
-vbox.addWidget(label);
-vbox.addWidget(button);
-vbox.addStretch(1);
-window.setLayout(vbox);
-window.show();
-app.exec();                     // blocks until the last window closes
+public class Hello {
+    public static void main(String[] args) {
+        JQtApplication app = new JQtApplication();      // 必须先创建
+        JQtWindow window = new JQtWindow("Hello JQt", 640, 480);
+        JQtButton button = new JQtButton("点我");
+        button.onClick(() -> System.out.println("clicked!"));
+        JQtVBoxLayout vbox = new JQtVBoxLayout();
+        vbox.addWidget(button);
+        window.setLayout(vbox);
+        window.show();
+        app.exec();                                     // 阻塞至窗口关闭
+    }
+}
 ```
 
-### Signal-Slot Mechanism (Pseudo Signals)
+---
 
+## ✨ 已实现 API（v0.1.0-alpha）
+
+> 完整清单见 docs/api-implemented.md。所有控件继承 JQtWidget（isCreated/dispose/isDisposed）。
+
+### JQtApplication
+
+| 方法 | 说明 |
+|------|------|
+| `JQtApplication()` | 创建应用（进程唯一，必须最先创建） |
+| `exec()` | 进入事件循环（阻塞，最后窗口关闭后返回） |
+| `quit()` / `scheduleQuit(ms)` | 退出 / 延迟退出 |
+| `schedule(Runnable, ms)` | 延迟在 GUI 线程执行任务（线程安全） |
+| `onAboutToQuit(Runnable)` | 退出前回调 |
+
+### JQtWindow
+
+| 方法 | 说明 |
+|------|------|
+| `JQtWindow(title[, w, h])` | 创建窗口 |
+| `show()` / `hide()` / `resize(w,h)` / `setTitle(s)` | 窗口操作 |
+| `addWidget(widget)` / `setLayout(layout)` | 添加控件 / 布局 |
+| `onClose()` / `onResized(w,h)` / `onMoved(x,y)` | 窗口事件回调 |
+
+### JQtButton
+
+| 方法 | 说明 |
+|------|------|
+| `setText(s)` / `setCheckable(b)` / `setChecked(b)` | 属性 |
+| `onClick()` / `onPressed()` / `onReleased()` | 点击三件套 |
+| `onToggled(boolean)` | 勾选切换（需 setCheckable） |
+
+### JQtLabel / JQtLineEdit / JQtComboBox / JQtListWidget
+
+| 控件 | 关键 API |
+|------|---------|
+| JQtLabel | `setText(s)` |
+| JQtLineEdit | `text()` `setText` `setPlaceholderText` `onTextChanged` `onReturnPressed` |
+| JQtComboBox | `addItem` `currentIndex()` `currentText()` `setCurrentIndex` `onCurrentIndexChanged` |
+| JQtListWidget | `addItem` `currentRow()` `onItemClicked(row)` `onCurrentRowChanged` |
+
+### 布局：JQtVBoxLayout / JQtHBoxLayout
+
+| 方法 | 说明 |
+|------|------|
+| `addWidget(w)` / `setSpacing(px)` / `addStretch(n)` | 添加 / 间距 / 弹性空间 |
+
+### 信号规则
+
+- 所有 `onXxx` 支持**多个监听器**，按注册顺序触发；
+- 回调始终在 **GUI 主线程**，可直接操作控件，无需加锁；
+- 内存：Java 对象不可达自动释放（Cleaner）；调用已释放对象抛 `IllegalStateException`，不会崩溃。
+
+---
+
+## 💡 用法示例 / Examples
+
+**输入框 + 下拉 + 列表：**
+
+```java
+JQtLineEdit edit = new JQtLineEdit("");
+edit.setPlaceholderText("输入文字，回车确认");
+edit.onReturnPressed(() -> System.out.println("输入了：" + edit.text()));
+
+JQtComboBox combo = new JQtComboBox();
+combo.addItem("选项 A");
+combo.onCurrentIndexChanged(i -> System.out.println("选中：" + combo.currentText()));
+
+JQtListWidget list = new JQtListWidget();
+list.addItem("条目 1");
+list.onItemClicked(row -> System.out.println("点击第 " + row + " 行"));
 ```
-User clicks the button
-   → Qt emits the clicked signal
-   → C++ lambda (connected in jqt_bridge.cpp)
-   → JNI CallVoidMethod invokes JQtButton.nativeHandleClick()
-   → Java onClickHandler.run() executes
+
+**勾选按钮 + 窗口事件 + 定时任务：**
+
+```java
+JQtButton check = new JQtButton("开关");
+check.setCheckable(true);
+check.onToggled(on -> System.out.println(on ? "开" : "关"));
+
+window.onResized((w, h) -> System.out.println("尺寸 " + w + "x" + h));
+app.schedule(() -> window.resize(800, 600), 1000);  // 1 秒后 GUI 线程执行
+app.onAboutToQuit(() -> saveYourData());
 ```
 
-Key points:
-- Java objects hold C++ object handles via `long nativeHandle`
-- The C++ side holds Java object references via `NewGlobalRef` (prevents GC)
-- Callbacks always occur on the GUI main thread (Qt signal thread), which is already attached to the JVM — no extra synchronization needed
-- Widget memory is managed by the Qt parent-child relationship: children are destroyed when the parent is destroyed
+**更多用法**（安装配置、三平台命令、FAQ）→ 📘 [docs/user-guide.md](docs/user-guide.md)
 
-**Memory management (Phase 5)**:
-- Handle registry: incrementing IDs (never reused); auto-unregistered on Qt `destroyed`
-- Ownership model: after `addWidget`/`setLayout` objects belong to Qt; otherwise reclaimed by the Java `Cleaner` (GUI-thread safe delete)
-- Dangling guard: calling a destroyed object throws `IllegalStateException` instead of a native crash
-- Guard: creating widgets before `JQtApplication` throws `IllegalStateException`
-- Manual `dispose()` for early release; `isDisposed()` to query state
+---
 
-### Distribution Target
+## 📚 文档索引 / Docs
 
-```
-jqt.jar          ← all Java-side code
-jqt.dll          ← Windows dynamic library (currently built)
-libjqt.so        ← Linux dynamic library (Phase 6)
-libjqt.dylib     ← macOS dynamic library (Phase 6)
-```
+| 文档 | 内容 |
+|------|------|
+| [docs/user-guide.md](docs/user-guide.md) | 用户指南：安装 / 配置 / 三平台运行 / FAQ |
+| [docs/api-implemented.md](docs/api-implemented.md) | 已实现 API 完整清单（双语） |
+| [docs/api-tiering.md](docs/api-tiering.md) | API 分级设计蓝图（L1 常用 / L2 分组 / L3 native） |
+| [114514.md](114514.md) | Qt 全部 2172 方法分级清单 |
+| [CHANGELOG.md](CHANGELOG.md) | 变更日志 |
+| [LICENSE.md](LICENSE.md) | JSL-1.0 分层授权 |
 
-End users need no C++ compiler or Qt SDK — `lib/` is self-contained with the Qt runtime (Qt6*.dll + platform plugins + qt.conf).
+## 🤝 参与
 
-### License
+- 提交政策：仅限 SilentStudio 成员（见 CONTRIBUTING.md）
+- 反馈：GitHub Issues
 
-JQt is licensed under the **JQt Source License v1.0 (JSL-1.0)** layered license (see `LICENSE.md`, bilingual; the Chinese version prevails in case of ambiguity):
+---
 
-| Tier | User | Obligation | Fee |
-|------|------|------------|-----|
-| L1 | Non-commercial use | Attribution to SilentStudio | Free |
-| L2 | Commercial use (Cumulative Revenue < $1M) | Application open source (OSI license) + attribution | Free |
-| L3 | Commercial use (Cumulative Revenue ≥ $1M) | Open source, or commercial license (5% of annual profit) | See COMMERCIAL.md |
-
-- Commit policy: SilentStudio members only (`CONTRIBUTING.md`)
-- Qt runtime is LGPLv3 (`THIRD-PARTY-NOTICES.md` + `LGPL-3.0.txt`)
-- The license was drafted with AI assistance and does not constitute legal advice
-
-### Build Dependencies (This Machine)
-
-| Component | Path |
-|-----------|------|
-| JDK 26 | `C:\Program Files\Java\latest\jdk-26` |
-| Qt 6.11.2 (mingw_64) | `D:\Qt\6.11.2\mingw_64` |
-| MinGW 13.1 | `D:\Qt\Tools\mingw1310_64` |
+© SilentStudio. JQt is licensed under the JQt Source License v1.0 (see LICENSE.md).
