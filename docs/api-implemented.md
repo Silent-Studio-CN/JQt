@@ -36,6 +36,7 @@
 | `void schedule(Runnable task, long delayMs)` | 延迟在 GUI 线程执行任务（线程安全） |
 | `void setStyleSheet(String qss)` | 设置全局样式表（QSS，Qt Style Sheets） |
 | `void setStyle(String style)` | 切换风格（如 `"Fusion"` 经典 Qt 扁平风） |
+| `void setLightMode(boolean)` | 切换浅色/默认配色（Java 进程中 Qt 可能误判系统暗色，用此 API 显式控制；也可用 `-Djqt.lightMode=true` 启动时自动开启） |
 | `void onAboutToQuit(Runnable)` | 退出前回调（Qt aboutToQuit 信号） |
 
 ### 1.2 JQtWindow —— 窗口
@@ -157,6 +158,7 @@
 | `void schedule(Runnable task, long delayMs)` | run a task on the GUI thread after delay (thread-safe) |
 | `void setStyleSheet(String qss)` | set global style sheet (QSS) |
 | `void setStyle(String style)` | switch style (e.g. `"Fusion"`) |
+| `void setLightMode(boolean)` | force light palette (Qt may mis-detect dark mode inside a Java process); or use `-Djqt.lightMode=true` at startup |
 | `void onAboutToQuit(Runnable)` | callback before app quits (aboutToQuit signal) |
 
 ### 1.2 JQtWindow

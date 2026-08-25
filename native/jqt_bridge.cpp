@@ -228,6 +228,33 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_scheduleQuit(JNIEnv* /*env*/,
     }
 }
 
+// 切换浅色/默认配色（setPalette 运行时生效，立即刷新全部控件）
+// 背景：Qt 在 Java 进程中暗色检测异常（深色系统下默认深色），
+// 原生 Qt（windowsvista 风格）不跟随系统深色；此 API 让 Java 应用可显式控制。
+JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetLightMode(JNIEnv* /*env*/, jobject /*thiz*/, jboolean on) {
+    if (g_app == nullptr) {
+        return;
+    }
+    if (on == JNI_TRUE) {
+        QPalette light;
+        light.setColor(QPalette::Window, QColor(0xf0, 0xf0, 0xf0));
+        light.setColor(QPalette::WindowText, Qt::black);
+        light.setColor(QPalette::Base, Qt::white);
+        light.setColor(QPalette::AlternateBase, QColor(0xf5, 0xf5, 0xf5));
+        light.setColor(QPalette::Text, Qt::black);
+        light.setColor(QPalette::Button, QColor(0xe1, 0xe1, 0xe1));
+        light.setColor(QPalette::ButtonText, Qt::black);
+        light.setColor(QPalette::BrightText, Qt::red);
+        light.setColor(QPalette::Highlight, QColor(0x00, 0x78, 0xd7));
+        light.setColor(QPalette::HighlightedText, Qt::white);
+        light.setColor(QPalette::ToolTipBase, QColor(0xff, 0xff, 0xdc));
+        light.setColor(QPalette::ToolTipText, Qt::black);
+        g_app->setPalette(light);
+    } else {
+        g_app->setPalette(g_app->style()->standardPalette());
+    }
+}
+
 // 设置全局样式表（QSS，QApplication::setStyleSheet）
 JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetStyleSheet(JNIEnv* env, jobject /*thiz*/, jstring qss) {
     if (g_app == nullptr) {
