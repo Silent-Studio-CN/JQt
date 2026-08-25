@@ -169,7 +169,9 @@ public:
     std::function<void(int, int)> onResized;
     std::function<void(int, int)> onMoved;
 
-    // ---- Fluent 窗口状态（qframelesswindow 偷师）----
+    // ---- Fluent 窗口状态 ----
+    // 实现思路参考 PyQt-Frameless-Window (zhiyiYo, GPLv3)；
+    // 仅使用公开 Win32 API 知识，代码独立编写（详见 THIRD-PARTY-NOTICES.md）----
     bool frameless = false;       // 无边框模式
     bool acrylic = false;         // 亚克力背景
     bool rounded = false;         // Win11 圆角

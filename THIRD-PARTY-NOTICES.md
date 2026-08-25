@@ -39,6 +39,24 @@ JQt 的构建产物 `lib/` 包含以下第三方组件，使用时须遵守其�
 
 JQt 自身（Java 源码、C++ 胶水层）的许可见 `LICENSE.md`（JQt Source License v1.0）。
 
+## 设计参考声明（Design References）
+
+JQt 的 Fluent 风格窗口能力（无边框、亚克力、圆角、缩放热区）与 Fluent 视觉主题，
+在**实现思路上**参考了以下开源项目。**JQt 未复制其任何代码或资源**（二者均为 GPLv3
+许可，为避免 GPL 传染与 JSL-1.0 冲突，JQt 仅参考公开的 Win32 API 用法与微软
+Fluent Design 公开设计规范，代码为独立编写）：
+
+| 项目 | 作者 | 许可 | 参考内容 |
+|------|------|------|---------|
+| [PyQt-Fluent-Widgets (qfluentwidgets)](https://github.com/zhiyiYo/PyQt-Fluent-Widgets) | zhiyiYo | GPLv3 / 商业 | Fluent Design 视觉风格、控件配色与布局思路 |
+| [PyQt-Frameless-Window (qframelesswindow)](https://github.com/zhiyiYo/PyQt-Frameless-Window) | zhiyiYo | GPLv3 / 商业 | 无边框窗口实现思路（WM_NCHITTEST 缩放热区、DWM 阴影、SetWindowCompositionAttribute 亚克力） |
+
+**English**: JQt's Fluent-style window capabilities and visual theme reference the
+*implementation ideas* of the projects above. JQt copies **no code or assets** from them
+(both are GPLv3; to avoid GPL contamination conflicting with JSL-1.0, JQt only uses public
+Win32 API knowledge and Microsoft's public Fluent Design guidelines, with independently
+written code).
+
 ---
 
 <a id="en"></a>
