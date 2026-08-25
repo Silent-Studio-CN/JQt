@@ -1,1 +1,0 @@
-.\run.ps1 -Class org.jqt.JQtQfDemo
