@@ -1,0 +1,48 @@
+/* ============================================================
+ * JQt Fluent Dark Theme (self-authored)
+ * Fluent Design style per Microsoft public design language.
+ * Written independently for JQt - no GPL code copied.
+ * ============================================================ */
+* { font-family: "Microsoft YaHei UI", "Segoe UI"; font-size: 13px; }
+QWidget { background: #1f1f1f; color: #e8e8e8; }
+
+/* ---- Fluent 卡片 ---- */
+JQtPanel { background: #2b2b2b; border: 1px solid #3a3a3a; border-radius: 8px; }
+
+/* ---- Fluent 按钮 ---- */
+QPushButton { background: #3b3b3b; color: #ffffff; border: none; border-radius: 4px; padding: 6px 14px; }
+QPushButton:hover { background: #484848; }
+QPushButton:pressed { background: #2e2e2e; }
+QPushButton:disabled { background: #2a2a2a; color: #6a6a6a; }
+
+/* ---- Fluent 开关（checkable 按钮胶囊）---- */
+QPushButton:checked { background: #4cc2ff; color: #ffffff; }
+QPushButton:checked:hover { background: #5acbff; }
+
+/* ---- Fluent 复选框开关（QCheckBox indicator 胶囊滑块）---- */
+QCheckBox { spacing: 8px; color: #e8e8e8; }
+QCheckBox::indicator { width: 40px; height: 20px; border-radius: 10px; background: #4a4a4a; }
+QCheckBox::indicator:hover { background: #555555; }
+QCheckBox::indicator:checked { background: #4cc2ff; }
+QCheckBox::indicator:checked:hover { background: #5acbff; }
+
+/* ---- Fluent 导航（列表）---- */
+QListWidget { background: transparent; border: none; outline: none; }
+QListWidget::item { padding: 9px 12px; border-radius: 4px; color: #d8d8d8; }
+QListWidget::item:hover { background: #2b2b2b; }
+QListWidget::item:selected { background: #333333; color: #4cc2ff; }
+
+/* ---- 输入框 ---- */
+QLineEdit { background: #2b2b2b; border: 1px solid #3a3a3a; border-radius: 4px; padding: 5px 8px; color: #ffffff; }
+QLineEdit:focus { border-color: #4cc2ff; }
+QLineEdit:disabled { color: #6a6a6a; }
+
+/* ---- 下拉框 ---- */
+QComboBox { background: #3b3b3b; border: 1px solid #3a3a3a; border-radius: 4px; padding: 5px 8px; color: #ffffff; }
+QComboBox:hover { background: #484848; }
+QComboBox QAbstractItemView { background: #2b2b2b; color: #e8e8e8; border: 1px solid #3a3a3a; selection-background-color: #333333; selection-color: #4cc2ff; }
+
+/* ---- 标签 ---- */
+QLabel { color: #e8e8e8; background: transparent; }
+QLabel[role="title"] { font-size: 16px; font-weight: bold; color: #ffffff; }
+QLabel[role="hint"] { color: #9a9a9a; }

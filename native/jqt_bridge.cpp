@@ -33,6 +33,8 @@
 
 #include <QApplication>
 #include <QBoxLayout>
+#include <QCheckBox>
+#include <QFrame>
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -65,6 +67,8 @@
 #include "generated/org_jqt_JQtLineEdit.h"
 #include "generated/org_jqt_JQtComboBox.h"
 #include "generated/org_jqt_JQtListWidget.h"
+#include "generated/org_jqt_JQtPanel.h"
+#include "generated/org_jqt_JQtCheckBox.h"
 
 // ----------------------------------------------------------------------------
 // 全局状态
@@ -686,6 +690,20 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetLayout(JNIEnv* env, jobje
     markQtOwned(layoutHandle);  // 归窗口管理
 }
 
+// JQtWidget：通用 setLayout（任何控件可装布局）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetLayout(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong layoutHandle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QLayout* layout = static_cast<QLayout*>(requireHandle(env, layoutHandle));
+    if (layout == nullptr) {
+        return;
+    }
+    widget->setLayout(layout);
+    markQtOwned(layoutHandle);
+}
+
 // ----------------------------------------------------------------------------
 // JQtButton：QPushButton 的封装（clicked/pressed/released/toggled 信号）
 // ----------------------------------------------------------------------------
@@ -983,6 +1001,20 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeSetSpacing(JNIEnv* env, jobj
     layout->setSpacing(static_cast<int>(spacing));
 }
 
+// 布局嵌套：把子布局加入本布局（如 VBox 中嵌 HBox 做标题栏/工具行）
+JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeAddLayout(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childLayoutHandle) {
+    QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
+    if (layout == nullptr) {
+        return;
+    }
+    QBoxLayout* child = static_cast<QBoxLayout*>(requireHandle(env, childLayoutHandle));
+    if (child == nullptr) {
+        return;
+    }
+    layout->addLayout(child);
+    markQtOwned(childLayoutHandle);  // 子布局归父布局管理
+}
+
 JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeAddStretch(JNIEnv* env, jobject /*thiz*/, jlong handle, jint stretch) {
     QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
     if (layout == nullptr) {
@@ -1004,4 +1036,88 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtHBoxLayout_nativeCreate(JNIEnv* env, job
         return 0;
     }
     return registerHandle(new QHBoxLayout(), /*javaOwned=*/true);
+}
+
+// ----------------------------------------------------------------------------
+// JQtPanel：QFrame 卡片/容器（Fluent 卡片基座）
+// ----------------------------------------------------------------------------
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtPanel_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    return registerHandle(new QFrame(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtPanel_nativeAddWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle) {
+    QFrame* frame = static_cast<QFrame*>(requireHandle(env, handle));
+    if (frame == nullptr) {
+        return;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return;
+    }
+    child->setParent(frame);
+    markQtOwned(childHandle);
+    int n = 0;
+    const QList<QObject*>& children = frame->children();
+    for (QObject* obj : children) {
+        if (qobject_cast<QWidget*>(obj) != nullptr) {
+            ++n;
+        }
+    }
+    child->move(10, 10 + (n - 1) * 40);
+    child->show();
+}
+
+// ----------------------------------------------------------------------------
+// JQtCheckBox：QCheckBox 的封装（toggled 信号，QSS 可做 Fluent 开关）
+// ----------------------------------------------------------------------------
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtCheckBox_nativeCreate(JNIEnv* env, jobject thiz, jstring text) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    QCheckBox* box = new QCheckBox(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(box, &QCheckBox::toggled, [gRef](bool checked) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleToggled", "(Z)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jboolean>(checked));
+        }
+    });
+
+    return registerHandle(box, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtCheckBox_nativeSetText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QCheckBox* box = static_cast<QCheckBox*>(requireHandle(env, handle));
+    if (box == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    box->setText(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_JQtCheckBox_nativeIsChecked(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QCheckBox* box = static_cast<QCheckBox*>(requireHandle(env, handle));
+    if (box == nullptr) {
+        return JNI_FALSE;
+    }
+    return box->isChecked() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtCheckBox_nativeSetChecked(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean checked) {
+    QCheckBox* box = static_cast<QCheckBox*>(requireHandle(env, handle));
+    if (box == nullptr) {
+        return;
+    }
+    box->setChecked(checked == JNI_TRUE);
 }
