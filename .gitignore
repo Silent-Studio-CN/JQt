@@ -32,3 +32,5 @@ _pureqt*
 _pq_*
 _jqt_diag.txt
 SilentStudioJQt*
+
+*.log
