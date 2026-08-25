@@ -22,6 +22,15 @@
 
 #include <jni.h>
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <windowsx.h>
+#include <dwmapi.h>
+#endif
+
 #include <QApplication>
 #include <QBoxLayout>
 #include <QCloseEvent>
@@ -38,6 +47,7 @@
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
+#include <QWindow>
 
 #include <atomic>
 #include <functional>
@@ -159,12 +169,131 @@ public:
     std::function<void(int, int)> onResized;
     std::function<void(int, int)> onMoved;
 
+    // ---- Fluent 窗口状态（qframelesswindow 偷师）----
+    bool frameless = false;       // 无边框模式
+    bool acrylic = false;         // 亚克力背景
+    bool rounded = false;         // Win11 圆角
+    bool draggable = true;        // 标题栏区域可拖拽
+    int borderWidth = 5;          // 缩放热区宽度
+
+#ifdef _WIN32
+    // DWM 阴影（无边框时启用）
+    void applyShadow() {
+        HMODULE dwm = GetModuleHandleW(L"dwmapi.dll");
+        if (!dwm) dwm = LoadLibraryW(L"dwmapi.dll");
+        if (!dwm) return;
+        typedef HRESULT(WINAPI* DwmExtendFrameFunc)(HWND, const MARGINS*);
+        auto fn = (DwmExtendFrameFunc)GetProcAddress(dwm, "DwmExtendFrameIntoClientArea");
+        if (fn) {
+            MARGINS margins{ 1, 1, 1, 1 };
+            fn(reinterpret_cast<HWND>(winId()), &margins);
+        }
+    }
+
+    // 亚克力背景（SetWindowCompositionAttribute，Win10+）
+    void applyAcrylic() {
+        HMODULE user32 = GetModuleHandleW(L"user32.dll");
+        if (!user32) return;
+        typedef BOOL(WINAPI* SetWCAFunc)(HWND, void*);
+        auto fn = (SetWCAFunc)GetProcAddress(user32, "SetWindowCompositionAttribute");
+        if (!fn) return;
+        struct ACCENT_POLICY { int state; int flags; int color; int animation; };
+        struct WINCOMPATTRDATA { int attr; void* data; unsigned long size; };
+        ACCENT_POLICY ap;
+        ap.state = 4;                                   // ACCENT_ENABLE_ACRYLICBLURBEHIND
+        ap.flags = 0x20 | 0x40 | 0x80 | 0x100;          // 阴影 + 无边框属性
+        ap.color = 0x99F2F2F2;                          // 亚克力混合色（ABGR）
+        ap.animation = 0;
+        WINCOMPATTRDATA data;
+        data.attr = 19;                                 // WCA_ACCENT_POLICY
+        data.data = &ap;
+        data.size = sizeof(ap);
+        fn(reinterpret_cast<HWND>(winId()), &data);
+    }
+
+    // Win11 圆角（DWMWA_WINDOW_CORNER_PREFERENCE = 33）
+    void applyRoundedCorners() {
+        HMODULE dwm = GetModuleHandleW(L"dwmapi.dll");
+        if (!dwm) dwm = LoadLibraryW(L"dwmapi.dll");
+        if (!dwm) return;
+        typedef HRESULT(WINAPI* DwmSetAttrFunc)(HWND, DWORD, const void*, DWORD);
+        auto fn = (DwmSetAttrFunc)GetProcAddress(dwm, "DwmSetWindowAttribute");
+        if (fn) {
+            int pref = 2;  // DWMWCP_ROUND
+            fn(reinterpret_cast<HWND>(winId()), 33, &pref, sizeof(pref));
+        }
+    }
+#endif
+
 protected:
     void closeEvent(QCloseEvent* event) override {
         if (onClose) {
             onClose();
         }
         QWidget::closeEvent(event);
+    }
+
+#ifdef _WIN32
+    // 无边框窗口：WM_NCHITTEST 手动实现缩放热区（qframelesswindow 同款逻辑）
+    bool nativeEvent(const QByteArray& eventType, void* message, qintptr* result) override {
+        if (!frameless) {
+            return QWidget::nativeEvent(eventType, message, result);
+        }
+        MSG* msg = static_cast<MSG*>(message);
+        if (msg->hwnd == nullptr) {
+            return QWidget::nativeEvent(eventType, message, result);
+        }
+
+        if (msg->message == WM_NCHITTEST) {
+            if (isMaximized() || isFullScreen()) {
+                return QWidget::nativeEvent(eventType, message, result);
+            }
+            const int x = GET_X_LPARAM(msg->lParam);
+            const int y = GET_Y_LPARAM(msg->lParam);
+            const QPoint pos = mapFromGlobal(QPoint(x, y));
+            const int w = width();
+            const int h = height();
+            const int bw = borderWidth;
+
+            const bool l = pos.x() < bw;
+            const bool r = pos.x() > w - bw;
+            const bool t = pos.y() < bw;
+            const bool b = pos.y() > h - bw;
+
+            if (l && t) { *result = HTTOPLEFT; return true; }
+            if (r && b) { *result = HTBOTTOMRIGHT; return true; }
+            if (r && t) { *result = HTTOPRIGHT; return true; }
+            if (l && b) { *result = HTBOTTOMLEFT; return true; }
+            if (t) { *result = HTTOP; return true; }
+            if (b) { *result = HTBOTTOM; return true; }
+            if (l) { *result = HTLEFT; return true; }
+            if (r) { *result = HTRIGHT; return true; }
+            // 标题栏区域拖拽
+            if (draggable && pos.y() < 40) {
+                *result = HTCAPTION;
+                return true;
+            }
+        } else if (msg->message == WM_NCCALCSIZE && msg->wParam != 0) {
+            // 无边框：客户区铺满（避免系统边框占位）
+            *result = 0;
+            return true;
+        }
+
+        return QWidget::nativeEvent(eventType, message, result);
+    }
+#endif
+
+    // 无边框窗口的标题栏区域拖拽（Qt 6 startSystemMove）
+    void mousePressEvent(QMouseEvent* event) override {
+        if (frameless && draggable && event->button() == Qt::LeftButton
+            && event->position().y() < 40) {
+            if (windowHandle() != nullptr) {
+                windowHandle()->startSystemMove();
+                event->accept();
+                return;
+            }
+        }
+        QWidget::mousePressEvent(event);
     }
 
     void resizeEvent(QResizeEvent* event) override {
@@ -385,6 +514,117 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeHide(JNIEnv* env, jobject /*
         return;
     }
     widget->hide();
+}
+
+// 关闭窗口（触发 onClose 回调；若为最后一个窗口，exec() 返回）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeClose(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    widget->close();
+}
+
+// ---- Fluent 窗口能力（偷师 qframelesswindow / qfluentwidgets）----
+
+// 无边框模式：FramelessWindowHint + DWM 阴影 + 缩放热区（WM_NCHITTEST）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetFrameless(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean on) {
+    JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
+    if (win == nullptr) {
+        return;
+    }
+    win->frameless = (on == JNI_TRUE);
+    if (win->frameless) {
+        win->setWindowFlag(Qt::FramelessWindowHint, true);
+#ifdef _WIN32
+        win->applyShadow();
+#endif
+    } else {
+        win->setWindowFlag(Qt::FramelessWindowHint, false);
+    }
+    win->show();
+}
+
+// 亚克力背景（Win10+，SetWindowCompositionAttribute）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetAcrylic(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean on) {
+    JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
+    if (win == nullptr) {
+        return;
+    }
+    win->acrylic = (on == JNI_TRUE);
+#ifdef _WIN32
+    if (win->acrylic) {
+        win->applyAcrylic();
+    }
+#endif
+}
+
+// Win11 圆角（DWMWA_WINDOW_CORNER_PREFERENCE）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetRoundedCorners(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean on) {
+    JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
+    if (win == nullptr) {
+        return;
+    }
+    win->rounded = (on == JNI_TRUE);
+#ifdef _WIN32
+    if (win->rounded) {
+        win->applyRoundedCorners();
+    }
+#endif
+}
+
+// 标题栏区域拖拽开关
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetDraggable(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean on) {
+    JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
+    if (win == nullptr) {
+        return;
+    }
+    win->draggable = (on == JNI_TRUE);
+}
+
+// 缩放热区宽度（像素）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeSetBorderWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint px) {
+    JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
+    if (win == nullptr) {
+        return;
+    }
+    win->borderWidth = static_cast<int>(px);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeMinimize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    widget->showMinimized();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeMaximize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    widget->showMaximized();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeToggleMaximize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    if (widget->isMaximized()) {
+        widget->showNormal();
+    } else {
+        widget->showMaximized();
+    }
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_JQtWindow_nativeIsMaximized(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return JNI_FALSE;
+    }
+    return widget->isMaximized() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeResize(JNIEnv* env, jobject /*thiz*/, jlong handle, jint width, jint height) {

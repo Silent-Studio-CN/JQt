@@ -98,9 +98,22 @@ public class JQtDemo {
         window.onMoved((x, y) -> System.out.println("[JQt] window moved → " + x + "," + y));
         window.onClose(() -> System.out.println("[JQt] window close 事件"));
 
+        // ---- Fluent 窗口模式（-Djqt.demoFluent=1：无边框 + 亚克力 + 圆角）----
+        if (Long.getLong("jqt.demoFluent", 0L) > 0) {
+            window.setFrameless(true);
+            window.setAcrylic(true);
+            window.setRoundedCorners(true);
+            System.out.println("[JQt] Fluent 模式：无边框 + 亚克力 + 圆角（顶部可拖拽）");
+        }
+
         // ---- 布局（Phase 3）----
         JQtVBoxLayout vbox = new JQtVBoxLayout();
         vbox.setSpacing(10);
+        if (Long.getLong("jqt.demoFluent", 0L) > 0) {
+            JQtButton closeBtn = new JQtButton("✕ 关闭窗口");
+            closeBtn.onClick(() -> window.close());
+            vbox.addWidget(closeBtn);
+        }
         vbox.addWidget(label);
         vbox.addWidget(edit);
         vbox.addWidget(combo);

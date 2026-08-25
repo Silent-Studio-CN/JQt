@@ -51,11 +51,77 @@ public class JQtWindow extends JQtWidget {
     }
     private native void nativeHide(long handle);
 
+    /** 关闭窗口（触发 onClose 回调；若为最后一个窗口，exec() 返回）。 */
+    public void close() {
+        nativeClose(nativeHandle);
+    }
+    private native void nativeClose(long handle);
+
     /** 修改窗口大小（会触发 onResized 回调）。 */
     public void resize(int width, int height) {
         nativeResize(nativeHandle, width, height);
     }
     private native void nativeResize(long handle, int width, int height);
+
+    // ---- Fluent 窗口能力（无边框 / 亚克力 / 圆角 / 拖拽）----
+
+    /**
+     * 无边框模式（Fluent 风格窗口的基石）。
+     * 启用后：移除系统标题栏、自动添加 DWM 阴影、边框 5px 区域可缩放、
+     * 顶部 40px 区域可拖拽移动。需要自绘标题栏（最小化/关闭按钮等）。
+     */
+    public void setFrameless(boolean frameless) {
+        nativeSetFrameless(nativeHandle, frameless);
+    }
+    private native void nativeSetFrameless(long handle, boolean frameless);
+
+    /** 亚克力背景（Windows 10+，模糊 + 半透明混合色）。 */
+    public void setAcrylic(boolean acrylic) {
+        nativeSetAcrylic(nativeHandle, acrylic);
+    }
+    private native void nativeSetAcrylic(long handle, boolean acrylic);
+
+    /** Windows 11 圆角窗口。 */
+    public void setRoundedCorners(boolean rounded) {
+        nativeSetRoundedCorners(nativeHandle, rounded);
+    }
+    private native void nativeSetRoundedCorners(long handle, boolean rounded);
+
+    /** 是否允许顶部区域拖拽移动窗口（默认 true）。 */
+    public void setDraggable(boolean draggable) {
+        nativeSetDraggable(nativeHandle, draggable);
+    }
+    private native void nativeSetDraggable(long handle, boolean draggable);
+
+    /** 无边框窗口的缩放热区宽度（像素，默认 5）。 */
+    public void setBorderWidth(int px) {
+        nativeSetBorderWidth(nativeHandle, px);
+    }
+    private native void nativeSetBorderWidth(long handle, int px);
+
+    /** 最小化。 */
+    public void minimize() {
+        nativeMinimize(nativeHandle);
+    }
+    private native void nativeMinimize(long handle);
+
+    /** 最大化。 */
+    public void maximize() {
+        nativeMaximize(nativeHandle);
+    }
+    private native void nativeMaximize(long handle);
+
+    /** 最大化/还原切换。 */
+    public void toggleMaximize() {
+        nativeToggleMaximize(nativeHandle);
+    }
+    private native void nativeToggleMaximize(long handle);
+
+    /** 是否已最大化。 */
+    public boolean isMaximized() {
+        return nativeIsMaximized(nativeHandle);
+    }
+    private native boolean nativeIsMaximized(long handle);
 
     /** 修改窗口标题。 */
     public void setTitle(String title) {
