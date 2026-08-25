@@ -1,56 +1,43 @@
-# JQt v0.1.0-alpha
+# JQt v0.2.0-alpha
 
-JQt 首个 Alpha 发布 —— Java 绑定 Qt 框架。Phase 0-6 全部完成，三平台 CI 全绿。
+JQt 第二个 Alpha —— Fluent 全家桶：开关 / 动画 / 标题栏 / 触摸适配 / 第三方皮肤验证。
 
-## 发布包（Qt 6.8.3 + 6.11.2 双版本）
+## 发布包
 
 | 资产 | 说明 |
 |------|------|
-| `jqt-0.1.0-alpha.jar` | Java API（平台无关） |
-| `jqt-windows-6.11.2-full.zip` | Windows 完整包（Qt 6.11.2 运行时，16MB） |
-| `jqt-windows-6.8.3-full.zip` | Windows 完整包（Qt 6.8.3 运行时，14MB） |
-| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux 动态库 |
-| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS 动态库 |
+| `jqt-0.2.0-alpha.jar` | Java API（平台无关） |
+| `jqt-0.2.0-alpha-windows-x64.zip` | Windows 完整包（jar + jqt.dll + Qt 6.11.2 运行时 + 文档） |
 
 ## 功能
 
-- **控件**：窗口 / 按钮 / 标签 / 输入框 / 下拉框 / 列表
-- **信号槽**（伪信号槽，多监听器）：点击 / 按下 / 释放 / 勾选切换 / 文本变化 / 回车 / 选项切换 / 列表点击 / 窗口关闭 / 尺寸变化 / 位置变化 / 退出前回调
-- **布局**：VBox / HBox（间距、弹性空间）
-- **内存管理**：句柄注册表 + Cleaner + 悬垂保护（IllegalStateException）
-- **跨平台**：Windows / Linux / macOS 三平台 CI 自动构建
+- **新控件**：JQtSwitch（Fluent 开关，滑块位移动画 + 轨道颜色渐变）、
+  JQtPivot（选项卡 + 滑动指示器）、JQtTitleBar（Windows MDL2 字形 / macOS 交通灯）
+- **动画系统**：JQtEasing（40 种缓动）、JQtAnimation（任意属性动画）、
+  JQtAnimations（按钮 hover 过渡 / 卡片入场退场）、JQtAnimationTheme
+  （DEFAULT / FAST / RELAXED / OFF 全局节奏）
+- **触摸适配**（HiteVision 一体机实战）：全局 POINTER→鼠标合成（含下拉弹层）、
+  标题栏按钮修复、DPI 感知命中、无边框窗口自动弹触摸键盘
+- **QSS 引擎验证**：完整加载 qfluentwidgets（GPLv3）34 个 QSS 文件，
+  类名映射后皮肤直接生效（JQtQfDemo）
 
 ## 快速上手
 
-```java
-import org.jqt.*;
-
-public class Hello {
-    public static void main(String[] args) {
-        JQtApplication app = new JQtApplication();
-        JQtWindow window = new JQtWindow("Hello JQt", 640, 480);
-        JQtButton button = new JQtButton("点我");
-        button.onClick(() -> System.out.println("clicked!"));
-        JQtVBoxLayout vbox = new JQtVBoxLayout();
-        vbox.addWidget(button);
-        window.setLayout(vbox);
-        window.show();
-        app.exec();
-    }
-}
-```
-
 ```powershell
-java -Djava.library.path=lib -cp jqt-0.1.0-alpha.jar Hello
+git clone https://github.com/Silent-Studio-CN/JQt.git
+cd JQt
+.\.\build.ps1
+.\run-fluent.ps1                 # Fluent 演示（开关/动画/标题栏）
+.\run.ps1 -Class org.jqt.JQtQfDemo   # qfluentwidgets 皮肤演示
 ```
 
 ## 许可
 
 - JQt：JQt Source License v1.0（JSL-1.0）分层授权（LICENSE.md）
 - Qt 运行时：LGPLv3（LGPL-3.0.txt，动态链接合规）
+- themes/qf/：qfluentwidgets（GPLv3）QSS，仅测试引用不随发布包分发
 
 ## 已知限制
 
-- 控件集为 Phase 4 规模（菜单/树/滚动区在后续版本发布，见 docs/api-tiering.md）
-- Windows 的 6.11.2 与 6.8.3 完整包功能一致；若你的环境需要 Qt 6.8.3 LTS 请选择 `jqt-windows-6.8.3-full.zip`
-- 详细使用方法见 docs/user-guide.md，已实现 API 见 docs/api-implemented.md
+- 控件集仍为 Phase 4 规模（菜单/树/滚动区在后续版本发布，见 docs/api-tiering.md）
+- 触摸拖动窗口依赖 startSystemMove（系统拖动循环），个别环境需实测
