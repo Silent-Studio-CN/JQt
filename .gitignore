@@ -21,3 +21,7 @@ Desktop.ini
 aqtinstall.log
 dist/
 release-assets/
+_pureqt_*
+_pq_*
+ghost_test.log
+qss_test.log
