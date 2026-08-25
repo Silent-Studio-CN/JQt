@@ -25,6 +25,16 @@ public class JQtFluentDemo {
         }
         System.out.println("[Fluent] 已应用主题 fluent-" + theme);
 
+        // ---- 动画主题（-Djqt.animTheme=fast|relaxed|off|default）----
+        String animTheme = System.getProperty("jqt.animTheme", "default");
+        switch (animTheme) {
+            case "fast":    JQtApplication.setAnimationTheme(JQtAnimationTheme.FAST); break;
+            case "relaxed": JQtApplication.setAnimationTheme(JQtAnimationTheme.RELAXED); break;
+            case "off":     JQtApplication.setAnimationTheme(JQtAnimationTheme.OFF); break;
+            default:        JQtApplication.setAnimationTheme(JQtAnimationTheme.DEFAULT); break;
+        }
+        System.out.println("[Fluent] 动画主题 = " + animTheme);
+
         JQtWindow window = new JQtWindow("JQt Fluent", 760, 520);
         window.setFrameless(true);
         window.setAcrylic(true);
@@ -103,7 +113,14 @@ public class JQtFluentDemo {
         pulse.setLoopCount(-1);
         pulse.start();
 
-        // ---- 主布局：标题栏 + 导航 + 卡片 ----
+        // ---- Pivot 选项卡（滑动指示器动画）----
+        JQtPivot pivot = new JQtPivot();
+        pivot.addItem("概览");
+        pivot.addItem("详情");
+        pivot.addItem("历史");
+        pivot.onChanged(i -> System.out.println("[Fluent] pivot -> " + i));
+
+        // ---- 主布局：标题栏 + Pivot + 导航 + 卡片 ----
         JQtHBoxLayout body = new JQtHBoxLayout();
         body.setSpacing(12);
         body.addWidget(nav);
@@ -119,11 +136,17 @@ public class JQtFluentDemo {
         JQtVBoxLayout main = new JQtVBoxLayout();
         main.setSpacing(8);
         main.addWidget(titleBar);
+        main.addWidget(pivot);
         main.addLayout(body);
         window.setLayout(main);
 
         window.show();
         window.fadeIn(300);   // 窗口淡入动画
+
+        // ---- Fluent 入场动画：卡片依次滑入 + 淡入（主题缩放时长）----
+        app.schedule(() -> JQtAnimations.entrance(card1), 250);
+        app.schedule(() -> JQtAnimations.entrance(card2), 340);
+        app.schedule(() -> JQtAnimations.entrance(card3), 430);
 
         long autoClose = Long.getLong("jqt.autoClose", -1L);
         if (autoClose > 0) {
