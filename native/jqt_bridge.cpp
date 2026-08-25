@@ -261,9 +261,11 @@ protected:
             if (isMaximized() || isFullScreen()) {
                 return QWidget::nativeEvent(eventType, message, result);
             }
+            // WM_NCHITTEST 坐标是物理像素，Qt 坐标是逻辑像素：DPI 缩放时需换算
+            const qreal dpr = devicePixelRatioF();
             const int x = GET_X_LPARAM(msg->lParam);
             const int y = GET_Y_LPARAM(msg->lParam);
-            const QPoint pos = mapFromGlobal(QPoint(x, y));
+            const QPoint pos = mapFromGlobal(QPoint(qRound(x / dpr), qRound(y / dpr)));
             const int w = width();
             const int h = height();
             const int bw = borderWidth;
@@ -281,14 +283,32 @@ protected:
             if (b) { *result = HTBOTTOM; return true; }
             if (l) { *result = HTLEFT; return true; }
             if (r) { *result = HTRIGHT; return true; }
-            // 标题栏区域拖拽
-            if (draggable && pos.y() < 40) {
-                *result = HTCAPTION;
-                return true;
-            }
+            // 中部一律 HTCLIENT：子控件（标题栏按钮/开关/卡片）正常接收点击；
+            // 标题栏空白区拖动改由 Qt 事件冒泡 + startSystemMove 实现（见 mousePressEvent）。
+            // 注意：不要在这里返回 HTCAPTION —— 那会吞掉子控件的一切鼠标消息。
+            return QWidget::nativeEvent(eventType, message, result);
         } else if (msg->message == WM_NCCALCSIZE && msg->wParam != 0) {
             // 无边框：客户区铺满（避免系统边框占位）
             *result = 0;
+            return true;
+        } else if (msg->message == WM_POINTERDOWN || msg->message == WM_POINTERUP
+                   || msg->message == WM_POINTERUPDATE) {
+            // 触摸/触笔（HiteVision 一体机等）→ 显式合成鼠标消息。
+            // Qt 默认的触摸→鼠标合成在无边框窗口上不可靠（按钮/自绘控件收不到点击），
+            // 这里在消息层兜底：单点触摸转发为 WM_LBUTTONDOWN/UP/MOUSEMOVE。
+            POINT pt;
+            if (GetCursorPos(&pt) && ScreenToClient(msg->hwnd, &pt)) {
+                const LONG lp = MAKELPARAM(pt.x, pt.y);
+                if (msg->message == WM_POINTERDOWN) {
+                    fprintf(stderr, "[JQt] POINTERDOWN -> mouse click\n");
+                    PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
+                } else if (msg->message == WM_POINTERUP) {
+                    fprintf(stderr, "[JQt] POINTERUP\n");
+                    PostMessageW(msg->hwnd, WM_LBUTTONUP, 0, lp);
+                } else {
+                    PostMessageW(msg->hwnd, WM_MOUSEMOVE, 0, lp);
+                }
+            }
             return true;
         }
 
@@ -297,7 +317,11 @@ protected:
 #endif
 
     // 无边框窗口的标题栏区域拖拽（Qt 6 startSystemMove）
+    // 事件冒泡机制：子控件（按钮/开关）处理了点击就不会到达这里；
+    // 标题栏空白区域（QFrame 不处理）会冒泡到窗口，在此启动系统拖动。
     void mousePressEvent(QMouseEvent* event) override {
+        fprintf(stderr, "[JQt] window mousePress at %.0f,%.0f\n",
+                event->position().x(), event->position().y());
         if (frameless && draggable && event->button() == Qt::LeftButton
             && event->position().y() < 40) {
             if (windowHandle() != nullptr) {
@@ -1380,6 +1404,8 @@ protected:
     }
 
     void mousePressEvent(QMouseEvent* event) override {
+        fprintf(stderr, "[JQt] switch mousePress at %.0f,%.0f\n",
+                event->position().x(), event->position().y());
         if (event->button() == Qt::LeftButton) {
             setChecked(!m_checked);
         }
@@ -1424,6 +1450,27 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtSwitch_nativeSetChecked(JNIEnv* env, jobj
     }
     sw->setChecked(checked == JNI_TRUE);
 }
+
+// ---- 自动化命中测试（诊断用）----
+// 向窗口发送真实 WM_LBUTTONDOWN/UP 消息，点击目标控件中心。
+// 走完整链路：Windows 消息 → WM_NCHITTEST → Qt 事件分发 → 子控件。
+#ifdef _WIN32
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativePostClickAt(JNIEnv* env, jclass /*cls*/, jlong targetHandle, jlong winHandle) {
+    QWidget* target = static_cast<QWidget*>(requireHandle(env, targetHandle));
+    QWidget* win = static_cast<QWidget*>(requireHandle(env, winHandle));
+    if (target == nullptr || win == nullptr) {
+        return;
+    }
+    const QPoint pos = target->mapTo(win, QPoint(target->width() / 2, target->height() / 2));
+    const qreal dpr = win->devicePixelRatioF();
+    HWND hwnd = reinterpret_cast<HWND>(win->winId());
+    const LONG lp = MAKELPARAM(qRound(pos.x() * dpr), qRound(pos.y() * dpr));
+    fprintf(stderr, "[JQt] postClick target at win (%d,%d) dpr=%.2f\n",
+            static_cast<int>(pos.x()), static_cast<int>(pos.y()), dpr);
+    PostMessageW(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
+    PostMessageW(hwnd, WM_LBUTTONUP, 0, lp);
+}
+#endif
 
 // ----------------------------------------------------------------------------
 // 动画系统：QPropertyAnimation 封装（淡入淡出 / 移动 / 缩放）
