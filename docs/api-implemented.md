@@ -46,7 +46,7 @@
 |------|------|
 | `JQtWindow(String title)` | 创建 800x600 窗口 |
 | `JQtWindow(String title, int w, int h)` | 创建指定大小窗口 |
-| `void show()` / `void hide()` | 显示 / 隐藏 |
+| `void show()` / `void hide()` / `void close()` | 显示 / 隐藏 / 关闭（触发 onClose，最后窗口关闭时 exec 返回） |
 | `void resize(int w, int h)` | 修改窗口大小（触发 onResized） |
 | `void setTitle(String)` | 修改标题 |
 | `void addWidget(JQtWidget child)` | 添加子控件（无布局时自动摆放） |
@@ -54,6 +54,11 @@
 | `void onClose(Runnable)` | 窗口关闭回调 |
 | `void onResized(BiConsumer<Integer,Integer>)` | 尺寸变化回调（参数：宽,高） |
 | `void onMoved(BiConsumer<Integer,Integer>)` | 位置变化回调（参数：x,y） |
+| `void setFrameless(boolean)` | 无边框模式（DWM 阴影 + 边框缩放热区 + 顶部拖拽，Fluent 风格） |
+| `void setAcrylic(boolean)` | 亚克力背景（Win10+ 模糊半透明） |
+| `void setRoundedCorners(boolean)` | Windows 11 圆角 |
+| `void setDraggable(boolean)` / `setBorderWidth(int)` | 拖拽开关 / 缩放热区宽度 |
+| `void minimize()` / `maximize()` / `toggleMaximize()` / `isMaximized()` | 窗口状态 |
 
 ### 1.3 JQtButton —— 按钮
 
@@ -169,7 +174,7 @@
 |--------|-------------|
 | `JQtWindow(String title)` | 800x600 window |
 | `JQtWindow(String title, int w, int h)` | sized window |
-| `void show()` / `void hide()` | show / hide |
+| `void show()` / `void hide()` / `void close()` | show / hide / close (fires onClose; exec returns when the last window closes) |
 | `void resize(int w, int h)` | resize (fires onResized) |
 | `void setTitle(String)` | set title |
 | `void addWidget(JQtWidget child)` | add a child (auto-placed without a layout) |
@@ -177,6 +182,11 @@
 | `void onClose(Runnable)` | window close callback |
 | `void onResized(BiConsumer<Integer,Integer>)` | resize callback (w, h) |
 | `void onMoved(BiConsumer<Integer,Integer>)` | move callback (x, y) |
+| `void setFrameless(boolean)` | frameless mode (DWM shadow + edge resize + title drag, Fluent style) |
+| `void setAcrylic(boolean)` | acrylic background (Win10+ blur) |
+| `void setRoundedCorners(boolean)` | Windows 11 rounded corners |
+| `void setDraggable(boolean)` / `setBorderWidth(int)` | drag toggle / resize hotzone width |
+| `void minimize()` / `maximize()` / `toggleMaximize()` / `isMaximized()` | window states |
 
 ### 1.3 JQtButton
 

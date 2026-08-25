@@ -12,7 +12,8 @@
 param(
     [int]$AutoClose = -1,
     [string]$Class = "org.jqt.JQtDemo",
-    [string]$JDK = "C:\Program Files\Java\latest\jdk-26"
+    [string]$JDK = "C:\Program Files\Java\latest\jdk-26",
+    [switch]$Fluent
 )
 
 $ErrorActionPreference = "Stop"
@@ -42,6 +43,7 @@ $javaArgs = @(
     "-cp", $Out
 )
 if ($AutoClose -gt 0) { $javaArgs += "-Djqt.autoClose=$AutoClose" }
+if ($Fluent) { $javaArgs += "-Djqt.demoFluent=1" }
 $javaArgs += $Class
 
 & "$JDK\bin\java.exe" @javaArgs
