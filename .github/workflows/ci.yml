@@ -176,77 +176,6 @@ jobs:
           name: jqt-windows-x64
           path: lib/
 
-  # ================= Windows ARM64 (native arm64 runner + MSVC Qt) =================
-  windows-arm64:
-    name: Windows ARM64
-    runs-on: windows-11-arm
-    steps:
-      - uses: actions/checkout@v4
-
-      # Temurin windows-aarch64 尚无 JDK 26，用 23（源码为 Java 17 语法，兼容）
-      - uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '23'
-
-      - name: Install Qt 6.8.3 win64_arm64 (aqt)
-        shell: pwsh
-        run: |
-          Set-Content -Path "D:/aqt.ini" -Value "[mirrors]" -Encoding ascii
-          Add-Content -Path "D:/aqt.ini" -Value "trusted_mirrors = https://download.qt.io"
-          pip install aqtinstall
-          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_arm64 --outputdir C:/Qt --archives qtbase *> aqt_qt.log
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "=== AQT FAILED, tail of aqt_qt.log ==="
-            Get-Content aqt_qt.log -Tail 30
-            exit $LASTEXITCODE
-          }
-          $qmake = Get-ChildItem C:/Qt -Recurse -Filter qmake.exe | Select-Object -First 1
-          if (-not $qmake) {
-            Write-Host "=== C:/Qt tree (depth 3) ==="
-            Get-ChildItem C:/Qt -Recurse -Depth 3 | Select-Object -First 30 -ExpandProperty FullName
-            throw "qmake.exe not found after aqt install"
-          }
-          $qtRoot = Split-Path (Split-Path $qmake.FullName)
-          Write-Host "QTBASE=$qtRoot"
-          "QTBASE=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
-
-      - name: Build jqt.dll (MSVC ARM64)
-        shell: pwsh
-        run: |
-          powershell -File build-arm64.ps1 -JDK "$env:JAVA_HOME" -QtRoot "$env:QTBASE" *> build_log.txt
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "=== BUILD FAILED, tail of build_log.txt ==="
-            Get-Content build_log.txt -Tail 60
-            exit $LASTEXITCODE
-          }
-
-      - name: Smoke test (offscreen, headless)
-        shell: pwsh
-        run: |
-          $env:QT_QPA_PLATFORM = "offscreen"
-          $env:QT_PLUGIN_PATH = "$env:QTBASE/plugins"
-          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -AutoClose 2000 *> smoke_log.txt
-          if ($LASTEXITCODE -ne 0) {
-            Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
-            Get-Content smoke_log.txt -Tail 40
-            exit $LASTEXITCODE
-          }
-      - name: Upload build log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-arm64-build-logs
-          path: |
-            build_log.txt
-            smoke_log.txt
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: jqt-windows-arm64
-          path: lib/
-
   # ================= macOS (install-qt-action) =================
   macos:
     name: macOS x64
@@ -298,7 +227,7 @@ jobs:
   # ================= Release package (jar + 3 platform libs + docs) =================
   release-package:
     name: Release package
-    needs: [ linux, windows, windows-arm64, macos ]
+    needs: [ linux, windows, macos ]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -328,7 +257,6 @@ jobs:
           cp artifacts/libjqt-linux-x64/libjqt-6.11.2.so dist/native/libjqt-linux-6.11.2.so
           cp artifacts/libjqt-linux-x64/libjqt-6.8.3.so dist/native/libjqt-linux-6.8.3.so
           cp artifacts/jqt-windows-x64/jqt.dll dist/native/jqt-windows-6.8.3.dll
-          cp artifacts/jqt-windows-arm64/jqt.dll dist/native/jqt-windows-arm64-6.8.3.dll
           cp artifacts/libjqt-macos-x64/libjqt-6.11.2.dylib dist/native/libjqt-macos-6.11.2.dylib
           cp artifacts/libjqt-macos-x64/libjqt-6.8.3.dylib dist/native/libjqt-macos-6.8.3.dylib
           cp README.md LICENSE.md LICENSE LGPL-3.0.txt THIRD-PARTY-NOTICES.md CHANGELOG.md VERSION dist/
