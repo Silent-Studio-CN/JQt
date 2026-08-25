@@ -1,9 +1,9 @@
+> 🔗 **全部功能导航：https://jqt.silentstudio.cn/docs**（⚠️ 暂未开放 · Coming Soon）
+
 # JQt — Java 绑定 Qt 框架 / Java Bindings for Qt
 
 > 用 Java 写桌面应用，Qt（C++）负责渲染与事件。无需 C++ 编译器、无需 Qt SDK。
 > Desktop apps in Java, powered by Qt underneath.
-
-> 📚 **全部功能与 API 文档：https://jqt.silentstudio.cn/docs**
 
 ---
 
@@ -79,7 +79,7 @@ list.onItemClicked(row -> ...);  window.onClose(() -> ...);
 window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 ```
 
-> 🔗 **全部功能与完整 API：https://jqt.silentstudio.cn/docs**
+> 🔗 **全部功能与完整 API：https://jqt.silentstudio.cn/docs**（暂未开放 · Coming Soon）
 
 ---
 
