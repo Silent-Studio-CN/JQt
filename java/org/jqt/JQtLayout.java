@@ -73,6 +73,12 @@ public abstract class JQtLayout {
     }
     protected native void nativeAddWidget(long handle, long childHandle);
 
+    /** 嵌套子布局（如 VBox 中嵌入 HBox 作为标题栏/工具行）。 */
+    public void addLayout(JQtLayout child) {
+        nativeAddLayout(nativeHandle, child.nativeHandle());
+    }
+    protected native void nativeAddLayout(long handle, long childLayoutHandle);
+
     /** 设置控件之间的间距（像素）。 */
     public void setSpacing(int spacing) {
         nativeSetSpacing(nativeHandle, spacing);

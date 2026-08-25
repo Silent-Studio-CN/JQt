@@ -52,6 +52,15 @@ public abstract class JQtWidget {
     private static native void nativeSetStyleSheet(long handle, String qss);
 
     /**
+     * 给本控件设置布局管理器（任何控件都可用，如面板/卡片内部布局）。
+     * 设置后由布局接管子控件排列。
+     */
+    public void setLayout(JQtLayout layout) {
+        nativeSetLayout(nativeHandle, layout.nativeHandle());
+    }
+    private static native void nativeSetLayout(long handle, long layoutHandle);
+
+    /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
      * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。
      */

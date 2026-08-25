@@ -139,13 +139,9 @@ public class JQtWindow extends JQtWidget {
     private native void nativeAddWidget(long handle, long childHandle);
 
     /**
-     * 设置布局管理器（QVBoxLayout / QHBoxLayout）。
+     * 设置布局管理器（继承自 {@link JQtWidget}）。
      * 布局接管子控件的位置与大小；重复设置会替换并销毁旧布局（Qt 行为）。
      */
-    public void setLayout(JQtLayout layout) {
-        nativeSetLayout(nativeHandle, layout.nativeHandle());
-    }
-    private native void nativeSetLayout(long handle, long layoutHandle);
 
     /** 注册窗口关闭回调（closeEvent）。 */
     public void onClose(Runnable handler) {
