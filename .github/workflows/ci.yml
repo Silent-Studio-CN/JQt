@@ -189,31 +189,23 @@ jobs:
           distribution: temurin
           java-version: '23'
 
-      - name: Install Qt 6.8.3 win64_arm64 (manual 7z, parse Updates.xml)
+      - name: Install Qt 6.8.3 win64_arm64 (aqt)
         shell: pwsh
         run: |
-          $base = "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_683/qt6_683"
-          $xml = (curl.exe -s "$base/Updates.xml") -join "`n"
-          $pkg = [regex]::Match($xml, "(?s)<PackageUpdate>.*?<Name>qt\.qt6\.683\.win64_arm64</Name>.*?</PackageUpdate>").Value
-          if (-not $pkg) {
-            Write-Host "=== Updates.xml probe (first 3000 chars) ==="
-            Write-Host $xml.Substring(0, [Math]::Min(3000, $xml.Length))
-            throw "qt.qt6.683.win64_arm64 not found in Updates.xml"
+          Set-Content -Path "D:/aqt.ini" -Value "[mirrors]" -Encoding ascii
+          Add-Content -Path "D:/aqt.ini" -Value "trusted_mirrors = https://download.qt.io"
+          pip install aqtinstall
+          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_arm64 --outputdir C:/Qt --archives qtbase *> aqt_qt.log
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== AQT FAILED, tail of aqt_qt.log ==="
+            Get-Content aqt_qt.log -Tail 30
+            exit $LASTEXITCODE
           }
-          $ver = [regex]::Match($pkg, '<Version>([^<]+)</Version>').Groups[1].Value
-          $arch = [regex]::Match($pkg, '<DownloadableArchives>([^<]+)</DownloadableArchives>').Groups[1].Value
-          $qtbase = ($arch -split ',' | Where-Object { $_ -like 'qtbase-*' } | Select-Object -First 1)
-          if (-not $qtbase) { throw "qtbase archive not found in: $arch" }
-          $url = "$base/qt.qt6.683.win64_arm64/$ver$qtbase"
-          Write-Host "Downloading: $url"
-          curl.exe -fsSL -o C:/qtbase.7z $url
-          New-Item -ItemType Directory -Force -Path C:/Qt | Out-Null
-          7z x -y -oC:/Qt C:/qtbase.7z | Out-Null
           $qmake = Get-ChildItem C:/Qt -Recurse -Filter qmake.exe | Select-Object -First 1
           if (-not $qmake) {
-            Write-Host "=== extracted tree (depth 3) ==="
+            Write-Host "=== C:/Qt tree (depth 3) ==="
             Get-ChildItem C:/Qt -Recurse -Depth 3 | Select-Object -First 30 -ExpandProperty FullName
-            throw "qmake.exe not found after extraction"
+            throw "qmake.exe not found after aqt install"
           }
           $qtRoot = Split-Path (Split-Path $qmake.FullName)
           Write-Host "QTBASE=$qtRoot"
