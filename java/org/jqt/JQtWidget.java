@@ -60,6 +60,32 @@ public abstract class JQtWidget {
     }
     private static native void nativeSetLayout(long handle, long layoutHandle);
 
+    // ---- 动画（QPropertyAnimation）----
+
+    /** 平滑移动到目标位置（属性动画，OutCubic 缓动）。 */
+    public void animateMove(int x, int y, long ms) {
+        nativeAnimateMove(nativeHandle, x, y, ms);
+    }
+    private static native void nativeAnimateMove(long handle, int x, int y, long ms);
+
+    /** 平滑缩放到目标尺寸。 */
+    public void animateResize(int w, int h, long ms) {
+        nativeAnimateResize(nativeHandle, w, h, ms);
+    }
+    private static native void nativeAnimateResize(long handle, int w, int h, long ms);
+
+    /** 淡入（透明度 0 → 1，QGraphicsOpacityEffect）。 */
+    public void fadeIn(long ms) {
+        nativeFadeIn(nativeHandle, ms);
+    }
+    private static native void nativeFadeIn(long handle, long ms);
+
+    /** 淡出（透明度 1 → 0）。 */
+    public void fadeOut(long ms) {
+        nativeFadeOut(nativeHandle, ms);
+    }
+    private static native void nativeFadeOut(long handle, long ms);
+
     /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
      * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。

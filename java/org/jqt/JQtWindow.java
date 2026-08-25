@@ -123,6 +123,20 @@ public class JQtWindow extends JQtWidget {
     }
     private native boolean nativeIsMaximized(long handle);
 
+    // ---- 动画（QPropertyAnimation）----
+
+    /** 窗口淡入（透明度 0 → 1，默认 200ms）。 */
+    public void fadeIn(long ms) {
+        nativeFadeIn(nativeHandle, ms);
+    }
+    private native void nativeFadeIn(long handle, long ms);
+
+    /** 窗口淡出（透明度 1 → 0）。 */
+    public void fadeOut(long ms) {
+        nativeFadeOut(nativeHandle, ms);
+    }
+    private native void nativeFadeOut(long handle, long ms);
+
     /** 修改窗口标题。 */
     public void setTitle(String title) {
         nativeSetTitle(nativeHandle, title);

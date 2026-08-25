@@ -6,6 +6,9 @@
  */
 package org.jqt;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,21 +42,9 @@ public class JQtApplication {
     public JQtApplication() {
         nativeHandle = nativeCreateApp();
         if (Boolean.getBoolean("jqt.lightMode")) {
-            setLightMode(true);
+            setColorScheme(true);
         }
     }
-
-    /**
-     * 切换浅色 / 默认配色（运行时生效，立即刷新全部控件）。
-     * <p>
-     * 背景：Qt 在 Java 进程中可能误判系统暗色模式（深色系统下默认深色），
-     * 调用 {@code setLightMode(true)} 可恢复经典浅色外观；
-     * 也可用 JVM 参数 {@code -Djqt.lightMode=true} 在启动时自动开启。
-     */
-    public void setLightMode(boolean on) {
-        nativeSetLightMode(on);
-    }
-    private native void nativeSetLightMode(boolean on);
 
     private native long nativeCreateApp();
 
@@ -78,13 +69,23 @@ public class JQtApplication {
     }
     private native void nativeSchedule(Runnable task, long delayMs);
 
+    // ==================== 主题系统 ====================
+
+    /**
+     * 切换配色方案（运行时生效，立即刷新全部控件）。
+     * {@code true} 浅色 / {@code false} 深色。
+     * <p>
+     * ⚠️ 层级规则：QSS 样式 > 调色板 > 风格引擎。QSS 覆盖到的属性优先于调色板；
+     * 未覆盖的控件/属性使用调色板。建议用 {@link #setTheme(String)} 统一应用主题
+     * （QSS + 调色板一致打包），避免手动混搭冲突。
+     */
+    public void setColorScheme(boolean light) {
+        nativeSetColorScheme(light);
+    }
+    private native void nativeSetColorScheme(boolean light);
+
     /**
      * 设置全局样式表（QSS，Qt Style Sheets）。
-     * <p>
-     * 示例：
-     * <pre>
-     * app.setStyleSheet("QPushButton { background: #3c3f41; color: white; }");
-     * </pre>
      * 语法详见 Qt 文档 "Qt Style Sheets Reference"。
      */
     public void setStyleSheet(String qss) {
@@ -100,6 +101,45 @@ public class JQtApplication {
         nativeSetStyle(style);
     }
     private native void nativeSetStyle(String style);
+
+    /**
+     * 应用主题（统一入口，QSS + 调色板一致打包，避免混搭冲突）。
+     * 内置主题：{@code "fluent-dark"}（Fluent 深色）、{@code "fluent-light"}（Fluent 浅色）。
+     * <p>
+     * 自定义主题：{@code setTheme("themes/my.qss", true)} —— 加载 QSS 文件并指定配色。
+     * 注意：第三方 QSS 由使用者自行负责其许可。
+     */
+    public void setTheme(String name) {
+        switch (name == null ? "" : name) {
+            case "fluent-dark":
+                applyThemeFile("themes/fluent-dark.qss", false);
+                break;
+            case "fluent-light":
+                applyThemeFile("themes/fluent-light.qss", true);
+                break;
+            default:
+                throw new IllegalArgumentException("未知主题: " + name + "（内置: fluent-dark / fluent-light）");
+        }
+    }
+
+    /** 自定义主题：加载 QSS 文件 + 指定浅色/深色调色板。 */
+    public void setTheme(String qssPath, boolean light) {
+        applyThemeFile(qssPath, light);
+    }
+
+    private void applyThemeFile(String path, boolean light) {
+        try {
+            Path p = Path.of(path);
+            if (!Files.exists(p)) {
+                throw new IllegalArgumentException("主题文件不存在: " + path);
+            }
+            String qss = Files.readString(p, StandardCharsets.UTF_8);
+            setColorScheme(light);
+            setStyleSheet(qss);
+        } catch (java.io.IOException e) {
+            throw new IllegalStateException("读取主题失败: " + path, e);
+        }
+    }
 
     /**
      * 注册退出前回调（对应 Qt 的 aboutToQuit 信号）。
