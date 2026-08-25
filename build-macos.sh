@@ -45,12 +45,17 @@ for dir in QtWidgets QtGui QtCore; do
   done
 done
 echo "forwarding headers ensured"
+echo "=== diag: QCloseEvent ==="
+ls -la "$QTLIB/QtGui.framework/Headers/QCloseEvent" 2>&1
+head -3 "$QTLIB/QtGui.framework/Headers/QCloseEvent" 2>&1
+echo "=== diag: QtWidgets dir ==="
+ls "$QTLIB/QtWidgets.framework/Headers/" 2>&1 | head -8
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
     -install_name @rpath/libjqt.dylib \
     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/darwin" \
-    -I$QTINC \
+    -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
     -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore
