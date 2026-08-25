@@ -6,10 +6,6 @@
  */
 package org.jqt;
 
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 /**
  * Fluent 风格演示：无边框窗口 + 自绘标题栏 + 卡片 + 开关 + 导航。
  * 运行：.\\run.ps1 -Class org.jqt.JQtFluentDemo [-AutoClose 8000]
@@ -19,16 +15,15 @@ public class JQtFluentDemo {
     public static void main(String[] args) throws Exception {
         JQtApplication app = new JQtApplication();
 
-        // 加载内置 Fluent 主题（自研 QSS）
+        // 统一主题入口（QSS + 调色板一致打包）
         String theme = System.getProperty("jqt.theme", "dark");
-        Path qss = Path.of("themes", "fluent-" + theme + ".qss");
         app.setStyle("Fusion");
-        if (Files.exists(qss)) {
-            app.setStyleSheet(Files.readString(qss, StandardCharsets.UTF_8));
-            System.out.println("[Fluent] 已加载主题 themes/fluent-" + theme + ".qss");
+        if ("light".equals(theme)) {
+            app.setTheme("fluent-light");
         } else {
-            System.out.println("[Fluent] 未找到主题文件，使用默认样式");
+            app.setTheme("fluent-dark");
         }
+        System.out.println("[Fluent] 已应用主题 fluent-" + theme);
 
         JQtWindow window = new JQtWindow("JQt Fluent", 760, 520);
         window.setFrameless(true);
@@ -111,6 +106,7 @@ public class JQtFluentDemo {
         window.setLayout(main);
 
         window.show();
+        window.fadeIn(300);   // 窗口淡入动画
 
         long autoClose = Long.getLong("jqt.autoClose", -1L);
         if (autoClose > 0) {

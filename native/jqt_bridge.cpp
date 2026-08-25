@@ -35,6 +35,8 @@
 #include <QBoxLayout>
 #include <QCheckBox>
 #include <QFrame>
+#include <QGraphicsOpacityEffect>
+#include <QPropertyAnimation>
 #include <QCloseEvent>
 #include <QComboBox>
 #include <QHBoxLayout>
@@ -363,31 +365,42 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_scheduleQuit(JNIEnv* /*env*/,
     }
 }
 
-// 切换浅色/默认配色（setPalette 运行时生效，立即刷新全部控件）
-// 背景：Qt 在 Java 进程中暗色检测异常（深色系统下默认深色），
-// 原生 Qt（windowsvista 风格）不跟随系统深色；此 API 让 Java 应用可显式控制。
-JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetLightMode(JNIEnv* /*env*/, jobject /*thiz*/, jboolean on) {
+// 切换配色方案（setPalette 运行时生效，立即刷新全部控件）
+// light=true → 浅色调色板；light=false → 深色调色板。
+// 背景：Qt 在 Java 进程中暗色检测异常；此 API 让 Java 应用显式控制深浅色。
+JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetColorScheme(JNIEnv* /*env*/, jobject /*thiz*/, jboolean light) {
     if (g_app == nullptr) {
         return;
     }
-    if (on == JNI_TRUE) {
-        QPalette light;
-        light.setColor(QPalette::Window, QColor(0xf0, 0xf0, 0xf0));
-        light.setColor(QPalette::WindowText, Qt::black);
-        light.setColor(QPalette::Base, Qt::white);
-        light.setColor(QPalette::AlternateBase, QColor(0xf5, 0xf5, 0xf5));
-        light.setColor(QPalette::Text, Qt::black);
-        light.setColor(QPalette::Button, QColor(0xe1, 0xe1, 0xe1));
-        light.setColor(QPalette::ButtonText, Qt::black);
-        light.setColor(QPalette::BrightText, Qt::red);
-        light.setColor(QPalette::Highlight, QColor(0x00, 0x78, 0xd7));
-        light.setColor(QPalette::HighlightedText, Qt::white);
-        light.setColor(QPalette::ToolTipBase, QColor(0xff, 0xff, 0xdc));
-        light.setColor(QPalette::ToolTipText, Qt::black);
-        g_app->setPalette(light);
+    QPalette p;
+    if (light == JNI_TRUE) {
+        p.setColor(QPalette::Window, QColor(0xf0, 0xf0, 0xf0));
+        p.setColor(QPalette::WindowText, Qt::black);
+        p.setColor(QPalette::Base, Qt::white);
+        p.setColor(QPalette::AlternateBase, QColor(0xf5, 0xf5, 0xf5));
+        p.setColor(QPalette::Text, Qt::black);
+        p.setColor(QPalette::Button, QColor(0xe1, 0xe1, 0xe1));
+        p.setColor(QPalette::ButtonText, Qt::black);
+        p.setColor(QPalette::BrightText, Qt::red);
+        p.setColor(QPalette::Highlight, QColor(0x00, 0x78, 0xd7));
+        p.setColor(QPalette::HighlightedText, Qt::white);
+        p.setColor(QPalette::ToolTipBase, QColor(0xff, 0xff, 0xdc));
+        p.setColor(QPalette::ToolTipText, Qt::black);
     } else {
-        g_app->setPalette(g_app->style()->standardPalette());
+        p.setColor(QPalette::Window, QColor(0x1f, 0x1f, 0x1f));
+        p.setColor(QPalette::WindowText, QColor(0xe8, 0xe8, 0xe8));
+        p.setColor(QPalette::Base, QColor(0x2b, 0x2b, 0x2b));
+        p.setColor(QPalette::AlternateBase, QColor(0x33, 0x33, 0x33));
+        p.setColor(QPalette::Text, QColor(0xe8, 0xe8, 0xe8));
+        p.setColor(QPalette::Button, QColor(0x3b, 0x3b, 0x3b));
+        p.setColor(QPalette::ButtonText, QColor(0xe8, 0xe8, 0xe8));
+        p.setColor(QPalette::BrightText, Qt::red);
+        p.setColor(QPalette::Highlight, QColor(0x4c, 0xc2, 0xff));
+        p.setColor(QPalette::HighlightedText, Qt::black);
+        p.setColor(QPalette::ToolTipBase, QColor(0x2b, 0x2b, 0x2b));
+        p.setColor(QPalette::ToolTipText, QColor(0xe8, 0xe8, 0xe8));
     }
+    g_app->setPalette(p);
 }
 
 // 设置全局样式表（QSS，QApplication::setStyleSheet）
@@ -1120,4 +1133,95 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtCheckBox_nativeSetChecked(JNIEnv* env, jo
         return;
     }
     box->setChecked(checked == JNI_TRUE);
+}
+
+// ----------------------------------------------------------------------------
+// 动画系统：QPropertyAnimation 封装（淡入淡出 / 移动 / 缩放）
+// 说明：QSS 不支持 CSS transition，Qt 动画必须走属性动画 API。
+// ----------------------------------------------------------------------------
+
+// 窗口淡入：透明度 0 → 1（默认 200ms）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeFadeIn(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong ms) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "windowOpacity", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(0.0);
+    anim->setEndValue(1.0);
+    anim->setEasingCurve(QEasingCurve::OutCubic);
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// 窗口淡出：透明度 1 → 0（结束后可回调）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeFadeOut(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong ms) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "windowOpacity", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(widget->windowOpacity());
+    anim->setEndValue(0.0);
+    anim->setEasingCurve(QEasingCurve::InCubic);
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// 控件平滑移动到目标位置（属性动画）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeAnimateMove(JNIEnv* env, jclass /*cls*/, jlong handle, jint x, jint y, jlong ms) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "pos", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setEndValue(QPoint(static_cast<int>(x), static_cast<int>(y)));
+    anim->setEasingCurve(QEasingCurve::OutCubic);
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// 控件平滑缩放到目标尺寸（属性动画）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeAnimateResize(JNIEnv* env, jclass /*cls*/, jlong handle, jint w, jint h, jlong ms) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QPropertyAnimation* anim = new QPropertyAnimation(widget, "size", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setEndValue(QSize(static_cast<int>(w), static_cast<int>(h)));
+    anim->setEasingCurve(QEasingCurve::OutCubic);
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// 控件淡入（透明度 0 → 1）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeFadeIn(JNIEnv* env, jclass /*cls*/, jlong handle, jlong ms) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect(widget);
+    widget->setGraphicsEffect(effect);
+    QPropertyAnimation* anim = new QPropertyAnimation(effect, "opacity", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(0.0);
+    anim->setEndValue(1.0);
+    anim->setEasingCurve(QEasingCurve::OutCubic);
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// 控件淡出（透明度 1 → 0）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeFadeOut(JNIEnv* env, jclass /*cls*/, jlong handle, jlong ms) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QGraphicsOpacityEffect* effect = new QGraphicsOpacityEffect(widget);
+    widget->setGraphicsEffect(effect);
+    QPropertyAnimation* anim = new QPropertyAnimation(effect, "opacity", widget);
+    anim->setDuration(static_cast<int>(ms));
+    anim->setStartValue(1.0);
+    anim->setEndValue(0.0);
+    anim->setEasingCurve(QEasingCurve::InCubic);
+    anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
