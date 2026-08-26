@@ -133,7 +133,6 @@ app.setTheme("themes/fluent.qss.tpl", SolarizedTheme.vars(), true);   // 亮色
 | <img src="assets/deepseek-2.svg" width="64" alt="DeepSeek-Work-In-SilentStudio"/> | **DeepSeek-Work-In-SilentStudio** (@DeepSeek-Work-In-SilentStudio) | AI 开发（提交署名，GitHub 账号头像；`.mailmap` 映射全部历史提交） |
 | | **Silent-xiaomiao** | 项目发起 / 发布（GitHub: [Silent-xiaomiao](https://github.com/Silent-xiaomiao)） |
 
-> 提交头像由提交邮箱的 [Gravatar](https://gravatar.com) 决定：用 `deepseek.com` 注册 Gravatar 并上传头像即可显示（PNG 格式）。
 
 ---
 
