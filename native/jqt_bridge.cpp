@@ -69,9 +69,39 @@
 #include <functional>
 #include <mutex>
 #include <unordered_map>
+#include <unordered_set>
 
 // 全局主题色（JQtApplication.setAccentColor 更新；自绘控件 JQtSwitch 使用）
 static QColor g_accentColor = QColor(0x4c, 0xc2, 0xff);
+
+// 亚克力窗口集合（拖动时临时禁用亚克力——模糊重采样是拖动卡顿的已知元凶）
+#ifdef _WIN32
+static std::unordered_set<HWND> g_acrylicWindows;
+
+static void jqtSetAcrylic(HWND hwnd, bool on) {
+    HMODULE user32 = GetModuleHandleW(L"user32.dll");
+    if (user32 == nullptr) {
+        return;
+    }
+    typedef BOOL(WINAPI* SetWCAFunc)(HWND, void*);
+    auto fn = reinterpret_cast<SetWCAFunc>(GetProcAddress(user32, "SetWindowCompositionAttribute"));
+    if (fn == nullptr) {
+        return;
+    }
+    struct ACCENT_POLICY { int state; int flags; int color; int animation; };
+    struct WINCOMPATTRDATA { int attr; void* data; unsigned long size; };
+    ACCENT_POLICY ap;
+    ap.state = on ? 4 : 0;                              // ACCENT_ENABLE_ACRYLICBLURBEHIND / DISABLED
+    ap.flags = on ? (0x20 | 0x40 | 0x80 | 0x100) : 0;
+    ap.color = on ? 0x99F2F2F2 : 0;
+    ap.animation = 0;
+    WINCOMPATTRDATA data;
+    data.attr = 19;                                     // WCA_ACCENT_POLICY
+    data.data = &ap;
+    data.size = sizeof(ap);
+    fn(hwnd, &data);
+}
+#endif
 
 #include "generated/org_jqt_JQtApplication.h"
 #include "generated/org_jqt_JQtAnimations.h"
@@ -220,6 +250,12 @@ public:
                         if (pt.y < static_cast<int>(40 * dpr)
                             && pt.x < rc.right - static_cast<int>(150 * dpr)) {
                             fprintf(stderr, "[JQt] titlebar drag loop begin\n");
+                            // 拖动期间临时禁用亚克力（模糊重采样是拖动卡顿的已知元凶，
+                            // 见 Tabby #8145 / dotnet-wpf #3608），拖完恢复
+                            const bool wasAcrylic = g_acrylicWindows.count(msg->hwnd) > 0;
+                            if (wasAcrylic) {
+                                jqtSetAcrylic(msg->hwnd, false);
+                            }
                             RECT wr;
                             GetWindowRect(msg->hwnd, &wr);
                             POINT startScreen = pt;
@@ -249,6 +285,9 @@ public:
                                     TranslateMessage(&m);
                                     DispatchMessageW(&m);
                                 }
+                            }
+                            if (wasAcrylic) {
+                                jqtSetAcrylic(msg->hwnd, true);
                             }
                             fprintf(stderr, "[JQt] titlebar drag loop end\n");
                             return true;
@@ -375,6 +414,7 @@ public:
         data.data = &ap;
         data.size = sizeof(ap);
         fn(reinterpret_cast<HWND>(winId()), &data);
+        g_acrylicWindows.insert(reinterpret_cast<HWND>(winId()));
     }
 
     // Win11 圆角（DWMWA_WINDOW_CORNER_PREFERENCE = 33）
