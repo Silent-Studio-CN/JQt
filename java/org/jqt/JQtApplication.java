@@ -306,6 +306,25 @@ public class JQtApplication {
     }
     private native void nativeSetAccent(String hex);
 
+    /**
+     * 自动跟随系统主题（Windows）：深浅色 + 系统强调色，变化时自动应用。
+     * 工业场景零配置：开启后无需任何手动主题切换代码。
+     * 非 Windows 平台为 no-op。
+     */
+    public void setAutoTheme(boolean on) {
+        nativeSetAutoTheme(on);
+    }
+    private native void nativeSetAutoTheme(boolean on);
+
+    /** 由 C++ 侧在系统主题变化时回调（JNI，GUI 线程）。 */
+    void nativeHandleSystemTheme(boolean light, String accentHex) {
+        System.out.println("[JQt] auto theme: " + (light ? "light" : "dark") + " accent=" + accentHex);
+        setTheme(light ? "fluent-light" : "fluent-dark");
+        if (accentHex != null && !accentHex.isEmpty()) {
+            setAccentColor(accentHex);
+        }
+    }
+
     /** 颜色向白偏移（hover 亮色用）。 */
     private static String lighten(String hex, double factor) {
         int r = Integer.parseInt(hex.substring(1, 3), 16);

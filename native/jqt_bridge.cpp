@@ -93,6 +93,7 @@ static QColor g_accentColor = QColor(0x4c, 0xc2, 0xff);
 
 static JavaVM* g_jvm = nullptr;        // 缓存的 JVM 句柄（供 C++ → Java 回调）
 static QApplication* g_app = nullptr;  // 进程级唯一的 QApplication
+static jobject g_appJavaRef = nullptr; // JQtApplication Java 全局引用（系统主题回调用）
 
 // 句柄注册表：Java 侧持有自增 ID（从 1 开始，永不复用），native 查表获得指针。
 // destroyed 信号保证注册表与 Qt 对象生命周期严格同步。
@@ -494,6 +495,10 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtApplication_nativeCreateApp(JNIEnv* env,
     }
 
     // aboutToQuit 信号 → Java nativeHandleAboutToQuit()；gRef 由 JVM 退出时统一清理
+    // g_appJavaRef 供系统主题自动跟随回调使用
+    if (g_appJavaRef == nullptr) {
+        g_appJavaRef = env->NewGlobalRef(thiz);
+    }
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(g_app, &QApplication::aboutToQuit, [gRef]() {
         JNIEnv* e = callbackEnv();
@@ -604,6 +609,93 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetAccent(JNIEnv* env, 
 }
 
 // 切换风格（QApplication::setStyle，如 "Fusion" / "Windows" / "macOS"）
+// ----------------------------------------------------------------------------
+// 自动跟随系统主题（深浅色 + 强调色）：注册表轮询，变化时回调 Java
+// 工业场景零配置：setAutoTheme(true) 后开发者无需关心主题切换。
+// ----------------------------------------------------------------------------
+#ifdef _WIN32
+static DWORD jqtReadRegDword(HKEY root, const wchar_t* subKey, const wchar_t* name, DWORD def) {
+    HKEY key = nullptr;
+    if (RegOpenKeyExW(root, subKey, 0, KEY_READ, &key) != ERROR_SUCCESS) {
+        return def;
+    }
+    DWORD value = def;
+    DWORD size = sizeof(value);
+    DWORD type = 0;
+    if (RegQueryValueExW(key, name, nullptr, &type, reinterpret_cast<LPBYTE>(&value), &size) != ERROR_SUCCESS) {
+        value = def;
+    }
+    RegCloseKey(key);
+    return value;
+}
+
+static bool g_autoThemeLastLight = false;
+static QString g_autoThemeLastAccent;
+
+// 系统主题变化 → Java nativeHandleSystemTheme(light, accentHex)
+static void jqtNotifySystemTheme(bool light, const QString& accentHex) {
+    JNIEnv* e = callbackEnv();
+    if (e == nullptr || g_appJavaRef == nullptr) {
+        return;
+    }
+    jclass cls = e->GetObjectClass(g_appJavaRef);
+    jmethodID mid = e->GetMethodID(cls, "nativeHandleSystemTheme", "(ZLjava/lang/String;)V");
+    if (mid == nullptr) {
+        return;
+    }
+    jstring jhex = e->NewStringUTF(accentHex.toUtf8().constData());
+    e->CallVoidMethod(g_appJavaRef, mid, light ? JNI_TRUE : JNI_FALSE, jhex);
+    if (e->ExceptionCheck()) {
+        e->ExceptionDescribe();
+        e->ExceptionClear();
+    }
+    e->DeleteLocalRef(jhex);
+}
+
+// 检测一次系统主题；变化时回调 Java（首次调用也立即同步）
+static void jqtPollSystemTheme(bool force) {
+    const bool light = jqtReadRegDword(HKEY_CURRENT_USER,
+        L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize",
+        L"AppsUseLightTheme", 0) == 1;
+    const DWORD accent = jqtReadRegDword(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\DWM",
+                                         L"AccentColor", 0x4cc2ff) & 0xFFFFFF;   // 0x00bbggrr
+    char hex[16];
+    snprintf(hex, sizeof(hex), "#%02x%02x%02x",
+             static_cast<unsigned>(accent & 0xFF),
+             static_cast<unsigned>((accent >> 8) & 0xFF),
+             static_cast<unsigned>((accent >> 16) & 0xFF));
+    const QString accentHex = QString::fromLatin1(hex);
+    if (force || light != g_autoThemeLastLight || accentHex != g_autoThemeLastAccent) {
+        g_autoThemeLastLight = light;
+        g_autoThemeLastAccent = accentHex;
+        jqtNotifySystemTheme(light, accentHex);
+    }
+}
+#endif
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetAutoTheme(JNIEnv* env, jobject /*thiz*/, jboolean on) {
+    if (g_app == nullptr) {
+        return;
+    }
+#ifdef _WIN32
+    static QTimer* g_themeTimer = nullptr;
+    if (on == JNI_TRUE) {
+        if (g_themeTimer == nullptr) {
+            g_themeTimer = new QTimer(g_app);
+            QObject::connect(g_themeTimer, &QTimer::timeout, []() { jqtPollSystemTheme(false); });
+            g_themeTimer->start(2000);
+        }
+        jqtPollSystemTheme(true);   // 开启时立即同步一次
+    } else if (g_themeTimer != nullptr) {
+        g_themeTimer->stop();
+    }
+#else
+    Q_UNUSED(on);
+    fprintf(stderr, "[JQt] auto theme is Windows-only\n");
+#endif
+}
+
+
 JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetStyle(JNIEnv* env, jobject /*thiz*/, jstring style) {
     if (g_app == nullptr) {
         return;
