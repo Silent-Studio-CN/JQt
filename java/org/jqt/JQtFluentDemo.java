@@ -54,6 +54,7 @@ public class JQtFluentDemo {
         JQtPanel card1 = new JQtPanel();
         card1.setObjectName("card");
         card1.setDropShadow(18, 70, 0, 3);   // 投影（QSS box-shadow 的替代）
+        card1.setBorderRadius(16);           // 自定义圆角（API，与 QSS 并存）
         JQtVBoxLayout card1L = new JQtVBoxLayout();
         card1L.setSpacing(10);
         JQtLabel card1Title = new JQtLabel("开关组");

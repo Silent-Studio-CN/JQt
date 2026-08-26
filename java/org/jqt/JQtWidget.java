@@ -148,6 +148,16 @@ public abstract class JQtWidget {
     static native void nativeClearDropShadow(long handle);
 
     /**
+     * 自定义控件圆角（像素）。作用于 QSS 渲染的控件（QFrame/QPushButton/QLineEdit 等），
+     * 与控件级 {@link #setStyleSheet(String)} 可共存（内部合并，互不覆盖）。
+     * 自绘控件（JQtSwitch/JQtPivot）不受影响。
+     */
+    public void setBorderRadius(int radius) {
+        nativeSetBorderRadius(nativeHandle, radius);
+    }
+    static native void nativeSetBorderRadius(long handle, int radius);
+
+    /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
      * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。
      */

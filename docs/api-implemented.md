@@ -29,10 +29,7 @@
 | `void animateResize(w,h,ms,JQtEasing)` | 平滑缩放，指定缓动函数 |
 | `void setDropShadow(blur,alpha[,dx,dy])` | 投影阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow） |
 | `void clearDropShadow()` | 移除投影阴影 |
-| `void setDropShadow(blur,alpha[,dx,dy])` | 投影阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow） |
-| `void clearDropShadow()` | 移除投影阴影 |
-| `void setDropShadow(blur,alpha[,dx,dy])` | 投影阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow） |
-| `void clearDropShadow()` | 移除投影阴影 |
+| `void setBorderRadius(int)` | 自定义圆角（像素；与控件级 setStyleSheet 内部合并，互不覆盖） |
 | `void setStyleSheet(String qss)` | 控件级 QSS（与全局样式可叠加，控件级优先） |
 
 ### 1.1 JQtApplication —— 应用入口
@@ -258,8 +255,7 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `void animateResize(w,h,ms)` / `(w,h,ms,JQtEasing)` | animated resize (OutCubic / custom easing) |
 | `void setDropShadow(blur,alpha[,dx,dy])` | drop shadow (QSS box-shadow substitute - Qt QSS lacks box-shadow) |
 | `void clearDropShadow()` | remove drop shadow |
-| `void setDropShadow(blur,alpha[,dx,dy])` | drop shadow (QSS box-shadow substitute - Qt QSS lacks box-shadow) |
-| `void clearDropShadow()` | remove drop shadow |
+| `void setBorderRadius(int)` | custom corner radius in px (merged with widget-level setStyleSheet) |
 
 ### 1.1 JQtApplication
 
