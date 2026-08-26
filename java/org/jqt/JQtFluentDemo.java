@@ -119,7 +119,13 @@ public class JQtFluentDemo {
         JQtButton fadePulse = new JQtButton("透明度脉冲 (InOutSine)");
         JQtLabel ball = new JQtLabel("●");
         ball.setStyleSheet("font-size: 20px;");   // 颜色跟随全局主题
+        JQtSwitch autoThemeSw = new JQtSwitch(false);
+        autoThemeSw.onToggled(on -> {
+            app.setAutoTheme(on);
+            System.out.println("[Fluent] autoTheme = " + on);
+        });
         card3L.addWidget(card3Title);
+        card3L.addWidget(autoThemeSw);
         card3L.addWidget(ball);
         card3L.addWidget(bounceBtn);
         card3L.addWidget(colorBtn);
