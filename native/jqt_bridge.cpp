@@ -205,21 +205,8 @@ public:
                 POINT pt = pi.ptPixelLocation;   // 物理屏幕坐标
                 if (ScreenToClient(msg->hwnd, &pt)) {
                     if (msg->message == WM_POINTERDOWN) {
-                        // 标题栏空白区 → 系统拖动（消息层 SendMessage，低延迟跟手；
-                        // 系统拖动循环消费后续触摸移动，绕开 Qt 事件循环的手动 move 延迟）
-                        // 避开右侧按钮区（三大将 ~150px）与标题栏高度（40 逻辑 px）
-                        const UINT dpi = GetDpiForWindow(msg->hwnd);
-                        const double dpr = dpi > 0 ? dpi / 96.0 : 1.0;
-                        RECT rc;
-                        GetClientRect(msg->hwnd, &rc);
-                        const int titleBarH = static_cast<int>(40 * dpr);
-                        const int btnZoneW = static_cast<int>(150 * dpr);
-                        if (pt.y < titleBarH && pt.x < rc.right - btnZoneW) {
-                            fprintf(stderr, "[JQt] titlebar -> system drag\n");
-                            SendMessageW(msg->hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
-                            return true;
-                        }
-                        // 其余区域：合成鼠标
+                        // 标题栏拖动由 WM_NCHITTEST(HTCAPTION) 原生接管（真实系统拖动），
+                        // 此处仅合成其余区域的鼠标事件
                         g_pointerPressed = true;
                         fprintf(stderr, "[JQt] POINTERDOWN at client (%d,%d) -> mouse\n",
                                 static_cast<int>(pt.x), static_cast<int>(pt.y));
@@ -403,9 +390,14 @@ protected:
             if (b) { *result = HTBOTTOM; return true; }
             if (l) { *result = HTLEFT; return true; }
             if (r) { *result = HTRIGHT; return true; }
-            // 中部一律 HTCLIENT：子控件（标题栏按钮/开关/卡片）正常接收点击；
-            // 标题栏空白区拖动改由 Qt 事件冒泡 + startSystemMove 实现（见 mousePressEvent）。
-            // 注意：不要在这里返回 HTCAPTION —— 那会吞掉子控件的一切鼠标消息。
+            // 标题栏空白区（顶部 40 逻辑 px，避开右侧按钮区 ~150px）→ HTCAPTION：
+            // Windows 走真实系统拖动链（鼠标/触摸原生支持，跟手且无延迟）。
+            // 按钮区保持 HTCLIENT → 按钮正常点击（第一版全区域 HTCAPTION 吞按钮的教训）。
+            if (draggable && !isManualMaximized() && pos.y() < 40 && pos.x() < w - 150) {
+                *result = HTCAPTION;
+                return true;
+            }
+            // 其余一律 HTCLIENT
             return QWidget::nativeEvent(eventType, message, result);
         } else if (msg->message == WM_NCCALCSIZE && msg->wParam != 0) {
             // 无边框：客户区铺满（避免系统边框占位）
