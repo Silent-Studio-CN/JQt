@@ -536,14 +536,38 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeDispose(JNIEnv* /*env*/, jcl
 }
 
 // 设置控件级样式表（QSS，QWidget::setStyleSheet；控件与全局样式可叠加）
+// 控件级 QSS 合并：base（用户 setStyleSheet）+ border-radius（setBorderRadius）
+// 存于 dynamic property，两 API 互相不覆盖。
+static void jqtApplyWidgetQss(QWidget* widget) {
+    const QString base = widget->property("jqtBaseQss").toString();
+    const int radius = widget->property("jqtRadius").toInt();
+    QString qss = base;
+    if (radius > 0) {
+        const QString cls = QString::fromLatin1(widget->metaObject()->className());
+        qss += QString::fromLatin1("\n%1 { border-radius: %2px; }").arg(cls).arg(radius);
+    }
+    widget->setStyleSheet(qss);
+}
+
 JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetStyleSheet(JNIEnv* env, jclass /*cls*/, jlong handle, jstring qss) {
     QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
     if (widget == nullptr) {
         return;
     }
     const char* utf = env->GetStringUTFChars(qss, nullptr);
-    widget->setStyleSheet(QString::fromUtf8(utf));
+    widget->setProperty("jqtBaseQss", QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(qss, utf);
+    jqtApplyWidgetQss(widget);
+}
+
+// 自定义控件圆角（像素；0 = 不添加规则，用全局 QSS）
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetBorderRadius(JNIEnv* env, jclass /*cls*/, jlong handle, jint radius) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    widget->setProperty("jqtRadius", static_cast<int>(radius));
+    jqtApplyWidgetQss(widget);
 }
 
 // ----------------------------------------------------------------------------
