@@ -34,3 +34,9 @@ _jqt_diag.txt
 SilentStudioJQt*
 
 *.log
+
+# Community 编译产物（源码入仓库，产物本地生成）
+Community/**/out/
+Community/**/*.class
+Community/**/runtime/
+Community/**/*.jar
