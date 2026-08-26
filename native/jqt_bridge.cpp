@@ -187,6 +187,8 @@ static QApplication* requireApp(JNIEnv* env) {
 #ifdef _WIN32
 // 全局 POINTER→鼠标合成过滤器：覆盖所有 Qt 顶层窗口
 // （含 QComboBox 弹层等 Qt 内部创建的独立窗口——弹层里点不动就是缺这个）。
+static bool g_pointerPressed = false;   // 触摸按下状态（合成 WM_MOUSEMOVE 的按键标志）
+
 class JQtPointerFilter : public QAbstractNativeEventFilter {
 public:
     bool nativeEventFilter(const QByteArray& eventType, void* message, qintptr* result) override {
@@ -204,14 +206,18 @@ public:
                 if (ScreenToClient(msg->hwnd, &pt)) {
                     const LONG lp = MAKELPARAM(pt.x, pt.y);
                     if (msg->message == WM_POINTERDOWN) {
+                        g_pointerPressed = true;
                         fprintf(stderr, "[JQt] POINTERDOWN at client (%d,%d) -> mouse\n",
                                 static_cast<int>(pt.x), static_cast<int>(pt.y));
                         PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
                     } else if (msg->message == WM_POINTERUP) {
+                        g_pointerPressed = false;
                         fprintf(stderr, "[JQt] POINTERUP\n");
                         PostMessageW(msg->hwnd, WM_LBUTTONUP, 0, lp);
                     } else {
-                        PostMessageW(msg->hwnd, WM_MOUSEMOVE, 0, lp);
+                        // 移动：带按下状态（Qt 据此维持 buttons()/拖动）
+                        PostMessageW(msg->hwnd, WM_MOUSEMOVE,
+                                     g_pointerPressed ? MK_LBUTTON : 0, lp);
                     }
                 }
             }
@@ -236,6 +242,8 @@ public:
     bool rounded = false;         // Win11 圆角
     bool draggable = true;        // 标题栏区域可拖拽
     int borderWidth = 5;          // 缩放热区宽度
+    bool m_dragging = false;      // 手动拖动状态
+    QPoint m_dragOffset;          // 按下点相对窗口原点的偏移
 
 #ifdef _WIN32
     // DWM 阴影（无边框时启用）
@@ -345,21 +353,40 @@ protected:
     }
 #endif
 
-    // 无边框窗口的标题栏区域拖拽（Qt 6 startSystemMove）
+    // 无边框窗口的标题栏区域拖拽（手动拖动方案）。
+    // 不用 startSystemMove：系统拖动循环在触摸→鼠标合成链中不可靠（拖不动），
+    // 手动 move() 对鼠标/触摸合成事件 100% 可靠。
     // 事件冒泡机制：子控件（按钮/开关）处理了点击就不会到达这里；
-    // 标题栏空白区域（QFrame 不处理）会冒泡到窗口，在此启动系统拖动。
+    // 标题栏空白区域（QFrame/QLabel 不处理）冒泡到窗口后启动拖动。
     void mousePressEvent(QMouseEvent* event) override {
         fprintf(stderr, "[JQt] window mousePress at %.0f,%.0f\n",
                 event->position().x(), event->position().y());
         if (frameless && draggable && event->button() == Qt::LeftButton
             && event->position().y() < 40) {
-            if (windowHandle() != nullptr) {
-                windowHandle()->startSystemMove();
-                event->accept();
-                return;
-            }
+            m_dragging = true;
+            m_dragOffset = event->globalPosition().toPoint() - window()->pos();
+            event->accept();
+            return;
         }
         QWidget::mousePressEvent(event);
+    }
+
+    void mouseMoveEvent(QMouseEvent* event) override {
+        if (m_dragging) {
+            window()->move(event->globalPosition().toPoint() - m_dragOffset);
+            event->accept();
+            return;
+        }
+        QWidget::mouseMoveEvent(event);
+    }
+
+    void mouseReleaseEvent(QMouseEvent* event) override {
+        if (m_dragging) {
+            m_dragging = false;
+            event->accept();
+            return;
+        }
+        QWidget::mouseReleaseEvent(event);
     }
 
     void resizeEvent(QResizeEvent* event) override {
