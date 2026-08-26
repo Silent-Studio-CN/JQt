@@ -288,6 +288,10 @@ public:
         if (maximized) {
             m_normalGeometry = geometry();
             const QRect wa = workArea();
+            fprintf(stderr, "[JQt] max: normal=%d,%d %dx%d work=%d,%d %dx%d valid=%d\n",
+                    m_normalGeometry.x(), m_normalGeometry.y(),
+                    m_normalGeometry.width(), m_normalGeometry.height(),
+                    wa.x(), wa.y(), wa.width(), wa.height(), wa.isValid() ? 1 : 0);
             if (wa.isValid()) {
                 setGeometry(wa);
             }
@@ -295,6 +299,9 @@ public:
         } else {
             m_manualMaximized = false;
             if (m_normalGeometry.isValid()) {
+                fprintf(stderr, "[JQt] restore: %d,%d %dx%d\n",
+                        m_normalGeometry.x(), m_normalGeometry.y(),
+                        m_normalGeometry.width(), m_normalGeometry.height());
                 setGeometry(m_normalGeometry);
             }
         }
