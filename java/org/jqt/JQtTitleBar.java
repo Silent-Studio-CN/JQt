@@ -78,7 +78,8 @@ public class JQtTitleBar extends JQtWidget {
             minBtn.setText(GLYPH_MINIMIZE);
             maxBtn.setText(GLYPH_MAXIMIZE);
             closeBtn.setText(GLYPH_CLOSE);
-            String glyphQss = "font-family: \"Segoe MDL2 Assets\"; font-size: 10px; padding: 4px 12px; min-height: 0; max-height: 34px;";
+            // 显式 background: transparent：避免按钮级 QSS 合并时漏掉全局 #titlebarBtn 的透明背景
+            String glyphQss = "font-family: \"Segoe MDL2 Assets\"; font-size: 10px; padding: 4px 12px; min-height: 0; max-height: 34px; background: transparent;";
             minBtn.setStyleSheet(glyphQss);
             maxBtn.setStyleSheet(glyphQss);
             closeBtn.setStyleSheet(glyphQss);

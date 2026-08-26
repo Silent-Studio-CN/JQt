@@ -124,10 +124,16 @@ public class JQtFluentDemo {
             ball.animateMove(0, 40, 700, JQtEasing.OUT_BOUNCE);
             ball.animateMove(0, 0, 700, JQtEasing.OUT_BOUNCE);
         });
-        // 无限循环透明度脉冲：JQtAnimation 高级 API
-        JQtAnimation pulse = new JQtAnimation(ball, "windowOpacity", 1.0, 0.25, 900, JQtEasing.IN_OUT_SINE);
-        pulse.setLoopCount(-1);
-        pulse.start();
+        // 无限循环上下浮动（windowOpacity 仅对顶层窗口有效，子控件改用位移动画）
+        final int[] floatDir = {1};
+        app.schedule(new Runnable() {
+            @Override
+            public void run() {
+                ball.animateMove(0, 14 * floatDir[0], 700, JQtEasing.IN_OUT_SINE);
+                floatDir[0] = -floatDir[0];
+                app.schedule(this, 720);
+            }
+        }, 300);
 
         // ---- Pivot 选项卡（滑动指示器动画）----
         JQtPivot pivot = new JQtPivot();
