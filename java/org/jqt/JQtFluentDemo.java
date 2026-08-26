@@ -101,12 +101,21 @@ public class JQtFluentDemo {
         JQtLabel card3Title = new JQtLabel("动画演示");
         card3Title.setStyleSheet("font-size: 14px; font-weight: bold;");
         JQtButton bounceBtn = new JQtButton("弹性移动 (OutBounce)");
+        JQtButton colorBtn = new JQtButton("主题色");
+        String[] accents = {"#4cc2ff", "#0078d4", "#9b59b6", "#2ecc71", "#e67e22"};
+        final int[] ci = {0};
+        colorBtn.onClick(() -> {
+            ci[0] = (ci[0] + 1) % accents.length;
+            app.setAccentColor(accents[ci[0]]);
+            System.out.println("[Fluent] accent = " + accents[ci[0]]);
+        });
         JQtButton fadePulse = new JQtButton("透明度脉冲 (InOutSine)");
         JQtLabel ball = new JQtLabel("●");
         ball.setStyleSheet("font-size: 20px; color: #4cc2ff;");
         card3L.addWidget(card3Title);
         card3L.addWidget(ball);
         card3L.addWidget(bounceBtn);
+        card3L.addWidget(colorBtn);
         card3L.addWidget(fadePulse);
         card3.setLayout(card3L);
 

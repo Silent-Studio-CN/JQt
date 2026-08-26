@@ -45,6 +45,10 @@
 | `void setStyle(String style)` | 切换风格（如 `"Fusion"` 经典 Qt 扁平风） |
 | `void setLightMode(boolean)` | 切换浅色/默认配色（Java 进程中 Qt 可能误判系统暗色，用此 API 显式控制；也可用 `-Djqt.lightMode=true` 启动时自动开启） |
 | `void setLightMode(boolean)` | 切换浅色/默认配色（Java 进程中 Qt 可能误判系统暗色，用此 API 显式控制；也可用 `-Djqt.lightMode=true` 启动时自动开启） |
+| `void setTheme(String)` | 应用主题（fluent-dark / fluent-light，QSS + 调色板一致打包） |
+| `void setTheme(path, vars[,light])` | QSS 模板 + 变量集渲染主题（%var% 占位符） |
+| `void setAccentColor(String hex)` | 切换主题色（#RRGGBB；模板主题重渲染 + 调色板 Highlight + 自绘开关同步） |
+| `void setFontFamily(String[,size])` | 全局字体（构造时自动应用系统中文字体） |
 | `void onAboutToQuit(Runnable)` | 退出前回调（Qt aboutToQuit 信号） |
 
 ### 1.2 JQtWindow —— 窗口
@@ -270,6 +274,10 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `void setStyle(String style)` | switch style (e.g. `"Fusion"`) |
 | `void setLightMode(boolean)` | force light palette (Qt may mis-detect dark mode inside a Java process); or use `-Djqt.lightMode=true` at startup |
 | `void setLightMode(boolean)` | force light palette (Qt may mis-detect dark mode inside a Java process); or use `-Djqt.lightMode=true` at startup |
+| `void setTheme(String)` | apply theme (fluent-dark / fluent-light, QSS + palette packaged) |
+| `void setTheme(path, vars[,light])` | render theme from QSS template + vars (%var% placeholders) |
+| `void setAccentColor(String hex)` | switch accent color (#RRGGBB; template re-render + palette Highlight + custom switch) |
+| `void setFontFamily(String[,size])` | global font (auto-applies system CJK font at construction) |
 | `void onAboutToQuit(Runnable)` | callback before app quits (aboutToQuit signal) |
 
 ### 1.2 JQtWindow
