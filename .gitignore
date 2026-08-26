@@ -18,6 +18,7 @@ Desktop.ini
 
 # ===== verification screenshots =====
 *.png
+!assets/deepseek-2.png
 aqtinstall.log
 dist/
 release-assets/
