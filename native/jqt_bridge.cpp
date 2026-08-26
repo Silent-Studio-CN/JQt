@@ -30,6 +30,10 @@
 #include <windowsx.h>
 #include <dwmapi.h>
 #include <objbase.h>
+// MinGW 旧头可能缺触摸指针消息常量
+#ifndef WM_POINTERCANCEL
+#define WM_POINTERCANCEL 0x0249
+#endif
 #endif
 
 #include <QApplication>
@@ -190,11 +194,6 @@ static QApplication* requireApp(JNIEnv* env) {
 // （含 QComboBox 弹层等 Qt 内部创建的独立窗口——弹层里点不动就是缺这个）。
 static bool g_pointerPressed = false;   // 触摸按下状态（合成 WM_MOUSEMOVE 的按键标志）
 
-// 消息层拖动状态（标题栏空白区触摸：SetWindowPos 直接移动，绕开 Qt 事件循环/合成队列）
-static HWND g_dragHwnd = nullptr;
-static POINT g_dragStartScreen = { 0, 0 };   // 按下点（屏幕物理）
-static POINT g_dragWindowPos = { 0, 0 };     // 按下时窗口左上角（屏幕物理）
-
 class JQtPointerFilter : public QAbstractNativeEventFilter {
 public:
     bool nativeEventFilter(const QByteArray& eventType, void* message, qintptr* result) override {
@@ -211,21 +210,47 @@ public:
                 POINT pt = pi.ptPixelLocation;   // 物理屏幕坐标
                 if (ScreenToClient(msg->hwnd, &pt)) {
                     if (msg->message == WM_POINTERDOWN) {
-                        // 标题栏空白区：消息层 SetWindowPos 拖动（同步、零队列、系统搬位图不重绘）
+                        // 标题栏空白区 → 模态拖动循环（复刻系统拖动架构：
+                        // GetMessage 直接取消息零 Qt 开销、SetWindowPos 同步搬位图、
+                        // UP/CANCEL 结束——拖动手感与系统窗口一致）
                         const UINT dpi = GetDpiForWindow(msg->hwnd);
                         const double dpr = dpi > 0 ? dpi / 96.0 : 1.0;
                         RECT rc;
                         GetClientRect(msg->hwnd, &rc);
                         if (pt.y < static_cast<int>(40 * dpr)
                             && pt.x < rc.right - static_cast<int>(150 * dpr)) {
-                            g_dragHwnd = msg->hwnd;
-                            g_dragStartScreen = pt;
-                            ClientToScreen(msg->hwnd, &g_dragStartScreen);
+                            fprintf(stderr, "[JQt] titlebar drag loop begin\n");
                             RECT wr;
                             GetWindowRect(msg->hwnd, &wr);
-                            g_dragWindowPos = { wr.left, wr.top };
-                            fprintf(stderr, "[JQt] titlebar drag begin @%d,%d\n",
-                                    static_cast<int>(pt.x), static_cast<int>(pt.y));
+                            POINT startScreen = pt;
+                            ClientToScreen(msg->hwnd, &startScreen);
+                            const int originX = wr.left;
+                            const int originY = wr.top;
+                            MSG m;
+                            while (GetMessageW(&m, nullptr, 0, 0) > 0) {
+                                if (m.message == WM_POINTERUPDATE && m.hwnd == msg->hwnd) {
+                                    POINTER_INFO pi2;
+                                    if (GetPointerInfo(GET_POINTERID_WPARAM(m.wParam), &pi2)) {
+                                        const POINT p2 = pi2.ptPixelLocation;
+                                        SetWindowPos(msg->hwnd, nullptr,
+                                                     originX + (p2.x - startScreen.x),
+                                                     originY + (p2.y - startScreen.y),
+                                                     0, 0,
+                                                     SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+                                    }
+                                } else if ((m.message == WM_POINTERUP
+                                            || m.message == WM_POINTERCANCEL)
+                                           && m.hwnd == msg->hwnd) {
+                                    break;
+                                } else if (m.message == WM_QUIT) {
+                                    PostQuitMessage(0);
+                                    break;
+                                } else {
+                                    TranslateMessage(&m);
+                                    DispatchMessageW(&m);
+                                }
+                            }
+                            fprintf(stderr, "[JQt] titlebar drag loop end\n");
                             return true;
                         }
                         g_pointerPressed = true;
@@ -234,28 +259,11 @@ public:
                         PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON,
                                      MAKELPARAM(pt.x, pt.y));
                     } else if (msg->message == WM_POINTERUP) {
-                        if (g_dragHwnd == msg->hwnd) {
-                            g_dragHwnd = nullptr;
-                            fprintf(stderr, "[JQt] titlebar drag end\n");
-                            return true;
-                        }
                         g_pointerPressed = false;
                         fprintf(stderr, "[JQt] POINTERUP\n");
                         PostMessageW(msg->hwnd, WM_LBUTTONUP, 0,
                                      MAKELPARAM(pt.x, pt.y));
                     } else {
-                        // WM_POINTERUPDATE
-                        if (g_dragHwnd == msg->hwnd) {
-                            POINT sp = pt;
-                            ClientToScreen(msg->hwnd, &sp);
-                            const int dx = sp.x - g_dragStartScreen.x;
-                            const int dy = sp.y - g_dragStartScreen.y;
-                            SetWindowPos(msg->hwnd, nullptr,
-                                         g_dragWindowPos.x + dx, g_dragWindowPos.y + dy,
-                                         0, 0,
-                                         SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-                            return true;
-                        }
                         // 移动：带按下状态（Qt 据此维持 buttons()/拖动）
                         PostMessageW(msg->hwnd, WM_MOUSEMOVE,
                                      g_pointerPressed ? MK_LBUTTON : 0,
