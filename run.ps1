@@ -14,6 +14,7 @@ param(
     [string]$Class = "org.jqt.JQtDemo",
     [string]$JDK = "C:\Program Files\Java\latest\jdk-26",
     [string]$AnimTheme = "",
+    [string]$Qss = "",
     [switch]$Fluent
 )
 
@@ -45,6 +46,7 @@ $javaArgs = @(
 )
 if ($AutoClose -gt 0) { $javaArgs += "-Djqt.autoClose=$AutoClose" }
 if ($AnimTheme -ne "") { $javaArgs += "-Djqt.animTheme=$AnimTheme" }
+if ($Qss -ne "") { $javaArgs += "-Djqt.qss=$Qss" }
 if ($Fluent) { $javaArgs += "-Djqt.demoFluent=1" }
 $javaArgs += $Class
 
