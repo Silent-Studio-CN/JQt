@@ -206,8 +206,18 @@ public:
                 POINT pt = pi.ptPixelLocation;   // 物理屏幕坐标
                 if (ScreenToClient(msg->hwnd, &pt)) {
                     if (msg->message == WM_POINTERDOWN) {
-                        // 标题栏拖动由 WM_NCHITTEST(HTCAPTION) 原生接管（真实系统拖动），
-                        // 此处仅合成其余区域的鼠标事件
+                        // 标题栏空白区：不合成鼠标——交给系统 WM_NCHITTEST(HTCAPTION)
+                        // 原生拖动（拖动期间窗口内容不重绘、跟手；
+                        // 合成链手动 move() 每帧重绘阴影/样式会明显卡顿）
+                        const UINT dpi = GetDpiForWindow(msg->hwnd);
+                        const double dpr = dpi > 0 ? dpi / 96.0 : 1.0;
+                        RECT rc;
+                        GetClientRect(msg->hwnd, &rc);
+                        if (pt.y < static_cast<int>(40 * dpr)
+                            && pt.x < rc.right - static_cast<int>(150 * dpr)) {
+                            fprintf(stderr, "[JQt] titlebar touch -> native drag\n");
+                            return true;
+                        }
                         g_pointerPressed = true;
                         fprintf(stderr, "[JQt] POINTERDOWN at client (%d,%d) -> mouse\n",
                                 static_cast<int>(pt.x), static_cast<int>(pt.y));
