@@ -807,6 +807,59 @@ static void jqtApplyWidgetQss(QWidget* widget) {
     widget->setStyleSheet(qss);
 }
 
+// ----------------------------------------------------------------------------
+// JQtWidget 基础 API（几何查询 / 显隐 / 禁用 / 固定尺寸）
+// ----------------------------------------------------------------------------
+JNIEXPORT jint JNICALL Java_org_jqt_JQtWidget_nativeWidth(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    return widget == nullptr ? 0 : static_cast<jint>(widget->width());
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtWidget_nativeHeight(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    return widget == nullptr ? 0 : static_cast<jint>(widget->height());
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtWidget_nativeX(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    return widget == nullptr ? 0 : static_cast<jint>(widget->x());
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtWidget_nativeY(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    return widget == nullptr ? 0 : static_cast<jint>(widget->y());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeShow(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget != nullptr) { widget->show(); }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeHide(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget != nullptr) { widget->hide(); }
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_JQtWidget_nativeIsVisible(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    return widget == nullptr ? JNI_FALSE : (widget->isVisible() ? JNI_TRUE : JNI_FALSE);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetEnabled(JNIEnv* env, jclass /*cls*/, jlong handle, jboolean enabled) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget != nullptr) { widget->setEnabled(enabled == JNI_TRUE); }
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_JQtWidget_nativeIsEnabled(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    return widget == nullptr ? JNI_FALSE : (widget->isEnabled() ? JNI_TRUE : JNI_FALSE);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetFixedSize(JNIEnv* env, jclass /*cls*/, jlong handle, jint w, jint h) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget != nullptr) { widget->setFixedSize(w, h); }
+}
+
 JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetStyleSheet(JNIEnv* env, jclass /*cls*/, jlong handle, jstring qss) {
     QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
     if (widget == nullptr) {
@@ -1233,6 +1286,15 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtLabel_nativeSetText(JNIEnv* env, jobject 
     const char* utf = env->GetStringUTFChars(text, nullptr);
     label->setText(QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_JQtLabel_nativeText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLabel* label = static_cast<QLabel*>(requireHandle(env, handle));
+    if (label == nullptr) {
+        return env->NewStringUTF("");
+    }
+    const QByteArray utf8 = label->text().toUtf8();
+    return env->NewStringUTF(utf8.constData());
 }
 
 // ----------------------------------------------------------------------------

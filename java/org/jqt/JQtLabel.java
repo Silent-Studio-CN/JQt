@@ -23,4 +23,10 @@ public class JQtLabel extends JQtWidget {
         nativeSetText(nativeHandle, text);
     }
     private native void nativeSetText(long handle, String text);
+
+    /** 读取当前文字。 */
+    public String text() {
+        return nativeText(nativeHandle);
+    }
+    private native String nativeText(long handle);
 }
