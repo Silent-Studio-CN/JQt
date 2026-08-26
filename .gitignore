@@ -40,3 +40,4 @@ Community/**/out/
 Community/**/*.class
 Community/**/runtime/
 Community/**/*.jar
+Community/**/*.exe
