@@ -240,56 +240,18 @@ public:
                 POINT pt = pi.ptPixelLocation;   // 物理屏幕坐标
                 if (ScreenToClient(msg->hwnd, &pt)) {
                     if (msg->message == WM_POINTERDOWN) {
-                        // 标题栏空白区 → 模态拖动循环（复刻系统拖动架构：
-                        // GetMessage 直接取消息零 Qt 开销、SetWindowPos 同步搬位图、
-                        // UP/CANCEL 结束——拖动手感与系统窗口一致）
+                        // 标题栏空白区：不合成、不接管——让系统处理。
+                        // WM_NCHITTEST 已返回 HTCAPTION，Windows 对触摸按下走
+                        // 系统原生拖动（DWM 合成器直通，内容位图整体搬移，
+                        // 亚克力/阴影作为内容不重算——这才是跟手路径）。
+                        // 任何应用层 SetWindowPos 拖动都会触发 DWM 重合成 → 卡。
                         const UINT dpi = GetDpiForWindow(msg->hwnd);
                         const double dpr = dpi > 0 ? dpi / 96.0 : 1.0;
                         RECT rc;
                         GetClientRect(msg->hwnd, &rc);
                         if (pt.y < static_cast<int>(40 * dpr)
                             && pt.x < rc.right - static_cast<int>(150 * dpr)) {
-                            fprintf(stderr, "[JQt] titlebar drag loop begin\n");
-                            // 拖动期间临时禁用亚克力（模糊重采样是拖动卡顿的已知元凶，
-                            // 见 Tabby #8145 / dotnet-wpf #3608），拖完恢复
-                            const bool wasAcrylic = g_acrylicWindows.count(msg->hwnd) > 0;
-                            if (wasAcrylic) {
-                                jqtSetAcrylic(msg->hwnd, false);
-                            }
-                            RECT wr;
-                            GetWindowRect(msg->hwnd, &wr);
-                            POINT startScreen = pt;
-                            ClientToScreen(msg->hwnd, &startScreen);
-                            const int originX = wr.left;
-                            const int originY = wr.top;
-                            MSG m;
-                            while (GetMessageW(&m, nullptr, 0, 0) > 0) {
-                                if (m.message == WM_POINTERUPDATE && m.hwnd == msg->hwnd) {
-                                    POINTER_INFO pi2;
-                                    if (GetPointerInfo(GET_POINTERID_WPARAM(m.wParam), &pi2)) {
-                                        const POINT p2 = pi2.ptPixelLocation;
-                                        SetWindowPos(msg->hwnd, nullptr,
-                                                     originX + (p2.x - startScreen.x),
-                                                     originY + (p2.y - startScreen.y),
-                                                     0, 0,
-                                                     SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-                                    }
-                                } else if ((m.message == WM_POINTERUP
-                                            || m.message == WM_POINTERCANCEL)
-                                           && m.hwnd == msg->hwnd) {
-                                    break;
-                                } else if (m.message == WM_QUIT) {
-                                    PostQuitMessage(0);
-                                    break;
-                                } else {
-                                    TranslateMessage(&m);
-                                    DispatchMessageW(&m);
-                                }
-                            }
-                            if (wasAcrylic) {
-                                jqtSetAcrylic(msg->hwnd, true);
-                            }
-                            fprintf(stderr, "[JQt] titlebar drag loop end\n");
+                            fprintf(stderr, "[JQt] titlebar touch -> system drag\n");
                             return true;
                         }
                         g_pointerPressed = true;
