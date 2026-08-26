@@ -83,17 +83,16 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 
 ---
 
-## 📦 发布包（v0.1.0-alpha）
+## 📦 发布包（v0.3.0-alpha）
 
 | 资产 | 平台 |
 |------|------|
-| `jqt-0.1.0-alpha.jar` | 全部（Java API） |
-| `jqt-windows-6.11.2-full.zip` / `jqt-windows-6.8.3-full.zip` | Windows（内置 Qt 运行库） |
+| `jqt-0.3.0-alpha.jar` | 全部（Java API） |
+| `jqt-0.3.0-alpha-windows-x64.zip` | Windows x64（内置 Qt 运行库） |
 | `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux |
 | `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS |
 
----
-
+> 最新发布见 [GitHub Releases](https://github.com/Silent-Studio-CN/JQt/releases)
 ## 📄 仓库内文档
 
 | 文档 | 内容 |
@@ -103,6 +102,28 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 | [docs/api-tiering.md](docs/api-tiering.md) | API 分级设计（L1/L2/L3） |
 | [114514.md](114514.md) | Qt 全部 2172 方法分级清单 |
 | [CHANGELOG.md](CHANGELOG.md) | 变更日志 |
+
+## 🎁 社区资源（Community）
+
+仓库 [Community/](Community/) 目录收录社区贡献的**全部开源免费**资源：
+
+- **许可**：JSL-1.0（与 JQt 相同，见 [LICENSE.md](LICENSE.md)）——**免费使用、免费修改、免费分发**（遵守 JSL-1.0 条款即可）
+- **当前收录**：
+
+| 资源 | 说明 |
+|------|------|
+| [jqt-theme-pack](Community/jqt-theme-pack/) | 三个原创主题：**Nord**（北极蓝·暗）/ **Solarized**（米黄护眼·亮）/ **Terminal**（荧光绿·暗） |
+| [FluentAnimDemo](Community/FluentAnimDemo/) | qfluentwidgets 经典动效的 JQt 映射演示（缩放/按压下沉/滑块/淡入） |
+
+```java
+// 社区主题即插即用（一套模板，无限主题）
+app.setTheme("themes/fluent.qss.tpl", NordTheme.vars(), false);       // 暗色
+app.setTheme("themes/fluent.qss.tpl", SolarizedTheme.vars(), true);   // 亮色
+```
+
+> 想提交自己的作品？把源码放进 `Community/`（请勿提交编译产物），我们审核后合入。
+
+---
 
 ## 🤝 参与
 
