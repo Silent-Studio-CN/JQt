@@ -42,3 +42,6 @@ Community/**/*.class
 Community/**/runtime/
 Community/**/*.jar
 Community/**/*.exe
+
+tools/*.exe
+tools/*.log
