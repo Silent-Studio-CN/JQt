@@ -64,9 +64,41 @@ public class JQtApplication {
         if (Boolean.getBoolean("jqt.lightMode")) {
             setColorScheme(true);
         }
+        // 自动应用中文字体策略：Windows 雅黑 / macOS 苹方 / Linux Noto CJK
+        // 解决 Qt 默认字体（Segoe UI 等）对 CJK 字形回退不稳导致的乱码/问号
+        nativeSetFont(systemFontFamily(), 13);
     }
 
     private native long nativeCreateApp();
+
+    /** 跨平台中文字体族（Qt 找不到时会自动回退，不会产生问号）。 */
+    private static String systemFontFamily() {
+        String os = System.getProperty("os.name", "").toLowerCase();
+        if (os.contains("win")) {
+            return "Microsoft YaHei UI";
+        }
+        if (os.contains("mac")) {
+            return "PingFang SC";
+        }
+        if (os.contains("linux")) {
+            return "Noto Sans CJK SC";
+        }
+        return "Sans Serif";
+    }
+
+    /**
+     * 设置全局字体（所有控件继承，含自绘控件如 JQtPivot/JQtSwitch）。
+     * Qt 找不到指定字体族时自动回退系统字体，不会产生问号。
+     */
+    public void setFontFamily(String family) {
+        setFontFamily(family, 13);
+    }
+
+    /** 设置全局字体（指定字号）。 */
+    public void setFontFamily(String family, int pointSize) {
+        nativeSetFont(family, pointSize);
+    }
+    private native void nativeSetFont(String family, int size);
 
     /**
      * 进入 Qt 事件循环（阻塞调用）。
