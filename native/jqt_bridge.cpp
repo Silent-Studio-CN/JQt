@@ -46,6 +46,8 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QPropertyAnimation>
+#include <QProgressBar>
+#include <QScrollArea>
 #include <QVariantAnimation>
 #include <QCloseEvent>
 #include <QComboBox>
@@ -56,6 +58,10 @@
 #include <QLayout>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QMessageBox>
+#include <QTimer>
+#include <QMessageBox>
+#include <QTimer>
 #include <QMetaObject>
 #include <QMoveEvent>
 #include <QPushButton>
@@ -105,7 +111,13 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 
 #include "generated/org_jqt_JQtApplication.h"
 #include "generated/org_jqt_JQtAnimations.h"
+#include "generated/org_jqt_JQtInfoBar.h"
+#include "generated/org_jqt_JQtMessageBox.h"
+#include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
+#include "generated/org_jqt_JQtProgressBar.h"
+#include "generated/org_jqt_JQtScrollArea.h"
+#include "generated/org_jqt_JQtSlider.h"
 #include "generated/org_jqt_JQtWidget.h"
 #include "generated/org_jqt_JQtWindow.h"
 #include "generated/org_jqt_JQtButton.h"
@@ -869,6 +881,67 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetStyleSheet(JNIEnv* env, j
     widget->setProperty("jqtBaseQss", QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(qss, utf);
     jqtApplyWidgetQss(widget);
+}
+
+// ----------------------------------------------------------------------------
+// JQtScrollArea：滚动区（QScrollArea 封装）
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtScrollArea_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QScrollArea* area = new QScrollArea();
+    area->setWidgetResizable(true);
+    area->setFrameShape(QFrame::NoFrame);
+    return registerHandle(area, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtScrollArea_nativeSetWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle) {
+    QScrollArea* area = static_cast<QScrollArea*>(requireHandle(env, handle));
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (area == nullptr || child == nullptr) {
+        return;
+    }
+    area->setWidget(child);
+    markQtOwned(childHandle);   // 内容控件生命周期移交滚动区
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtScrollArea_nativeSetWidgetResizable(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean resizable) {
+    QScrollArea* area = static_cast<QScrollArea*>(requireHandle(env, handle));
+    if (area != nullptr) {
+        area->setWidgetResizable(resizable == JNI_TRUE);
+    }
+}
+
+// ----------------------------------------------------------------------------
+// JQtProgressBar：进度条（QProgressBar 封装，QSS 可样式化 chunk）
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtProgressBar_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QProgressBar* bar = new QProgressBar();
+    bar->setTextVisible(false);
+    return registerHandle(bar, /*javaOwned=*/true);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtProgressBar_nativeValue(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QProgressBar* bar = static_cast<QProgressBar*>(requireHandle(env, handle));
+    return bar == nullptr ? 0 : static_cast<jint>(bar->value());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtProgressBar_nativeSetValue(JNIEnv* env, jobject /*thiz*/, jlong handle, jint value) {
+    QProgressBar* bar = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (bar != nullptr) {
+        bar->setValue(static_cast<int>(value));
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtProgressBar_nativeSetRange(JNIEnv* env, jobject /*thiz*/, jlong handle, jint min, jint max) {
+    QProgressBar* bar = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (bar != nullptr) {
+        bar->setRange(static_cast<int>(min), static_cast<int>(max));
+    }
 }
 
 // 自定义控件圆角（像素；0 = 不添加规则，用全局 QSS）
@@ -1859,6 +1932,309 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeRegisterAnimation(JNIEnv* en
 }
 
 // ----------------------------------------------------------------------------
+// JQtNavigation：Fluent 侧栏导航（自绘导航项 + 选中高亮背景动画）
+// 每项：图标（emoji/字符）+ 文字；选中态圆角高亮（accent 淡色背景），200ms 滑动。
+// ----------------------------------------------------------------------------
+class JQtNavigationWidget : public QWidget {
+public:
+    struct Item {
+        QString icon;
+        QString text;
+    };
+
+    explicit JQtNavigationWidget() {
+        setFixedWidth(180);
+        setCursor(Qt::PointingHandCursor);
+        m_anim = new QVariantAnimation(this);
+        m_anim->setDuration(200);
+        m_anim->setEasingCurve(QEasingCurve::OutCubic);
+        QObject::connect(m_anim, &QVariantAnimation::valueChanged, this,
+                         [this](const QVariant& v) {
+                             m_selY = v.toDouble();
+                             update();
+                         });
+    }
+
+    std::function<void(int)> onChanged;
+
+    void addItem(const QString& icon, const QString& text) {
+        m_items.push_back({ icon, text });
+        update();
+    }
+
+    int currentIndex() const { return m_current; }
+
+    void setCurrentIndex(int index) {
+        if (index < 0 || index >= static_cast<int>(m_items.size()) || index == m_current) {
+            return;
+        }
+        m_current = index;
+        if (onChanged) {
+            onChanged(index);
+        }
+        animateTo(itemCenterY(index));
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        const int n = static_cast<int>(m_items.size());
+        if (n == 0) {
+            return;
+        }
+        const bool light = palette().color(QPalette::Window).lightness() > 128;
+        const double itemH = 40.0;
+        const double padX = 10.0;
+        const QColor accent = g_accentColor;
+        const QColor textColor = light ? QColor(0x33, 0x33, 0x33) : QColor(0xd8, 0xd8, 0xd8);
+
+        // 选中高亮（accent 淡色）
+        const double hw = width() - padX * 2.0;
+        if (m_selY >= 0) {
+            QColor hl = accent;
+            hl.setAlpha(light ? 40 : 55);
+            p.setPen(Qt::NoPen);
+            p.setBrush(hl);
+            p.drawRoundedRect(QRectF(padX, m_selY - itemH / 2.0, hw, itemH), 8.0, 8.0);
+        }
+
+        p.setFont(font());
+        for (int i = 0; i < n; ++i) {
+            const double cy = itemH * i + itemH / 2.0;
+            const bool selected = (i == m_current);
+            // 图标 + 文字
+            const QRectF iconRect(padX + 6.0, cy - itemH / 2.0, 26.0, itemH);
+            const QRectF textRect(padX + 34.0, cy - itemH / 2.0, hw - 30.0, itemH);
+            p.setPen(selected ? accent : textColor);
+            p.drawText(iconRect, Qt::AlignVCenter | Qt::AlignLeft, m_items[i].icon);
+            p.setPen(selected ? accent : textColor);
+            p.drawText(textRect, Qt::AlignVCenter | Qt::AlignLeft, m_items[i].text);
+        }
+    }
+
+    void mousePressEvent(QMouseEvent* event) override {
+        const int n = static_cast<int>(m_items.size());
+        if (n == 0) {
+            return;
+        }
+        const int idx = static_cast<int>(event->position().y() / 40.0);
+        if (idx >= 0 && idx < n) {
+            setCurrentIndex(idx);
+        }
+    }
+
+private:
+    double itemCenterY(int index) const {
+        return 40.0 * index + 20.0;
+    }
+
+    void animateTo(double y) {
+        m_anim->stop();
+        m_anim->setStartValue(m_selY);
+        m_anim->setEndValue(y);
+        m_anim->start();
+    }
+
+    std::vector<Item> m_items;
+    int m_current = 0;
+    double m_selY = -1.0;
+    QVariantAnimation* m_anim;
+};
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtNavigation_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    JQtNavigationWidget* nav = new JQtNavigationWidget();
+    jobject gRef = env->NewGlobalRef(thiz);
+    nav->onChanged = [gRef](int index) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleChanged", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(index));
+        }
+    };
+    return registerHandle(nav, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtNavigation_nativeAddItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring icon, jstring text) {
+    JQtNavigationWidget* nav = static_cast<JQtNavigationWidget*>(requireHandle(env, handle));
+    if (nav == nullptr) {
+        return;
+    }
+    const char* u1 = env->GetStringUTFChars(icon, nullptr);
+    const char* u2 = env->GetStringUTFChars(text, nullptr);
+    nav->addItem(QString::fromUtf8(u1), QString::fromUtf8(u2));
+    env->ReleaseStringUTFChars(icon, u1);
+    env->ReleaseStringUTFChars(text, u2);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtNavigation_nativeCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    JQtNavigationWidget* nav = static_cast<JQtNavigationWidget*>(requireHandle(env, handle));
+    return nav == nullptr ? 0 : static_cast<jint>(nav->currentIndex());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtNavigation_nativeSetCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle, jint index) {
+    JQtNavigationWidget* nav = static_cast<JQtNavigationWidget*>(requireHandle(env, handle));
+    if (nav != nullptr) {
+        nav->setCurrentIndex(static_cast<int>(index));
+    }
+}
+
+// ----------------------------------------------------------------------------
+// JQtSlider：Fluent 滑块（轨道 + 圆钮，accent 填充，拖动跟手，点击跳转动画）
+// clean-room 自绘；轨道明暗感知，填充色跟随全局主题色。
+// ----------------------------------------------------------------------------
+class JQtSliderWidget : public QWidget {
+public:
+    explicit JQtSliderWidget(int min, int max, int value)
+        : m_min(min), m_max(max), m_value(value) {
+        setFixedHeight(24);
+        setCursor(Qt::PointingHandCursor);
+        m_anim = new QVariantAnimation(this);
+        m_anim->setDuration(120);
+        m_anim->setEasingCurve(QEasingCurve::OutCubic);
+        QObject::connect(m_anim, &QVariantAnimation::valueChanged, this,
+                         [this](const QVariant& v) {
+                             m_value = qRound(v.toDouble());
+                             update();
+                             if (onValueChanged) {
+                                 onValueChanged(m_value);
+                             }
+                         });
+    }
+
+    std::function<void(int)> onValueChanged;
+
+    int minimum() const { return m_min; }
+    int maximum() const { return m_max; }
+    int value() const { return m_value; }
+
+    void setValue(int value) {
+        value = qBound(m_min, value, m_max);
+        if (value == m_value) {
+            return;
+        }
+        m_anim->stop();
+        m_anim->setStartValue(static_cast<double>(m_value));
+        m_anim->setEndValue(static_cast<double>(value));
+        m_anim->start();
+    }
+
+    void setRange(int min, int max) {
+        m_min = min;
+        m_max = max;
+        m_value = qBound(min, m_value, max);
+        update();
+    }
+
+protected:
+    void paintEvent(QPaintEvent*) override {
+        QPainter p(this);
+        p.setRenderHint(QPainter::Antialiasing);
+        const double h = height();
+        const double trackH = 4.0;
+        const double trackY = (h - trackH) / 2.0;
+        const double pad = 10.0;
+        const double usable = width() - pad * 2.0;
+        const double ratio = (m_max > m_min) ? (m_value - m_min) / static_cast<double>(m_max - m_min) : 0.0;
+        const bool light = palette().color(QPalette::Window).lightness() > 128;
+        const QColor trackColor = light ? QColor(0xd2, 0xd2, 0xd2) : QColor(0x4a, 0x4a, 0x4a);
+        // 轨道底
+        p.setPen(Qt::NoPen);
+        p.setBrush(trackColor);
+        p.drawRoundedRect(QRectF(pad, trackY, usable, trackH), trackH / 2.0, trackH / 2.0);
+        // 已填充（主题色）
+        p.setBrush(g_accentColor);
+        p.drawRoundedRect(QRectF(pad, trackY, pad + usable * ratio - pad, trackH), trackH / 2.0, trackH / 2.0);
+        // 圆钮
+        const double r = h / 2.0 - 3.0;
+        const double cx = pad + usable * ratio;
+        p.setBrush(light ? QColor(0xff, 0xff, 0xff) : QColor(0xe8, 0xe8, 0xe8));
+        p.setPen(QPen(QColor(0, 0, 0, 40), 1));
+        p.drawEllipse(QPointF(cx, h / 2.0), r, r);
+    }
+
+    double valueFromX(double x) const {
+        const double pad = 10.0;
+        const double usable = width() - pad * 2.0;
+        double ratio = (x - pad) / usable;
+        ratio = qBound(0.0, ratio, 1.0);
+        return m_min + ratio * (m_max - m_min);
+    }
+
+    void mousePressEvent(QMouseEvent* event) override {
+        if (event->button() == Qt::LeftButton) {
+            m_dragging = true;
+            setValue(qRound(valueFromX(event->position().x())));
+            event->accept();
+        }
+    }
+
+    void mouseMoveEvent(QMouseEvent* event) override {
+        if (m_dragging) {
+            // 拖动直接更新（不经过动画，跟手）
+            m_value = qRound(valueFromX(event->position().x()));
+            update();
+            if (onValueChanged) {
+                onValueChanged(m_value);
+            }
+            event->accept();
+        }
+    }
+
+    void mouseReleaseEvent(QMouseEvent* event) override {
+        m_dragging = false;
+        QWidget::mouseReleaseEvent(event);
+    }
+
+private:
+    int m_min;
+    int m_max;
+    int m_value;
+    bool m_dragging = false;
+    QVariantAnimation* m_anim;
+};
+
+JNIEXPORT jlong JNICALL Java_org_jqt_JQtSlider_nativeCreate(JNIEnv* env, jobject thiz, jint min, jint max, jint value) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    JQtSliderWidget* slider = new JQtSliderWidget(static_cast<int>(min), static_cast<int>(max), static_cast<int>(value));
+    jobject gRef = env->NewGlobalRef(thiz);
+    slider->onValueChanged = [gRef](int v) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleValueChanged", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(v));
+        }
+    };
+    return registerHandle(slider, /*javaOwned=*/true);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_JQtSlider_nativeValue(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    JQtSliderWidget* slider = static_cast<JQtSliderWidget*>(requireHandle(env, handle));
+    return slider == nullptr ? 0 : static_cast<jint>(slider->value());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtSlider_nativeSetValue(JNIEnv* env, jobject /*thiz*/, jlong handle, jint value) {
+    JQtSliderWidget* slider = static_cast<JQtSliderWidget*>(requireHandle(env, handle));
+    if (slider != nullptr) {
+        slider->setValue(static_cast<int>(value));
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtSlider_nativeSetRange(JNIEnv* env, jobject /*thiz*/, jlong handle, jint min, jint max) {
+    JQtSliderWidget* slider = static_cast<JQtSliderWidget*>(requireHandle(env, handle));
+    if (slider != nullptr) {
+        slider->setRange(static_cast<int>(min), static_cast<int>(max));
+    }
+}
+
+// ----------------------------------------------------------------------------
 // JQtPivot：Fluent 选项卡（文本项 + 底部滑动指示器，200ms OutCubic）
 // 纯自绘（clean-room 独立实现）；文本色跟随 palette，指示器用 Highlight 色。
 // ----------------------------------------------------------------------------
@@ -2300,3 +2676,74 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtAnimations_nativeExit(JNIEnv* env, jclass
     });
     anim->start(QAbstractAnimation::DeleteWhenStopped);
 }
+// ----------------------------------------------------------------------------
+// JQtMessageBox：模态对话框（QMessageBox 封装；样式由 QSS 控制）
+// ----------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_JQtMessageBox_nativeShowQuestion(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring text) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(text, nullptr);
+    QMessageBox box(parent);
+    box.setWindowTitle(QString::fromUtf8(t1));
+    box.setText(QString::fromUtf8(t2));
+    box.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(text, t2);
+    return box.exec() == QMessageBox::Yes ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtMessageBox_nativeShowInfo(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring text) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(text, nullptr);
+    QMessageBox box(parent);
+    box.setWindowTitle(QString::fromUtf8(t1));
+    box.setText(QString::fromUtf8(t2));
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(text, t2);
+    box.exec();
+}
+
+// ----------------------------------------------------------------------------
+// JQtInfoBar：顶部通知条（滑入 + 停留 + 滑出，自动清理）
+// 样式走 QSS 模板的 QFrame#infoBar 规则（主题化）。
+// ----------------------------------------------------------------------------
+JNIEXPORT void JNICALL Java_org_jqt_JQtInfoBar_nativeShowInfo(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring text, jlong durationMs) {
+    QWidget* win = static_cast<QWidget*>(requireHandle(env, winHandle));
+    if (win == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    const QString msg = QString::fromUtf8(utf);
+    env->ReleaseStringUTFChars(text, utf);
+    QFrame* bar = new QFrame(win);
+    bar->setObjectName("infoBar");
+    QHBoxLayout* lay = new QHBoxLayout(bar);
+    lay->setContentsMargins(14, 8, 14, 8);
+    QLabel* label = new QLabel(msg);
+    label->setObjectName("infoBarLabel");
+    lay->addWidget(label);
+    bar->adjustSize();
+    const int targetX = (win->width() - bar->width()) / 2;
+    bar->move(targetX, -bar->height() - 4);
+    bar->show();
+    bar->raise();
+    QPropertyAnimation* in = new QPropertyAnimation(bar, "pos", bar);
+    in->setDuration(200);
+    in->setStartValue(bar->pos());
+    in->setEndValue(QPoint(targetX, 10));
+    in->setEasingCurve(QEasingCurve::OutCubic);
+    QTimer::singleShot(static_cast<int>(durationMs) + 220, bar, [bar, targetX]() {
+        QPropertyAnimation* out = new QPropertyAnimation(bar, "pos", bar);
+        out->setDuration(220);
+        out->setStartValue(bar->pos());
+        out->setEndValue(QPoint(targetX, -bar->height() - 20));
+        out->setEasingCurve(QEasingCurve::InCubic);
+        QObject::connect(out, &QPropertyAnimation::finished, bar, [bar]() {
+            bar->deleteLater();
+        });
+        out->start();
+    });
+    in->start();
+}
+
