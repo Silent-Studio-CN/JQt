@@ -7,7 +7,8 @@ JQt 第四个 Alpha —— 新控件六件套 / Windows ARM64 / qf light 皮肤�
 | 资产 | 说明 |
 |------|------|
 | `jqt-0.4.0-alpha.jar` | Java API（平台无关） |
-| `jqt-0.4.0-alpha-windows-x64.zip` | Windows x64 完整包 |
+| `jqt-0.4.0-alpha-windows-x64.zip` | Windows x64 完整包（**Qt 6.11.2** 运行时） |
+| `jqt-windows-6.11.2.dll` | Windows x64（Qt 6.11.2，与 zip 同版本裸库） |
 | `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 动态库 |
 | `jqt-windows-6.8.3.dll` | Windows x64（Qt 6.8.3） |
 | `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux |
