@@ -206,7 +206,7 @@ jobs:
           Write-Host "QTBASE=$qtRoot"
           "QTBASE=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
 
-      - name: Build jqt.dll (MSVC ARM64)
+      - name: Build jqt.dll (MSVC ARM64, Qt 6.8.3)
         shell: pwsh
         run: |
           powershell -File build-arm64.ps1 -JDK "$env:JAVA_HOME" -QtRoot "$env:QTBASE" *> build_log.txt
@@ -215,6 +215,32 @@ jobs:
             Get-Content build_log.txt -Tail 60
             exit $LASTEXITCODE
           }
+          Copy-Item lib/jqt.dll lib/jqt-windows-arm64-6.8.3.dll -Force
+
+      - name: Install Qt 6.11.2 win64_arm64 (manual 7z)
+        shell: pwsh
+        run: |
+          $url = "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.win64_msvc2022_arm64/6.11.2-0-202608131017qtbase-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
+          Write-Host "Downloading: $url"
+          curl.exe -fsSL -o C:/qtbase6112.7z $url
+          New-Item -ItemType Directory -Force -Path C:/Qt6112 | Out-Null
+          7z x -y -oC:/Qt6112 C:/qtbase6112.7z | Out-Null
+          $qmake = Get-ChildItem C:/Qt6112 -Recurse -Filter qmake.exe | Select-Object -First 1
+          if (-not $qmake) { throw "qmake.exe not found for Qt 6.11.2 arm64" }
+          $qtRoot = Split-Path (Split-Path $qmake.FullName)
+          Write-Host "QTBASE6112=$qtRoot"
+          "QTBASE6112=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
+
+      - name: Build jqt.dll (MSVC ARM64, Qt 6.11.2)
+        shell: pwsh
+        run: |
+          powershell -File build-arm64.ps1 -JDK "$env:JAVA_HOME" -QtRoot "$env:QTBASE6112" *> build6112_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== BUILD FAILED (6.11.2), tail of build6112_log.txt ==="
+            Get-Content build6112_log.txt -Tail 60
+            exit $LASTEXITCODE
+          }
+          Copy-Item lib/jqt.dll lib/jqt-windows-arm64-6.11.2.dll -Force
 
       - name: Smoke test (offscreen, headless)
         shell: pwsh
@@ -323,7 +349,8 @@ jobs:
           cp artifacts/libjqt-linux-x64/libjqt-6.11.2.so dist/native/libjqt-linux-6.11.2.so
           cp artifacts/libjqt-linux-x64/libjqt-6.8.3.so dist/native/libjqt-linux-6.8.3.so
           cp artifacts/jqt-windows-x64/jqt.dll dist/native/jqt-windows-6.8.3.dll
-          cp artifacts/jqt-windows-arm64/jqt.dll dist/native/jqt-windows-arm64-6.8.3.dll
+          cp artifacts/jqt-windows-arm64/jqt-windows-arm64-6.8.3.dll dist/native/jqt-windows-arm64-6.8.3.dll
+          cp artifacts/jqt-windows-arm64/jqt-windows-arm64-6.11.2.dll dist/native/jqt-windows-arm64-6.11.2.dll
           cp artifacts/libjqt-macos-x64/libjqt-6.11.2.dylib dist/native/libjqt-macos-6.11.2.dylib
           cp artifacts/libjqt-macos-x64/libjqt-6.8.3.dylib dist/native/libjqt-macos-6.8.3.dylib
           cp README.md LICENSE.md LICENSE LGPL-3.0.txt THIRD-PARTY-NOTICES.md CHANGELOG.md VERSION dist/
