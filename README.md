@@ -114,6 +114,7 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 |------|------|
 | [jqt-theme-pack](Community/jqt-theme-pack/) | 三个原创主题：**Nord**（北极蓝·暗）/ **Solarized**（米黄护眼·亮）/ **Terminal**（荧光绿·暗） |
 | [FluentAnimDemo](Community/FluentAnimDemo/) | qfluentwidgets 经典动效的 JQt 映射演示（缩放/按压下沉/滑块/淡入） |
+| [JQtGallery](Community/JQtGallery/) | 全功能演示：5 套主题 / 强调色 / 自动跟随 / 控件 / 动画 / 窗口（含 jpackage 打包方案） |
 
 ```java
 // 社区主题即插即用（一套模板，无限主题）
