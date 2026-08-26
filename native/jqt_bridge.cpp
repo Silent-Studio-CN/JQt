@@ -38,6 +38,7 @@
 #include <QCheckBox>
 #include <QFrame>
 #include <QGraphicsOpacityEffect>
+#include <QGraphicsDropShadowEffect>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPropertyAnimation>
@@ -1223,6 +1224,16 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeSetSpacing(JNIEnv* env, jobj
     layout->setSpacing(static_cast<int>(spacing));
 }
 
+// 布局四周留白（外边距）
+JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeSetContentsMargins(JNIEnv* env, jobject /*thiz*/, jlong handle, jint left, jint top, jint right, jint bottom) {
+    QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
+    if (layout == nullptr) {
+        return;
+    }
+    layout->setContentsMargins(static_cast<int>(left), static_cast<int>(top),
+                               static_cast<int>(right), static_cast<int>(bottom));
+}
+
 // 布局嵌套：把子布局加入本布局（如 VBox 中嵌 HBox 做标题栏/工具行）
 JNIEXPORT void JNICALL Java_org_jqt_JQtLayout_nativeAddLayout(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childLayoutHandle) {
     QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
@@ -1865,6 +1876,31 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeFadeOut(JNIEnv* env, jclass 
     anim->setEndValue(0.0);
     anim->setEasingCurve(QEasingCurve::InCubic);
     anim->start(QAbstractAnimation::DeleteWhenStopped);
+}
+
+// ----------------------------------------------------------------------------
+// 投影阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow 属性）
+// QGraphicsDropShadowEffect；注意：与 QSS 样式化控件组合存在崩溃风险
+// （Qt 已知 issue），若目标控件应用了 QSS 背景请先实测或改用两层 QFrame 方案。
+// ----------------------------------------------------------------------------
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetDropShadow(JNIEnv* env, jclass /*cls*/, jlong handle, jint blur, jint alpha, jint dx, jint dy) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    QGraphicsDropShadowEffect* fx = new QGraphicsDropShadowEffect(widget);
+    fx->setBlurRadius(static_cast<qreal>(blur));
+    fx->setColor(QColor(0, 0, 0, alpha));
+    fx->setOffset(static_cast<qreal>(dx), static_cast<qreal>(dy));
+    widget->setGraphicsEffect(fx);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeClearDropShadow(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
+    if (widget == nullptr) {
+        return;
+    }
+    widget->setGraphicsEffect(nullptr);
 }
 
 // ----------------------------------------------------------------------------

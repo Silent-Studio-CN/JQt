@@ -27,6 +27,12 @@
 | `void animateMove(x,y,ms,JQtEasing)` | 平滑移动，指定缓动函数 |
 | `void animateResize(w,h,ms)` | 平滑缩放（OutCubic 缓动） |
 | `void animateResize(w,h,ms,JQtEasing)` | 平滑缩放，指定缓动函数 |
+| `void setDropShadow(blur,alpha[,dx,dy])` | 投影阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow） |
+| `void clearDropShadow()` | 移除投影阴影 |
+| `void setDropShadow(blur,alpha[,dx,dy])` | 投影阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow） |
+| `void clearDropShadow()` | 移除投影阴影 |
+| `void setDropShadow(blur,alpha[,dx,dy])` | 投影阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow） |
+| `void clearDropShadow()` | 移除投影阴影 |
 | `void setStyleSheet(String qss)` | 控件级 QSS（与全局样式可叠加，控件级优先） |
 
 ### 1.1 JQtApplication —— 应用入口
@@ -211,6 +217,8 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `JQtVBoxLayout()` / `JQtHBoxLayout()` | 创建垂直 / 水平布局 |
 | `void addWidget(JQtWidget)` | 加入控件 |
 | `void setSpacing(int)` | 控件间距（像素） |
+| `void setContentsMargins(int)` / `(l,t,r,b)` | 布局四周留白（外边距） |
+| `void setContentsMargins(int)` / `(l,t,r,b)` | 布局四周留白（外边距） |
 | `void addStretch(int)` | 弹性空间（占满剩余空间的比例） |
 
 ### 1.9 信号注册规则
@@ -248,6 +256,10 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `void setStyleSheet(String qss)` | widget-level QSS (layers over the global style) |
 | `void animateMove(x,y,ms)` / `(x,y,ms,JQtEasing)` | animated move (OutCubic / custom easing) |
 | `void animateResize(w,h,ms)` / `(w,h,ms,JQtEasing)` | animated resize (OutCubic / custom easing) |
+| `void setDropShadow(blur,alpha[,dx,dy])` | drop shadow (QSS box-shadow substitute - Qt QSS lacks box-shadow) |
+| `void clearDropShadow()` | remove drop shadow |
+| `void setDropShadow(blur,alpha[,dx,dy])` | drop shadow (QSS box-shadow substitute - Qt QSS lacks box-shadow) |
+| `void clearDropShadow()` | remove drop shadow |
 
 ### 1.1 JQtApplication
 
@@ -431,6 +443,7 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 | `JQtVBoxLayout()` / `JQtHBoxLayout()` | vertical / horizontal layout |
 | `void addWidget(JQtWidget)` | add widget |
 | `void setSpacing(int)` | spacing in px |
+| `void setContentsMargins(int)` / `(l,t,r,b)` | layout margins |
 | `void addStretch(int)` | stretch factor |
 
 ### 1.9 Signal Rules

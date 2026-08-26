@@ -85,6 +85,17 @@ public abstract class JQtLayout {
     }
     protected native void nativeSetSpacing(long handle, int spacing);
 
+    /** 设置布局四周留白（外边距，像素；四边相同）。 */
+    public void setContentsMargins(int all) {
+        setContentsMargins(all, all, all, all);
+    }
+
+    /** 设置布局四周留白（外边距，像素；左/上/右/下）。 */
+    public void setContentsMargins(int left, int top, int right, int bottom) {
+        nativeSetContentsMargins(nativeHandle, left, top, right, bottom);
+    }
+    protected native void nativeSetContentsMargins(long handle, int left, int top, int right, int bottom);
+
     /**
      * 添加弹性空间（stretch 因子，越大占据越多剩余空间）。
      * 例如 {@code vbox.addStretch(1)} 会把控件推向顶部。

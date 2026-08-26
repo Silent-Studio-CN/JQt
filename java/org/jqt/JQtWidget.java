@@ -128,6 +128,25 @@ public abstract class JQtWidget {
     /** 自动化命中测试：向窗口发送真实 WM_LBUTTONDOWN/UP 点击目标控件中心（诊断用）。 */
     static native void nativePostClickAt(long targetHandle, long winHandle);
 
+    // ---- 阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow）----
+
+    /** 给控件添加投影阴影（QGraphicsDropShadowEffect）。 */
+    public void setDropShadow(int blurRadius, int alpha) {
+        setDropShadow(blurRadius, alpha, 0, 2);
+    }
+
+    /** 给控件添加投影阴影（blur 模糊半径、alpha 透明度 0~255、dx/dy 偏移）。 */
+    public void setDropShadow(int blurRadius, int alpha, int dx, int dy) {
+        nativeSetDropShadow(nativeHandle, blurRadius, alpha, dx, dy);
+    }
+    static native void nativeSetDropShadow(long handle, int blur, int alpha, int dx, int dy);
+
+    /** 移除投影阴影。 */
+    public void clearDropShadow() {
+        nativeClearDropShadow(nativeHandle);
+    }
+    static native void nativeClearDropShadow(long handle);
+
     /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
      * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。
