@@ -42,6 +42,7 @@ public class JQtApplication {
     private String themeTemplatePath;          // 非 null = 模板模式
     private java.util.Map<String, String> themeVars;
     private boolean themeLight;
+    private String currentAccent;              // 自定义主题色（切换主题时保留）
 
     /**
      * 设置全局动画主题：所有 JQt 动效（hover / 入场 / 退场 / pivot 指示器）
@@ -253,18 +254,28 @@ public class JQtApplication {
         renderTheme();
     }
 
-    /** 重新渲染当前模板主题（变量替换 + 应用）。 */
+    /** 重新渲染当前模板主题（变量替换 + 应用；自定义主题色在主题切换后保留）。 */
     private void renderTheme() {
         if (themeTemplatePath == null || themeVars == null) {
             return;
         }
         try {
+            // 重放自定义 accent（setTheme 切换深浅色后不丢失）
+            if (currentAccent != null) {
+                java.util.Map<String, String> vars = new java.util.HashMap<>(themeVars);
+                vars.put("accent", currentAccent);
+                vars.put("accent-hover", lighten(currentAccent, 0.12));
+                themeVars = vars;
+            }
             String qss = Files.readString(Path.of(themeTemplatePath), StandardCharsets.UTF_8);
             for (java.util.Map.Entry<String, String> e : themeVars.entrySet()) {
                 qss = qss.replace("%" + e.getKey() + "%", e.getValue());
             }
             setColorScheme(themeLight);
             setStyleSheet(qss);
+            if (currentAccent != null) {
+                nativeSetAccent(currentAccent);   // 调色板 Highlight 重放
+            }
         } catch (java.io.IOException e) {
             throw new IllegalStateException("读取主题失败: " + themeTemplatePath, e);
         }
@@ -283,11 +294,12 @@ public class JQtApplication {
         if (hex == null || !hex.matches("#[0-9a-fA-F]{6}")) {
             throw new IllegalArgumentException("主题色需为 #RRGGBB 格式: " + hex);
         }
-        nativeSetAccent(hex);
+        currentAccent = hex.toLowerCase();
+        nativeSetAccent(currentAccent);
         if (themeVars != null) {
             java.util.Map<String, String> vars = new java.util.HashMap<>(themeVars);
-            vars.put("accent", hex.toLowerCase());
-            vars.put("accent-hover", lighten(hex, 0.12));
+            vars.put("accent", currentAccent);
+            vars.put("accent-hover", lighten(currentAccent, 0.12));
             themeVars = vars;
             renderTheme();
         }

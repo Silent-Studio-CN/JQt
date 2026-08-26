@@ -109,6 +109,13 @@ public class JQtFluentDemo {
             app.setAccentColor(accents[ci[0]]);
             System.out.println("[Fluent] accent = " + accents[ci[0]]);
         });
+        JQtButton themeToggle = new JQtButton("黑白切换");
+        final boolean[] dark = {true};
+        themeToggle.onClick(() -> {
+            dark[0] = !dark[0];
+            app.setTheme(dark[0] ? "fluent-dark" : "fluent-light");   // 自定义主题色自动保留
+            System.out.println("[Fluent] theme = " + (dark[0] ? "dark" : "light"));
+        });
         JQtButton fadePulse = new JQtButton("透明度脉冲 (InOutSine)");
         JQtLabel ball = new JQtLabel("●");
         ball.setStyleSheet("font-size: 20px; color: #4cc2ff;");
@@ -116,6 +123,7 @@ public class JQtFluentDemo {
         card3L.addWidget(ball);
         card3L.addWidget(bounceBtn);
         card3L.addWidget(colorBtn);
+        card3L.addWidget(themeToggle);
         card3L.addWidget(fadePulse);
         card3.setLayout(card3L);
 
