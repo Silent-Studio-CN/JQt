@@ -204,20 +204,37 @@ public:
             if (GetPointerInfo(GET_POINTERID_WPARAM(msg->wParam), &pi)) {
                 POINT pt = pi.ptPixelLocation;   // 物理屏幕坐标
                 if (ScreenToClient(msg->hwnd, &pt)) {
-                    const LONG lp = MAKELPARAM(pt.x, pt.y);
                     if (msg->message == WM_POINTERDOWN) {
+                        // 标题栏空白区 → 系统拖动（消息层 SendMessage，低延迟跟手；
+                        // 系统拖动循环消费后续触摸移动，绕开 Qt 事件循环的手动 move 延迟）
+                        // 避开右侧按钮区（三大将 ~150px）与标题栏高度（40 逻辑 px）
+                        const UINT dpi = GetDpiForWindow(msg->hwnd);
+                        const double dpr = dpi > 0 ? dpi / 96.0 : 1.0;
+                        RECT rc;
+                        GetClientRect(msg->hwnd, &rc);
+                        const int titleBarH = static_cast<int>(40 * dpr);
+                        const int btnZoneW = static_cast<int>(150 * dpr);
+                        if (pt.y < titleBarH && pt.x < rc.right - btnZoneW) {
+                            fprintf(stderr, "[JQt] titlebar -> system drag\n");
+                            SendMessageW(msg->hwnd, WM_NCLBUTTONDOWN, HTCAPTION, 0);
+                            return true;
+                        }
+                        // 其余区域：合成鼠标
                         g_pointerPressed = true;
                         fprintf(stderr, "[JQt] POINTERDOWN at client (%d,%d) -> mouse\n",
                                 static_cast<int>(pt.x), static_cast<int>(pt.y));
-                        PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON, lp);
+                        PostMessageW(msg->hwnd, WM_LBUTTONDOWN, MK_LBUTTON,
+                                     MAKELPARAM(pt.x, pt.y));
                     } else if (msg->message == WM_POINTERUP) {
                         g_pointerPressed = false;
                         fprintf(stderr, "[JQt] POINTERUP\n");
-                        PostMessageW(msg->hwnd, WM_LBUTTONUP, 0, lp);
+                        PostMessageW(msg->hwnd, WM_LBUTTONUP, 0,
+                                     MAKELPARAM(pt.x, pt.y));
                     } else {
                         // 移动：带按下状态（Qt 据此维持 buttons()/拖动）
                         PostMessageW(msg->hwnd, WM_MOUSEMOVE,
-                                     g_pointerPressed ? MK_LBUTTON : 0, lp);
+                                     g_pointerPressed ? MK_LBUTTON : 0,
+                                     MAKELPARAM(pt.x, pt.y));
                     }
                 }
             }
@@ -345,6 +362,20 @@ protected:
             return QWidget::nativeEvent(eventType, message, result);
         } else if (msg->message == WM_NCCALCSIZE && msg->wParam != 0) {
             // 无边框：客户区铺满（避免系统边框占位）
+            *result = 0;
+            return true;
+        } else if (msg->message == WM_GETMINMAXINFO) {
+            // 最大化约束到显示器工作区（无边框窗口默认会盖住任务栏）
+            MINMAXINFO* mmi = reinterpret_cast<MINMAXINFO*>(msg->lParam);
+            HMONITOR mon = MonitorFromWindow(msg->hwnd, MONITOR_DEFAULTTONEAREST);
+            MONITORINFO mi;
+            mi.cbSize = sizeof(mi);
+            if (GetMonitorInfoW(mon, &mi)) {
+                mmi->ptMaxPosition.x = mi.rcWork.left;
+                mmi->ptMaxPosition.y = mi.rcWork.top;
+                mmi->ptMaxSize.x = mi.rcWork.right - mi.rcWork.left;
+                mmi->ptMaxSize.y = mi.rcWork.bottom - mi.rcWork.top;
+            }
             *result = 0;
             return true;
         }
