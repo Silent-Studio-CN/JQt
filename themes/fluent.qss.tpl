@@ -47,6 +47,19 @@ QLabel { color: %fg%; background: transparent; }
 QLabel[role="title"] { font-size: 16px; font-weight: bold; color: %fg-strong%; }
 QLabel[role="hint"] { color: %fg-hint%; }
 
+/* ---- 进度条 ---- */
+QProgressBar { background: %btn-bg%; border: none; border-radius: 4px; height: 6px; }
+QProgressBar::chunk { background: %accent%; border-radius: 4px; }
+
+/* ---- 对话框 ---- */
+QMessageBox { background: %card-bg%; }
+QMessageBox QLabel { color: %fg%; }
+QMessageBox QPushButton { min-width: 72px; }
+
+/* ---- 通知条（JQtInfoBar）---- */
+QFrame#infoBar { background: %card-bg%; border: 1px solid %card-border%; border-radius: 8px; }
+QFrame#infoBar QLabel#infoBarLabel { color: %fg%; background: transparent; }
+
 /* ---- 标题栏按钮（Fluent 打磨）---- */
 QPushButton#titlebarBtn { background: transparent; border: none; border-radius: 4px; padding: 4px 12px; font-size: 12px; min-height: 0; max-height: 34px; color: %fg%; }
 QPushButton#titlebarBtn:hover { background: rgba(255, 255, 255, 0.05); }

@@ -35,7 +35,7 @@ public class JQtFluentDemo {
         }
         System.out.println("[Fluent] 动画主题 = " + animTheme);
 
-        JQtWindow window = new JQtWindow("JQt Fluent", 760, 520);
+        JQtWindow window = new JQtWindow("JQt Fluent", 760, 620);
         window.setFrameless(true);
         window.setAcrylic(true);
         window.setRoundedCorners(true);
@@ -156,6 +156,30 @@ public class JQtFluentDemo {
         pivot.addItem("历史");
         pivot.onChanged(i -> System.out.println("[Fluent] pivot -> " + i));
 
+        // ---- 卡片 4：v0.4 新控件（滑块 / 进度条 / 通知 / 对话框）----
+        JQtPanel card4 = new JQtPanel();
+        card4.setObjectName("card");
+        card4.setDropShadow(18, 70, 0, 3);
+        JQtVBoxLayout c4 = new JQtVBoxLayout();
+        c4.setSpacing(10);
+        JQtLabel sliderVal = new JQtLabel("音量：40");
+        JQtProgressBar progress = new JQtProgressBar();
+        JQtSlider slider = new JQtSlider(0, 100, 40);
+        slider.onValueChanged(v -> {
+            progress.setValue(v);
+            sliderVal.setText("音量：" + v);
+        });
+        JQtButton notifyBtn = new JQtButton("顶部通知条");
+        notifyBtn.onClick(() -> JQtInfoBar.show(window, "通知：v0.4 新控件已就绪", 2500));
+        JQtButton askBtn = new JQtButton("询问框");
+        askBtn.onClick(() -> System.out.println("[Fluent] 询问结果 = " + JQtMessageBox.showQuestion(window, "确认", "要执行操作吗？")));
+        c4.addWidget(sliderVal);
+        c4.addWidget(slider);
+        c4.addWidget(progress);
+        c4.addWidget(notifyBtn);
+        c4.addWidget(askBtn);
+        card4.setLayout(c4);
+
         // ---- 主布局：标题栏 + Pivot + 导航 + 卡片 ----
         JQtHBoxLayout body = new JQtHBoxLayout();
         body.setSpacing(12);
@@ -167,6 +191,7 @@ public class JQtFluentDemo {
         cards.addWidget(card1);
         cards.addWidget(card2);
         cards.addWidget(card3);
+        cards.addWidget(card4);
         cards.addStretch(1);
         body.addLayout(cards);
         body.addStretch(1);
@@ -185,6 +210,7 @@ public class JQtFluentDemo {
         app.schedule(() -> JQtAnimations.entrance(card1), 250);
         app.schedule(() -> JQtAnimations.entrance(card2), 340);
         app.schedule(() -> JQtAnimations.entrance(card3), 430);
+        app.schedule(() -> JQtAnimations.entrance(card4), 520);
 
         long autoClose = Long.getLong("jqt.autoClose", -1L);
         if (autoClose > 0) {
