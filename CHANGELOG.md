@@ -12,6 +12,23 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.4.0-alpha（2026-08-27）— 新控件六件套 / ARM64
+
+**新控件（v0.4 六件套）**：
+- **JQtSlider**：Fluent 滑块（自绘轨道+圆钮，accent 填充，点击跳转 120ms 动画，拖动跟手，明暗感知）
+- **JQtScrollArea**：滚动区（内容可滚动，滚动条 QSS 样式化）
+- **JQtProgressBar**：进度条（QSS chunk 圆角 + accent）
+- **JQtNavigation**：Fluent 侧栏导航（图标+文字，选中高亮 200ms 滑动，主题色淡色背景）
+- **JQtMessageBox**：模态对话框（询问/信息，QSS 可样式化）
+- **JQtInfoBar**：顶部通知条（滑入→停留→滑出，自动清理）
+
+**平台**：
+- **Windows ARM64 恢复**（windows-11-arm 原生 runner + aqt win64_arm64 + MSVC 构建）
+
+**皮肤**：
+- **qf light 皮肤**：qfluentwidgets light QSS（34 文件）合并映射完成（themes/qf/qf-light-jqt.qss）
+
+**demo**：卡片 4 集成全部新控件（滑块联动进度条/通知条/询问框）
 ### v0.3.0-alpha（2026-08-26）— 触摸实战 / 主题系统 / 基础 API 补齐
 
 **触摸与窗口（HiteVision 一体机实战打磨）**：
@@ -101,6 +118,17 @@
 <a id="en"></a>
 ## English Version
 
+### v0.4.0-alpha (2026-08-27) — Six new widgets / ARM64
+
+**New widgets**: JQtSlider (Fluent painted, drag + animated), JQtScrollArea,
+JQtProgressBar (QSS chunk), JQtNavigation (sidebar sliding highlight),
+JQtMessageBox (modal), JQtInfoBar (toast auto-dismiss)
+
+**Platform**: Windows ARM64 restored (native arm64 runner + aqt win64_arm64 + MSVC)
+
+**Skin**: qf light QSS (34 files) merged and mapped (themes/qf/qf-light-jqt.qss)
+
+**Demo**: card 4 integrates all new controls (slider->progress, toast, question box)
 ### v0.3.0-alpha (2026-08-26) — Touch-tested / Theme system / Base API completion
 
 **Touch & windows (battle-tested on HiteVision all-in-one)**:

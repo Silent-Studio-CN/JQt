@@ -205,6 +205,25 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `JQtApplication.setAnimationTheme(theme)` | 全局应用（所有动效统一跟随） |
 
 > 启动参数 `-Djqt.animTheme=fast|relaxed|off|default`（或启动脚本 `-AnimTheme`）。
+
+### 1.15 JQtSlider —— Fluent 滑块【新增 v0.4.0】
+
+| 方法 | 说明 |
+|------|------|
+| `JQtSlider(min, max, value)` | 创建滑块（自绘：轨道+圆钮，accent 填充） |
+| `value()` / `setValue(int)` | 取值 / 设置（点击跳转 120ms 动画） |
+| `setRange(min, max)` | 范围 |
+| `onValueChanged(Consumer<Integer>)` | 值变化回调（拖动高频） |
+
+### 1.16 JQtScrollArea / JQtProgressBar / JQtNavigation / JQtMessageBox / JQtInfoBar【新增 v0.4.0】
+
+| 类 | 方法 | 说明 |
+|------|------|------|
+| `JQtScrollArea` | `setWidget(w)` / `setWidgetResizable(b)` | 滚动区（QScrollArea） |
+| `JQtProgressBar` | `value()` / `setValue(v)` / `setRange(min,max)` | 进度条（QSS chunk） |
+| `JQtNavigation` | `addItem(icon,text)` / `setCurrentIndex(i)` / `onChanged(...)` | 侧栏导航（选中高亮滑动动画） |
+| `JQtMessageBox` | `showQuestion(win,title,text)` / `showInfo(win,title,text)` | 模态对话框（阻塞） |
+| `JQtInfoBar` | `show(window,text,durationMs)` | 顶部通知条（自动消失） |
 ### 1.9 JQtCheckBox —— 复选框（QSS 可呈现 Fluent 开关）
 
 | 方法 | 说明 |
@@ -438,6 +457,17 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 | `JQtApplication.setAnimationTheme(theme)` | apply globally (all motion follows) |
 
 > Startup: `-Djqt.animTheme=fast|relaxed|off|default` (or `-AnimTheme` in launchers).
+
+### 1.15 JQtSlider / JQtScrollArea / JQtProgressBar / JQtNavigation / JQtMessageBox / JQtInfoBar [v0.4.0]
+
+| Class | Key methods | Description |
+|-------|-------------|-------------|
+| `JQtSlider` | `(min,max,value)` / `value()` / `setValue` / `onValueChanged` | Fluent painted slider (accent fill, drag + 120ms animation) |
+| `JQtScrollArea` | `setWidget` / `setWidgetResizable` | scroll area |
+| `JQtProgressBar` | `value` / `setValue` / `setRange` | progress bar (QSS chunk) |
+| `JQtNavigation` | `addItem(icon,text)` / `setCurrentIndex` / `onChanged` | sidebar navigation (sliding highlight) |
+| `JQtMessageBox` | `showQuestion` / `showInfo` | modal dialogs (blocking) |
+| `JQtInfoBar` | `show(window,text,ms)` | top toast, auto-dismiss |
 ### 1.9 JQtCheckBox — check box (QSS can render a Fluent switch)
 
 | Method | Description |
