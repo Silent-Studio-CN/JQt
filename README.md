@@ -1,4 +1,4 @@
-> 🔗 **全部功能导航：https://jqt.silentstudio.cn/docs**（⚠️ 暂未开放 · Coming Soon）
+> 🔗 **全部功能导航：https://jqt.silentstudio.cn/docs **（⚠️ 暂未开放 · Coming Soon）
 
 # JQt — Java 绑定 Qt 框架 / Java Bindings for Qt
 
