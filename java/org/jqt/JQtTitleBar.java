@@ -78,7 +78,7 @@ public class JQtTitleBar extends JQtWidget {
             minBtn.setText(GLYPH_MINIMIZE);
             maxBtn.setText(GLYPH_MAXIMIZE);
             closeBtn.setText(GLYPH_CLOSE);
-            String glyphQss = "font-family: \"Segoe MDL2 Assets\"; font-size: 10px;";
+            String glyphQss = "font-family: \"Segoe MDL2 Assets\"; font-size: 10px; padding: 4px 12px; min-height: 0; max-height: 34px;";
             minBtn.setStyleSheet(glyphQss);
             maxBtn.setStyleSheet(glyphQss);
             closeBtn.setStyleSheet(glyphQss);

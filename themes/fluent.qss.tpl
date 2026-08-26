@@ -48,9 +48,9 @@ QLabel[role="title"] { font-size: 16px; font-weight: bold; color: %fg-strong%; }
 QLabel[role="hint"] { color: %fg-hint%; }
 
 /* ---- 标题栏按钮（Fluent 打磨）---- */
-QPushButton#titlebarBtn { background: transparent; border: none; border-radius: 4px; padding: 6px 12px; font-size: 12px; color: %fg%; }
+QPushButton#titlebarBtn { background: transparent; border: none; border-radius: 4px; padding: 4px 12px; font-size: 12px; min-height: 0; max-height: 34px; color: %fg%; }
 QPushButton#titlebarBtn:hover { background: %titlebar-hover%; }
 QPushButton#titlebarBtn:pressed { background: %titlebar-pressed%; }
-QPushButton#titlebarClose { background: transparent; border: none; border-radius: 4px; padding: 6px 12px; font-size: 12px; color: %fg%; }
+QPushButton#titlebarClose { background: transparent; border: none; border-radius: 4px; padding: 4px 12px; font-size: 12px; min-height: 0; max-height: 34px; color: %fg%; }
 QPushButton#titlebarClose:hover { background: #c42b1c; color: #ffffff; }
 QPushButton#titlebarClose:pressed { background: #a02418; color: #ffffff; }
