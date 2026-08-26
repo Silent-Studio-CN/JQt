@@ -66,8 +66,29 @@ card.fadeOut(200);                  // 控件淡出
 
 内置动画全部走 GUI 线程，动画对象自动清理（DeleteWhenStopped），无需手动管理。
 
----
 
+### 4. 文字、字体与编码（中文乱码/问号排查）
+
+JQt 的字符串管道全程 UTF-8（JNI 用 GetStringUTFChars + QString::fromUtf8），
+Java 源码与编译均 UTF-8。出现 `?`/乱码时按以下顺序排查：
+
+| 症状 | 原因 | 解决 |
+|------|------|------|
+| 控件内中文显示为 `?` 或方块 | Qt 全局字体不含 CJK 字形或回退失败 | JQt 构造时自动应用系统中文字体（Windows 雅黑 / macOS 苹方 / Linux Noto CJK）；也可手动 `app.setFontFamily("Microsoft YaHei UI", 13)` |
+| 控制台 `System.out.println` 中文为 `?` | 终端代码页（GBK）与 Java UTF-8 输出不匹配 | 用 `run.ps1`/`run-fluent.ps1` 启动（已设 UTF-8）；或 `chcp 65001` |
+| 输入框无法输入中文 | 无边框窗口的 IME（输入法）候选框未正确挂接 | 确认聚焦后输入法正常弹出；无边框窗口已知限制见 docs/user-guide.md |
+| 自己写的 Java 文件中文乱码 | 源文件为 GBK 编码而 javac 按 UTF-8 编译 | 源码统一 UTF-8（无 BOM）；编译加 `-encoding UTF-8` |
+
+**跨平台字体策略**（JQtApplication 构造时自动）：
+
+```
+Windows: Microsoft YaHei UI / macOS: PingFang SC / Linux: Noto Sans CJK SC
+```
+
+Qt 找不到指定字体族时会自动回退系统字体，不会产生问号。
+QSS 模板中的 `font-family` 建议带 CJK 回退链：`"Segoe UI", "Microsoft YaHei UI"`。
+
+---
 <a id="en"></a>
 ## English Version
 
@@ -111,3 +132,27 @@ card.fadeIn(200);  card.fadeOut(200);
 ```
 
 All animations run on the GUI thread and self-clean (DeleteWhenStopped).
+
+
+### 4. Text, Fonts & Encoding (CJK / question-mark troubleshooting)
+
+JQt's string pipeline is UTF-8 end to end (JNI GetStringUTFChars + QString::fromUtf8);
+Java sources and compilation are UTF-8. If you see `?` or mojibake:
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `?`/boxes for CJK in widgets | Qt global font lacks CJK glyphs or fallback fails | JQt auto-applies a system CJK font at construction (YaHei / PingFang / Noto CJK); or `app.setFontFamily("Microsoft YaHei UI", 13)` |
+| `?` in console `System.out.println` | terminal codepage (GBK) vs Java UTF-8 output | use run.ps1/run-fluent.ps1 (UTF-8 preset); or `chcp 65001` |
+| cannot type CJK in inputs | frameless-window IME candidate window not attached | check IME pops on focus; frameless IME limits documented in docs/user-guide.md |
+| mojibake in your own .java files | source saved as GBK while javac compiles UTF-8 | save sources UTF-8 (no BOM); compile with `-encoding UTF-8` |
+
+**Cross-platform font strategy** (auto at JQtApplication construction):
+
+```
+Windows: Microsoft YaHei UI / macOS: PingFang SC / Linux: Noto Sans CJK SC
+```
+
+Qt falls back to a system font when the requested family is missing - never `?`.
+Use CJK fallback chains in QSS: `"Segoe UI", "Microsoft YaHei UI"`.
+
+---

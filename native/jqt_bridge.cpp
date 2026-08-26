@@ -472,6 +472,17 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetStyleSheet(JNIEnv* e
     env->ReleaseStringUTFChars(qss, utf);
 }
 
+// 设置全局字体（QApplication::setFont；所有控件继承，Qt 自动回退缺失字形）
+JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetFont(JNIEnv* env, jobject /*thiz*/, jstring family, jint size) {
+    if (g_app == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(family, nullptr);
+    QFont font(QString::fromUtf8(utf), static_cast<int>(size));
+    env->ReleaseStringUTFChars(family, utf);
+    g_app->setFont(font);
+}
+
 // 切换风格（QApplication::setStyle，如 "Fusion" / "Windows" / "macOS"）
 JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetStyle(JNIEnv* env, jobject /*thiz*/, jstring style) {
     if (g_app == nullptr) {
