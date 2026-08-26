@@ -261,6 +261,46 @@ public:
     int borderWidth = 5;          // 缩放热区宽度
     bool m_dragging = false;      // 手动拖动状态
     QPoint m_dragOffset;          // 按下点相对窗口原点的偏移
+    bool m_manualMaximized = false;  // 手动最大化（showMaximized 对无边框窗口不可靠）
+    QRect m_normalGeometry;          // 最大化前的几何（还原用）
+
+    // 当前显示器工作区（Qt 逻辑坐标）
+    QRect workArea() const {
+#ifdef _WIN32
+        HMONITOR mon = MonitorFromWindow(reinterpret_cast<HWND>(winId()), MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi;
+        mi.cbSize = sizeof(mi);
+        if (GetMonitorInfoW(mon, &mi)) {
+            const qreal dpr = devicePixelRatioF();
+            return QRect(qRound(mi.rcWork.left / dpr), qRound(mi.rcWork.top / dpr),
+                         qRound((mi.rcWork.right - mi.rcWork.left) / dpr),
+                         qRound((mi.rcWork.bottom - mi.rcWork.top) / dpr));
+        }
+#endif
+        return QRect();
+    }
+
+    // 手动最大化/还原（无边框窗口可靠方案）
+    void setManualMaximized(bool maximized) {
+        if (maximized == m_manualMaximized) {
+            return;
+        }
+        if (maximized) {
+            m_normalGeometry = geometry();
+            const QRect wa = workArea();
+            if (wa.isValid()) {
+                setGeometry(wa);
+            }
+            m_manualMaximized = true;
+        } else {
+            m_manualMaximized = false;
+            if (m_normalGeometry.isValid()) {
+                setGeometry(m_normalGeometry);
+            }
+        }
+    }
+
+    bool isManualMaximized() const { return m_manualMaximized; }
 
 #ifdef _WIN32
     // DWM 阴影（无边框时启用）
@@ -331,7 +371,7 @@ protected:
         }
 
         if (msg->message == WM_NCHITTEST) {
-            if (isMaximized() || isFullScreen()) {
+            if (isManualMaximized() || isFullScreen()) {
                 return QWidget::nativeEvent(eventType, message, result);
             }
             // WM_NCHITTEST 坐标是物理像素，Qt 坐标是逻辑像素：DPI 缩放时需换算
@@ -794,31 +834,27 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeMinimize(JNIEnv* env, jobjec
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeMaximize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
-    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
-    if (widget == nullptr) {
+    JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
+    if (win == nullptr) {
         return;
     }
-    widget->showMaximized();
+    win->setManualMaximized(true);
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeToggleMaximize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
-    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
-    if (widget == nullptr) {
+    JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
+    if (win == nullptr) {
         return;
     }
-    if (widget->isMaximized()) {
-        widget->showNormal();
-    } else {
-        widget->showMaximized();
-    }
+    win->setManualMaximized(!win->isManualMaximized());
 }
 
 JNIEXPORT jboolean JNICALL Java_org_jqt_JQtWindow_nativeIsMaximized(JNIEnv* env, jobject /*thiz*/, jlong handle) {
-    QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
-    if (widget == nullptr) {
+    JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
+    if (win == nullptr) {
         return JNI_FALSE;
     }
-    return widget->isMaximized() ? JNI_TRUE : JNI_FALSE;
+    return win->isManualMaximized() ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_JQtWindow_nativeResize(JNIEnv* env, jobject /*thiz*/, jlong handle, jint width, jint height) {
@@ -1535,6 +1571,11 @@ JNIEXPORT jlong JNICALL Java_org_jqt_JQtWidget_nativeCreateAnimation(JNIEnv* env
         return 0;
     }
     const char* utf = env->GetStringUTFChars(property, nullptr);
+    // windowOpacity 只对顶层窗口有效：子控件上静默无效，给提示
+    if (!widget->isWindow() && strcmp(utf, "windowOpacity") == 0) {
+        fprintf(stderr, "[JQt] warning: windowOpacity only affects top-level windows; "
+                        "apply it to a JQtWindow or use geometry/move animations on widgets\n");
+    }
     QPropertyAnimation* anim = new QPropertyAnimation(widget, QByteArray(utf), widget);
     env->ReleaseStringUTFChars(property, utf);
     anim->setDuration(static_cast<int>(ms));
