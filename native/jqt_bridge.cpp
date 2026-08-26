@@ -66,6 +66,9 @@
 #include <mutex>
 #include <unordered_map>
 
+// 全局主题色（JQtApplication.setAccentColor 更新；自绘控件 JQtSwitch 使用）
+static QColor g_accentColor = QColor(0x4c, 0xc2, 0xff);
+
 #include "generated/org_jqt_JQtApplication.h"
 #include "generated/org_jqt_JQtAnimations.h"
 #include "generated/org_jqt_JQtPivot.h"
@@ -484,6 +487,25 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetFont(JNIEnv* env, jo
     g_app->setFont(font);
 }
 
+// 设置全局主题色（强调色）：更新 QPalette::Highlight（pivot/选中态/输入框光标跟随）
+// + 自绘控件主题色（JQtSwitch 轨道）；QSS 部分由 Java 侧重渲染模板。
+JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetAccent(JNIEnv* env, jobject /*thiz*/, jstring hex) {
+    if (g_app == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(hex, nullptr);
+    QColor c(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(hex, utf);
+    if (!c.isValid()) {
+        return;
+    }
+    g_accentColor = c;
+    QPalette p = g_app->palette();
+    p.setColor(QPalette::Highlight, c);
+    p.setColor(QPalette::HighlightedText, QColor(0xff, 0xff, 0xff));
+    g_app->setPalette(p);
+}
+
 // 切换风格（QApplication::setStyle，如 "Fusion" / "Windows" / "macOS"）
 JNIEXPORT void JNICALL Java_org_jqt_JQtApplication_nativeSetStyle(JNIEnv* env, jobject /*thiz*/, jstring style) {
     if (g_app == nullptr) {
@@ -828,6 +850,7 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeSetObjectName(JNIEnv* env, j
 // 150ms OutCubic 高亮叠加层（白色 8.5%），Fluent 公开动效规范参数。
 // ----------------------------------------------------------------------------
 static bool g_hoverEnabled = true;
+static double g_hoverIntensity = 0.085;   // 悬停高亮叠加透明度（JQtAnimations.setHoverIntensity）
 
 class JQtButtonWidget : public QPushButton {
 public:
@@ -862,7 +885,7 @@ protected:
         if (m_hover > 0.01 && !isDown()) {
             QPainter p(this);
             p.setRenderHint(QPainter::Antialiasing);
-            const QColor overlay(255, 255, 255, qRound(255.0 * 0.085 * m_hover));
+            const QColor overlay(255, 255, 255, qRound(255.0 * g_hoverIntensity * m_hover));
             QPainterPath path;
             path.addRoundedRect(QRectF(rect()).adjusted(0.5, 0.5, -0.5, -0.5), 5.0, 5.0);
             p.fillPath(path, overlay);
@@ -1722,9 +1745,9 @@ protected:
         const double w = width();
         const double h = height();
 
-        // 轨道颜色随进度渐变：关=灰 → 开=accent
+        // 轨道颜色随进度渐变：关=灰 → 开=全局主题色（setAccentColor 可换）
         const QColor offColor(0x4a, 0x4a, 0x4a);
-        const QColor onColor(0x4c, 0xc2, 0xff);
+        const QColor onColor = g_accentColor;
         const double t = m_progress;
         const QColor trackColor(
             int(offColor.red()   + (onColor.red()   - offColor.red())   * t),
@@ -1935,6 +1958,11 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtWidget_nativeClearDropShadow(JNIEnv* env,
 // 全局按钮悬停动画开关（跟随 JQtAnimationTheme）
 JNIEXPORT void JNICALL Java_org_jqt_JQtAnimations_nativeSetHoverEnabled(JNIEnv* /*env*/, jclass /*cls*/, jboolean on) {
     g_hoverEnabled = (on == JNI_TRUE);
+}
+
+// 悬停高亮强度（0~1，默认 0.085）
+JNIEXPORT void JNICALL Java_org_jqt_JQtAnimations_nativeSetHoverIntensity(JNIEnv* /*env*/, jclass /*cls*/, jdouble intensity) {
+    g_hoverIntensity = intensity;
 }
 
 // 控件入场：下方 dy 滑入（纯位移动画）。

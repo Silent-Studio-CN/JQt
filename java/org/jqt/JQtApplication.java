@@ -38,6 +38,11 @@ public class JQtApplication {
     /** 全局动画主题（动效节奏 + 默认缓动）。 */
     private static volatile JQtAnimationTheme animationTheme = JQtAnimationTheme.DEFAULT;
 
+    // 主题渲染状态（setAccentColor 重渲染用）
+    private String themeTemplatePath;          // 非 null = 模板模式
+    private java.util.Map<String, String> themeVars;
+    private boolean themeLight;
+
     /**
      * 设置全局动画主题：所有 JQt 动效（hover / 入场 / 退场 / pivot 指示器）
      * 的时长按 {@link JQtAnimationTheme#speed} 缩放，默认缓动取 {@link JQtAnimationTheme#easing}。
@@ -242,22 +247,62 @@ public class JQtApplication {
 
     /** 模板 + 变量集 + 配色方案（light/dark palette）。 */
     public void setTheme(String qssTemplatePath, java.util.Map<String, String> variables, boolean light) {
+        themeTemplatePath = qssTemplatePath;
+        themeVars = (variables == null) ? null : new java.util.HashMap<>(variables);
+        themeLight = light;
+        renderTheme();
+    }
+
+    /** 重新渲染当前模板主题（变量替换 + 应用）。 */
+    private void renderTheme() {
+        if (themeTemplatePath == null || themeVars == null) {
+            return;
+        }
         try {
-            Path p = Path.of(qssTemplatePath);
-            if (!Files.exists(p)) {
-                throw new IllegalArgumentException("主题文件不存在: " + qssTemplatePath);
+            String qss = Files.readString(Path.of(themeTemplatePath), StandardCharsets.UTF_8);
+            for (java.util.Map.Entry<String, String> e : themeVars.entrySet()) {
+                qss = qss.replace("%" + e.getKey() + "%", e.getValue());
             }
-            String qss = Files.readString(p, StandardCharsets.UTF_8);
-            if (variables != null) {
-                for (java.util.Map.Entry<String, String> e : variables.entrySet()) {
-                    qss = qss.replace("%" + e.getKey() + "%", e.getValue());
-                }
-            }
-            setColorScheme(light);
+            setColorScheme(themeLight);
             setStyleSheet(qss);
         } catch (java.io.IOException e) {
-            throw new IllegalStateException("读取主题失败: " + qssTemplatePath, e);
+            throw new IllegalStateException("读取主题失败: " + themeTemplatePath, e);
         }
+    }
+
+    /**
+     * 切换全局主题色（强调色，如 {@code "#4cc2ff"}）。
+     * <ul>
+     *   <li>模板主题（setTheme 内置 fluent-* 或模板模式）：QSS 重渲染，accent/accent-hover 跟随</li>
+     *   <li>所有模式：QPalette::Highlight 更新（Pivot 指示器 / 选中态 / 输入框光标跟随）</li>
+     *   <li>自绘控件：JQtSwitch 轨道开色跟随</li>
+     * </ul>
+     * 纯 QSS 文件主题（setTheme(path, light)）只更新调色板与自绘控件，QSS 内硬编码色不受影响。
+     */
+    public void setAccentColor(String hex) {
+        if (hex == null || !hex.matches("#[0-9a-fA-F]{6}")) {
+            throw new IllegalArgumentException("主题色需为 #RRGGBB 格式: " + hex);
+        }
+        nativeSetAccent(hex);
+        if (themeVars != null) {
+            java.util.Map<String, String> vars = new java.util.HashMap<>(themeVars);
+            vars.put("accent", hex.toLowerCase());
+            vars.put("accent-hover", lighten(hex, 0.12));
+            themeVars = vars;
+            renderTheme();
+        }
+    }
+    private native void nativeSetAccent(String hex);
+
+    /** 颜色向白偏移（hover 亮色用）。 */
+    private static String lighten(String hex, double factor) {
+        int r = Integer.parseInt(hex.substring(1, 3), 16);
+        int g = Integer.parseInt(hex.substring(3, 5), 16);
+        int b = Integer.parseInt(hex.substring(5, 7), 16);
+        r = (int) (r + (255 - r) * factor);
+        g = (int) (g + (255 - g) * factor);
+        b = (int) (b + (255 - b) * factor);
+        return String.format("#%02x%02x%02x", r, g, b);
     }
 
     /** 自定义主题：加载 QSS 文件 + 指定浅色/深色调色板。 */
@@ -266,6 +311,8 @@ public class JQtApplication {
     }
 
     private void applyThemeFile(String path, boolean light) {
+        themeTemplatePath = null;   // 纯文件模式：setAccentColor 只影响调色板/自绘控件
+        themeVars = null;
         try {
             Path p = Path.of(path);
             if (!Files.exists(p)) {
