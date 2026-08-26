@@ -12,6 +12,33 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.3.0-alpha（2026-08-26）— 触摸实战 / 主题系统 / 基础 API 补齐
+
+**触摸与窗口（HiteVision 一体机实战打磨）**：
+- 全局 POINTER→鼠标合成（含下拉弹层等所有窗口）——触摸屏按钮/开关/下拉/弹层全可点
+- 标题栏触摸拖动：系统原生路径（HTCAPTION）+ 消息层兜底，复刻系统手感
+- 无边框窗口最大化：手动几何管理（工作区约束，不盖任务栏）
+- 无边框窗口输入框聚焦自动弹触摸键盘（TabTip / ITipInvocation）
+- WM_NCHITTEST DPI 感知 + 不再吞标题栏按钮；WM_GETMINMAXINFO 工作区约束
+
+**主题系统**：
+- **setAccentColor(#RRGGBB)**：一键换主题色（QSS 重渲染 + 调色板 Highlight + 自绘开关同步）
+- **setAutoTheme(true)**：自动跟随 Windows 系统深浅色 + 系统强调色（注册表轮询）
+- **setFontFamily**：全局字体（构造时自动应用中文字体，根治 CJK 问号/乱码）
+- 主题一致性：demo 硬编码颜色全部清除，自绘控件（开关轨道）明暗感知
+- 黑白整体切换 demo（主题色跨主题保留）
+
+**动画系统**：
+- JQtAnimations（hover 过渡 / 卡片入场退场）、JQtPivot（滑动指示器）、
+  JQtAnimationTheme（DEFAULT/FAST/RELAXED/OFF）、setHoverIntensity
+
+**样式能力**：
+- setDropShadow（QSS box-shadow 替代）、setBorderRadius、布局 setContentsMargins
+- qfluentwidgets（GPLv3）34 个 QSS 文件皮肤直通验证（JQtQfDemo）
+
+**基础 API 补齐**：
+- JQtWidget：width/height/x/y、show/hide/isVisible、setEnabled/isEnabled、setFixedSize
+- JQtLabel.text()
 ### v0.2.0-alpha（2026-08-26）— Fluent 全家桶：开关 / 动画 / 标题栏 / 触摸 / 皮肤
 
 **控件与外观**：
@@ -74,6 +101,30 @@
 <a id="en"></a>
 ## English Version
 
+### v0.3.0-alpha (2026-08-26) — Touch-tested / Theme system / Base API completion
+
+**Touch & windows (battle-tested on HiteVision all-in-one)**:
+- Global POINTER->mouse synthesis covering ALL windows incl. popups - buttons/switches/dropdowns clickable on touch panels
+- Titlebar touch drag: system native path (HTCAPTION) with message-layer fallback
+- Frameless maximize: manual geometry management (work-area constrained, no taskbar overlap)
+- Frameless inputs auto-show touch keyboard (TabTip / ITipInvocation)
+- DPI-aware WM_NCHITTEST; buttons no longer swallowed; WM_GETMINMAXINFO work-area clamp
+
+**Theme system**:
+- **setAccentColor(#RRGGBB)**: switch accent (QSS re-render + palette Highlight + custom switch)
+- **setAutoTheme(true)**: follow Windows light/dark + accent (registry polling)
+- **setFontFamily**: global font (auto CJK font at construction - fixes CJK question marks)
+- Theme consistency: demo hardcoded colors removed, custom widgets lightness-aware
+- Dark/light toggle demo (accent preserved across themes)
+
+**Animation**: JQtAnimations (hover/card entrance-exit), JQtPivot (sliding indicator),
+JQtAnimationTheme (DEFAULT/FAST/RELAXED/OFF), setHoverIntensity
+
+**Styling**: setDropShadow (QSS box-shadow substitute), setBorderRadius,
+layout setContentsMargins; qfluentwidgets (GPLv3) 34-file QSS skin verification (JQtQfDemo)
+
+**Base API**: JQtWidget width/height/x/y, show/hide/isVisible, setEnabled/isEnabled,
+setFixedSize; JQtLabel.text()
 ### v0.2.0-alpha (2026-08-26) — Fluent Kit: Switch / Animation / Titlebar / Touch / Skins
 
 **Widgets & look**:

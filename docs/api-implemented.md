@@ -30,6 +30,10 @@
 | `void setDropShadow(blur,alpha[,dx,dy])` | 投影阴影（QSS box-shadow 的替代：Qt QSS 不支持 box-shadow） |
 | `void clearDropShadow()` | 移除投影阴影 |
 | `void setBorderRadius(int)` | 自定义圆角（像素；与控件级 setStyleSheet 内部合并，互不覆盖） |
+| `int width()` / `height()` / `x()` / `y()` | 几何查询（像素） |
+| `void show()` / `hide()` / `isVisible()` | 显隐控制 |
+| `void setEnabled(boolean)` / `isEnabled()` | 启用/禁用 |
+| `void setFixedSize(w,h)` | 固定尺寸 |
 | `void setStyleSheet(String qss)` | 控件级 QSS（与全局样式可叠加，控件级优先） |
 
 ### 1.1 JQtApplication —— 应用入口
@@ -260,6 +264,10 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `void setDropShadow(blur,alpha[,dx,dy])` | drop shadow (QSS box-shadow substitute - Qt QSS lacks box-shadow) |
 | `void clearDropShadow()` | remove drop shadow |
 | `void setBorderRadius(int)` | custom corner radius in px (merged with widget-level setStyleSheet) |
+| `int width()` / `height()` / `x()` / `y()` | geometry queries (px) |
+| `void show()` / `hide()` / `isVisible()` | visibility control |
+| `void setEnabled(boolean)` / `isEnabled()` | enable/disable |
+| `void setFixedSize(w,h)` | fixed size |
 
 ### 1.1 JQtApplication
 

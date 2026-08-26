@@ -157,6 +157,48 @@ public abstract class JQtWidget {
     }
     static native void nativeSetBorderRadius(long handle, int radius);
 
+    // ---- 基础控件 API（几何 / 显隐 / 禁用 / 固定尺寸）----
+
+    /** 控件当前宽度（像素）。 */
+    public int width() { return nativeWidth(nativeHandle); }
+    static native int nativeWidth(long handle);
+
+    /** 控件当前高度（像素）。 */
+    public int height() { return nativeHeight(nativeHandle); }
+    static native int nativeHeight(long handle);
+
+    /** 控件当前 x 坐标（相对父控件）。 */
+    public int x() { return nativeX(nativeHandle); }
+    static native int nativeX(long handle);
+
+    /** 控件当前 y 坐标（相对父控件）。 */
+    public int y() { return nativeY(nativeHandle); }
+    static native int nativeY(long handle);
+
+    /** 显示控件。 */
+    public void show() { nativeShow(nativeHandle); }
+    static native void nativeShow(long handle);
+
+    /** 隐藏控件。 */
+    public void hide() { nativeHide(nativeHandle); }
+    static native void nativeHide(long handle);
+
+    /** 控件是否可见（含父链）。 */
+    public boolean isVisible() { return nativeIsVisible(nativeHandle); }
+    static native boolean nativeIsVisible(long handle);
+
+    /** 启用 / 禁用控件（禁用后不响应输入）。 */
+    public void setEnabled(boolean enabled) { nativeSetEnabled(nativeHandle, enabled); }
+    static native void nativeSetEnabled(long handle, boolean enabled);
+
+    /** 控件是否启用。 */
+    public boolean isEnabled() { return nativeIsEnabled(nativeHandle); }
+    static native boolean nativeIsEnabled(long handle);
+
+    /** 固定控件尺寸（布局中不再拉伸）。 */
+    public void setFixedSize(int width, int height) { nativeSetFixedSize(nativeHandle, width, height); }
+    static native void nativeSetFixedSize(long handle, int width, int height);
+
     /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
      * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。

@@ -39,17 +39,7 @@ public class JQtWindow extends JQtWidget {
 
     private native long nativeCreate(String title, int width, int height);
 
-    /** 显示窗口。 */
-    public void show() {
-        nativeShow(nativeHandle);
-    }
-    private native void nativeShow(long handle);
-
-    /** 隐藏窗口。 */
-    public void hide() {
-        nativeHide(nativeHandle);
-    }
-    private native void nativeHide(long handle);
+    // show()/hide() 继承自 JQtWidget（基础 API）
 
     /** 关闭窗口（触发 onClose 回调；若为最后一个窗口，exec() 返回）。 */
     public void close() {
