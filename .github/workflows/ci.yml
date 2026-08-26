@@ -191,10 +191,10 @@ jobs:
       - name: Install Qt 6.8.3 win64_arm64 (aqt)
         shell: pwsh
         run: |
-          Set-Content -Path "D:/aqt.ini" -Value "[mirrors]"
-          Add-Content -Path "D:/aqt.ini" -Value "trusted_mirrors = https://download.qt.io"
+          Set-Content -Path "C:/aqt.ini" -Value "[mirrors]"
+          Add-Content -Path "C:/aqt.ini" -Value "trusted_mirrors = https://download.qt.io"
           pip install aqtinstall
-          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_arm64 --outputdir C:/Qt --archives qtbase *> aqt_qt.log
+          python -m aqt -c C:/aqt.ini install-qt windows desktop 6.8.3 win64_arm64 --outputdir C:/Qt --archives qtbase *> aqt_qt.log
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== AQT FAILED, tail of aqt_qt.log ==="
             Get-Content aqt_qt.log -Tail 30
