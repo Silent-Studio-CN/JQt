@@ -75,8 +75,11 @@ if ($LASTEXITCODE -ne 0) { throw "cl.exe failed" }
 Write-Host "==> [4/5] Deploying Qt runtime"
 $deploy = Join-Path $QtRoot "bin\windeployqt.exe"
 if (-not (Test-Path $deploy)) { throw "windeployqt not found: $deploy" }
+# windeployqt 的 stderr 警告（如 Translations）在 $ErrorActionPreference=Stop 下
+# 会触发 NativeCommandError 终止脚本——临时切回 Continue
+$ErrorActionPreference = "Continue"
 & $deploy (Join-Path $LibDir "jqt.dll") --no-translations --no-system-d3d-compiler --no-opengl-sw --compiler-runtime 2>&1 | Out-Host
-if ($LASTEXITCODE -ne 0) { Write-Warning "windeployqt failed (exit $LASTEXITCODE)" }
+$ErrorActionPreference = "Stop"
 
 # ---- 5) qt.conf ----
 Write-Host "==> [5/5] Writing qt.conf"
