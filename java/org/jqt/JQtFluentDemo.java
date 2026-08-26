@@ -52,6 +52,8 @@ public class JQtFluentDemo {
 
         // ---- 卡片 1：开关组 ----
         JQtPanel card1 = new JQtPanel();
+        card1.setObjectName("card");
+        card1.setDropShadow(18, 70, 0, 3);   // 投影（QSS box-shadow 的替代）
         JQtVBoxLayout card1L = new JQtVBoxLayout();
         card1L.setSpacing(10);
         JQtLabel card1Title = new JQtLabel("开关组");
@@ -74,6 +76,8 @@ public class JQtFluentDemo {
 
         // ---- 卡片 2：输入与按钮 ----
         JQtPanel card2 = new JQtPanel();
+        card2.setObjectName("card");
+        card2.setDropShadow(18, 70, 0, 3);
         JQtVBoxLayout card2L = new JQtVBoxLayout();
         card2L.setSpacing(10);
         JQtLabel card2Title = new JQtLabel("输入与按钮");
@@ -89,6 +93,8 @@ public class JQtFluentDemo {
 
         // ---- 卡片 3：动画演示（easing + JQtAnimation）----
         JQtPanel card3 = new JQtPanel();
+        card3.setObjectName("card");
+        card3.setDropShadow(18, 70, 0, 3);
         JQtVBoxLayout card3L = new JQtVBoxLayout();
         card3L.setSpacing(10);
         JQtLabel card3Title = new JQtLabel("动画演示");
@@ -123,9 +129,11 @@ public class JQtFluentDemo {
         // ---- 主布局：标题栏 + Pivot + 导航 + 卡片 ----
         JQtHBoxLayout body = new JQtHBoxLayout();
         body.setSpacing(12);
+        body.setContentsMargins(12, 0, 12, 10);   // 窗口边缘留白（不再贴边）
         body.addWidget(nav);
         JQtVBoxLayout cards = new JQtVBoxLayout();
         cards.setSpacing(12);
+        cards.setContentsMargins(0, 4, 0, 0);
         cards.addWidget(card1);
         cards.addWidget(card2);
         cards.addWidget(card3);
