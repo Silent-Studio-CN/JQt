@@ -1843,8 +1843,10 @@ protected:
         const double w = width();
         const double h = height();
 
-        // 轨道颜色随进度渐变：关=灰 → 开=全局主题色（setAccentColor 可换）
-        const QColor offColor(0x4a, 0x4a, 0x4a);
+        // 轨道颜色随进度渐变：关=灰（跟随主题明暗）→ 开=全局主题色（setAccentColor 可换）
+        const bool lightTheme = palette().color(QPalette::Window).lightness() > 128;
+        const QColor offColor = lightTheme ? QColor(0xc8, 0xc8, 0xc8)
+                                           : QColor(0x4a, 0x4a, 0x4a);
         const QColor onColor = g_accentColor;
         const double t = m_progress;
         const QColor trackColor(

@@ -65,8 +65,8 @@ public class JQtFluentDemo {
         switch1.onToggled(on -> System.out.println("[Fluent] 自动更新 = " + on));
         switch2.onToggled(on -> System.out.println("[Fluent] 开机自启 = " + on));
         JQtLabel switchRow = new JQtLabel("");
-        // 深色主题下固定前景色（模板变量仅用于 setTheme 渲染，此处直接写字面值）
-        switchRow.setStyleSheet("font-size: 13px; color: #e6e6e6;");
+        // 颜色跟随全局主题（不硬编码——控件级 QSS 会盖过主题导致深浅色不跟随）
+        switchRow.setStyleSheet("font-size: 13px;");
         card1L.addWidget(switchRow);
         card1L.addWidget(switch1);
         card1L.addWidget(switch2);
@@ -118,7 +118,7 @@ public class JQtFluentDemo {
         });
         JQtButton fadePulse = new JQtButton("透明度脉冲 (InOutSine)");
         JQtLabel ball = new JQtLabel("●");
-        ball.setStyleSheet("font-size: 20px; color: #4cc2ff;");
+        ball.setStyleSheet("font-size: 20px;");   // 颜色跟随全局主题
         card3L.addWidget(card3Title);
         card3L.addWidget(ball);
         card3L.addWidget(bounceBtn);
