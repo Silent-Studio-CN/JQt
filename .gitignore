@@ -43,5 +43,11 @@ Community/**/runtime/
 Community/**/*.jar
 Community/**/*.exe
 
+# 本地保留不入库（早期素材 / 本地快捷方式）
+114514.md
+docs/qt-ref/
+themes/qf/qf-dark-all.qss
+run.cmd
+
 tools/*.exe
 tools/*.log

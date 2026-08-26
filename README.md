@@ -100,7 +100,6 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 | [docs/api-implemented.md](docs/api-implemented.md) | 已实现 API 完整清单（双语） |
 | [docs/user-guide.md](docs/user-guide.md) | 安装配置 / 三平台运行 / FAQ |
 | [docs/api-tiering.md](docs/api-tiering.md) | API 分级设计（L1/L2/L3） |
-| [114514.md](114514.md) | Qt 全部 2172 方法分级清单 |
 | [CHANGELOG.md](CHANGELOG.md) | 变更日志 |
 
 ## 🎁 社区资源（Community）
