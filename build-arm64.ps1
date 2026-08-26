@@ -50,7 +50,7 @@ if ($LASTEXITCODE -ne 0) { throw "javac failed" }
 # ---- 3) Compile native bridge (cl.exe, ARM64) ----
 Write-Host "==> [3/5] Compiling native bridge (jqt.dll, ARM64)"
 $clArgs = @(
-    "/nologo", "/std:c++17", "/O2", "/LD", "/EHsc", "/MD", "/W3", "/Zc:__cplusplus",
+    "/nologo", "/std:c++17", "/O2", "/LD", "/EHsc", "/MD", "/W3", "/Zc:__cplusplus", "/permissive-",
     "/I", (Join-Path $JDK "include"),
     "/I", (Join-Path $JDK "include\win32"),
     "/I", (Join-Path $QtRoot "include"),
