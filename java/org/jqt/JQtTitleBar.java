@@ -54,8 +54,9 @@ public class JQtTitleBar extends JQtWidget {
         closeBtn.setObjectName("titlebarClose");
 
         minBtn.onClick(() -> window.minimize());
-        maxBtn.onClick(() -> window.toggleMaximize());
         closeBtn.onClick(() -> window.close());
+        // 注意：maxBtn 的 onClick 在各平台分支注册（Windows 带图标切换），
+        // 避免重复注册导致 toggle 两次 = 点击无效果（历史 bug）
 
         if (IS_MAC) {
             // macOS 交通灯：红黄绿圆点（左侧）
@@ -95,6 +96,7 @@ public class JQtTitleBar extends JQtWidget {
             bar.addWidget(closeBtn);
         } else {
             // Linux：标题在左，三件套在右（字符图标）
+            maxBtn.onClick(() -> window.toggleMaximize());
             bar.addWidget(titleLabel);
             bar.addStretch(1);
             bar.addWidget(minBtn);
