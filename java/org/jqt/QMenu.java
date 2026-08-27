@@ -1,0 +1,66 @@
+/*
+ * JQt - Java bindings for Qt.
+ * Copyright (c) SilentStudio
+ * SPDX-License-Identifier: LicenseRef-SilentStudio-JQt-1.0
+ * Licensed under the JQt Source License v1.0 - see LICENSE.md.
+ */
+package org.jqt;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+/**
+ * 弹出菜单：封装 C++ 侧的 {@code QMenu}。
+ * <pre>
+ * QMenu menu = new QMenu();
+ * int openId = menu.addItem("打开");
+ * int quitId = menu.addItem("退出");
+ * menu.onTriggered(id -> { if (id == quitId) app.quit(); });
+ * menu.popup(button);   // 在按钮下方弹出
+ * </pre>
+ * <p>信号槽：{@link #onTriggered(Consumer)} — triggered 信号（参数为 actionId）。
+ */
+public class QMenu extends QWidget {
+
+    private final List<Consumer<Integer>> onTriggeredHandlers = new ArrayList<>();
+    private int nextActionId = 1;
+
+    public QMenu() {
+        nativeHandle = nativeCreate();
+        registerCleaner();
+    }
+
+    private native long nativeCreate();
+
+    /** 追加菜单项，返回其 actionId。 */
+    public int addItem(String text) {
+        return nativeAddItem(nativeHandle, nextActionId++, text);
+    }
+    private native int nativeAddItem(long handle, int actionId, String text);
+
+    /** 在指定坐标（屏幕坐标）弹出菜单。 */
+    public void popup(int x, int y) {
+        nativePopupAt(nativeHandle, x, y);
+    }
+    private native void nativePopupAt(long handle, int x, int y);
+
+    /** 在锚点控件下方弹出菜单。 */
+    public void popup(QWidget anchor) {
+        nativePopupAnchor(nativeHandle, anchor.nativeHandle);
+    }
+    private native void nativePopupAnchor(long handle, long anchorHandle);
+
+    /** 菜单项触发回调（参数为 actionId）。 */
+    public QMenu onTriggered(Consumer<Integer> handler) {
+        onTriggeredHandlers.add(handler);
+        return this;
+    }
+
+    /** 由 C++ 侧在菜单项被触发时回调（JNI）。 */
+    void nativeHandleTriggered(int actionId) {
+        for (Consumer<Integer> h : onTriggeredHandlers) {
+            h.accept(actionId);
+        }
+    }
+}

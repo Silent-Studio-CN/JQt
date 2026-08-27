@@ -73,6 +73,11 @@
 #include <QDateTime>
 #include <QGridLayout>
 #include <QFormLayout>
+#include <QMenu>
+#include <QToolBar>
+#include <QStatusBar>
+#include <QSystemTrayIcon>
+#include <QStyle>
 #include <QMessageBox>
 #include <QTimer>
 #include <QMessageBox>
@@ -148,6 +153,10 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QDateTimeEdit.h"
 #include "generated/org_jqt_QGridLayout.h"
 #include "generated/org_jqt_QFormLayout.h"
+#include "generated/org_jqt_QMenu.h"
+#include "generated/org_jqt_QToolBar.h"
+#include "generated/org_jqt_QStatusBar.h"
+#include "generated/org_jqt_QSystemTrayIcon.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -3609,4 +3618,206 @@ JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeAddRowWidget(JNIEnv* env, 
     markQtOwned(fieldHandle);
     label->show();
     field->show();
+}
+
+// ----------------------------------------------------------------------------
+// JQtMenu / JQtToolBar / JQtStatusBar / JQtSystemTrayIcon
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QMenu_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QMenu* menu = new QMenu();
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(menu, &QMenu::triggered, [gRef](QAction* action) {
+        if (action == nullptr) {
+            return;
+        }
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleTriggered", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(action->data().toInt()));
+        }
+    });
+    return registerHandle(menu, /*javaOwned=*/true);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QMenu_nativeAddItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jint actionId, jstring text) {
+    QMenu* menu = static_cast<QMenu*>(requireHandle(env, handle));
+    if (menu == nullptr) {
+        return -1;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    QAction* act = menu->addAction(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+    act->setData(actionId);
+    return actionId;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMenu_nativePopupAt(JNIEnv* env, jobject /*thiz*/, jlong handle, jint x, jint y) {
+    QMenu* menu = static_cast<QMenu*>(requireHandle(env, handle));
+    if (menu != nullptr) {
+        menu->popup(QPoint(x, y));
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMenu_nativePopupAnchor(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong anchorHandle) {
+    QMenu* menu = static_cast<QMenu*>(requireHandle(env, handle));
+    if (menu == nullptr) {
+        return;
+    }
+    QWidget* anchor = static_cast<QWidget*>(requireHandle(env, anchorHandle));
+    if (anchor == nullptr) {
+        return;
+    }
+    menu->popup(anchor->mapToGlobal(QPoint(0, anchor->height())));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QToolBar_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QToolBar* bar = new QToolBar();
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(bar, &QToolBar::actionTriggered, [gRef](QAction* action) {
+        if (action == nullptr) {
+            return;
+        }
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleTriggered", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(action->data().toInt()));
+        }
+    });
+    return registerHandle(bar, /*javaOwned=*/true);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QToolBar_nativeAddButton(JNIEnv* env, jobject /*thiz*/, jlong handle, jint actionId, jstring text) {
+    QToolBar* bar = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (bar == nullptr) {
+        return -1;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    QAction* act = bar->addAction(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+    act->setData(actionId);
+    return actionId;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeAddWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle) {
+    QToolBar* bar = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (bar == nullptr) {
+        return;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return;
+    }
+    bar->addWidget(child);
+    markQtOwned(childHandle);
+    child->show();
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QStatusBar_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    return registerHandle(new QStatusBar(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QStatusBar_nativeShowMessage(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text, jint ms) {
+    QStatusBar* bar = static_cast<QStatusBar*>(requireHandle(env, handle));
+    if (bar == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    bar->showMessage(QString::fromUtf8(utf), ms);
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QStatusBar_nativeClearMessage(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QStatusBar* bar = static_cast<QStatusBar*>(requireHandle(env, handle));
+    if (bar != nullptr) {
+        bar->clearMessage();
+    }
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QStatusBar_nativeCurrentMessage(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QStatusBar* bar = static_cast<QStatusBar*>(requireHandle(env, handle));
+    if (bar == nullptr) {
+        return nullptr;
+    }
+    return env->NewStringUTF(bar->currentMessage().toUtf8().constData());
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSystemTrayIcon_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QSystemTrayIcon* tray = new QSystemTrayIcon(QApplication::style()->standardIcon(QStyle::SP_MessageBoxInformation));
+    return registerHandle(tray, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSystemTrayIcon_nativeShow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSystemTrayIcon* tray = static_cast<QSystemTrayIcon*>(requireHandle(env, handle));
+    if (tray != nullptr) {
+        tray->show();
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSystemTrayIcon_nativeHide(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSystemTrayIcon* tray = static_cast<QSystemTrayIcon*>(requireHandle(env, handle));
+    if (tray != nullptr) {
+        tray->hide();
+    }
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSystemTrayIcon_nativeIsVisible(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSystemTrayIcon* tray = static_cast<QSystemTrayIcon*>(requireHandle(env, handle));
+    return (tray != nullptr && tray->isVisible()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSystemTrayIcon_nativeSetToolTip(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring tip) {
+    QSystemTrayIcon* tray = static_cast<QSystemTrayIcon*>(requireHandle(env, handle));
+    if (tray == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(tip, nullptr);
+    tray->setToolTip(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(tip, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSystemTrayIcon_nativeShowMessage(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring title, jstring message, jint ms) {
+    QSystemTrayIcon* tray = static_cast<QSystemTrayIcon*>(requireHandle(env, handle));
+    if (tray == nullptr) {
+        return;
+    }
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(message, nullptr);
+    tray->showMessage(QString::fromUtf8(t1), QString::fromUtf8(t2), QSystemTrayIcon::Information, ms);
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(message, t2);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSystemTrayIcon_nativeDispose(JNIEnv* /*env*/, jclass /*cls*/, jlong handle) {
+    QObject* obj = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_handleMutex);
+        auto it = g_handles.find(static_cast<int64_t>(handle));
+        if (it == g_handles.end()) {
+            return;
+        }
+        auto oit = g_javaOwned.find(static_cast<int64_t>(handle));
+        if (oit == g_javaOwned.end() || !oit->second) {
+            return;
+        }
+        obj = static_cast<QObject*>(it->second);
+        g_handles.erase(it);
+        g_javaOwned.erase(oit);
+    }
+    if (obj != nullptr && g_app != nullptr) {
+        QMetaObject::invokeMethod(g_app, [obj]() { delete obj; }, Qt::QueuedConnection);
+    }
 }
