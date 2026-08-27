@@ -122,4 +122,12 @@ public class QPushButton extends QWidget {
     private static native void nativeToggle(long handle);
 
     /** 可勾选模式（已在类首部定义）。 */
+
+    /** 关联弹出菜单（按钮右侧出现小箭头，点击弹出）。 */
+    public void setMenu(QMenu menu) { nativeSetMenu(nativeHandle, menu.nativeHandle); }
+    private static native void nativeSetMenu(long handle, long menuHandle);
+
+    /** 是否关联了菜单。 */
+    public boolean menu() { return nativeHasMenu(nativeHandle); }
+    private static native boolean nativeHasMenu(long handle);
 }

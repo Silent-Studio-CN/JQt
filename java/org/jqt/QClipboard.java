@@ -31,4 +31,23 @@ public class QClipboard {
         nativeClear();
     }
     private static native void nativeClear();
+
+    private static final java.util.List<Runnable> onSelectionChangedHandlers = new java.util.ArrayList<>();
+    private static volatile boolean selectionConnected;
+
+    /** 剪贴板内容变化回调（静态注册，全局一次）。 */
+    public static void onSelectionChanged(Runnable handler) {
+        onSelectionChangedHandlers.add(handler);
+        if (!selectionConnected) {
+            selectionConnected = true;
+            nativeConnectSelectionChanged();
+        }
+    }
+
+    private static native void nativeConnectSelectionChanged();
+
+    /** 由 C++ 侧在剪贴板变化时回调（JNI）。 */
+    static void nativeHandleSelectionChanged() {
+        for (Runnable h : onSelectionChangedHandlers) h.run();
+    }
 }

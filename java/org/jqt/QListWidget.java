@@ -182,4 +182,20 @@ public class QListWidget extends QWidget {
     void nativeHandleCurrentItemChanged(int row) {
         for (Consumer<Integer> h : onCurrentItemChangedHandlers) h.accept(row);
     }
+
+    private final List<Consumer<Integer>> onItemEnteredHandlers = new ArrayList<>();
+    private volatile boolean entConn;
+
+    /** 悬停项回调（参数为行号）。 */
+    public QListWidget onItemEntered(Consumer<Integer> handler) {
+        onItemEnteredHandlers.add(handler);
+        if (!entConn) { entConn = true; nativeConnectItemEntered(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectItemEntered(long handle);
+
+    void nativeHandleItemEntered(int row) {
+        for (Consumer<Integer> h : onItemEnteredHandlers) h.accept(row);
+    }
 }

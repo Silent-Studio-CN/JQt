@@ -36,6 +36,8 @@ public class QGridLayout extends QLayout {
     }
     private native void nativeAddWidget(long handle, long childHandle, int row, int col, int rowSpan, int colSpan);
 
+    /** 子项数量/间距继承自 QLayout（v0.6.0）。 */
+
     /** 设置列拉伸系数。 */
     public void setColumnStretch(int col, int stretch) {
         nativeSetColumnStretch(nativeHandle, col, stretch);
