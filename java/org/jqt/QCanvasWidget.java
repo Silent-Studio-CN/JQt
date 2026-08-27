@@ -40,11 +40,7 @@ public class QCanvasWidget extends QWidget {
         return this;
     }
 
-    /** 请求立即重绘。 */
-    public void repaint() {
-        nativeRepaint(nativeHandle);
-    }
-    private native void nativeRepaint(long handle);
+    /** 请求立即重绘（继承自 QWidget，v0.6.0 上移到基类）。 */
 
     /** 由 C++ 侧在 paintEvent 中回调（JNI）。 */
     void nativeHandlePaint() {

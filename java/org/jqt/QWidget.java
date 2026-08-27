@@ -7,6 +7,10 @@
 package org.jqt;
 
 import java.lang.ref.Cleaner;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * JQt 所有控件的基类。
@@ -199,6 +203,112 @@ public abstract class QWidget {
     public void setFixedSize(int width, int height) { nativeSetFixedSize(nativeHandle, width, height); }
     static native void nativeSetFixedSize(long handle, int width, int height);
 
+    // ---- L1 基础 API（v0.6.0 补全：几何 / 显隐 / 状态 / 属性）----
+
+    /** 关闭控件（若为窗口则触发关闭流程；最后一个窗口关闭后 exec() 返回）。 */
+    public void close() { nativeClose(nativeHandle); }
+    static native void nativeClose(long handle);
+
+    /** 移动到指定位置（相对父控件）。 */
+    public void move(int x, int y) { nativeMove(nativeHandle, x, y); }
+    static native void nativeMove(long handle, int x, int y);
+
+    /** 调整控件尺寸。 */
+    public void resize(int width, int height) { nativeResize(nativeHandle, width, height); }
+    static native void nativeResize(long handle, int width, int height);
+
+    /** 请求重绘（异步合并）。 */
+    public void update() { nativeUpdate(nativeHandle); }
+    static native void nativeUpdate(long handle);
+
+    /** 立即重绘。 */
+    public void repaint() { nativeRepaint(nativeHandle); }
+    static native void nativeRepaint(long handle);
+
+    /** 控件尺寸 [宽, 高]。 */
+    public int[] size() { return nativeSize(nativeHandle); }
+    static native int[] nativeSize(long handle);
+
+    /** 控件几何 [x, y, w, h]（相对父控件）。 */
+    public int[] geometry() { return nativeGeometry(nativeHandle); }
+    static native int[] nativeGeometry(long handle);
+
+    /** 内容边距 [左, 上, 右, 下]。 */
+    public int[] contentsMargins() { return nativeContentsMargins(nativeHandle); }
+    static native int[] nativeContentsMargins(long handle);
+
+    /** 当前控件级样式表（QSS；无则返回空串）。 */
+    public String styleSheet() { return nativeStyleSheet(nativeHandle); }
+    static native String nativeStyleSheet(long handle);
+
+    /** 设置悬停提示。 */
+    public void setToolTip(String tip) { nativeSetToolTip(nativeHandle, tip); }
+    static native void nativeSetToolTip(long handle, String tip);
+
+    /** 悬停提示文本。 */
+    public String toolTip() { return nativeToolTip(nativeHandle); }
+    static native String nativeToolTip(long handle);
+
+    /** 设置窗口标题（触发 onWindowTitleChanged）。 */
+    public void setWindowTitle(String title) { nativeSetWindowTitle(nativeHandle, title); }
+    static native void nativeSetWindowTitle(long handle, String title);
+
+    /** 窗口标题。 */
+    public String windowTitle() { return nativeWindowTitle(nativeHandle); }
+    static native String nativeWindowTitle(long handle);
+
+    /**
+     * 设置窗口状态（Qt::WindowState 位）：0 正常 / 1 最小化 / 2 最大化 / 4 全屏，可组合。
+     */
+    public void setWindowState(int state) { nativeSetWindowState(nativeHandle, state); }
+    static native void nativeSetWindowState(long handle, int state);
+
+    /** 当前窗口状态（位值）。 */
+    public int windowState() { return nativeWindowState(nativeHandle); }
+    static native int nativeWindowState(long handle);
+
+    /**
+     * 设置焦点策略：0 NoFocus / 1 TabFocus / 2 ClickFocus / 4 StrongFocus / 8 WheelFocus。
+     */
+    public void setFocusPolicy(int policy) { nativeSetFocusPolicy(nativeHandle, policy); }
+    static native void nativeSetFocusPolicy(long handle, int policy);
+
+    /** 当前焦点策略。 */
+    public int focusPolicy() { return nativeFocusPolicy(nativeHandle); }
+    static native int nativeFocusPolicy(long handle);
+
+    /** 是否接受拖放。 */
+    public boolean acceptDrops() { return nativeAcceptDrops(nativeHandle); }
+    static native boolean nativeAcceptDrops(long handle);
+
+    /** 设置是否接受拖放。 */
+    public void setAcceptDrops(boolean on) { nativeSetAcceptDrops(nativeHandle, on); }
+    static native void nativeSetAcceptDrops(long handle, boolean on);
+
+    /**
+     * 设置鼠标形状：arrow / ibeam / wait / crosshair / pointinghand / forbidden /
+     * sizeall / sizefdiag / sizebdiag / sizewe / sizens / splitv / splith / openhand / closedhand。
+     */
+    public void setCursor(String shape) { nativeSetCursor(nativeHandle, shape); }
+    static native void nativeSetCursor(long handle, String shape);
+
+    /** 当前鼠标形状名。 */
+    public String cursor() { return nativeCursor(nativeHandle); }
+    static native String nativeCursor(long handle);
+
+    /** 设置控件字体（"Family,size" 中取 Family）。 */
+    public void setFont(String family, int pointSize) { nativeSetFont(nativeHandle, family, pointSize); }
+    static native void nativeSetFont(long handle, String family, int pointSize);
+
+    /** 控件字体，返回 "Family,size"（未单独设置时为默认字体）。 */
+    public String font() { return nativeFont(nativeHandle); }
+    static native String nativeFont(long handle);
+
+    /** 是否带投影阴影（setDropShadow 设置过）。 */
+    public boolean graphicsEffect() { return nativeGraphicsEffect(nativeHandle); }
+    static native boolean nativeGraphicsEffect(long handle);
+
+
     /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
      * 释放后再次调用本控件任何方法将抛出 {@link IllegalStateException}。
@@ -221,6 +331,50 @@ public abstract class QWidget {
     /** 控件是否已在 C++ 侧创建且未释放。 */
     public boolean isCreated() {
         return nativeHandle != 0 && !disposed;
+    }
+
+    // ---- 信号（L1：windowTitleChanged / customContextMenuRequested）----
+
+    private final List<Consumer<String>> onWindowTitleChangedHandlers = new ArrayList<>();
+    private final List<BiConsumer<Integer, Integer>> onCustomContextMenuRequestedHandlers = new ArrayList<>();
+    private volatile boolean windowTitleConnected;
+    private volatile boolean contextMenuConnected;
+
+    /** 窗口标题变化回调（参数为新标题）。 */
+    public QWidget onWindowTitleChanged(Consumer<String> handler) {
+        onWindowTitleChangedHandlers.add(handler);
+        if (!windowTitleConnected) {
+            windowTitleConnected = true;
+            nativeConnectWindowTitleChanged(nativeHandle);
+        }
+        return this;
+    }
+
+    /** 右键菜单请求回调（参数为请求位置 x, y，相对本控件）。 */
+    public QWidget onCustomContextMenuRequested(BiConsumer<Integer, Integer> handler) {
+        onCustomContextMenuRequestedHandlers.add(handler);
+        if (!contextMenuConnected) {
+            contextMenuConnected = true;
+            nativeConnectContextMenu(nativeHandle);
+        }
+        return this;
+    }
+
+    private native void nativeConnectWindowTitleChanged(long handle);
+    private native void nativeConnectContextMenu(long handle);
+
+    /** 由 C++ 侧在窗口标题变化时回调（JNI）。 */
+    void nativeHandleWindowTitleChanged(String title) {
+        for (Consumer<String> h : onWindowTitleChangedHandlers) {
+            h.accept(title);
+        }
+    }
+
+    /** 由 C++ 侧在右键菜单请求时回调（JNI）。 */
+    void nativeHandleCustomContextMenuRequested(int x, int y) {
+        for (BiConsumer<Integer, Integer> h : onCustomContextMenuRequestedHandlers) {
+            h.accept(x, y);
+        }
     }
 
     /** C++ 侧句柄 ID（仅供内部 / 高级用法）。 */
