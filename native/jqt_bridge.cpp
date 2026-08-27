@@ -79,6 +79,7 @@
 #include <QSystemTrayIcon>
 #include <QStyle>
 #include <QTextEdit>
+#include <QPainter>
 #include <QMessageBox>
 #include <QTimer>
 #include <QMessageBox>
@@ -159,6 +160,8 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QStatusBar.h"
 #include "generated/org_jqt_QSystemTrayIcon.h"
 #include "generated/org_jqt_QTextEdit.h"
+#include "generated/org_jqt_QPainter.h"
+#include "generated/org_jqt_QCanvasWidget.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -826,7 +829,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSetStyle(JNIEnv* env, job
 // 在 ms 毫秒后于 GUI 线程执行 Java Runnable（Qt 定时器 → JNI → Runnable.run()）
 JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSchedule(JNIEnv* env, jobject /*thiz*/, jobject task, jlong ms) {
     jobject gTask = env->NewGlobalRef(task);
-    QTimer::singleShot(static_cast<int>(ms), [gTask]() {
+    QTimer::singleShot(static_cast<int>(ms), g_app, [gTask]() {
         JNIEnv* e = callbackEnv();
         jclass cls = e->GetObjectClass(gTask);
         jmethodID mid = e->GetMethodID(cls, "run", "()V");
@@ -3895,4 +3898,150 @@ JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeSetReadOnly(JNIEnv* env, job
 JNIEXPORT jboolean JNICALL Java_org_jqt_QTextEdit_nativeIsReadOnly(JNIEnv* env, jobject /*thiz*/, jlong handle) {
     QTextEdit* edit = static_cast<QTextEdit*>(requireHandle(env, handle));
     return (edit != nullptr && edit->isReadOnly()) ? JNI_TRUE : JNI_FALSE;
+}
+
+// ----------------------------------------------------------------------------
+// JQtCanvasWidget + JQtPainter：自绘画布与 2D 画笔
+// ----------------------------------------------------------------------------
+static QPainter* g_currentPainter = nullptr;   // paintEvent 期间有效
+
+class JQtCanvasWidget : public QWidget {
+public:
+    jobject javaRef = nullptr;
+protected:
+    void paintEvent(QPaintEvent*) override {
+        if (javaRef == nullptr) {
+            return;
+        }
+        QPainter painter(this);
+        g_currentPainter = &painter;
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(javaRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandlePaint", "()V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, javaRef, mid);
+        }
+        g_currentPainter = nullptr;
+    }
+};
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QCanvasWidget_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    JQtCanvasWidget* canvas = new JQtCanvasWidget();
+    canvas->javaRef = env->NewGlobalRef(thiz);
+    return registerHandle(canvas, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QCanvasWidget_nativeRepaint(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* canvas = static_cast<QWidget*>(requireHandle(env, handle));
+    if (canvas != nullptr) {
+        canvas->update();
+    }
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QCanvasWidget_nativeCurrentPainter(JNIEnv* env, jclass /*cls*/) {
+    return reinterpret_cast<jlong>(g_currentPainter);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeSetColor(JNIEnv* env, jclass /*cls*/, jlong handle, jint argb) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) {
+        return;
+    }
+    p->setPen(QColor::fromRgba(static_cast<QRgb>(argb)));
+    p->setBrush(Qt::NoBrush);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeSetStrokeWidth(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble width) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) {
+        return;
+    }
+    QPen pen = p->pen();
+    pen.setWidthF(width);
+    p->setPen(pen);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawLine(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble x1, jdouble y1, jdouble x2, jdouble y2) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p != nullptr) {
+        p->drawLine(QPointF(x1, y1), QPointF(x2, y2));
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawRect(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jdouble w, jdouble h) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p != nullptr) {
+        p->drawRect(QRectF(x, y, w, h));
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeFillRect(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jdouble w, jdouble h) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) {
+        return;
+    }
+    QColor c = p->pen().color();
+    p->fillRect(QRectF(x, y, w, h), c);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawEllipse(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jdouble w, jdouble h) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p != nullptr) {
+        p->drawEllipse(QRectF(x, y, w, h));
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeFillEllipse(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jdouble w, jdouble h) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) {
+        return;
+    }
+    QColor c = p->pen().color();
+    p->setBrush(c);
+    p->drawEllipse(QRectF(x, y, w, h));
+    p->setBrush(Qt::NoBrush);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawRoundRect(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jdouble w, jdouble h, jdouble radius) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p != nullptr) {
+        p->drawRoundedRect(QRectF(x, y, w, h), radius, radius);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawText(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jstring text) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    p->drawText(QPointF(x, y), QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeSetFont(JNIEnv* env, jclass /*cls*/, jlong handle, jstring family, jint pointSize) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(family, nullptr);
+    p->setFont(QFont(QString::fromUtf8(utf), pointSize));
+    env->ReleaseStringUTFChars(family, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeTranslate(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble dx, jdouble dy) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p != nullptr) {
+        p->translate(dx, dy);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeRotate(JNIEnv* env, jclass /*cls*/, jlong handle, jdouble degrees) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p != nullptr) {
+        p->rotate(degrees);
+    }
 }

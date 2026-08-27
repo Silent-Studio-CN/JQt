@@ -92,6 +92,7 @@ public class QApplication {
         if (backend == null) {
             backend = System.getProperty("jqt.rhi");
         }
+        instance = this;
         nativeHandle = nativeCreateApp(backend);
         if (Boolean.getBoolean("jqt.lightMode")) {
             setColorScheme(true);
@@ -152,6 +153,33 @@ public class QApplication {
         nativeSchedule(task, delayMs);
     }
     private native void nativeSchedule(Runnable task, long delayMs);
+
+    /**
+     * 在 Qt GUI 线程执行任务（立即排队；线程安全，可在任意线程调用）。
+     * 用于后台线程完成后回到 UI 线程更新控件——JQt 控件非线程安全，
+     * 后台线程严禁直接操作控件，必须经此回到 GUI 线程。
+     * <pre>
+     * executor.execute(() -> {
+     *     String data = loadRemote();          // 后台线程
+     *     QApplication.runOnUiThread(() -> {   // 回 UI 线程
+     *         label.setText(data);
+     *     });
+     * });
+     * </pre>
+     */
+    public static void runOnUiThread(Runnable task) {
+        appInstance().schedule(task, 0);
+    }
+
+    /** 单例访问（runOnUiThread 静态入口用）。 */
+    private static volatile QApplication instance;
+
+    private static QApplication appInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("QApplication 尚未创建");
+        }
+        return instance;
+    }
 
     // ==================== 主题系统 ====================
 
