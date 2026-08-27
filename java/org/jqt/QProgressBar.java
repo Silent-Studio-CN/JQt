@@ -9,9 +9,9 @@ package org.jqt;
 /**
  * 进度条（QProgressBar 封装）。Fluent 风格：QSS 里 QProgressBar::chunk 圆角 + accent 色。
  */
-public class JQtProgressBar extends JQtWidget {
+public class QProgressBar extends QWidget {
 
-    public JQtProgressBar() {
+    public QProgressBar() {
         nativeHandle = nativeCreate();
         registerCleaner();
     }
@@ -36,3 +36,5 @@ public class JQtProgressBar extends JQtWidget {
     private native void nativeSetValue(long handle, int value);
     private native void nativeSetRange(long handle, int min, int max);
 }
+
+

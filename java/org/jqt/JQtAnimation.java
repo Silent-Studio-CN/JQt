@@ -23,7 +23,7 @@ import java.util.function.Consumer;
  * <p>
  * 说明：目前几何/数值属性以 {@code double} 双端点驱动
  * （{@code geometry} 之外的自定义数值属性用 {@code double} from/to 最稳）。
- * 窗口/控件便捷动画请用 {@link JQtWidget#animateMove} 等。
+ * 窗口/控件便捷动画请用 {@link QWidget#animateMove} 等。
  */
 public class JQtAnimation {
 
@@ -42,25 +42,25 @@ public class JQtAnimation {
      * @param ms       时长（毫秒）
      * @param easing   缓动函数
      */
-    public JQtAnimation(JQtWidget widget, String property, double from, double to, long ms, JQtEasing easing) {
-        this.animHandle = JQtWidget.nativeCreateAnimation(widget.nativeHandle(), property, from, to, ms, easing.qtType);
-        JQtWidget.nativeRegisterAnimation(animHandle, this);
+    public JQtAnimation(QWidget widget, String property, double from, double to, long ms, JQtEasing easing) {
+        this.animHandle = QWidget.nativeCreateAnimation(widget.nativeHandle(), property, from, to, ms, easing.qtType);
+        QWidget.nativeRegisterAnimation(animHandle, this);
     }
 
     /** 设置循环次数（-1 = 无限循环）。 */
     public JQtAnimation setLoopCount(int loops) {
-        JQtWidget.nativeAnimationSetLoopCount(animHandle, loops);
+        QWidget.nativeAnimationSetLoopCount(animHandle, loops);
         return this;
     }
 
     /** 启动动画（结束后 C++ 对象自动销毁）。 */
     public void start() {
-        JQtWidget.nativeAnimationStart(animHandle);
+        QWidget.nativeAnimationStart(animHandle);
     }
 
     /** 停止动画（不销毁；可再次 start）。 */
     public void stop() {
-        JQtWidget.nativeAnimationStop(animHandle);
+        QWidget.nativeAnimationStop(animHandle);
     }
 
     /** 注册完成回调（动画 finished 信号时在 GUI 线程调用）。 */
@@ -76,3 +76,4 @@ public class JQtAnimation {
         }
     }
 }
+

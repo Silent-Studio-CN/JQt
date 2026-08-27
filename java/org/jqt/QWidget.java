@@ -22,7 +22,7 @@ import java.lang.ref.Cleaner;
  *   <li>也可调用 {@link #dispose()} 手动提前释放。</li>
  * </ul>
  */
-public abstract class JQtWidget {
+public abstract class QWidget {
 
     private static final Cleaner CLEANER = Cleaner.create();
 
@@ -44,7 +44,7 @@ public abstract class JQtWidget {
 
     /**
      * 设置控件级样式表（QSS），只影响本控件及其子控件。
-     * 与 {@link JQtApplication#setStyleSheet(String)} 的全局样式可叠加（控件级优先）。
+     * 与 {@link QApplication#setStyleSheet(String)} 的全局样式可叠加（控件级优先）。
      */
     public void setStyleSheet(String qss) {
         nativeSetStyleSheet(nativeHandle, qss);
@@ -65,7 +65,7 @@ public abstract class JQtWidget {
      * 给本控件设置布局管理器（任何控件都可用，如面板/卡片内部布局）。
      * 设置后由布局接管子控件排列。
      */
-    public void setLayout(JQtLayout layout) {
+    public void setLayout(QLayout layout) {
         nativeSetLayout(nativeHandle, layout.nativeHandle());
     }
     private static native void nativeSetLayout(long handle, long layoutHandle);
@@ -228,3 +228,6 @@ public abstract class JQtWidget {
         return nativeHandle;
     }
 }
+
+
+

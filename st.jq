@@ -1,0 +1,1 @@
+{s: .status, arm: [.jobs[] | select(.name | contains("ARM64")) | {started: .startedAt, status: .status}]}

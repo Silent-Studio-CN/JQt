@@ -20,26 +20,26 @@ import java.util.function.BiConsumer;
  *   <li>{@link #onMoved(BiConsumer)} — 窗口位置变化（moveEvent，参数为 x/y）</li>
  * </ul>
  */
-public class JQtWindow extends JQtWidget {
+public class QMainWindow extends QWidget {
 
     private final List<Runnable> onCloseHandlers = new ArrayList<>();
     private final List<BiConsumer<Integer, Integer>> onResizedHandlers = new ArrayList<>();
     private final List<BiConsumer<Integer, Integer>> onMovedHandlers = new ArrayList<>();
 
     /** 创建一个 800x600 的新窗口。 */
-    public JQtWindow(String title) {
+    public QMainWindow(String title) {
         this(title, 800, 600);
     }
 
     /** 创建一个指定大小的新窗口。 */
-    public JQtWindow(String title, int width, int height) {
+    public QMainWindow(String title, int width, int height) {
         nativeHandle = nativeCreate(title, width, height);
         registerCleaner();
     }
 
     private native long nativeCreate(String title, int width, int height);
 
-    // show()/hide() 继承自 JQtWidget（基础 API）
+    // show()/hide() 继承自 QWidget（基础 API）
 
     /** 关闭窗口（触发 onClose 回调；若为最后一个窗口，exec() 返回）。 */
     public void close() {
@@ -147,31 +147,34 @@ public class JQtWindow extends JQtWidget {
 
     /**
      * 添加子控件（未设置布局时按顺序自动摆放）。
-     * 若已调用 {@link #setLayout(JQtLayout)}，子控件应改用 {@link JQtLayout#addWidget(JQtWidget)} 加入布局。
+     * 若已调用 {@link #setLayout(QLayout)}，子控件应改用 {@link QLayout#addWidget(QWidget)} 加入布局。
      */
-    public void addWidget(JQtWidget child) {
+    public void addWidget(QWidget child) {
         nativeAddWidget(nativeHandle, child.nativeHandle());
     }
     private native void nativeAddWidget(long handle, long childHandle);
 
     /**
-     * 设置布局管理器（继承自 {@link JQtWidget}）。
+     * 设置布局管理器（继承自 {@link QWidget}）。
      * 布局接管子控件的位置与大小；重复设置会替换并销毁旧布局（Qt 行为）。
      */
 
     /** 注册窗口关闭回调（closeEvent）。 */
-    public void onClose(Runnable handler) {
+    public QMainWindow onClose(Runnable handler) {
         onCloseHandlers.add(handler);
+        return this;
     }
 
     /** 注册窗口大小变化回调（resizeEvent，参数为新的宽和高）。 */
-    public void onResized(BiConsumer<Integer, Integer> handler) {
+    public QMainWindow onResized(BiConsumer<Integer, Integer> handler) {
         onResizedHandlers.add(handler);
+        return this;
     }
 
     /** 注册窗口位置变化回调（moveEvent，参数为新的 x 和 y）。 */
-    public void onMoved(BiConsumer<Integer, Integer> handler) {
+    public QMainWindow onMoved(BiConsumer<Integer, Integer> handler) {
         onMovedHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧在窗口关闭时回调（JNI）。 */
@@ -195,3 +198,6 @@ public class JQtWindow extends JQtWidget {
         }
     }
 }
+
+
+

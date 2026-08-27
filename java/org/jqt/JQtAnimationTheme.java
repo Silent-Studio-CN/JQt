@@ -8,7 +8,7 @@ package org.jqt;
 
 /**
  * 动画主题：全局动效节奏配置（时长倍率 + 默认缓动）。
- * 通过 {@link JQtApplication#setAnimationTheme(JQtAnimationTheme)} 应用，
+ * 通过 {@link QApplication#setAnimationTheme(JQtAnimationTheme)} 应用，
  * 所有 JQt 动效（hover / 入场 / pivot 指示器）统一跟随。
  */
 public class JQtAnimationTheme {
@@ -54,3 +54,4 @@ public class JQtAnimationTheme {
         return d < 16 ? 16 : d;   // 至少 1 帧
     }
 }
+

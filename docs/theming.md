@@ -33,7 +33,7 @@ QSS 样式表（setStyleSheet）  ← 最高：覆盖到的属性优先
 ### 2. 主题 API（统一入口）
 
 ```java
-JQtApplication app = new JQtApplication();
+QApplication app = new QApplication();
 
 // 内置主题（QSS + 调色板一致打包）
 app.setTheme("fluent-dark");    // Fluent 深色
@@ -79,7 +79,7 @@ Java 源码与编译均 UTF-8。出现 `?`/乱码时按以下顺序排查：
 | 输入框无法输入中文 | 无边框窗口的 IME（输入法）候选框未正确挂接 | 确认聚焦后输入法正常弹出；无边框窗口已知限制见 docs/user-guide.md |
 | 自己写的 Java 文件中文乱码 | 源文件为 GBK 编码而 javac 按 UTF-8 编译 | 源码统一 UTF-8（无 BOM）；编译加 `-encoding UTF-8` |
 
-**跨平台字体策略**（JQtApplication 构造时自动）：
+**跨平台字体策略**（QApplication 构造时自动）：
 
 ```
 Windows: Microsoft YaHei UI / macOS: PingFang SC / Linux: Noto Sans CJK SC
@@ -113,7 +113,7 @@ Style engine (setStyle)          <- lowest: default drawing
 ### 2. Theme API (single entry)
 
 ```java
-JQtApplication app = new JQtApplication();
+QApplication app = new QApplication();
 app.setTheme("fluent-dark");    // built-in
 app.setTheme("fluent-light");
 app.setTheme("themes/my.qss", true);  // custom QSS + light palette
@@ -146,7 +146,7 @@ Java sources and compilation are UTF-8. If you see `?` or mojibake:
 | cannot type CJK in inputs | frameless-window IME candidate window not attached | check IME pops on focus; frameless IME limits documented in docs/user-guide.md |
 | mojibake in your own .java files | source saved as GBK while javac compiles UTF-8 | save sources UTF-8 (no BOM); compile with `-encoding UTF-8` |
 
-**Cross-platform font strategy** (auto at JQtApplication construction):
+**Cross-platform font strategy** (auto at QApplication construction):
 
 ```
 Windows: Microsoft YaHei UI / macOS: PingFang SC / Linux: Noto Sans CJK SC

@@ -13,9 +13,9 @@
 ## 中文版
 
 > 本清单从源码自动提取，与 v0.2.0-alpha 发布包一一对应。
-> 所有控件继承 `JQtWidget`，共享其基础方法（见 1.0）。
+> 所有控件继承 `QWidget`，共享其基础方法（见 1.0）。
 
-### 1.0 基类 JQtWidget（所有控件共享）
+### 1.0 基类 QWidget（所有控件共享）
 
 | 方法 | 说明 |
 |------|------|
@@ -36,11 +36,11 @@
 | `void setFixedSize(w,h)` | 固定尺寸 |
 | `void setStyleSheet(String qss)` | 控件级 QSS（与全局样式可叠加，控件级优先） |
 
-### 1.1 JQtApplication —— 应用入口
+### 1.1 QApplication —— 应用入口
 
 | 方法 | 说明 |
 |------|------|
-| `JQtApplication()` | 创建应用（整个进程仅一个，**必须先创建**） |
+| `QApplication()` | 创建应用（整个进程仅一个，**必须先创建**） |
 | `void exec()` | 进入事件循环（阻塞，最后一个窗口关闭后返回） |
 | `void quit()` | 退出事件循环 |
 | `void scheduleQuit(long ms)` | 延迟 ms 毫秒后自动退出 |
@@ -55,17 +55,17 @@
 | `void setFontFamily(String[,size])` | 全局字体（构造时自动应用系统中文字体） |
 | `void onAboutToQuit(Runnable)` | 退出前回调（Qt aboutToQuit 信号） |
 
-### 1.2 JQtWindow —— 窗口
+### 1.2 QMainWindow —— 窗口
 
 | 方法 | 说明 |
 |------|------|
-| `JQtWindow(String title)` | 创建 800x600 窗口 |
-| `JQtWindow(String title, int w, int h)` | 创建指定大小窗口 |
+| `QMainWindow(String title)` | 创建 800x600 窗口 |
+| `QMainWindow(String title, int w, int h)` | 创建指定大小窗口 |
 | `void show()` / `void hide()` / `void close()` | 显示 / 隐藏 / 关闭（触发 onClose，最后窗口关闭时 exec 返回） |
 | `void resize(int w, int h)` | 修改窗口大小（触发 onResized） |
 | `void setTitle(String)` | 修改标题 |
-| `void addWidget(JQtWidget child)` | 添加子控件（无布局时自动摆放） |
-| `void setLayout(JQtLayout layout)` | 设置布局管理器 |
+| `void addWidget(QWidget child)` | 添加子控件（无布局时自动摆放） |
+| `void setLayout(QLayout layout)` | 设置布局管理器 |
 | `void onClose(Runnable)` | 窗口关闭回调 |
 | `void onResized(BiConsumer<Integer,Integer>)` | 尺寸变化回调（参数：宽,高） |
 | `void onMoved(BiConsumer<Integer,Integer>)` | 位置变化回调（参数：x,y） |
@@ -75,61 +75,61 @@
 | `void setDraggable(boolean)` / `setBorderWidth(int)` | 拖拽开关 / 缩放热区宽度 |
 | `void minimize()` / `maximize()` / `toggleMaximize()` / `isMaximized()` | 窗口状态 |
 
-### 1.3 JQtButton —— 按钮
+### 1.3 QPushButton —— 按钮
 
 | 方法 | 说明 |
 |------|------|
-| `JQtButton(String text)` | 创建按钮 |
+| `QPushButton(String text)` | 创建按钮 |
 | `void setText(String)` | 修改文字 |
 | `void setCheckable(boolean)` / `void setChecked(boolean)` | 勾选模式 |
-| `void onClick(Runnable)` | 点击回调（clicked 信号） |
+| `void onClicked(Runnable)` | 点击回调（clicked 信号） |
 | `void onPressed(Runnable)` | 按下回调（pressed 信号） |
 | `void onReleased(Runnable)` | 释放回调（released 信号） |
 | `void onToggled(Consumer<Boolean>)` | 勾选切换回调（toggled 信号，参数为新状态） |
 
-### 1.4 JQtLabel —— 文本标签
+### 1.4 QLabel —— 文本标签
 
 | 方法 | 说明 |
 |------|------|
-| `JQtLabel(String text)` | 创建标签 |
+| `QLabel(String text)` | 创建标签 |
 | `void setText(String)` | 修改文本 |
 
-### 1.5 JQtLineEdit —— 单行输入框
+### 1.5 QLineEdit —— 单行输入框
 
 | 方法 | 说明 |
 |------|------|
-| `JQtLineEdit(String text)` | 创建输入框 |
+| `QLineEdit(String text)` | 创建输入框 |
 | `String text()` | 当前文本 |
 | `void setText(String)` | 设置文本（触发 onTextChanged） |
 | `void setPlaceholderText(String)` | 占位提示 |
 | `void onTextChanged(Consumer<String>)` | 文本变化回调 |
 | `void onReturnPressed(Runnable)` | 回车确认回调 |
 
-### 1.6 JQtComboBox —— 下拉框
+### 1.6 QComboBox —— 下拉框
 
 | 方法 | 说明 |
 |------|------|
-| `JQtComboBox()` | 创建下拉框 |
+| `QComboBox()` | 创建下拉框 |
 | `void addItem(String)` | 追加选项 |
 | `int currentIndex()` / `String currentText()` | 当前选项 |
 | `void setCurrentIndex(int)` | 选中指定项（触发 onCurrentIndexChanged） |
 | `void onCurrentIndexChanged(Consumer<Integer>)` | 选项切换回调（参数：新索引） |
 
-### 1.7 JQtListWidget —— 列表
+### 1.7 QListWidget —— 列表
 
 | 方法 | 说明 |
 |------|------|
-| `JQtListWidget()` | 创建列表 |
+| `QListWidget()` | 创建列表 |
 | `void addItem(String)` | 追加列表项 |
 | `int currentRow()` | 当前行号 |
 | `void onItemClicked(Consumer<Integer>)` | 点击回调（参数：行号） |
 | `void onCurrentRowChanged(Consumer<Integer>)` | 当前行切换回调 |
 
-### 1.8 JQtPanel —— 卡片/容器（Fluent 卡片基座）
+### 1.8 QFrame —— 卡片/容器（Fluent 卡片基座）
 
 | 方法 | 说明 |
 |------|------|
-| `JQtPanel()` | 创建面板（QFrame，QSS 可样式化：圆角/边框/背景） |
+| `QFrame()` | 创建面板（QFrame，QSS 可样式化：圆角/边框/背景） |
 | `addWidget(widget)` | 直接添加子控件 |
 | `setLayout(layout)`（继承） | 内部布局 |
 
@@ -172,11 +172,11 @@
 
 | 方法 | 说明 |
 |------|------|
-| `entrance(JQtWidget)` / `(w, ms, easing)` | 控件入场：下方 24px 滑入（时长经动画主题缩放） |
-| `exit(JQtWidget)` / `(w, ms, easing)` | 控件退场：下移，动画结束后隐藏 |
+| `entrance(QWidget)` / `(w, ms, easing)` | 控件入场：下方 24px 滑入（时长经动画主题缩放） |
+| `exit(QWidget)` / `(w, ms, easing)` | 控件退场：下移，动画结束后隐藏 |
 | `setHoverEnabled(boolean)` | 全局按钮悬停动画开关（跟随动画主题） |
 
-**hover**：所有 JQtButton 默认带 150ms OutCubic 悬停高亮过渡（白色 8.5% 叠加层，
+**hover**：所有 QPushButton 默认带 150ms OutCubic 悬停高亮过渡（白色 8.5% 叠加层，
 clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hover 不受影响。
 
 > 实现说明：入场/退场用纯位移动画（QPropertyAnimation pos）。
@@ -202,44 +202,44 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `RELAXED`（1.6x, OutQuint） | 舒缓（桌面沉浸） |
 | `OFF`（0x） | 禁用全部动效（无障碍/低配） |
 | `new JQtAnimationTheme(speed, easing)` | 自定义（speed=时长倍率，0=禁用） |
-| `JQtApplication.setAnimationTheme(theme)` | 全局应用（所有动效统一跟随） |
+| `QApplication.setAnimationTheme(theme)` | 全局应用（所有动效统一跟随） |
 
 > 启动参数 `-Djqt.animTheme=fast|relaxed|off|default`（或启动脚本 `-AnimTheme`）。
 
-### 1.15 JQtSlider —— Fluent 滑块【新增 v0.4.0】
+### 1.15 QSlider —— Fluent 滑块【新增 v0.4.0】
 
 | 方法 | 说明 |
 |------|------|
-| `JQtSlider(min, max, value)` | 创建滑块（自绘：轨道+圆钮，accent 填充） |
+| `QSlider(min, max, value)` | 创建滑块（自绘：轨道+圆钮，accent 填充） |
 | `value()` / `setValue(int)` | 取值 / 设置（点击跳转 120ms 动画） |
 | `setRange(min, max)` | 范围 |
 | `onValueChanged(Consumer<Integer>)` | 值变化回调（拖动高频） |
 
-### 1.16 JQtScrollArea / JQtProgressBar / JQtNavigation / JQtMessageBox / JQtInfoBar【新增 v0.4.0】
+### 1.16 QScrollArea / QProgressBar / JQtNavigation / QMessageBox / JQtInfoBar【新增 v0.4.0】
 
 | 类 | 方法 | 说明 |
 |------|------|------|
-| `JQtScrollArea` | `setWidget(w)` / `setWidgetResizable(b)` | 滚动区（QScrollArea） |
-| `JQtProgressBar` | `value()` / `setValue(v)` / `setRange(min,max)` | 进度条（QSS chunk） |
+| `QScrollArea` | `setWidget(w)` / `setWidgetResizable(b)` | 滚动区（QScrollArea） |
+| `QProgressBar` | `value()` / `setValue(v)` / `setRange(min,max)` | 进度条（QSS chunk） |
 | `JQtNavigation` | `addItem(icon,text)` / `setCurrentIndex(i)` / `onChanged(...)` | 侧栏导航（选中高亮滑动动画） |
-| `JQtMessageBox` | `showQuestion(win,title,text)` / `showInfo(win,title,text)` | 模态对话框（阻塞） |
+| `QMessageBox` | `showQuestion(win,title,text)` / `showInfo(win,title,text)` | 模态对话框（阻塞） |
 | `JQtInfoBar` | `show(window,text,durationMs)` | 顶部通知条（自动消失） |
-### 1.9 JQtCheckBox —— 复选框（QSS 可呈现 Fluent 开关）
+### 1.9 QCheckBox —— 复选框（QSS 可呈现 Fluent 开关）
 
 | 方法 | 说明 |
 |------|------|
-| `JQtCheckBox(String text)` | 创建 |
+| `QCheckBox(String text)` | 创建 |
 | `isChecked()` / `setChecked(boolean)` | 勾选状态 |
 | `onToggled(Consumer<Boolean>)` | 状态切换回调 |
 
-### 1.10 布局：JQtVBoxLayout / JQtHBoxLayout（继承 JQtLayout）
+### 1.10 布局：QVBoxLayout / QHBoxLayout（继承 QLayout）
 
-> 新增：`addLayout(JQtLayout)` —— **布局嵌套**（VBox 中嵌 HBox，可自绘标题栏/工具行）
+> 新增：`addLayout(QLayout)` —— **布局嵌套**（VBox 中嵌 HBox，可自绘标题栏/工具行）
 
 | 方法 | 说明 |
 |------|------|
-| `JQtVBoxLayout()` / `JQtHBoxLayout()` | 创建垂直 / 水平布局 |
-| `void addWidget(JQtWidget)` | 加入控件 |
+| `QVBoxLayout()` / `QHBoxLayout()` | 创建垂直 / 水平布局 |
+| `void addWidget(QWidget)` | 加入控件 |
 | `void setSpacing(int)` | 控件间距（像素） |
 | `void setContentsMargins(int)` / `(l,t,r,b)` | 布局四周留白（外边距） |
 | `void setContentsMargins(int)` / `(l,t,r,b)` | 布局四周留白（外边距） |
@@ -249,7 +249,7 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 
 - 所有 `onXxx` 均可**注册多个监听器**，按注册顺序触发；
 - 回调**始终在 GUI 主线程**执行，可直接操作任何控件，无需加锁；
-- 信号对应关系：`onClick`←clicked、`onPressed`←pressed、`onReleased`←released、
+- 信号对应关系：`onClicked`←clicked、`onPressed`←pressed、`onReleased`←released、
   `onToggled`←toggled、`onTextChanged`←textChanged、`onReturnPressed`←returnPressed、
   `onCurrentIndexChanged`←currentIndexChanged、`onItemClicked`←itemClicked、
   `onCurrentRowChanged`←currentRowChanged、`onClose`←closeEvent、
@@ -260,16 +260,16 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 - Java 对象不可达时自动释放 C++ 对象（Cleaner，GUI 线程安全）；
 - 控件加入窗口/布局后由 Qt 父子关系管理；
 - 调用已释放对象的方法会抛出 `IllegalStateException`（不会崩溃）；
-- 未创建 `JQtApplication` 就创建控件会抛出 `IllegalStateException`。
+- 未创建 `QApplication` 就创建控件会抛出 `IllegalStateException`。
 
 ---
 
 <a id="en"></a>
 ## English Version
 
-> Extracted from the v0.2.0-alpha sources. All widgets extend `JQtWidget` (base methods in 1.0).
+> Extracted from the v0.2.0-alpha sources. All widgets extend `QWidget` (base methods in 1.0).
 
-### 1.0 JQtWidget (base, shared by all widgets)
+### 1.0 QWidget (base, shared by all widgets)
 
 | Method | Description |
 |--------|-------------|
@@ -288,11 +288,11 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `void setEnabled(boolean)` / `isEnabled()` | enable/disable |
 | `void setFixedSize(w,h)` | fixed size |
 
-### 1.1 JQtApplication
+### 1.1 QApplication
 
 | Method | Description |
 |--------|-------------|
-| `JQtApplication()` | create the app (one per process; **must be created first**) |
+| `QApplication()` | create the app (one per process; **must be created first**) |
 | `void exec()` | run the event loop (blocks until the last window closes) |
 | `void quit()` | quit the event loop |
 | `void scheduleQuit(long ms)` | auto-quit after ms |
@@ -307,17 +307,17 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `void setFontFamily(String[,size])` | global font (auto-applies system CJK font at construction) |
 | `void onAboutToQuit(Runnable)` | callback before app quits (aboutToQuit signal) |
 
-### 1.2 JQtWindow
+### 1.2 QMainWindow
 
 | Method | Description |
 |--------|-------------|
-| `JQtWindow(String title)` | 800x600 window |
-| `JQtWindow(String title, int w, int h)` | sized window |
+| `QMainWindow(String title)` | 800x600 window |
+| `QMainWindow(String title, int w, int h)` | sized window |
 | `void show()` / `void hide()` / `void close()` | show / hide / close (fires onClose; exec returns when the last window closes) |
 | `void resize(int w, int h)` | resize (fires onResized) |
 | `void setTitle(String)` | set title |
-| `void addWidget(JQtWidget child)` | add a child (auto-placed without a layout) |
-| `void setLayout(JQtLayout layout)` | install a layout manager |
+| `void addWidget(QWidget child)` | add a child (auto-placed without a layout) |
+| `void setLayout(QLayout layout)` | install a layout manager |
 | `void onClose(Runnable)` | window close callback |
 | `void onResized(BiConsumer<Integer,Integer>)` | resize callback (w, h) |
 | `void onMoved(BiConsumer<Integer,Integer>)` | move callback (x, y) |
@@ -327,61 +327,61 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 | `void setDraggable(boolean)` / `setBorderWidth(int)` | drag toggle / resize hotzone width |
 | `void minimize()` / `maximize()` / `toggleMaximize()` / `isMaximized()` | window states |
 
-### 1.3 JQtButton
+### 1.3 QPushButton
 
 | Method | Description |
 |--------|-------------|
-| `JQtButton(String text)` | create |
+| `QPushButton(String text)` | create |
 | `void setText(String)` | set text |
 | `void setCheckable(boolean)` / `void setChecked(boolean)` | checkable mode |
-| `void onClick(Runnable)` | clicked signal |
+| `void onClicked(Runnable)` | clicked signal |
 | `void onPressed(Runnable)` | pressed signal |
 | `void onReleased(Runnable)` | released signal |
 | `void onToggled(Consumer<Boolean>)` | toggled signal (new state) |
 
-### 1.4 JQtLabel
+### 1.4 QLabel
 
 | Method | Description |
 |--------|-------------|
-| `JQtLabel(String text)` | create |
+| `QLabel(String text)` | create |
 | `void setText(String)` | set text |
 
-### 1.5 JQtLineEdit
+### 1.5 QLineEdit
 
 | Method | Description |
 |--------|-------------|
-| `JQtLineEdit(String text)` | create |
+| `QLineEdit(String text)` | create |
 | `String text()` | current text |
 | `void setText(String)` | set text (fires onTextChanged) |
 | `void setPlaceholderText(String)` | placeholder |
 | `void onTextChanged(Consumer<String>)` | text changed |
 | `void onReturnPressed(Runnable)` | enter pressed |
 
-### 1.6 JQtComboBox
+### 1.6 QComboBox
 
 | Method | Description |
 |--------|-------------|
-| `JQtComboBox()` | create |
+| `QComboBox()` | create |
 | `void addItem(String)` | append item |
 | `int currentIndex()` / `String currentText()` | current selection |
 | `void setCurrentIndex(int)` | select (fires onCurrentIndexChanged) |
 | `void onCurrentIndexChanged(Consumer<Integer>)` | selection changed |
 
-### 1.7 JQtListWidget
+### 1.7 QListWidget
 
 | Method | Description |
 |--------|-------------|
-| `JQtListWidget()` | create |
+| `QListWidget()` | create |
 | `void addItem(String)` | append item |
 | `int currentRow()` | current row |
 | `void onItemClicked(Consumer<Integer>)` | item clicked (row) |
 | `void onCurrentRowChanged(Consumer<Integer>)` | current row changed |
 
-### 1.8 JQtPanel — card/container (Fluent card base)
+### 1.8 QFrame — card/container (Fluent card base)
 
 | Method | Description |
 |--------|-------------|
-| `JQtPanel()` | create a panel (QFrame, QSS-stylable) |
+| `QFrame()` | create a panel (QFrame, QSS-stylable) |
 | `addWidget(widget)` | add a child directly |
 | `setLayout(layout)` (inherited) | inner layout |
 
@@ -424,11 +424,11 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 | Method | Description |
 |--------|-------------|
-| `entrance(JQtWidget)` / `(w, ms, easing)` | entrance: slide up 24px from below (duration scaled by animation theme) |
-| `exit(JQtWidget)` / `(w, ms, easing)` | exit: slide down, hides when finished |
+| `entrance(QWidget)` / `(w, ms, easing)` | entrance: slide up 24px from below (duration scaled by animation theme) |
+| `exit(QWidget)` / `(w, ms, easing)` | exit: slide down, hides when finished |
 | `setHoverEnabled(boolean)` | global button hover animation toggle (follows theme) |
 
-**hover**: every JQtButton has a 150ms OutCubic hover highlight by default
+**hover**: every QPushButton has a 150ms OutCubic hover highlight by default
 (white 8.5% overlay; clean-room implementation, Fluent public motion spec).
 
 > Impl: entrance/exit use pure position animation (QPropertyAnimation pos).
@@ -454,36 +454,36 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 | `RELAXED` (1.6x, OutQuint) | relaxed (desktop immersion) |
 | `OFF` (0x) | disable all motion (accessibility / low-end) |
 | `new JQtAnimationTheme(speed, easing)` | custom (speed = duration multiplier, 0 = off) |
-| `JQtApplication.setAnimationTheme(theme)` | apply globally (all motion follows) |
+| `QApplication.setAnimationTheme(theme)` | apply globally (all motion follows) |
 
 > Startup: `-Djqt.animTheme=fast|relaxed|off|default` (or `-AnimTheme` in launchers).
 
-### 1.15 JQtSlider / JQtScrollArea / JQtProgressBar / JQtNavigation / JQtMessageBox / JQtInfoBar [v0.4.0]
+### 1.15 QSlider / QScrollArea / QProgressBar / JQtNavigation / QMessageBox / JQtInfoBar [v0.4.0]
 
 | Class | Key methods | Description |
 |-------|-------------|-------------|
-| `JQtSlider` | `(min,max,value)` / `value()` / `setValue` / `onValueChanged` | Fluent painted slider (accent fill, drag + 120ms animation) |
-| `JQtScrollArea` | `setWidget` / `setWidgetResizable` | scroll area |
-| `JQtProgressBar` | `value` / `setValue` / `setRange` | progress bar (QSS chunk) |
+| `QSlider` | `(min,max,value)` / `value()` / `setValue` / `onValueChanged` | Fluent painted slider (accent fill, drag + 120ms animation) |
+| `QScrollArea` | `setWidget` / `setWidgetResizable` | scroll area |
+| `QProgressBar` | `value` / `setValue` / `setRange` | progress bar (QSS chunk) |
 | `JQtNavigation` | `addItem(icon,text)` / `setCurrentIndex` / `onChanged` | sidebar navigation (sliding highlight) |
-| `JQtMessageBox` | `showQuestion` / `showInfo` | modal dialogs (blocking) |
+| `QMessageBox` | `showQuestion` / `showInfo` | modal dialogs (blocking) |
 | `JQtInfoBar` | `show(window,text,ms)` | top toast, auto-dismiss |
-### 1.9 JQtCheckBox — check box (QSS can render a Fluent switch)
+### 1.9 QCheckBox — check box (QSS can render a Fluent switch)
 
 | Method | Description |
 |--------|-------------|
-| `JQtCheckBox(String text)` | create |
+| `QCheckBox(String text)` | create |
 | `isChecked()` / `setChecked(boolean)` | checked state |
 | `onToggled(Consumer<Boolean>)` | toggle callback |
 
-### 1.10 Layouts: JQtVBoxLayout / JQtHBoxLayout (extend JQtLayout)
+### 1.10 Layouts: QVBoxLayout / QHBoxLayout (extend QLayout)
 
-> New: `addLayout(JQtLayout)` — **layout nesting** (HBox inside VBox for custom title bars / tool rows)
+> New: `addLayout(QLayout)` — **layout nesting** (HBox inside VBox for custom title bars / tool rows)
 
 | Method | Description |
 |--------|-------------|
-| `JQtVBoxLayout()` / `JQtHBoxLayout()` | vertical / horizontal layout |
-| `void addWidget(JQtWidget)` | add widget |
+| `QVBoxLayout()` / `QHBoxLayout()` | vertical / horizontal layout |
+| `void addWidget(QWidget)` | add widget |
 | `void setSpacing(int)` | spacing in px |
 | `void setContentsMargins(int)` / `(l,t,r,b)` | layout margins |
 | `void addStretch(int)` | stretch factor |
@@ -492,7 +492,7 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 - `onXxx` supports **multiple listeners**, invoked in registration order;
 - callbacks always run on the **GUI main thread** — safe to touch any widget, no locking needed;
-- mapping: onClick←clicked, onPressed←pressed, onReleased←released, onToggled←toggled,
+- mapping: onClicked←clicked, onPressed←pressed, onReleased←released, onToggled←toggled,
   onTextChanged←textChanged, onReturnPressed←returnPressed, onCurrentIndexChanged←currentIndexChanged,
   onItemClicked←itemClicked, onCurrentRowChanged←currentRowChanged, onClose←closeEvent,
   onResized←resizeEvent, onMoved←moveEvent, onAboutToQuit←aboutToQuit.
@@ -502,4 +502,4 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 - unreachable Java objects release their C++ objects automatically (Cleaner, GUI-thread safe);
 - widgets added to a window/layout are owned by the Qt parent-child relationship;
 - calling a disposed object throws `IllegalStateException` (no native crash);
-- creating widgets before `JQtApplication` throws `IllegalStateException`.
+- creating widgets before `QApplication` throws `IllegalStateException`.

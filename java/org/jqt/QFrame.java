@@ -11,9 +11,9 @@ package org.jqt;
  * 配合 QSS 使用（如 #card { background: ...; border-radius: 8px; }）。
  * 内部可 setLayout 或 addWidget 摆放子控件。
  */
-public class JQtPanel extends JQtWidget {
+public class QFrame extends QWidget {
 
-    public JQtPanel() {
+    public QFrame() {
         nativeHandle = nativeCreate();
         registerCleaner();
     }
@@ -21,8 +21,9 @@ public class JQtPanel extends JQtWidget {
     private native long nativeCreate();
 
     /** 直接添加子控件（无布局时自动摆放）。 */
-    public void addWidget(JQtWidget child) {
+    public void addWidget(QWidget child) {
         nativeAddWidget(nativeHandle, child.nativeHandle());
     }
     private native void nativeAddWidget(long handle, long childHandle);
 }
+

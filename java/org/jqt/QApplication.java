@@ -17,13 +17,13 @@ import java.util.List;
  * <p>
  * 用法：
  * <pre>
- * JQtApplication app = new JQtApplication();
- * JQtWindow window = new JQtWindow("我的窗口");
+ * QApplication app = new QApplication();
+ * QMainWindow window = new QMainWindow("我的窗口");
  * window.show();
  * app.exec();   // 进入 Qt 事件循环（阻塞），最后一个窗口关闭后返回
  * </pre>
  */
-public class JQtApplication {
+public class QApplication {
 
     static {
         // 加载 native 库：jqt.dll (Windows) / libjqt.so (Linux) / libjqt.dylib (macOS)
@@ -65,7 +65,7 @@ public class JQtApplication {
      * 创建 QApplication（整个进程只能有一个）。
      * 若 JVM 参数包含 {@code -Djqt.lightMode=true}，自动切换浅色配色。
      */
-    public JQtApplication() {
+    public QApplication() {
         nativeHandle = nativeCreateApp();
         if (Boolean.getBoolean("jqt.lightMode")) {
             setColorScheme(true);
@@ -361,8 +361,9 @@ public class JQtApplication {
      * 注册退出前回调（对应 Qt 的 aboutToQuit 信号）。
      * 事件循环结束前触发。
      */
-    public void onAboutToQuit(Runnable handler) {
+    public QApplication onAboutToQuit(Runnable handler) {
         onAboutToQuitHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧在应用退出前回调（JNI）。 */
@@ -372,3 +373,4 @@ public class JQtApplication {
         }
     }
 }
+

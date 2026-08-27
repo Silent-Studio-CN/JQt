@@ -17,7 +17,7 @@ public class JQtDemo {
     public static void main(String[] args) {
         System.out.println("[JQt] 创建 QApplication ...");
 
-        JQtApplication app = new JQtApplication();
+        QApplication app = new QApplication();
         app.onAboutToQuit(() -> System.out.println("[JQt] aboutToQuit 信号触发（应用即将退出）"));
 
         // ---- QSS 样式（Qt Style Sheets，-Djqt.demoQss=0 关闭）----
@@ -40,13 +40,13 @@ public class JQtDemo {
             System.out.println("[JQt] QSS 样式已应用（Fusion 深色主题）");
         }
 
-        JQtWindow window = new JQtWindow("JQt Phase 4 演示", 720, 600);
-        JQtLabel label = new JQtLabel("JQt 控件 + 布局 + 信号槽演示");
-        JQtLineEdit edit = new JQtLineEdit("");
-        JQtComboBox combo = new JQtComboBox();
-        JQtListWidget list = new JQtListWidget();
-        JQtButton clickBtn = new JQtButton("点击我（clicked/pressed/released）");
-        JQtButton checkBtn = new JQtButton("开关按钮（toggled）");
+        QMainWindow window = new QMainWindow("JQt Phase 4 演示", 720, 600);
+        QLabel label = new QLabel("JQt 控件 + 布局 + 信号槽演示");
+        QLineEdit edit = new QLineEdit("");
+        QComboBox combo = new QComboBox();
+        QListWidget list = new QListWidget();
+        QPushButton clickBtn = new QPushButton("点击我（clicked/pressed/released）");
+        QPushButton checkBtn = new QPushButton("开关按钮（toggled）");
         checkBtn.setCheckable(true);
 
         // ---- 输入框（Phase 4）----
@@ -58,7 +58,7 @@ public class JQtDemo {
             app.schedule(() -> combo.setCurrentIndex(1), 2500);
             // 3 秒后演示悬垂保护（Phase 5）：dispose 后调用 → IllegalStateException
             app.schedule(() -> {
-                JQtButton ghost = new JQtButton("临时按钮");
+                QPushButton ghost = new QPushButton("临时按钮");
                 ghost.dispose();
                 try {
                     ghost.setText("应该失败");
@@ -88,7 +88,7 @@ public class JQtDemo {
         list.onItemClicked(row -> System.out.println("[JQt] itemClicked → 第 " + row + " 行"));
 
         // ---- 按钮信号（Phase 2）----
-        clickBtn.onClick(() -> System.out.println("[JQt] ✅ clicked 信号"));
+        clickBtn.onClicked(() -> System.out.println("[JQt] ✅ clicked 信号"));
         clickBtn.onPressed(() -> System.out.println("[JQt] pressed 信号"));
         clickBtn.onReleased(() -> System.out.println("[JQt] released 信号"));
         checkBtn.onToggled(checked -> System.out.println("[JQt] toggled 信号，选中状态 = " + checked));
@@ -107,11 +107,11 @@ public class JQtDemo {
         }
 
         // ---- 布局（Phase 3）----
-        JQtVBoxLayout vbox = new JQtVBoxLayout();
+        QVBoxLayout vbox = new QVBoxLayout();
         vbox.setSpacing(10);
         if (Long.getLong("jqt.demoFluent", 0L) > 0) {
-            JQtButton closeBtn = new JQtButton("✕ 关闭窗口");
-            closeBtn.onClick(() -> window.close());
+            QPushButton closeBtn = new QPushButton("✕ 关闭窗口");
+            closeBtn.onClicked(() -> window.close());
             vbox.addWidget(closeBtn);
         }
         vbox.addWidget(label);
@@ -146,3 +146,12 @@ public class JQtDemo {
         System.out.println("[JQt] 事件循环结束，JQt 运行正常 ✅");
     }
 }
+
+
+
+
+
+
+
+
+

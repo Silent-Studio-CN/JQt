@@ -9,7 +9,7 @@ package org.jqt;
 /**
  * 跨平台标题栏：Windows 显示 — ▢ ✕（右侧，Fluent 风格），
  * macOS 显示 ● ● ● 交通灯（左侧）。
- * 配合 {@link JQtWindow#setFrameless(boolean)} 使用。
+ * 配合 {@link QMainWindow#setFrameless(boolean)} 使用。
  * <p>
  * 用法：
  * <pre>
@@ -17,7 +17,7 @@ package org.jqt;
  * vbox.addWidget(bar);   // 放在窗口布局顶部
  * </pre>
  */
-public class JQtTitleBar extends JQtWidget {
+public class JQtTitleBar extends QWidget {
 
     private static final boolean IS_MAC =
             System.getProperty("os.name", "").toLowerCase().contains("mac");
@@ -35,40 +35,40 @@ public class JQtTitleBar extends JQtWidget {
      * @param title 窗口标题文字
      * @param window 关联窗口（按钮控制其最小化/最大化/关闭）
      */
-    public JQtTitleBar(String title, JQtWindow window) {
+    public JQtTitleBar(String title, QMainWindow window) {
         nativeHandle = nativeCreate();
         registerCleaner();
         setObjectName("titleBar");   // QSS: QFrame#titleBar 可单独定制标题栏背景
 
-        JQtHBoxLayout bar = new JQtHBoxLayout();
+        QHBoxLayout bar = new QHBoxLayout();
         bar.setSpacing(4);
 
-        JQtLabel titleLabel = new JQtLabel("  " + title);
+        QLabel titleLabel = new QLabel("  " + title);
         titleLabel.setStyleSheet("font-size: 13px; font-weight: bold;");
 
-        JQtButton minBtn = new JQtButton("—");
-        JQtButton maxBtn = new JQtButton("▢");
-        JQtButton closeBtn = new JQtButton("✕");
+        QPushButton minBtn = new QPushButton("—");
+        QPushButton maxBtn = new QPushButton("▢");
+        QPushButton closeBtn = new QPushButton("✕");
         minBtn.setObjectName("titlebarBtn");
         maxBtn.setObjectName("titlebarBtn");
         closeBtn.setObjectName("titlebarClose");
 
-        minBtn.onClick(() -> window.minimize());
-        closeBtn.onClick(() -> window.close());
-        // 注意：maxBtn 的 onClick 在各平台分支注册（Windows 带图标切换），
+        minBtn.onClicked(() -> window.minimize());
+        closeBtn.onClicked(() -> window.close());
+        // 注意：maxBtn 的 onClicked 在各平台分支注册（Windows 带图标切换），
         // 避免重复注册导致 toggle 两次 = 点击无效果（历史 bug）
 
         if (IS_MAC) {
             // macOS 交通灯：红黄绿圆点（左侧）
-            JQtButton red = new JQtButton("●");
-            JQtButton yellow = new JQtButton("●");
-            JQtButton green = new JQtButton("●");
+            QPushButton red = new QPushButton("●");
+            QPushButton yellow = new QPushButton("●");
+            QPushButton green = new QPushButton("●");
             red.setStyleSheet("color: #ff5f57; background: transparent; border: none; font-size: 10px; padding: 0;");
             yellow.setStyleSheet("color: #febc2e; background: transparent; border: none; font-size: 10px; padding: 0;");
             green.setStyleSheet("color: #28c840; background: transparent; border: none; font-size: 10px; padding: 0;");
-            red.onClick(() -> window.close());
-            yellow.onClick(() -> window.minimize());
-            green.onClick(() -> window.toggleMaximize());
+            red.onClicked(() -> window.close());
+            yellow.onClicked(() -> window.minimize());
+            green.onClicked(() -> window.toggleMaximize());
             bar.addWidget(red);
             bar.addWidget(yellow);
             bar.addWidget(green);
@@ -85,7 +85,7 @@ public class JQtTitleBar extends JQtWidget {
             maxBtn.setStyleSheet(glyphQss);
             closeBtn.setStyleSheet(glyphQss);
             // 最大化 ↔ 还原 图标随状态切换
-            maxBtn.onClick(() -> {
+            maxBtn.onClicked(() -> {
                 window.toggleMaximize();
                 maxBtn.setText(window.isMaximized() ? GLYPH_RESTORE : GLYPH_MAXIMIZE);
             });
@@ -96,7 +96,7 @@ public class JQtTitleBar extends JQtWidget {
             bar.addWidget(closeBtn);
         } else {
             // Linux：标题在左，三件套在右（字符图标）
-            maxBtn.onClick(() -> window.toggleMaximize());
+            maxBtn.onClicked(() -> window.toggleMaximize());
             bar.addWidget(titleLabel);
             bar.addStretch(1);
             bar.addWidget(minBtn);
@@ -108,3 +108,8 @@ public class JQtTitleBar extends JQtWidget {
 
     private native long nativeCreate();
 }
+
+
+
+
+

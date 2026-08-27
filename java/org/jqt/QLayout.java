@@ -13,18 +13,18 @@ import java.lang.ref.Cleaner;
  * <p>
  * 用法：
  * <pre>
- * JQtVBoxLayout vbox = new JQtVBoxLayout();
+ * QVBoxLayout vbox = new QVBoxLayout();
  * vbox.addWidget(label);
  * vbox.addWidget(button);
  * window.setLayout(vbox);
  * </pre>
  * 布局接管子控件的位置与大小；控件加入布局后不要再调用
- * {@link JQtWindow#addWidget(JQtWidget)} 重复添加。
+ * {@link QMainWindow#addWidget(QWidget)} 重复添加。
  * <p>
- * 内存管理（Phase 5）：与 {@link JQtWidget} 相同——未安装到窗口前由
+ * 内存管理（Phase 5）：与 {@link QWidget} 相同——未安装到窗口前由
  * {@link Cleaner} 回收；{@code setLayout} 后归窗口管理。
  */
-public abstract class JQtLayout {
+public abstract class QLayout {
 
     private static final Cleaner CLEANER = Cleaner.create();
 
@@ -68,13 +68,13 @@ public abstract class JQtLayout {
     }
 
     /** 把子控件加入布局（Qt 会自动接管其排列）。 */
-    public void addWidget(JQtWidget widget) {
+    public void addWidget(QWidget widget) {
         nativeAddWidget(nativeHandle, widget.nativeHandle());
     }
     protected native void nativeAddWidget(long handle, long childHandle);
 
     /** 嵌套子布局（如 VBox 中嵌入 HBox 作为标题栏/工具行）。 */
-    public void addLayout(JQtLayout child) {
+    public void addLayout(QLayout child) {
         nativeAddLayout(nativeHandle, child.nativeHandle());
     }
     protected native void nativeAddLayout(long handle, long childLayoutHandle);
@@ -105,3 +105,7 @@ public abstract class JQtLayout {
     }
     protected native void nativeAddStretch(long handle, int stretch);
 }
+
+
+
+

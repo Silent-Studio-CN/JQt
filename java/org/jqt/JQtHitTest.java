@@ -4,33 +4,33 @@ package org.jqt;
 public class JQtHitTest {
 
     public static void main(String[] args) throws Exception {
-        JQtApplication app = new JQtApplication();
+        QApplication app = new QApplication();
         app.setStyle("Fusion");
         app.setTheme("fluent-dark");
 
-        JQtWindow window = new JQtWindow("HitTest", 520, 380);
+        QMainWindow window = new QMainWindow("HitTest", 520, 380);
         window.setFrameless(true);
         JQtTitleBar bar = new JQtTitleBar("HitTest", window);
 
         // 卡片（QFrame）里的开关和按钮
-        JQtPanel card = new JQtPanel();
-        JQtVBoxLayout cl = new JQtVBoxLayout();
+        QFrame card = new QFrame();
+        QVBoxLayout cl = new QVBoxLayout();
         cl.setSpacing(10);
         final JQtSwitch sw = new JQtSwitch(false);
         sw.onToggled(on -> System.out.println("[HitTest] switch -> " + on));
-        final JQtButton btn = new JQtButton("OK");
-        btn.onClick(() -> System.out.println("[HitTest] button clicked"));
+        final QPushButton btn = new QPushButton("OK");
+        btn.onClicked(() -> System.out.println("[HitTest] button clicked"));
         cl.addWidget(sw);
         cl.addWidget(btn);
         card.setLayout(cl);
 
         // 列表（窗口级布局）
-        JQtListWidget list = new JQtListWidget();
+        QListWidget list = new QListWidget();
         list.addItem("A");
         list.addItem("B");
         list.onItemClicked(i -> System.out.println("[HitTest] list item " + i));
 
-        JQtVBoxLayout main = new JQtVBoxLayout();
+        QVBoxLayout main = new QVBoxLayout();
         main.setSpacing(8);
         main.addWidget(bar);
         main.addWidget(card);
@@ -40,18 +40,26 @@ public class JQtHitTest {
         window.show();
         app.schedule(() -> {
             System.out.println("[HitTest] postClick switch");
-            JQtWidget.nativePostClickAt(sw.nativeHandle(), window.nativeHandle());
+            QWidget.nativePostClickAt(sw.nativeHandle(), window.nativeHandle());
         }, 1200);
         app.schedule(() -> {
             System.out.println("[HitTest] postClick button");
-            JQtWidget.nativePostClickAt(btn.nativeHandle(), window.nativeHandle());
+            QWidget.nativePostClickAt(btn.nativeHandle(), window.nativeHandle());
         }, 1800);
         app.schedule(() -> {
             System.out.println("[HitTest] postClick list");
-            JQtWidget.nativePostClickAt(list.nativeHandle(), window.nativeHandle());
+            QWidget.nativePostClickAt(list.nativeHandle(), window.nativeHandle());
         }, 2400);
         app.scheduleQuit(4000);
         app.exec();
         System.out.println("[HitTest] done");
     }
 }
+
+
+
+
+
+
+
+

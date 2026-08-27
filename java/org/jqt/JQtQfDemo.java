@@ -22,7 +22,7 @@ import java.nio.file.Paths;
 public class JQtQfDemo {
 
     public static void main(String[] args) throws Exception {
-        JQtApplication app = new JQtApplication();
+        QApplication app = new QApplication();
         app.setStyle("Fusion");
 
         // ---- 加载 qf QSS（完整 34 文件合并 + 类名映射）----
@@ -33,13 +33,13 @@ public class JQtQfDemo {
         app.setStyleSheet(qss);
         System.out.println("[Qf] 已加载 qf QSS: " + qssPath + " (" + qss.length() + " chars)");
 
-        JQtWindow window = new JQtWindow("JQt x qfluentwidgets", 800, 560);
+        QMainWindow window = new QMainWindow("JQt x qfluentwidgets", 800, 560);
         window.setFrameless(true);
         window.setRoundedCorners(true);
         JQtTitleBar bar = new JQtTitleBar("JQt x qfluentwidgets QSS", window);
 
         // ---- 导航（qf NavigationPanel → QListWidget#nav）----
-        JQtListWidget nav = new JQtListWidget();
+        QListWidget nav = new QListWidget();
         nav.setObjectName("nav");
         nav.addItem("首页");
         nav.addItem("设置");
@@ -48,37 +48,37 @@ public class JQtQfDemo {
         nav.onItemClicked(i -> System.out.println("[Qf] nav item " + i));
 
         // ---- 卡片 1：qf 按钮族 ----
-        JQtPanel card1 = new JQtPanel();
+        QFrame card1 = new QFrame();
         card1.setObjectName("card");
-        JQtVBoxLayout c1 = new JQtVBoxLayout();
+        QVBoxLayout c1 = new QVBoxLayout();
         c1.setSpacing(10);
-        JQtButton primary = new JQtButton("主按钮");
+        QPushButton primary = new QPushButton("主按钮");
         primary.setObjectName("primary");
-        primary.onClick(() -> System.out.println("[Qf] primary clicked"));
-        JQtButton normal = new JQtButton("普通按钮");
-        normal.onClick(() -> System.out.println("[Qf] normal clicked"));
-        JQtButton hyper = new JQtButton("超链接按钮");
+        primary.onClicked(() -> System.out.println("[Qf] primary clicked"));
+        QPushButton normal = new QPushButton("普通按钮");
+        normal.onClicked(() -> System.out.println("[Qf] normal clicked"));
+        QPushButton hyper = new QPushButton("超链接按钮");
         hyper.setObjectName("hyperlink");
-        hyper.onClick(() -> System.out.println("[Qf] hyperlink clicked"));
+        hyper.onClicked(() -> System.out.println("[Qf] hyperlink clicked"));
         c1.addWidget(primary);
         c1.addWidget(normal);
         c1.addWidget(hyper);
         card1.setLayout(c1);
 
         // ---- 卡片 2：qf 输入族 ----
-        JQtPanel card2 = new JQtPanel();
+        QFrame card2 = new QFrame();
         card2.setObjectName("card");
-        JQtVBoxLayout c2 = new JQtVBoxLayout();
+        QVBoxLayout c2 = new QVBoxLayout();
         c2.setSpacing(10);
-        JQtLineEdit edit = new JQtLineEdit("");
+        QLineEdit edit = new QLineEdit("");
         edit.setPlaceholderText("输入内容...");
         edit.onTextChanged(t -> System.out.println("[Qf] edit: " + t));
-        JQtComboBox combo = new JQtComboBox();
+        QComboBox combo = new QComboBox();
         combo.addItem("选项 A");
         combo.addItem("选项 B");
         combo.addItem("选项 C");
         combo.onCurrentIndexChanged(i -> System.out.println("[Qf] combo -> " + i));
-        JQtCheckBox cb = new JQtCheckBox("启用 qf 复选框");
+        QCheckBox cb = new QCheckBox("启用 qf 复选框");
         cb.onToggled(on -> System.out.println("[Qf] checkbox = " + on));
         c2.addWidget(edit);
         c2.addWidget(combo);
@@ -86,21 +86,21 @@ public class JQtQfDemo {
         card2.setLayout(c2);
 
         // ---- 卡片 3：开关 + 动画（JQt 自绘开关不受 qf QSS 影响）----
-        JQtPanel card3 = new JQtPanel();
+        QFrame card3 = new QFrame();
         card3.setObjectName("card");
-        JQtVBoxLayout c3 = new JQtVBoxLayout();
+        QVBoxLayout c3 = new QVBoxLayout();
         c3.setSpacing(10);
         JQtSwitch sw = new JQtSwitch(true);
         sw.onToggled(on -> System.out.println("[Qf] switch = " + on));
-        JQtButton bounce = new JQtButton("弹性移动 (OutBounce)");
-        JQtLabel ball = new JQtLabel("●");
+        QPushButton bounce = new QPushButton("弹性移动 (OutBounce)");
+        QLabel ball = new QLabel("●");
         ball.setStyleSheet("font-size: 22px; color: #009faa;");
         c3.addWidget(sw);
         c3.addWidget(ball);
         c3.addWidget(bounce);
         card3.setLayout(c3);
 
-        bounce.onClick(() -> {
+        bounce.onClicked(() -> {
             ball.animateMove(0, 60, 800, JQtEasing.OUT_BOUNCE);
             ball.animateMove(0, 0, 800, JQtEasing.OUT_BOUNCE);
         });
@@ -109,10 +109,10 @@ public class JQtQfDemo {
         pulse.start();
 
         // ---- 布局 ----
-        JQtHBoxLayout body = new JQtHBoxLayout();
+        QHBoxLayout body = new QHBoxLayout();
         body.setSpacing(12);
         body.addWidget(nav);
-        JQtVBoxLayout cards = new JQtVBoxLayout();
+        QVBoxLayout cards = new QVBoxLayout();
         cards.setSpacing(12);
         cards.addWidget(card1);
         cards.addWidget(card2);
@@ -120,7 +120,7 @@ public class JQtQfDemo {
         cards.addStretch(1);
         body.addLayout(cards);
         body.addStretch(1);
-        JQtVBoxLayout main = new JQtVBoxLayout();
+        QVBoxLayout main = new QVBoxLayout();
         main.setSpacing(8);
         main.addWidget(bar);
         main.addLayout(body);
@@ -138,3 +138,15 @@ public class JQtQfDemo {
         System.out.println("[Qf] 正常退出");
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+

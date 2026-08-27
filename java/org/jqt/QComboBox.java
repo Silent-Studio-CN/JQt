@@ -18,11 +18,11 @@ import java.util.function.Consumer;
  *   <li>{@link #onCurrentIndexChanged(Consumer)} — currentIndexChanged 信号（选项切换）</li>
  * </ul>
  */
-public class JQtComboBox extends JQtWidget {
+public class QComboBox extends QWidget {
 
     private final List<Consumer<Integer>> onCurrentIndexChangedHandlers = new ArrayList<>();
 
-    public JQtComboBox() {
+    public QComboBox() {
         nativeHandle = nativeCreate();
         registerCleaner();
     }
@@ -54,8 +54,9 @@ public class JQtComboBox extends JQtWidget {
     private native void nativeSetCurrentIndex(long handle, int index);
 
     /** 注册选项切换回调（currentIndexChanged 信号，参数为新索引）。 */
-    public void onCurrentIndexChanged(Consumer<Integer> handler) {
+    public QComboBox onCurrentIndexChanged(Consumer<Integer> handler) {
         onCurrentIndexChangedHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧在选项切换时回调（JNI）。 */
@@ -65,3 +66,5 @@ public class JQtComboBox extends JQtWidget {
         }
     }
 }
+
+

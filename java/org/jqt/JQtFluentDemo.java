@@ -13,7 +13,7 @@ package org.jqt;
 public class JQtFluentDemo {
 
     public static void main(String[] args) throws Exception {
-        JQtApplication app = new JQtApplication();
+        QApplication app = new QApplication();
 
         // 统一主题入口（QSS + 调色板一致打包）
         String theme = System.getProperty("jqt.theme", "dark");
@@ -28,14 +28,14 @@ public class JQtFluentDemo {
         // ---- 动画主题（-Djqt.animTheme=fast|relaxed|off|default）----
         String animTheme = System.getProperty("jqt.animTheme", "default");
         switch (animTheme) {
-            case "fast":    JQtApplication.setAnimationTheme(JQtAnimationTheme.FAST); break;
-            case "relaxed": JQtApplication.setAnimationTheme(JQtAnimationTheme.RELAXED); break;
-            case "off":     JQtApplication.setAnimationTheme(JQtAnimationTheme.OFF); break;
-            default:        JQtApplication.setAnimationTheme(JQtAnimationTheme.DEFAULT); break;
+            case "fast":    QApplication.setAnimationTheme(JQtAnimationTheme.FAST); break;
+            case "relaxed": QApplication.setAnimationTheme(JQtAnimationTheme.RELAXED); break;
+            case "off":     QApplication.setAnimationTheme(JQtAnimationTheme.OFF); break;
+            default:        QApplication.setAnimationTheme(JQtAnimationTheme.DEFAULT); break;
         }
         System.out.println("[Fluent] 动画主题 = " + animTheme);
 
-        JQtWindow window = new JQtWindow("JQt Fluent", 760, 620);
+        QMainWindow window = new QMainWindow("JQt Fluent", 760, 620);
         window.setFrameless(true);
         window.setAcrylic(true);
         window.setRoundedCorners(true);
@@ -44,27 +44,27 @@ public class JQtFluentDemo {
         JQtTitleBar titleBar = new JQtTitleBar("JQt Fluent", window);
 
         // ---- 导航（列表）----
-        JQtListWidget nav = new JQtListWidget();
+        QListWidget nav = new QListWidget();
         nav.addItem("首页");
         nav.addItem("设置");
         nav.addItem("关于");
         nav.setStyleSheet("font-size: 14px;");
 
         // ---- 卡片 1：开关组 ----
-        JQtPanel card1 = new JQtPanel();
+        QFrame card1 = new QFrame();
         card1.setObjectName("card");
         card1.setDropShadow(18, 70, 0, 3);   // 投影（QSS box-shadow 的替代）
         card1.setBorderRadius(16);           // 自定义圆角（API，与 QSS 并存）
-        JQtVBoxLayout card1L = new JQtVBoxLayout();
+        QVBoxLayout card1L = new QVBoxLayout();
         card1L.setSpacing(10);
-        JQtLabel card1Title = new JQtLabel("开关组");
+        QLabel card1Title = new QLabel("开关组");
         card1Title.setStyleSheet("font-size: 14px; font-weight: bold;");
         card1L.addWidget(card1Title);
         JQtSwitch switch1 = new JQtSwitch(true);
         JQtSwitch switch2 = new JQtSwitch(false);
         switch1.onToggled(on -> System.out.println("[Fluent] 自动更新 = " + on));
         switch2.onToggled(on -> System.out.println("[Fluent] 开机自启 = " + on));
-        JQtLabel switchRow = new JQtLabel("");
+        QLabel switchRow = new QLabel("");
         // 颜色跟随全局主题（不硬编码——控件级 QSS 会盖过主题导致深浅色不跟随）
         switchRow.setStyleSheet("font-size: 13px;");
         card1L.addWidget(switchRow);
@@ -76,48 +76,48 @@ public class JQtFluentDemo {
         switchRow.setText("自动更新：开（滑块动画）");
 
         // ---- 卡片 2：输入与按钮 ----
-        JQtPanel card2 = new JQtPanel();
+        QFrame card2 = new QFrame();
         card2.setObjectName("card");
         card2.setDropShadow(18, 70, 0, 3);
-        JQtVBoxLayout card2L = new JQtVBoxLayout();
+        QVBoxLayout card2L = new QVBoxLayout();
         card2L.setSpacing(10);
-        JQtLabel card2Title = new JQtLabel("输入与按钮");
+        QLabel card2Title = new QLabel("输入与按钮");
         card2Title.setStyleSheet("font-size: 14px; font-weight: bold;");
-        JQtLineEdit edit = new JQtLineEdit("");
+        QLineEdit edit = new QLineEdit("");
         edit.setPlaceholderText("输入内容...");
-        JQtButton ok = new JQtButton("确定");
-        ok.onClick(() -> System.out.println("[Fluent] 输入：" + edit.text()));
+        QPushButton ok = new QPushButton("确定");
+        ok.onClicked(() -> System.out.println("[Fluent] 输入：" + edit.text()));
         card2L.addWidget(card2Title);
         card2L.addWidget(edit);
         card2L.addWidget(ok);
         card2.setLayout(card2L);
 
         // ---- 卡片 3：动画演示（easing + JQtAnimation）----
-        JQtPanel card3 = new JQtPanel();
+        QFrame card3 = new QFrame();
         card3.setObjectName("card");
         card3.setDropShadow(18, 70, 0, 3);
-        JQtVBoxLayout card3L = new JQtVBoxLayout();
+        QVBoxLayout card3L = new QVBoxLayout();
         card3L.setSpacing(10);
-        JQtLabel card3Title = new JQtLabel("动画演示");
+        QLabel card3Title = new QLabel("动画演示");
         card3Title.setStyleSheet("font-size: 14px; font-weight: bold;");
-        JQtButton bounceBtn = new JQtButton("弹性移动 (OutBounce)");
-        JQtButton colorBtn = new JQtButton("主题色");
+        QPushButton bounceBtn = new QPushButton("弹性移动 (OutBounce)");
+        QPushButton colorBtn = new QPushButton("主题色");
         String[] accents = {"#4cc2ff", "#0078d4", "#9b59b6", "#2ecc71", "#e67e22"};
         final int[] ci = {0};
-        colorBtn.onClick(() -> {
+        colorBtn.onClicked(() -> {
             ci[0] = (ci[0] + 1) % accents.length;
             app.setAccentColor(accents[ci[0]]);
             System.out.println("[Fluent] accent = " + accents[ci[0]]);
         });
-        JQtButton themeToggle = new JQtButton("黑白切换");
+        QPushButton themeToggle = new QPushButton("黑白切换");
         final boolean[] dark = {true};
-        themeToggle.onClick(() -> {
+        themeToggle.onClicked(() -> {
             dark[0] = !dark[0];
             app.setTheme(dark[0] ? "fluent-dark" : "fluent-light");   // 自定义主题色自动保留
             System.out.println("[Fluent] theme = " + (dark[0] ? "dark" : "light"));
         });
-        JQtButton fadePulse = new JQtButton("透明度脉冲 (InOutSine)");
-        JQtLabel ball = new JQtLabel("●");
+        QPushButton fadePulse = new QPushButton("透明度脉冲 (InOutSine)");
+        QLabel ball = new QLabel("●");
         ball.setStyleSheet("font-size: 20px;");   // 颜色跟随全局主题
         JQtSwitch autoThemeSw = new JQtSwitch(false);
         autoThemeSw.onToggled(on -> {
@@ -134,7 +134,7 @@ public class JQtFluentDemo {
         card3.setLayout(card3L);
 
         // 弹性移动：easing 重载
-        bounceBtn.onClick(() -> {
+        bounceBtn.onClicked(() -> {
             ball.animateMove(0, 40, 700, JQtEasing.OUT_BOUNCE);
             ball.animateMove(0, 0, 700, JQtEasing.OUT_BOUNCE);
         });
@@ -157,22 +157,22 @@ public class JQtFluentDemo {
         pivot.onChanged(i -> System.out.println("[Fluent] pivot -> " + i));
 
         // ---- 卡片 4：v0.4 新控件（滑块 / 进度条 / 通知 / 对话框）----
-        JQtPanel card4 = new JQtPanel();
+        QFrame card4 = new QFrame();
         card4.setObjectName("card");
         card4.setDropShadow(18, 70, 0, 3);
-        JQtVBoxLayout c4 = new JQtVBoxLayout();
+        QVBoxLayout c4 = new QVBoxLayout();
         c4.setSpacing(10);
-        JQtLabel sliderVal = new JQtLabel("音量：40");
-        JQtProgressBar progress = new JQtProgressBar();
-        JQtSlider slider = new JQtSlider(0, 100, 40);
+        QLabel sliderVal = new QLabel("音量：40");
+        QProgressBar progress = new QProgressBar();
+        QSlider slider = new QSlider(0, 100, 40);
         slider.onValueChanged(v -> {
             progress.setValue(v);
             sliderVal.setText("音量：" + v);
         });
-        JQtButton notifyBtn = new JQtButton("顶部通知条");
-        notifyBtn.onClick(() -> JQtInfoBar.show(window, "通知：v0.4 新控件已就绪", 2500));
-        JQtButton askBtn = new JQtButton("询问框");
-        askBtn.onClick(() -> System.out.println("[Fluent] 询问结果 = " + JQtMessageBox.showQuestion(window, "确认", "要执行操作吗？")));
+        QPushButton notifyBtn = new QPushButton("顶部通知条");
+        notifyBtn.onClicked(() -> JQtInfoBar.show(window, "通知：v0.4 新控件已就绪", 2500));
+        QPushButton askBtn = new QPushButton("询问框");
+        askBtn.onClicked(() -> System.out.println("[Fluent] 询问结果 = " + QMessageBox.showQuestion(window, "确认", "要执行操作吗？")));
         c4.addWidget(sliderVal);
         c4.addWidget(slider);
         c4.addWidget(progress);
@@ -181,11 +181,11 @@ public class JQtFluentDemo {
         card4.setLayout(c4);
 
         // ---- 主布局：标题栏 + Pivot + 导航 + 卡片 ----
-        JQtHBoxLayout body = new JQtHBoxLayout();
+        QHBoxLayout body = new QHBoxLayout();
         body.setSpacing(12);
         body.setContentsMargins(12, 0, 12, 10);   // 窗口边缘留白（不再贴边）
         body.addWidget(nav);
-        JQtVBoxLayout cards = new JQtVBoxLayout();
+        QVBoxLayout cards = new QVBoxLayout();
         cards.setSpacing(12);
         cards.setContentsMargins(0, 4, 0, 0);
         cards.addWidget(card1);
@@ -196,7 +196,7 @@ public class JQtFluentDemo {
         body.addLayout(cards);
         body.addStretch(1);
 
-        JQtVBoxLayout main = new JQtVBoxLayout();
+        QVBoxLayout main = new QVBoxLayout();
         main.setSpacing(8);
         main.addWidget(titleBar);
         main.addWidget(pivot);
@@ -222,3 +222,15 @@ public class JQtFluentDemo {
         System.out.println("[Fluent] 正常退出 ✅");
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
