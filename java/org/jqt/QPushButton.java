@@ -15,20 +15,20 @@ import java.util.function.Consumer;
  * <p>
  * 信号槽（均可注册多个监听器，按注册顺序触发）：
  * <ul>
- *   <li>{@link #onClick(Runnable)} — clicked 信号（按下并在按钮上释放）</li>
+ *   <li>{@link #onClicked(Runnable)} — clicked 信号（按下并在按钮上释放）</li>
  *   <li>{@link #onPressed(Runnable)} — pressed 信号（按下瞬间）</li>
  *   <li>{@link #onReleased(Runnable)} — released 信号（释放瞬间）</li>
  *   <li>{@link #onToggled(Consumer)} — toggled 信号（勾选状态切换，需 {@link #setCheckable(boolean)}）</li>
  * </ul>
  */
-public class JQtButton extends JQtWidget {
+public class QPushButton extends QWidget {
 
-    private final List<Runnable> onClickHandlers = new ArrayList<>();
+    private final List<Runnable> onClickedHandlers = new ArrayList<>();
     private final List<Runnable> onPressedHandlers = new ArrayList<>();
     private final List<Runnable> onReleasedHandlers = new ArrayList<>();
     private final List<Consumer<Boolean>> onToggledHandlers = new ArrayList<>();
 
-    public JQtButton(String text) {
+    public QPushButton(String text) {
         nativeHandle = nativeCreate(text);
         registerCleaner();
     }
@@ -54,28 +54,32 @@ public class JQtButton extends JQtWidget {
     private native void nativeSetChecked(long handle, boolean checked);
 
     /** 注册点击回调（Qt clicked 信号）。 */
-    public void onClick(Runnable handler) {
-        onClickHandlers.add(handler);
+    public QPushButton onClicked(Runnable handler) {
+        onClickedHandlers.add(handler);
+        return this;
     }
 
     /** 注册按下回调（Qt pressed 信号，鼠标按下瞬间）。 */
-    public void onPressed(Runnable handler) {
+    public QPushButton onPressed(Runnable handler) {
         onPressedHandlers.add(handler);
+        return this;
     }
 
     /** 注册释放回调（Qt released 信号，鼠标释放瞬间）。 */
-    public void onReleased(Runnable handler) {
+    public QPushButton onReleased(Runnable handler) {
         onReleasedHandlers.add(handler);
+        return this;
     }
 
     /** 注册勾选状态切换回调（Qt toggled 信号，参数为新的勾选状态）。 */
-    public void onToggled(Consumer<Boolean> handler) {
+    public QPushButton onToggled(Consumer<Boolean> handler) {
         onToggledHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧在按钮被点击时回调（JNI）。 */
     void nativeHandleClick() {
-        for (Runnable h : onClickHandlers) {
+        for (Runnable h : onClickedHandlers) {
             h.run();
         }
     }
@@ -101,3 +105,6 @@ public class JQtButton extends JQtWidget {
         }
     }
 }
+
+
+

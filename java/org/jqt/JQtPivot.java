@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  * Fluent 风格选项卡（Pivot）：文本项 + 底部滑动指示器（动画过渡）。
  * 纯自绘（clean-room 独立实现），颜色跟随 QPalette::Highlight（可被主题定制）。
  */
-public class JQtPivot extends JQtWidget {
+public class JQtPivot extends QWidget {
 
     private final List<Consumer<Integer>> onChangedHandlers = new ArrayList<>();
 
@@ -40,8 +40,9 @@ public class JQtPivot extends JQtWidget {
     }
 
     /** 选中项变化回调（参数：新索引）。 */
-    public void onChanged(Consumer<Integer> handler) {
+    public JQtPivot onChanged(Consumer<Integer> handler) {
         onChangedHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧在选中项变化时回调（JNI）。 */
@@ -56,3 +57,4 @@ public class JQtPivot extends JQtWidget {
     private native int nativeCurrentIndex(long handle);
     private native void nativeSetCurrentIndex(long handle, int index);
 }
+

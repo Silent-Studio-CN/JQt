@@ -14,12 +14,12 @@ import java.util.function.Consumer;
  * Fluent 滑块：轨道 + 圆钮，已填充部分用主题色，点击跳转（120ms 动画）、拖动跟手。
  * 轨道颜色跟随主题明暗。
  */
-public class JQtSlider extends JQtWidget {
+public class QSlider extends QWidget {
 
     private final List<Consumer<Integer>> onValueChangedHandlers = new ArrayList<>();
 
     /** 创建滑块（范围 min~max，初始 value）。 */
-    public JQtSlider(int min, int max, int value) {
+    public QSlider(int min, int max, int value) {
         nativeHandle = nativeCreate(min, max, value);
         registerCleaner();
     }
@@ -40,8 +40,9 @@ public class JQtSlider extends JQtWidget {
     }
 
     /** 值变化回调（拖动高频触发）。 */
-    public void onValueChanged(Consumer<Integer> handler) {
+    public QSlider onValueChanged(Consumer<Integer> handler) {
         onValueChangedHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧回调（JNI）。 */
@@ -56,3 +57,5 @@ public class JQtSlider extends JQtWidget {
     private native void nativeSetValue(long handle, int value);
     private native void nativeSetRange(long handle, int min, int max);
 }
+
+

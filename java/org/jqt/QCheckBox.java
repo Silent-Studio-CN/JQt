@@ -14,11 +14,11 @@ import java.util.function.Consumer;
  * 复选框（封装 QCheckBox）。配合 QSS 可呈现 Fluent 开关外观
  * （如 QCheckBox::indicator 胶囊滑块）。
  */
-public class JQtCheckBox extends JQtWidget {
+public class QCheckBox extends QWidget {
 
     private final List<Consumer<Boolean>> onToggledHandlers = new ArrayList<>();
 
-    public JQtCheckBox(String text) {
+    public QCheckBox(String text) {
         nativeHandle = nativeCreate(text);
         registerCleaner();
     }
@@ -44,8 +44,9 @@ public class JQtCheckBox extends JQtWidget {
     private native void nativeSetChecked(long handle, boolean checked);
 
     /** 勾选状态切换回调（参数为新状态）。 */
-    public void onToggled(Consumer<Boolean> handler) {
+    public QCheckBox onToggled(Consumer<Boolean> handler) {
         onToggledHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧回调（JNI）。 */
@@ -55,3 +56,4 @@ public class JQtCheckBox extends JQtWidget {
         }
     }
 }
+

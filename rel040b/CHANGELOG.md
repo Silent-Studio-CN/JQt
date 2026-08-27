@@ -12,19 +12,6 @@
 <a id="zh"></a>
 ## 中文版
 
-### v0.5.0-alpha（2026-08-27）— Qt API 对齐（类名 Q 化 + 信号对齐 + 链式）
-
-**命名策略（SilentStudio 理念：好好对待程序员）**：
-- **有 Qt 对应物的类改用 Q 前缀**：QPushButton / QLineEdit / QComboBox / QListWidget /
-  QCheckBox / QMainWindow / QWidget / QApplication / QSlider / QProgressBar / QScrollArea /
-  QMessageBox / QFrame / QVBoxLayout / QHBoxLayout / QLayout —— **Qt 文档直接可查，零认知成本**
-- **JQt 原创控件保留 JQt 前缀**：JQtSwitch / JQtPivot / JQtNavigation / JQtTitleBar /
-  JQtInfoBar / JQtEasing / JQtAnimation 系列
-- **信号对齐 Qt**：onClick → **onClicked**（其余本就对齐：onPressed/onToggled/onTextChanged...）
-- **链式 API**：所有 onXxx 返回 this：`btn.onClicked(...).setText("OK").setFixedSize(100,40)`
-- 映射表：[docs/qt-mapping.md](docs/qt-mapping.md)（类名 + 信号 + 翻译规则）
-
-> 破坏性变更：旧类名（JQtButton 等）不再存在，迁移见映射表（Java→C++ 翻译一条规则）。
 ### v0.4.0-alpha（2026-08-27）— 新控件六件套 / ARM64
 
 **新控件（v0.4 六件套）**：

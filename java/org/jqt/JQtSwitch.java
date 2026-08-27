@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  * Fluent 风格开关控件：轨道 + 滑块，切换时滑块位移动画。
  * 自定义绘制（非 QSS 子控件），颜色跟随内置配色。
  */
-public class JQtSwitch extends JQtWidget {
+public class JQtSwitch extends QWidget {
 
     private final List<Consumer<Boolean>> onToggledHandlers = new ArrayList<>();
 
@@ -44,8 +44,9 @@ public class JQtSwitch extends JQtWidget {
     private native void nativeSetChecked(long handle, boolean checked);
 
     /** 状态切换回调（参数为新状态）。 */
-    public void onToggled(Consumer<Boolean> handler) {
+    public JQtSwitch onToggled(Consumer<Boolean> handler) {
         onToggledHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧回调（JNI）。 */

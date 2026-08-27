@@ -14,7 +14,7 @@ import java.util.function.Consumer;
  * Fluent 侧栏导航：图标 + 文字导航项，选中高亮背景 200ms 滑动动画。
  * 高亮色 = 主题色淡色，文字选中态用主题色；宽度固定 180px。
  */
-public class JQtNavigation extends JQtWidget {
+public class JQtNavigation extends QWidget {
 
     private final List<Consumer<Integer>> onChangedHandlers = new ArrayList<>();
 
@@ -39,8 +39,9 @@ public class JQtNavigation extends JQtWidget {
     }
 
     /** 选中项变化回调。 */
-    public void onChanged(Consumer<Integer> handler) {
+    public JQtNavigation onChanged(Consumer<Integer> handler) {
         onChangedHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧回调（JNI）。 */
@@ -55,3 +56,4 @@ public class JQtNavigation extends JQtWidget {
     private native int nativeCurrentIndex(long handle);
     private native void nativeSetCurrentIndex(long handle, int index);
 }
+

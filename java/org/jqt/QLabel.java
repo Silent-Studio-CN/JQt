@@ -9,9 +9,9 @@ package org.jqt;
 /**
  * 文本标签：封装 C++ 侧的 {@code QLabel}。
  */
-public class JQtLabel extends JQtWidget {
+public class QLabel extends QWidget {
 
-    public JQtLabel(String text) {
+    public QLabel(String text) {
         nativeHandle = nativeCreate(text);
         registerCleaner();
     }
@@ -30,3 +30,5 @@ public class JQtLabel extends JQtWidget {
     }
     private native String nativeText(long handle);
 }
+
+

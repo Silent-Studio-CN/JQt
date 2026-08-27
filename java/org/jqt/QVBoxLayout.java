@@ -7,14 +7,16 @@
 package org.jqt;
 
 /**
- * 水平布局：子控件自左向右排列（封装 C++ 侧 {@code QHBoxLayout}）。
+ * 垂直布局：子控件自上而下排列（封装 C++ 侧 {@code QVBoxLayout}）。
  */
-public class JQtHBoxLayout extends JQtLayout {
+public class QVBoxLayout extends QLayout {
 
-    public JQtHBoxLayout() {
+    public QVBoxLayout() {
         nativeHandle = nativeCreate();
         registerCleaner();
     }
 
     private native long nativeCreate();
 }
+
+

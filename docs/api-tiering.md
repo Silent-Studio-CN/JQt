@@ -16,7 +16,7 @@
 
 ## 2. L2 分组对象设计
 
-所有 L2 方法按语义分组，通过 `JQtWidget` 基类上的惰性访问器获取：
+所有 L2 方法按语义分组，通过 `QWidget` 基类上的惰性访问器获取：
 
 | 访问器 | 分组 | 涵盖内容 |
 |--------|------|---------|
@@ -30,7 +30,7 @@
 ## 3. 命名与呈现规则
 
 - Java 命名：camelCase；布尔 getter 保留 `isXxx`；信号统一 `onXxx`；
-- 语义去冗余：`JQtWindow.setTitle`（而非 setWindowTitle——类本身是窗口）；
+- 语义去冗余：`QMainWindow.setTitle`（而非 setWindowTitle——类本身是窗口）；
 - 默认参数：Qt 的 `parent` 参数在 Java 中省略（用 `addWidget`/布局建立父子关系）；
 - 返回 `this` 支持链式调用（L1 setter 尽量链式）；
 - 文档注释标注"①常用 / ②少用（window()） / ③高级（native()）"。
@@ -64,13 +64,13 @@
 | setFocus() | setFocus | |
 | hasFocus() | hasFocus | |
 | setWindowIcon(Icon) | setWindowIcon | |
-| setParent(JQtWidget) | setParent | |
+| setParent(QWidget) | setParent | |
 | raise() / lower() | raise / lower | 层级 |
 | update() / repaint() | update / repaint | 重绘 |
 | move(x,y) / pos() | move / pos | |
 | x() / y() | x / y | |
 | geometry() / setGeometry(x,y,w,h) | 同左 | |
-| setLayout(JQtLayout) | setLayout | |
+| setLayout(QLayout) | setLayout | |
 | grab() → Image | grab | 控件截图 |
 | isWindow() | isWindow | |
 | setAttribute(attr, on) | setAttribute | 常用属性（WA_*） |
@@ -113,13 +113,13 @@
 
 **L1**：exec()、quit()、onAboutToQuit()、schedule(Runnable, ms)、scheduleQuit(ms)（现有实现已覆盖）
 
-**L2（JQtApplication 直接方法）**：setStyle / style、setStyleSheet / styleSheet、setFont / font、setPalette / palette、beep()、closeAllWindows()、alert(window, ms)、activeWindow()、focusWidget()、widgetAt(x,y)、topLevelAt(x,y)、topLevelWidgets()、allWidgets()、setQuitOnLastWindowClosed / quitOnLastWindowClosed、setDoubleClickInterval、setCursorFlashTime、setWheelScrollLines、setStartDragDistance / setStartDragTime、setKeyboardInputInterval
+**L2（QApplication 直接方法）**：setStyle / style、setStyleSheet / styleSheet、setFont / font、setPalette / palette、beep()、closeAllWindows()、alert(window, ms)、activeWindow()、focusWidget()、widgetAt(x,y)、topLevelAt(x,y)、topLevelWidgets()、allWidgets()、setQuitOnLastWindowClosed / quitOnLastWindowClosed、setDoubleClickInterval、setCursorFlashTime、setWheelScrollLines、setStartDragDistance / setStartDragTime、setKeyboardInputInterval
 
 **L3（.native()）**：notify、event、qApp（单例访问——Java 直接用全局静态实例即可，无需暴露）、setEffectEnabled / isEffectEnabled、navigationMode、autoSipEnabled、activeModalWidget、activePopupWidget
 
 ### 4.3 QPushButton + QAbstractButton（67 个方法合并）
 
-**L1**：setText / text、onClick(Runnable)、onPressed(Runnable)、onReleased(Runnable)、setCheckable(boolean) / isCheckable()、setChecked(boolean) / isChecked()、onToggled(Consumer<Boolean>)、setEnabled / isEnabled（继承）、setIcon(Icon)、click()（程序化点击）、setDefault(boolean)、isDown() / setDown(boolean)、toggle()
+**L1**：setText / text、onClicked(Runnable)、onPressed(Runnable)、onReleased(Runnable)、setCheckable(boolean) / isCheckable()、setChecked(boolean) / isChecked()、onToggled(Consumer<Boolean>)、setEnabled / isEnabled（继承）、setIcon(Icon)、click()（程序化点击）、setDefault(boolean)、isDown() / setDown(boolean)、toggle()
 
 **L2**：setAutoRepeat(boolean) / autoRepeat()、setAutoRepeatDelay(ms)、setAutoRepeatInterval(ms)、setIconSize(Size) / iconSize()、setShortcut(KeySequence)、setAutoExclusive(boolean) / autoExclusive()、setFlat(boolean) / isFlat()、animateClick(ms)、group()（返回按钮组）
 
@@ -177,7 +177,7 @@
 
 **JQtDialog L1**：exec()（模态阻塞）、accept()、reject()、done(int)、result()、setModal / isModal、show()、close()、setTitle、onAccepted(Runnable)、onRejected(Runnable)、setWindowTitle
 
-**JQtMessageBox L2-L1 静态工厂**：info(parent, title, text)、warning(...)、critical(...)、question(...)（静态方法，返回用户选择）、setText / setInformativeText / setDetailedText、addButton(StandardButton)、setDefaultButton、setIcon(Icon)
+**QMessageBox L2-L1 静态工厂**：info(parent, title, text)、warning(...)、critical(...)、question(...)（静态方法，返回用户选择）、setText / setInformativeText / setDetailedText、addButton(StandardButton)、setDefaultButton、setIcon(Icon)
 
 **L3（.native()）**：open()、showEvent、setSizeGripEnabled、adjustPosition、最小化按钮行为等
 
@@ -190,21 +190,21 @@
 | **JQtAction** | setText、setIcon、setEnabled、setCheckable、setChecked、onTriggered、setShortcut | setIconText、setMenu、setSeparator、onToggled | setShortcutContext、setData、setStatusTip |
 | **JQtToolBar** | addAction、addSeparator、addWidget、setMovable、onActionTriggered | setToolButtonStyle、setIconSize、setAllowedAreas | setFloatable、toggleViewAction |
 | **JQtTreeWidget** | addTopLevelItem、setHeaderLabels、clear、currentItem、onItemClicked、setCurrentItem | expandAll/collapseAll、expandItem、setItemText、selectedItems、onItemDoubleClicked | setItemWidget、setRootIsDecorated、header() |
-| **JQtScrollArea** | setWidget、widget()、setWidgetResizable | setAlignment、ensureVisible、onVerticalScrollBarChanged | setFrameShape、takeWidget |
+| **QScrollArea** | setWidget、widget()、setWidgetResizable | setAlignment、ensureVisible、onVerticalScrollBarChanged | setFrameShape、takeWidget |
 | **JQtSpinBox** | value()、setValue、onValueChanged、setRange、setSuffix | setPrefix、setSingleStep、setDecimals（double）、onEditingFinished | setGroupSeparatorShown、setSpecialValueText |
-| **JQtCheckBox** | setChecked、isChecked、setText、onToggled、onStateChanged | setTristate、checkState、setTextVisible | setIconSize |
+| **QCheckBox** | setChecked、isChecked、setText、onToggled、onStateChanged | setTristate、checkState、setTextVisible | setIconSize |
 | **JQtColorDialog** | 静态 getColor()、setCurrentColor、onColorSelected | setOption、setWindowTitle | setCustomColor、customColorCount |
 | **JQtTabWidget** | addTab、insertTab、removeTab、setCurrentIndex、currentIndex、onCurrentChanged | setTabText、setTabIcon、setTabsClosable、onTabCloseRequested | setCornerWidget、setDocumentMode、setMovable |
 | **JQtPlainTextEdit** | setPlainText、toPlainText、appendPlainText、clear、setReadOnly、onTextChanged | insertPlainText、setPlaceholderText、setTabStopDistance、undo/redo、find | setDocument、setLineWrapMode、setMaximumBlockCount |
 | **JQtStatusBar** | showMessage(String, ms)、clearMessage、addWidget | addPermanentWidget、onMessageChanged | setSizeGripEnabled |
-| **JQtProgressBar** | setValue、value、setRange、setMaximum、setMinimum | setTextVisible、setFormat、onValueChanged | setAlignment、setInvertedAppearance |
+| **QProgressBar** | setValue、value、setRange、setMaximum、setMinimum | setTextVisible、setFormat、onValueChanged | setAlignment、setInvertedAppearance |
 
 ## 5. 实现顺序建议
 
-1. **第一批（已完成）**：JQtWindow/JQtButton/JQtLabel/JQtLineEdit/JQtComboBox/JQtListWidget + 布局（L1 子集已实现）
-2. **第二批（HtmlWorkbench 前置）**：JQtMenuBar/JQtMenu/JQtAction/JQtToolBar/JQtTreeWidget/JQtScrollArea/JQtStatusBar/JQtSpinBox/JQtCheckBox/JQtColorDialog/JQtDialog（L1 全量）
-3. **第三批**：L2 分组对象（window()/style()/drag()/focus()）落地到 JQtWidget 基类
-4. **第四批**：JQtMessageBox 静态工厂、JQtTabWidget、JQtPlainTextEdit、JQtProgressBar
+1. **第一批（已完成）**：QMainWindow/QPushButton/QLabel/QLineEdit/QComboBox/QListWidget + 布局（L1 子集已实现）
+2. **第二批（HtmlWorkbench 前置）**：JQtMenuBar/JQtMenu/JQtAction/JQtToolBar/JQtTreeWidget/QScrollArea/JQtStatusBar/JQtSpinBox/QCheckBox/JQtColorDialog/JQtDialog（L1 全量）
+3. **第三批**：L2 分组对象（window()/style()/drag()/focus()）落地到 QWidget 基类
+4. **第四批**：QMessageBox 静态工厂、JQtTabWidget、JQtPlainTextEdit、QProgressBar
 5. **第五批**：.native() 高级入口（winId、绘制引擎等），文档标注"高级 API"
 6. **持续**：每个新控件先出分级表（本文档），评审后再实现
 

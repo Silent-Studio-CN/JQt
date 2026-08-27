@@ -10,43 +10,43 @@ import org.jqt.*;
  */
 public class FluentAnimDemo {
 
-    static JQtApplication app;
-    static JQtPanel card;
+    static QApplication app;
+    static QFrame card;
     static boolean expanded = false;
 
     public static void main(String[] args) {
-        app = new JQtApplication();
+        app = new QApplication();
         app.setStyleSheet(
             "QWidget { font-family: 'Segoe UI','Microsoft YaHei'; }" +
             "QPushButton#animBtn { background: #3b64e8; color: white; border: none; border-radius: 6px;" +
             "  padding: 10px 24px; font-size: 14px; font-weight: bold; }" +
             "QPushButton#animBtn:hover { background: #4a74f0; }" +
             "QPushButton#animBtn:pressed { background: #2f55d6; padding-top: 11px; padding-bottom: 9px; }" +
-            "JQtPanel#card { background: white; border: 1px solid #e3e8f0; border-radius: 8px; }" +
+            "QFrame#card { background: white; border: 1px solid #e3e8f0; border-radius: 8px; }" +
             "QLabel#tip { color: #666; font-size: 12px; }"
         );
 
-        JQtWindow w = new JQtWindow("Fluent Anim Demo", 460, 400);
+        QMainWindow w = new QMainWindow("Fluent Anim Demo", 460, 400);
         w.setFrameless(true);
         w.setRoundedCorners(true);
         w.setDraggable(true);
 
         // 标题栏（可拖动）
-        JQtLabel titleBar = new JQtLabel("  Fluent Anim Demo");
+        QLabel titleBar = new QLabel("  Fluent Anim Demo");
         titleBar.setStyleSheet("background: #f3f3f3; min-height: 36px; color: #333; font-weight: bold;");
-        JQtButton closeBtn = new JQtButton("✕");
+        QPushButton closeBtn = new QPushButton("✕");
         closeBtn.setStyleSheet("QPushButton { background: transparent; border: none; color: #333; padding: 4px 12px; }" +
                                "QPushButton:hover { background: #e81123; color: white; }");
-        closeBtn.onClick(() -> w.close());
-        JQtHBoxLayout tbBox = new JQtHBoxLayout();
+        closeBtn.onClicked(() -> w.close());
+        QHBoxLayout tbBox = new QHBoxLayout();
         tbBox.addWidget(titleBar);
         tbBox.addStretch(1);
         tbBox.addWidget(closeBtn);
-        JQtPanel tbHost = new JQtPanel();
+        QFrame tbHost = new QFrame();
         tbHost.setLayout(tbBox);
 
         // 按压按钮（QSS :pressed 下沉模拟 TranslateYAnimation）
-        JQtButton pushBtn = new JQtButton("按压我（QSS 下沉反馈）");
+        QPushButton pushBtn = new QPushButton("按压我（QSS 下沉反馈）");
         pushBtn.setObjectName("animBtn");
         pushBtn.onPressed(() -> System.out.println("[ANIM] pressed  -> TranslateY 语义: QSS padding 下沉"));
         pushBtn.onReleased(() -> System.out.println("[ANIM] released -> 回弹语义: 恢复原状"));
@@ -57,20 +57,20 @@ public class FluentAnimDemo {
         sw.onToggled(b -> System.out.println("[ANIM] switch slider -> " + b + " (120ms 滑块动画)"));
 
         // 卡片缩放按钮（FluentAnimation SCALE 语义 -> animateResize）
-        JQtButton scaleBtn = new JQtButton("卡片缩放动画（bounce）");
+        QPushButton scaleBtn = new QPushButton("卡片缩放动画（bounce）");
         scaleBtn.setObjectName("animBtn");
 
-        card = new JQtPanel();
+        card = new QFrame();
         card.setObjectName("card");
-        JQtLabel cardText = new JQtLabel("我是卡片");
-        JQtVBoxLayout cardBox = new JQtVBoxLayout();
+        QLabel cardText = new QLabel("我是卡片");
+        QVBoxLayout cardBox = new QVBoxLayout();
         cardBox.addWidget(cardText);
         card.setLayout(cardBox);
 
-        JQtLabel tip = new JQtLabel("qf 动画 = 属性插值 + 重绘；JQt 内置同款引擎（JQtEasing 40 缓动）");
+        QLabel tip = new QLabel("qf 动画 = 属性插值 + 重绘；JQt 内置同款引擎（JQtEasing 40 缓动）");
         tip.setObjectName("tip");
 
-        JQtVBoxLayout root = new JQtVBoxLayout();
+        QVBoxLayout root = new QVBoxLayout();
         root.setSpacing(14);
         root.addWidget(tbHost);
         root.addWidget(pushBtn);
@@ -82,7 +82,7 @@ public class FluentAnimDemo {
         w.setLayout(root);
 
         // 卡片缩放（SCALE 语义：160x60 <-> 300x120）
-        scaleBtn.onClick(() -> {
+        scaleBtn.onClicked(() -> {
             if (!expanded) {
                 System.out.println("[ANIM] card scale up: animateResize 300x120 OUT_BOUNCE 500ms");
                 card.animateResize(300, 120, 500, JQtEasing.OUT_BOUNCE);
@@ -105,3 +105,4 @@ public class FluentAnimDemo {
         System.out.println("[FluentAnimDemo] exited");
     }
 }
+

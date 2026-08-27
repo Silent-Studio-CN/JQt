@@ -72,15 +72,15 @@ import org.jqt.*;
 
 public class Hello {
     public static void main(String[] args) {
-        JQtApplication app = new JQtApplication();   // 第一步：必须最先创建
+        QApplication app = new QApplication();   // 第一步：必须最先创建
 
-        JQtWindow window = new JQtWindow("Hello JQt", 640, 480);
-        JQtLabel label = new JQtLabel("我的第一个 JQt 程序");
-        JQtButton button = new JQtButton("点我");
+        QMainWindow window = new QMainWindow("Hello JQt", 640, 480);
+        QLabel label = new QLabel("我的第一个 JQt 程序");
+        QPushButton button = new QPushButton("点我");
 
-        button.onClick(() -> label.setText("点击成功！"));
+        button.onClicked(() -> label.setText("点击成功！"));
 
-        JQtVBoxLayout vbox = new JQtVBoxLayout();
+        QVBoxLayout vbox = new QVBoxLayout();
         vbox.setSpacing(12);
         vbox.addWidget(label);
         vbox.addWidget(button);
@@ -97,16 +97,16 @@ public class Hello {
 **输入框 + 下拉框 + 列表：**
 
 ```java
-JQtLineEdit edit = new JQtLineEdit("");
+QLineEdit edit = new QLineEdit("");
 edit.setPlaceholderText("输入文字，回车确认");
 edit.onReturnPressed(() -> System.out.println("输入了：" + edit.text()));
 
-JQtComboBox combo = new JQtComboBox();
+QComboBox combo = new QComboBox();
 combo.addItem("选项 A");
 combo.addItem("选项 B");
 combo.onCurrentIndexChanged(i -> System.out.println("选中：" + combo.currentText()));
 
-JQtListWidget list = new JQtListWidget();
+QListWidget list = new QListWidget();
 list.addItem("条目 1");
 list.addItem("条目 2");
 list.onItemClicked(row -> System.out.println("点击了第 " + row + " 行"));
@@ -115,7 +115,7 @@ list.onItemClicked(row -> System.out.println("点击了第 " + row + " 行"));
 **勾选按钮：**
 
 ```java
-JQtButton check = new JQtButton("开关");
+QPushButton check = new QPushButton("开关");
 check.setCheckable(true);
 check.onToggled(checked -> System.out.println("状态：" + (checked ? "开" : "关")));
 ```
@@ -132,7 +132,7 @@ app.schedule(() -> window.resize(800, 600), 1000);   // 1 秒后在 GUI 线程�
 **水平布局 + 弹性空间：**
 
 ```java
-JQtHBoxLayout hbox = new JQtHBoxLayout();
+QHBoxLayout hbox = new QHBoxLayout();
 hbox.addWidget(button1);
 hbox.addWidget(button2);
 hbox.addStretch(1);   // 把按钮推向左端
@@ -146,7 +146,7 @@ window.setLayout(hbox);
 | 线程 | 所有 `onXxx` 回调在 **GUI 主线程**执行；`schedule` 可从任意线程调用，任务在 GUI 线程执行 |
 | 多监听器 | 同一信号可注册多个回调，按注册顺序触发 |
 | 内存 | Java 对象不可达时自动释放底层 Qt 对象；`dispose()` 可提前手动释放 |
-| 错误 | 调用已释放对象 → `IllegalStateException`（程序不会崩溃）；未创建 `JQtApplication` 就建控件 → 同样抛异常 |
+| 错误 | 调用已释放对象 → `IllegalStateException`（程序不会崩溃）；未创建 `QApplication` 就建控件 → 同样抛异常 |
 | 中文 | Java 源码用 UTF-8 保存；运行加 `-Dfile.encoding=UTF-8`（JDK 18+ 默认） |
 
 ### 7. 常见问题（FAQ）
@@ -165,7 +165,7 @@ window.setLayout(hbox);
 → `app.exec()` 会一直运行直到**所有窗口关闭**。关闭窗口后自动返回。
 
 **Q5：可以同时注册多个点击回调吗？**
-→ 可以。`button.onClick(a); button.onClick(b);` 两者都会触发。
+→ 可以。`button.onClicked(a); button.onClicked(b);` 两者都会触发。
 
 **Q6：程序退出前想保存数据？**
 → `app.onAboutToQuit(() -> 保存...)`。
@@ -254,15 +254,15 @@ import org.jqt.*;
 
 public class Hello {
     public static void main(String[] args) {
-        JQtApplication app = new JQtApplication();   // always first
+        QApplication app = new QApplication();   // always first
 
-        JQtWindow window = new JQtWindow("Hello JQt", 640, 480);
-        JQtLabel label = new JQtLabel("My first JQt app");
-        JQtButton button = new JQtButton("Click me");
+        QMainWindow window = new QMainWindow("Hello JQt", 640, 480);
+        QLabel label = new QLabel("My first JQt app");
+        QPushButton button = new QPushButton("Click me");
 
-        button.onClick(() -> label.setText("Clicked!"));
+        button.onClicked(() -> label.setText("Clicked!"));
 
-        JQtVBoxLayout vbox = new JQtVBoxLayout();
+        QVBoxLayout vbox = new QVBoxLayout();
         vbox.setSpacing(12);
         vbox.addWidget(label);
         vbox.addWidget(button);
@@ -278,22 +278,22 @@ public class Hello {
 
 **LineEdit + ComboBox + List:**
 ```java
-JQtLineEdit edit = new JQtLineEdit("");
+QLineEdit edit = new QLineEdit("");
 edit.setPlaceholderText("type and press Enter");
 edit.onReturnPressed(() -> System.out.println("typed: " + edit.text()));
 
-JQtComboBox combo = new JQtComboBox();
+QComboBox combo = new QComboBox();
 combo.addItem("Option A");
 combo.onCurrentIndexChanged(i -> System.out.println("selected: " + combo.currentText()));
 
-JQtListWidget list = new JQtListWidget();
+QListWidget list = new QListWidget();
 list.addItem("Row 1");
 list.onItemClicked(row -> System.out.println("clicked row " + row));
 ```
 
 **Checkable button:**
 ```java
-JQtButton check = new JQtButton("Toggle");
+QPushButton check = new QPushButton("Toggle");
 check.setCheckable(true);
 check.onToggled(checked -> System.out.println(checked ? "on" : "off"));
 ```
@@ -308,7 +308,7 @@ app.schedule(() -> window.resize(800, 600), 1000);   // GUI thread, after 1s
 
 **HBox with stretch:**
 ```java
-JQtHBoxLayout hbox = new JQtHBoxLayout();
+QHBoxLayout hbox = new QHBoxLayout();
 hbox.addWidget(button1);
 hbox.addWidget(button2);
 hbox.addStretch(1);
@@ -322,7 +322,7 @@ window.setLayout(hbox);
 | Threading | all `onXxx` callbacks run on the **GUI thread**; `schedule` is thread-safe and runs on the GUI thread |
 | Multi-listener | multiple callbacks per signal, in registration order |
 | Memory | unreachable Java objects release their Qt objects automatically; `dispose()` for manual release |
-| Errors | calling a disposed object throws `IllegalStateException` (no crash); same when creating widgets before `JQtApplication` |
+| Errors | calling a disposed object throws `IllegalStateException` (no crash); same when creating widgets before `QApplication` |
 | Unicode | save sources as UTF-8; add `-Dfile.encoding=UTF-8` on JDK 17 |
 
 ### 7. FAQ
@@ -335,7 +335,7 @@ window.setLayout(hbox);
 
 **Q4: `app.exec()` never returns** — it returns when **all windows are closed**.
 
-**Q5: Multiple click callbacks?** — yes: `onClick(a); onClick(b);` both fire.
+**Q5: Multiple click callbacks?** — yes: `onClicked(a); onClicked(b);` both fire.
 
 **Q6: Save data before exit?** — `app.onAboutToQuit(() -> save())`.
 

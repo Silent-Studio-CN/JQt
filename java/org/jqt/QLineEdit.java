@@ -19,12 +19,12 @@ import java.util.function.Consumer;
  *   <li>{@link #onReturnPressed(Runnable)} — returnPressed 信号（回车确认）</li>
  * </ul>
  */
-public class JQtLineEdit extends JQtWidget {
+public class QLineEdit extends QWidget {
 
     private final List<Consumer<String>> onTextChangedHandlers = new ArrayList<>();
     private final List<Runnable> onReturnPressedHandlers = new ArrayList<>();
 
-    public JQtLineEdit(String text) {
+    public QLineEdit(String text) {
         nativeHandle = nativeCreate(text);
         registerCleaner();
     }
@@ -50,13 +50,15 @@ public class JQtLineEdit extends JQtWidget {
     private native void nativeSetPlaceholderText(long handle, String text);
 
     /** 注册文本变化回调（textChanged 信号，参数为最新文本）。 */
-    public void onTextChanged(Consumer<String> handler) {
+    public QLineEdit onTextChanged(Consumer<String> handler) {
         onTextChangedHandlers.add(handler);
+        return this;
     }
 
     /** 注册回车确认回调（returnPressed 信号）。 */
-    public void onReturnPressed(Runnable handler) {
+    public QLineEdit onReturnPressed(Runnable handler) {
         onReturnPressedHandlers.add(handler);
+        return this;
     }
 
     /** 由 C++ 侧在文本变化时回调（JNI）。 */
@@ -73,3 +75,5 @@ public class JQtLineEdit extends JQtWidget {
         }
     }
 }
+
+

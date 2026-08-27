@@ -16,8 +16,9 @@ public class JQtInfoBar {
     }
 
     /** 在窗口顶部显示通知（durationMs 毫秒后自动消失）。 */
-    public static void show(JQtWindow window, String text, long durationMs) {
+    public static void show(QMainWindow window, String text, long durationMs) {
         nativeShowInfo(window.nativeHandle(), text, durationMs);
     }
     static native void nativeShowInfo(long winHandle, String text, long durationMs);
 }
+

@@ -10,20 +10,22 @@ package org.jqt;
  * 模态对话框（QMessageBox 封装）。调用会阻塞直到用户选择（模态循环）。
  * 样式由 QSS 控制。
  */
-public class JQtMessageBox {
+public class QMessageBox {
 
-    private JQtMessageBox() {
+    private QMessageBox() {
     }
 
     /** 是/否 询问框，返回用户选择（true = 是）。阻塞调用。 */
-    public static boolean showQuestion(JQtWindow parent, String title, String text) {
+    public static boolean showQuestion(QMainWindow parent, String title, String text) {
         return nativeShowQuestion(parent.nativeHandle(), title, text);
     }
     static native boolean nativeShowQuestion(long winHandle, String title, String text);
 
     /** 信息框（确定）。阻塞调用。 */
-    public static void showInfo(JQtWindow parent, String title, String text) {
+    public static void showInfo(QMainWindow parent, String title, String text) {
         nativeShowInfo(parent.nativeHandle(), title, text);
     }
     static native void nativeShowInfo(long winHandle, String title, String text);
 }
+
+

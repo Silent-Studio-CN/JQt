@@ -33,15 +33,15 @@ import org.jqt.*;
 
 public class Hello {
     public static void main(String[] args) {
-        QApplication app = new QApplication();
+        JQtApplication app = new JQtApplication();
 
-        QMainWindow window = new QMainWindow("Hello JQt", 640, 480);
-        QLabel label = new QLabel("JQt 的第一个程序");
-        QPushButton button = new QPushButton("点我");
+        JQtWindow window = new JQtWindow("Hello JQt", 640, 480);
+        JQtLabel label = new JQtLabel("JQt 的第一个程序");
+        JQtButton button = new JQtButton("点我");
 
-        button.onClicked(() -> label.setText("点击成功！"));
+        button.onClick(() -> label.setText("点击成功！"));
 
-        QVBoxLayout vbox = new QVBoxLayout();
+        JQtVBoxLayout vbox = new JQtVBoxLayout();
         vbox.addWidget(label);
         vbox.addWidget(button);
         window.setLayout(vbox);
@@ -92,15 +92,15 @@ import org.jqt.*;
 
 public class Hello {
     public static void main(String[] args) {
-        QApplication app = new QApplication();
+        JQtApplication app = new JQtApplication();
 
-        QMainWindow window = new QMainWindow("Hello JQt", 640, 480);
-        QLabel label = new QLabel("My first JQt app");
-        QPushButton button = new QPushButton("Click me");
+        JQtWindow window = new JQtWindow("Hello JQt", 640, 480);
+        JQtLabel label = new JQtLabel("My first JQt app");
+        JQtButton button = new JQtButton("Click me");
 
-        button.onClicked(() -> label.setText("Clicked!"));
+        button.onClick(() -> label.setText("Clicked!"));
 
-        QVBoxLayout vbox = new QVBoxLayout();
+        JQtVBoxLayout vbox = new JQtVBoxLayout();
         vbox.addWidget(label);
         vbox.addWidget(button);
         window.setLayout(vbox);
