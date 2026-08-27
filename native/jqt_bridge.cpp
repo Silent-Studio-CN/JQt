@@ -99,6 +99,25 @@
 
 #include <atomic>
 #include <functional>
+
+// 崩溃日志：Windows SEH 未处理异常时追加 jqt-crash.log（时间/异常码/地址/线程）
+// 写入后继续交给系统默认处理（错误框），便于诊断 native 崩溃。
+#ifdef _WIN32
+static LONG WINAPI jqtCrashHandler(EXCEPTION_POINTERS* ep) {
+    FILE* f = fopen("jqt-crash.log", "a");
+    if (f != nullptr) {
+        SYSTEMTIME st;
+        GetLocalTime(&st);
+        fprintf(f, "[%04d-%02d-%02d %02d:%02d:%02d] EXCEPTION code=0x%08lX addr=%p thread=%lu\n",
+                st.wYear, st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond,
+                ep->ExceptionRecord->ExceptionCode,
+                ep->ExceptionRecord->ExceptionAddress,
+                GetCurrentThreadId());
+        fclose(f);
+    }
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+#endif
 #include <mutex>
 #include <unordered_map>
 #include <unordered_set>
@@ -588,6 +607,9 @@ protected:
 // ----------------------------------------------------------------------------
 
 JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeCreateApp(JNIEnv* env, jobject thiz, jstring rhiBackend) {
+#ifdef _WIN32
+    SetUnhandledExceptionFilter(jqtCrashHandler);   // 崩溃日志（jqt-crash.log）
+#endif
     env->GetJavaVM(&g_jvm);
     if (rhiBackend != nullptr) {
         const char* b = env->GetStringUTFChars(rhiBackend, nullptr);
