@@ -138,6 +138,10 @@ public class QApplication {
         nativeSetFont(family, pointSize);
     }
 
+    /** 当前全局字体，返回 "Family,size"。 */
+    public String font() { return nativeFont(); }
+    private static native String nativeFont();
+
     /**
      * 进入 Qt 事件循环（阻塞调用）。
      * 当最后一个窗口关闭时返回（对应 Qt 的 quitOnLastWindowClosed）。
