@@ -39,19 +39,7 @@ public class QMainWindow extends QWidget {
 
     private native long nativeCreate(String title, int width, int height);
 
-    // show()/hide() 继承自 QWidget（基础 API）
-
-    /** 关闭窗口（触发 onClose 回调；若为最后一个窗口，exec() 返回）。 */
-    public void close() {
-        nativeClose(nativeHandle);
-    }
-    private native void nativeClose(long handle);
-
-    /** 修改窗口大小（会触发 onResized 回调）。 */
-    public void resize(int width, int height) {
-        nativeResize(nativeHandle, width, height);
-    }
-    private native void nativeResize(long handle, int width, int height);
+    // show()/hide()/close()/resize() 继承自 QWidget（基础 API，v0.6.0 上移到基类）
 
     // ---- Fluent 窗口能力（无边框 / 亚克力 / 圆角 / 拖拽）----
 
