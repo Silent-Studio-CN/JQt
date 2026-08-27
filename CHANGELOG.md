@@ -12,7 +12,7 @@
 <a id="zh"></a>
 ## 中文版
 
-### v0.5.0-alpha（2026-08-27）— Qt API 对齐（类名 Q 化 + 信号对齐 + 链式）
+### v0.4.1-alpha（2026-08-27）— Qt API 对齐（类名 Q 化 + 信号对齐 + 链式）
 
 **命名策略（SilentStudio 理念：好好对待程序员）**：
 - **有 Qt 对应物的类改用 Q 前缀**：QPushButton / QLineEdit / QComboBox / QListWidget /

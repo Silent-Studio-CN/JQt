@@ -1,36 +1,33 @@
-# JQt v0.4.0-alpha
+# JQt v0.4.1-alpha
 
-JQt 第四个 Alpha —— 新控件六件套 / Windows ARM64 / qf light 皮肤。
+JQt v0.4.1 —— **Qt API 对齐版**：类名 Q 化 + 信号对齐 + 链式 API。
+
+## 本版变更（API 命名体系）
+
+- **类名 Q 化**：有 Qt 对应物的类改用 Q 前缀——
+  `QPushButton` / `QLineEdit` / `QComboBox` / `QListWidget` / `QCheckBox` / `QMainWindow` /
+  `QWidget` / `QApplication` / `QSlider` / `QProgressBar` / `QScrollArea` / `QMessageBox` /
+  `QFrame` / `QVBoxLayout` / `QHBoxLayout` / `QLayout` —— **Qt 文档直接可查，零认知成本**
+- **JQt 原创控件保留 JQt 前缀**：JQtSwitch / JQtPivot / JQtNavigation / JQtTitleBar /
+  JQtInfoBar / JQtEasing / JQtAnimation 系列
+- **信号对齐 Qt**：`onClick` → `onClicked`（其余本就对齐）
+- **链式 API**：所有 onXxx 返回 this：`btn.onClicked(...).setText("OK").setFixedSize(100,40)`
+- 完整映射：[docs/qt-mapping.md](docs/qt-mapping.md)
+
+> 破坏性变更：旧类名（JQtButton 等）不再存在，迁移见映射表。
 
 ## 发布包
 
 | 资产 | 说明 |
 |------|------|
-| `jqt-0.4.0-alpha.jar` | Java API（平台无关） |
-| `jqt-0.4.0-alpha-windows-x64.zip` | Windows x64 完整包（**Qt 6.11.2** 运行时） |
-| `jqt-windows-6.11.2.dll` | Windows x64（Qt 6.11.2，与 zip 同版本裸库） |
-| `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 动态库 |
-| `jqt-windows-6.8.3.dll` | Windows x64（Qt 6.8.3） |
+| `jqt-0.4.1-alpha.jar` | Java API（平台无关） |
+| `jqt-0.4.1-alpha-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2） |
+| `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库 |
+| `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
 | `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux |
 | `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS |
-
-## 本版亮点
-
-- **新控件六件套**：JQtSlider / JQtScrollArea / JQtProgressBar / JQtNavigation / JQtMessageBox / JQtInfoBar
-- **Windows ARM64** 恢复（原生 runner + MSVC 构建）
-- **qf light 皮肤**（34 个 QSS 文件映射）
-
-## 快速上手
-
-```powershell
-git clone https://github.com/Silent-Studio-CN/JQt.git
-cd JQt
-.\build.ps1
-.\run-fluent.ps1                 # Fluent 演示（含 v0.4 新控件卡片）
-```
 
 ## 许可
 
 - JQt：JQt Source License v1.0（JSL-1.0）（LICENSE.md）
 - Qt 运行时：LGPLv3（LGPL-3.0.txt）
-- themes/qf/：qfluentwidgets（GPLv3）QSS，仅测试引用不随发布包分发
