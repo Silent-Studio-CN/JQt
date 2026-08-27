@@ -59,4 +59,10 @@ public class QSplitter extends QWidget {
         nativeSetHandleWidth(nativeHandle, width);
     }
     private native void nativeSetHandleWidth(long handle, int width);
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 子控件数量。 */
+    public int count() { return nativeCount(nativeHandle); }
+    private static native int nativeCount(long handle);
 }

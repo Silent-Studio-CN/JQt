@@ -30,6 +30,14 @@ public class QScrollArea extends QWidget {
     private native long nativeCreate();
     private native void nativeSetWidget(long handle, long childHandle);
     private native void nativeSetWidgetResizable(long handle, boolean resizable);
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 内容对齐：1 左 / 2 右 / 4 居中 / 8 两端。 */
+    public void setAlignment(int alignment) { nativeSetAlignment(nativeHandle, alignment); }
+    private static native void nativeSetAlignment(long handle, int alignment);
+
+    /** 内容对齐。 */
+    public int alignment() { return nativeAlignment(nativeHandle); }
+    private static native int nativeAlignment(long handle);
 }
-
-

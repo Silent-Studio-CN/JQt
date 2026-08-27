@@ -43,6 +43,12 @@ public class QListWidget extends QWidget {
     }
     private native int nativeCurrentRow(long handle);
 
+    /** 选中指定行（触发 onCurrentRowChanged）。 */
+    public void setCurrentRow(int row) {
+        nativeSetCurrentRow(nativeHandle, row);
+    }
+    private native void nativeSetCurrentRow(long handle, int row);
+
     /** 注册点击回调（itemClicked 信号，参数为行号）。 */
     public QListWidget onItemClicked(Consumer<Integer> handler) {
         onItemClickedHandlers.add(handler);
@@ -82,4 +88,50 @@ public class QListWidget extends QWidget {
     /** 指定行文本（越界返回 null）。 */
     public String item(int row) { return nativeItem(nativeHandle, row); }
     private static native String nativeItem(long handle, int row);
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 当前选中文本（无选中返回空串）。 */
+    public String currentText() { return nativeCurrentText(nativeHandle); }
+    private static native String nativeCurrentText(long handle);
+
+    private final List<Consumer<Integer>> onItemDoubleClickedHandlers = new ArrayList<>();
+    private final List<Consumer<Integer>> onItemActivatedHandlers = new ArrayList<>();
+    private final List<Consumer<String>> onCurrentTextChangedHandlers = new ArrayList<>();
+    private volatile boolean dblConn, actConn, curTxtConn;
+
+    /** 双击回调（参数为行号）。 */
+    public QListWidget onItemDoubleClicked(Consumer<Integer> handler) {
+        onItemDoubleClickedHandlers.add(handler);
+        if (!dblConn) { dblConn = true; nativeConnectItemDoubleClicked(nativeHandle); }
+        return this;
+    }
+
+    /** 激活回调（双击/回车，参数为行号）。 */
+    public QListWidget onItemActivated(Consumer<Integer> handler) {
+        onItemActivatedHandlers.add(handler);
+        if (!actConn) { actConn = true; nativeConnectItemActivated(nativeHandle); }
+        return this;
+    }
+
+    /** 当前文本变化回调（参数为新文本）。 */
+    public QListWidget onCurrentTextChanged(Consumer<String> handler) {
+        onCurrentTextChangedHandlers.add(handler);
+        if (!curTxtConn) { curTxtConn = true; nativeConnectCurrentTextChanged(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectItemDoubleClicked(long handle);
+    private native void nativeConnectItemActivated(long handle);
+    private native void nativeConnectCurrentTextChanged(long handle);
+
+    void nativeHandleItemDoubleClicked(int row) {
+        for (Consumer<Integer> h : onItemDoubleClickedHandlers) h.accept(row);
+    }
+    void nativeHandleItemActivated(int row) {
+        for (Consumer<Integer> h : onItemActivatedHandlers) h.accept(row);
+    }
+    void nativeHandleCurrentTextChanged(String text) {
+        for (Consumer<String> h : onCurrentTextChangedHandlers) h.accept(text);
+    }
 }

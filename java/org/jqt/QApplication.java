@@ -142,6 +142,18 @@ public class QApplication {
     /** 退出事件循环。 */
     public native void quit();
 
+    /** 播放系统提示音（beep）。 */
+    public static void beep() {
+        nativeBeep();
+    }
+    private static native void nativeBeep();
+
+    /** 当前全局样式表（QSS）。 */
+    public String styleSheet() {
+        return nativeStyleSheet();
+    }
+    private static native String nativeStyleSheet();
+
     /** 延迟 {@code ms} 毫秒后自动退出事件循环（演示 / 自动化测试用）。 */
     public native void scheduleQuit(long ms);
 

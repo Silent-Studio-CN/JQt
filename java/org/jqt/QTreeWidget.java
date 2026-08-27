@@ -82,4 +82,54 @@ public class QTreeWidget extends QWidget {
             h.accept(itemId);
         }
     }
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 当前选中节点 itemId（无选中返回 -1）。 */
+    public int currentItem() { return nativeCurrentItem(nativeHandle); }
+    private static native int nativeCurrentItem(long handle);
+
+    /** 选中指定节点（itemId）。 */
+    public void setCurrentItem(int itemId) { nativeSetCurrentItem(nativeHandle, itemId); }
+    private static native void nativeSetCurrentItem(long handle, int itemId);
+
+    private final List<Consumer<Integer>> onCurrentItemChangedHandlers = new ArrayList<>();
+    private final List<Consumer<Integer>> onItemDoubleClickedHandlers = new ArrayList<>();
+    private final List<Consumer<Integer>> onItemActivatedHandlers = new ArrayList<>();
+    private volatile boolean curConn, dblConn, actConn;
+
+    /** 当前节点切换回调（参数为新节点 itemId）。 */
+    public QTreeWidget onCurrentItemChanged(Consumer<Integer> handler) {
+        onCurrentItemChangedHandlers.add(handler);
+        if (!curConn) { curConn = true; nativeConnectCurrentItemChanged(nativeHandle); }
+        return this;
+    }
+
+    /** 节点双击回调（参数为 itemId）。 */
+    public QTreeWidget onItemDoubleClicked(Consumer<Integer> handler) {
+        onItemDoubleClickedHandlers.add(handler);
+        if (!dblConn) { dblConn = true; nativeConnectItemDoubleClicked(nativeHandle); }
+        return this;
+    }
+
+    /** 节点激活回调（双击/回车，参数为 itemId）。 */
+    public QTreeWidget onItemActivated(Consumer<Integer> handler) {
+        onItemActivatedHandlers.add(handler);
+        if (!actConn) { actConn = true; nativeConnectItemActivated(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectCurrentItemChanged(long handle);
+    private native void nativeConnectItemDoubleClicked(long handle);
+    private native void nativeConnectItemActivated(long handle);
+
+    void nativeHandleCurrentItemChanged(int itemId) {
+        for (Consumer<Integer> h : onCurrentItemChangedHandlers) h.accept(itemId);
+    }
+    void nativeHandleItemDoubleClicked(int itemId) {
+        for (Consumer<Integer> h : onItemDoubleClickedHandlers) h.accept(itemId);
+    }
+    void nativeHandleItemActivated(int itemId) {
+        for (Consumer<Integer> h : onItemActivatedHandlers) h.accept(itemId);
+    }
 }
