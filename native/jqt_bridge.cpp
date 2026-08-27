@@ -90,6 +90,8 @@
 #include <QFileDialog>
 #include <QColorDialog>
 #include <QFontDialog>
+#include <QFile>
+#include <QFileInfo>
 #include <QMetaObject>
 #include <QMoveEvent>
 #include <QPushButton>
@@ -185,6 +187,7 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QCanvasWidget.h"
 #include "generated/org_jqt_QClipboard.h"
 #include "generated/org_jqt_QSettings.h"
+#include "generated/org_jqt_QFile.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -4965,4 +4968,40 @@ JNIEXPORT void JNICALL Java_org_jqt_QSettings_nativeRemove(JNIEnv* env, jobject,
 JNIEXPORT void JNICALL Java_org_jqt_QSettings_nativeClear(JNIEnv* env, jobject, jlong h) {
     QSettings* s = static_cast<QSettings*>(requireHandle(env, h));
     if (s) s->clear();
+}
+
+// L1 补全批 H：QFile 静态工具
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFile_nativeCopy(JNIEnv* env, jclass, jstring src, jstring dst) {
+    const char* s1 = env->GetStringUTFChars(src, nullptr);
+    const char* s2 = env->GetStringUTFChars(dst, nullptr);
+    bool ok = QFile::copy(QString::fromUtf8(s1), QString::fromUtf8(s2));
+    env->ReleaseStringUTFChars(src, s1);
+    env->ReleaseStringUTFChars(dst, s2);
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFile_nativeExists(JNIEnv* env, jclass, jstring path) {
+    const char* u = env->GetStringUTFChars(path, nullptr);
+    bool ok = QFile::exists(QString::fromUtf8(u));
+    env->ReleaseStringUTFChars(path, u);
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFile_nativeRemove(JNIEnv* env, jclass, jstring path) {
+    const char* u = env->GetStringUTFChars(path, nullptr);
+    bool ok = QFile::remove(QString::fromUtf8(u));
+    env->ReleaseStringUTFChars(path, u);
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFile_nativeRename(JNIEnv* env, jclass, jstring oldName, jstring newName) {
+    const char* s1 = env->GetStringUTFChars(oldName, nullptr);
+    const char* s2 = env->GetStringUTFChars(newName, nullptr);
+    bool ok = QFile::rename(QString::fromUtf8(s1), QString::fromUtf8(s2));
+    env->ReleaseStringUTFChars(oldName, s1);
+    env->ReleaseStringUTFChars(newName, s2);
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QFile_nativeSize(JNIEnv* env, jclass, jstring path) {
+    const char* u = env->GetStringUTFChars(path, nullptr);
+    qint64 sz = QFileInfo(QString::fromUtf8(u)).size();
+    env->ReleaseStringUTFChars(path, u);
+    return static_cast<jlong>(sz);
 }
