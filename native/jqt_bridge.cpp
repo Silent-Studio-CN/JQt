@@ -233,6 +233,9 @@ static void jqtShowLayoutChildren(QLayout* layout) {
         }
         if (item->widget() != nullptr) {
             QWidget* w = item->widget();
+            if (w->property("jqtUserHidden").toBool()) {
+                continue;   // 用户显式 hide() 过的控件：不强制显示
+            }
             w->show();
             // 递归显示容器内部布局（面板等嵌套内容）——注意跳过 QStackedLayout（页由 setCurrentIndex 管理）
             if (w->layout() != nullptr && dynamic_cast<QStackedLayout*>(w->layout()) == nullptr) {
@@ -968,7 +971,10 @@ JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeShow(JNIEnv* env, jclass /*cls
 
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHide(JNIEnv* env, jclass /*cls*/, jlong handle) {
     QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
-    if (widget != nullptr) { widget->hide(); }
+    if (widget != nullptr) {
+        widget->setProperty("jqtUserHidden", true);   // 用户显式隐藏标记：窗口 show 时不强制再显示
+        widget->hide();
+    }
 }
 
 JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeIsVisible(JNIEnv* env, jclass /*cls*/, jlong handle) {
@@ -5004,4 +5010,18 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QFile_nativeSize(JNIEnv* env, jclass, jstri
     qint64 sz = QFileInfo(QString::fromUtf8(u)).size();
     env->ReleaseStringUTFChars(path, u);
     return static_cast<jlong>(sz);
+}
+
+// 吐槽修复：pos() / addSpacing
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWidget_nativePos(JNIEnv* env, jclass, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) return nullptr;
+    jintArray arr = env->NewIntArray(2);
+    jint v[2] = { w->x(), w->y() };
+    env->SetIntArrayRegion(arr, 0, 2, v);
+    return arr;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeAddSpacing(JNIEnv* env, jobject, jlong handle, jint spacing) {
+    QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
+    if (layout) layout->addSpacing(spacing);
 }

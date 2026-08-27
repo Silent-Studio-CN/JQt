@@ -14,8 +14,8 @@
 ```
 ┌─────────────────────────────────────────┐
 │  Java 层（你写的代码）                   │
-│  JQtButton btn = new JQtButton("点我");   │
-│  btn.onClick(() -> ...);                  │
+│  QPushButton btn = new QPushButton("点我");   │
+│  btn.onClicked(() -> ...);               │
 └─────────────────────────────────────────┘
                     ↕ JNI
 ┌─────────────────────────────────────────┐
@@ -57,13 +57,13 @@ import org.jqt.*;
 
 public class Hello {
     public static void main(String[] args) {
-        JQtApplication app = new JQtApplication();      // 必须先创建
-        JQtWindow window = new JQtWindow("Hello JQt", 640, 480);
-        JQtButton button = new JQtButton("点我");
-        button.onClick(() -> System.out.println("clicked!"));
-        JQtVBoxLayout vbox = new JQtVBoxLayout();
+        QApplication app = new QApplication();          // 必须先创建
+        QMainWindow window = new QMainWindow("Hello JQt", 640, 480);
+        QPushButton button = new QPushButton("点我");
+        button.onClicked(() -> System.out.println("clicked!"));
+        QVBoxLayout vbox = new QVBoxLayout();
         vbox.addWidget(button);
-        window.setLayout(vbox);
+        window.setLayout(vbox);                         // 布局挂载后控件统一显示
         window.show();
         app.exec();                                     // 阻塞至窗口关闭
     }
@@ -78,7 +78,7 @@ public class Hello {
 app.schedule(() -> window.resize(800, 600), 1000);   // 定时任务（GUI 线程）
 app.onAboutToQuit(() -> save());                      // 退出前保存
 
-button.onClick(() -> ...);       button.onToggled(on -> ...);
+button.onClicked(() -> ...);     button.onToggled(on -> ...);
 edit.onTextChanged(s -> ...);    edit.onReturnPressed(() -> ...);
 combo.onCurrentIndexChanged(i -> ...);
 list.onItemClicked(row -> ...);  window.onClose(() -> ...);
