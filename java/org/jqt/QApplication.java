@@ -331,7 +331,9 @@ public class QApplication {
                 nativeSetAccent(currentAccent);   // 调色板 Highlight 重放
             }
         } catch (java.io.IOException e) {
-            throw new IllegalStateException("读取主题失败: " + themeTemplatePath, e);
+            // 主题模板缺失：降级到调色板模式而非崩溃（与 Qt 一致：资源缺失回退默认样式）
+            System.err.println("[JQt] 警告: 主题模板缺失（" + themeTemplatePath + "），回退默认配色");
+            setColorScheme(themeLight);
         }
     }
 
