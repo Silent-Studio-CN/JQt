@@ -26,6 +26,24 @@ public class QMessageBox {
         nativeShowInfo(parent.nativeHandle(), title, text);
     }
     static native void nativeShowInfo(long winHandle, String title, String text);
+
+    /** 警告框（确定）。阻塞调用。 */
+    public static void showWarning(QMainWindow parent, String title, String text) {
+        nativeShowWarning(parent.nativeHandle(), title, text);
+    }
+    static native void nativeShowWarning(long winHandle, String title, String text);
+
+    /** 错误框（确定）。阻塞调用。 */
+    public static void showCritical(QMainWindow parent, String title, String text) {
+        nativeShowCritical(parent.nativeHandle(), title, text);
+    }
+    static native void nativeShowCritical(long winHandle, String title, String text);
+
+    /** 确定/取消 询问框，返回用户选择（true = 确定）。阻塞调用。 */
+    public static boolean showOkCancel(QMainWindow parent, String title, String text) {
+        return nativeShowOkCancel(parent.nativeHandle(), title, text);
+    }
+    static native boolean nativeShowOkCancel(long winHandle, String title, String text);
 }
 
 
