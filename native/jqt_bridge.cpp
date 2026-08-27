@@ -78,6 +78,7 @@
 #include <QStatusBar>
 #include <QSystemTrayIcon>
 #include <QStyle>
+#include <QTextEdit>
 #include <QMessageBox>
 #include <QTimer>
 #include <QMessageBox>
@@ -157,6 +158,7 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QToolBar.h"
 #include "generated/org_jqt_QStatusBar.h"
 #include "generated/org_jqt_QSystemTrayIcon.h"
+#include "generated/org_jqt_QTextEdit.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -3820,4 +3822,64 @@ JNIEXPORT void JNICALL Java_org_jqt_QSystemTrayIcon_nativeDispose(JNIEnv* /*env*
     if (obj != nullptr && g_app != nullptr) {
         QMetaObject::invokeMethod(g_app, [obj]() { delete obj; }, Qt::QueuedConnection);
     }
+}
+
+// ----------------------------------------------------------------------------
+// JQtTextEdit：多行文本编辑器
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QTextEdit_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QTextEdit* edit = new QTextEdit();
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(edit, &QTextEdit::textChanged, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleTextChanged", "()V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid);
+        }
+    });
+    return registerHandle(edit, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeSetPlainText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QTextEdit* edit = static_cast<QTextEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    edit->setPlainText(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QTextEdit_nativeToPlainText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTextEdit* edit = static_cast<QTextEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return nullptr;
+    }
+    return env->NewStringUTF(edit->toPlainText().toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeAppend(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QTextEdit* edit = static_cast<QTextEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    edit->append(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeSetReadOnly(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean readOnly) {
+    QTextEdit* edit = static_cast<QTextEdit*>(requireHandle(env, handle));
+    if (edit != nullptr) {
+        edit->setReadOnly(readOnly == JNI_TRUE);
+    }
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QTextEdit_nativeIsReadOnly(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTextEdit* edit = static_cast<QTextEdit*>(requireHandle(env, handle));
+    return (edit != nullptr && edit->isReadOnly()) ? JNI_TRUE : JNI_FALSE;
 }
