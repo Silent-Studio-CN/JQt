@@ -71,6 +71,8 @@
 #include <QRadioButton>
 #include <QDateTimeEdit>
 #include <QDateTime>
+#include <QGridLayout>
+#include <QFormLayout>
 #include <QMessageBox>
 #include <QTimer>
 #include <QMessageBox>
@@ -144,6 +146,8 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QDial.h"
 #include "generated/org_jqt_QRadioButton.h"
 #include "generated/org_jqt_QDateTimeEdit.h"
+#include "generated/org_jqt_QGridLayout.h"
+#include "generated/org_jqt_QFormLayout.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -3527,4 +3531,82 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QDateTimeEdit_nativeText(JNIEnv* env, job
         return nullptr;
     }
     return env->NewStringUTF(edit->text().toUtf8().constData());
+}
+
+// ----------------------------------------------------------------------------
+// JQtGridLayout / JQtFormLayout
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QGridLayout_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    return registerHandle(new QGridLayout(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGridLayout_nativeAddWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle, jint row, jint col, jint rowSpan, jint colSpan) {
+    QGridLayout* grid = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (grid == nullptr) {
+        return;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return;
+    }
+    grid->addWidget(child, row, col, rowSpan, colSpan);
+    markQtOwned(childHandle);
+    child->show();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGridLayout_nativeSetColumnStretch(JNIEnv* env, jobject /*thiz*/, jlong handle, jint col, jint stretch) {
+    QGridLayout* grid = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (grid != nullptr) {
+        grid->setColumnStretch(col, stretch);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGridLayout_nativeSetRowStretch(JNIEnv* env, jobject /*thiz*/, jlong handle, jint row, jint stretch) {
+    QGridLayout* grid = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (grid != nullptr) {
+        grid->setRowStretch(row, stretch);
+    }
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QFormLayout_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    return registerHandle(new QFormLayout(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeAddRowString(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring label, jlong fieldHandle) {
+    QFormLayout* form = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (form == nullptr) {
+        return;
+    }
+    QWidget* field = static_cast<QWidget*>(requireHandle(env, fieldHandle));
+    if (field == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(label, nullptr);
+    form->addRow(QString::fromUtf8(utf), field);
+    env->ReleaseStringUTFChars(label, utf);
+    markQtOwned(fieldHandle);
+    field->show();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeAddRowWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong labelHandle, jlong fieldHandle) {
+    QFormLayout* form = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (form == nullptr) {
+        return;
+    }
+    QWidget* label = static_cast<QWidget*>(requireHandle(env, labelHandle));
+    QWidget* field = static_cast<QWidget*>(requireHandle(env, fieldHandle));
+    if (label == nullptr || field == nullptr) {
+        return;
+    }
+    form->addRow(label, field);
+    markQtOwned(labelHandle);
+    markQtOwned(fieldHandle);
+    label->show();
+    field->show();
 }
