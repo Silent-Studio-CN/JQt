@@ -12,6 +12,16 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.5.1-TEST（2026-08-27）— 启动体验修复 + 主题降级健壮性
+
+**修复**：
+- **启动窗口闪现**（污点）：布局未安装时 addWidget 不再 show（防顶层窗口闪现）；子控件由父窗口 setLayout 递归显示（QStackedLayout 页跳过，防多页堆叠）
+- **窗口尺寸被布局 sizeHint 撑大**（1280x720 16:9 被破坏）：面板级 setLayout 不再触发子控件显示，统一由父窗口递归
+- **QApplication.setTheme 主题模板缺失时崩溃**：降级为警告 + 默认配色（Qt 一致行为）
+- **jpackage 分发修复**：runtime/bin/java.exe 必需（launcher 依赖）；themes/ 目录需随包分发
+
+**验证**：启动窗口峰值 10-15 → 1；JQtGallery 16:9 保持；无 themes 目录不崩溃；三 demo 回归全绿。
+
 ### v0.5.0-TEST（开发中）— 控件海啸 + 窗口体系 + 渲染适配 + 自绘画布/多线程
 
 **批 1 控件海啸**：
@@ -153,6 +163,16 @@
 
 <a id="en"></a>
 ## English Version
+
+### v0.5.1-TEST (2026-08-27) — Startup polish + theme degrade robustness
+
+**Fixes**:
+- Startup window flash: no show() before layout attached (no top-level flashes); children shown recursively by parent setLayout (QStackedLayout pages skipped)
+- Window inflated by layout sizeHint (16:9 broken): panel-level setLayout no longer shows children
+- QApplication.setTheme crashes on missing template: degrade to default palette (Qt-consistent)
+- jpackage distribution: runtime/bin/java.exe required; themes/ must ship
+
+**Verified**: window peak 10-15 → 1; 16:9 kept; no crash without themes; demos green.
 
 ### v0.5.0-TEST (in development) — Widget wave + Window family + Rendering + Canvas/Multithreading
 
