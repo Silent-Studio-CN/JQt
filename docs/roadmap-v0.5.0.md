@@ -1,6 +1,6 @@
-# JQt v0.5.0-test 路线图
+# JQt v0.5.0-TEST 路线图
 
-> 版本命名：v0.5.0-test（v0.4.1-alpha 之后，后缀 alpha → test）
+> 版本命名：v0.5.0-TEST（v0.4.1-alpha 之后，后缀 alpha → test）
 > 范围：十项全收（用户全选）+ 渲染适配（用户新增），共 11 项，分 5 批。
 
 ## 背景
@@ -43,6 +43,6 @@
 
 ## 发布物
 
-- v0.5.0-test 发布：jar + Windows x64 完整包 + 双 Qt 裸库（x64/arm64/linux/macos）
+- v0.5.0-TEST 发布：jar + Windows x64 完整包 + 双 Qt 裸库（x64/arm64/linux/macos）
 - API 文档同步：api-implemented.md / qt-mapping.md 增量更新
-- 版本标注：VERSION / README / CHANGELOG / RELEASE_NOTES 统一 v0.5.0-test
+- 版本标注：VERSION / README / CHANGELOG / RELEASE_NOTES 统一 v0.5.0-TEST
