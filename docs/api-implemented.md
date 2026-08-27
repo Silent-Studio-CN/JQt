@@ -503,3 +503,76 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 - widgets added to a window/layout are owned by the Qt parent-child relationship;
 - calling a disposed object throws `IllegalStateException` (no native crash);
 - creating widgets before `QApplication` throws `IllegalStateException`.
+
+
+---
+
+## 新增（v0.5.0-TEST 开发中）· New in v0.5.0-TEST (in development)
+
+> 23 个新类 / 104 个新公共方法（批 1-4）。
+> 23 new classes / 104 new public methods (batch 1-4).
+
+**对话框家族 · Dialogs**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QInputDialog | `getText` `getInt` `getItem` |
+| QFileDialog | `getOpenFileName` `getSaveFileName` `getExistingDirectory` |
+| QColorDialog | `getColor` |
+| QFontDialog | `getFont` |
+| QMessageBox+ | `showWarning` `showCritical` `showOkCancel` |
+
+**数据展示 · Data**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QTableWidget | `setItemText` `itemText` `setColumnHeaders` `setRowCount` `setColumnCount` `rowCount` `columnCount` `setColumnWidth` `setRowHeight` `resizeColumnsToContents` `clearContents` `currentRow` `onCellClicked` `onCurrentRowChanged` |
+| QTreeWidget | `addTopLevelItem` `addChild` `itemText` `setItemText` `expandAll` `collapseAll` `clear` `onItemClicked` |
+
+**界面组织 · Layout**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QTabWidget | `addTab` `setCurrentIndex` `currentIndex` `setTabText` `onCurrentChanged` |
+| QGroupBox | `setTitle` `title` |
+| QStackedLayout | `addPage` `setCurrentIndex` `currentIndex` `setCurrentWidget` |
+| QSplitter | `setOrientation` `addWidget` `setSizes` `sizes` `setHandleWidth` |
+| QGridLayout | `addWidget(3/5 参)` `setColumnStretch` `setRowStretch` |
+| QFormLayout | `addRow(文本/控件)` |
+
+**输入控件 · Input**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QSpinBox | `setRange` `value` `setValue` `onValueChanged` |
+| QDial | `setRange` `value` `setValue` `onValueChanged` |
+| QRadioButton | `setText` `isChecked` `setChecked` `onToggled` |
+| QDateTimeEdit | `setDisplayFormat` `setDateTime` `text` `onTextChanged` |
+
+**窗口体系 · Window**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QMenu | `addItem` `popup(坐标/锚点)` `onTriggered` |
+| QToolBar | `addButton` `addWidget` `onTriggered` |
+| QStatusBar | `showMessage` `clearMessage` `currentMessage` |
+| QSystemTrayIcon | `show` `hide` `isVisible` `setToolTip` `showMessage` `dispose` |
+
+**富文本 · Rich text**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QTextEdit | `setPlainText` `toPlainText` `append` `setReadOnly` `isReadOnly` `onTextChanged` |
+
+**自绘 · Canvas**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QCanvasWidget | `onPaint` `repaint` |
+| QPainter | `setColor` `setStrokeWidth` `drawLine` `drawRect` `fillRect` `drawCircle` `fillCircle` `drawRoundRect` `drawText` `setFont` `translate` `rotate` |
+
+**应用 · Application**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QApplication+ | `rhiBackend(String/无参)` `runOnUiThread` |
