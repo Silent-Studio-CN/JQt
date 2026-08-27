@@ -66,6 +66,11 @@
 #include <QGroupBox>
 #include <QStackedLayout>
 #include <QSplitter>
+#include <QSpinBox>
+#include <QDial>
+#include <QRadioButton>
+#include <QDateTimeEdit>
+#include <QDateTime>
 #include <QMessageBox>
 #include <QTimer>
 #include <QMessageBox>
@@ -135,6 +140,10 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QGroupBox.h"
 #include "generated/org_jqt_QStackedLayout.h"
 #include "generated/org_jqt_QSplitter.h"
+#include "generated/org_jqt_QSpinBox.h"
+#include "generated/org_jqt_QDial.h"
+#include "generated/org_jqt_QRadioButton.h"
+#include "generated/org_jqt_QDateTimeEdit.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -3357,4 +3366,165 @@ JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetHandleWidth(JNIEnv* env, 
     if (split != nullptr) {
         split->setHandleWidth(width);
     }
+}
+
+// ----------------------------------------------------------------------------
+// JQtSpinBox / JQtDial / JQtRadioButton / JQtDateTimeEdit
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QSpinBox_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QSpinBox* spin = new QSpinBox();
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(spin, QOverload<int>::of(&QSpinBox::valueChanged), [gRef](int value) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleValueChanged", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(value));
+        }
+    });
+    return registerHandle(spin, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSpinBox_nativeSetRange(JNIEnv* env, jobject /*thiz*/, jlong handle, jint min, jint max) {
+    QSpinBox* spin = static_cast<QSpinBox*>(requireHandle(env, handle));
+    if (spin != nullptr) {
+        spin->setRange(min, max);
+    }
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSpinBox_nativeValue(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSpinBox* spin = static_cast<QSpinBox*>(requireHandle(env, handle));
+    return spin != nullptr ? static_cast<jint>(spin->value()) : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSpinBox_nativeSetValue(JNIEnv* env, jobject /*thiz*/, jlong handle, jint value) {
+    QSpinBox* spin = static_cast<QSpinBox*>(requireHandle(env, handle));
+    if (spin != nullptr) {
+        spin->setValue(value);
+    }
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QDial_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QDial* dial = new QDial();
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(dial, &QDial::valueChanged, [gRef](int value) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleValueChanged", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(value));
+        }
+    });
+    return registerHandle(dial, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDial_nativeSetRange(JNIEnv* env, jobject /*thiz*/, jlong handle, jint min, jint max) {
+    QDial* dial = static_cast<QDial*>(requireHandle(env, handle));
+    if (dial != nullptr) {
+        dial->setRange(min, max);
+    }
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QDial_nativeValue(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QDial* dial = static_cast<QDial*>(requireHandle(env, handle));
+    return dial != nullptr ? static_cast<jint>(dial->value()) : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDial_nativeSetValue(JNIEnv* env, jobject /*thiz*/, jlong handle, jint value) {
+    QDial* dial = static_cast<QDial*>(requireHandle(env, handle));
+    if (dial != nullptr) {
+        dial->setValue(value);
+    }
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QRadioButton_nativeCreate(JNIEnv* env, jobject thiz, jstring text) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    QRadioButton* btn = new QRadioButton(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(btn, &QRadioButton::toggled, [gRef](bool checked) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleToggled", "(Z)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, checked ? JNI_TRUE : JNI_FALSE);
+        }
+    });
+    return registerHandle(btn, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QRadioButton_nativeSetText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring text) {
+    QRadioButton* btn = static_cast<QRadioButton*>(requireHandle(env, handle));
+    if (btn == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    btn->setText(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QRadioButton_nativeIsChecked(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QRadioButton* btn = static_cast<QRadioButton*>(requireHandle(env, handle));
+    return (btn != nullptr && btn->isChecked()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QRadioButton_nativeSetChecked(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean checked) {
+    QRadioButton* btn = static_cast<QRadioButton*>(requireHandle(env, handle));
+    if (btn != nullptr) {
+        btn->setChecked(checked == JNI_TRUE);
+    }
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QDateTimeEdit_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QDateTimeEdit* edit = new QDateTimeEdit(QDateTime::currentDateTime());
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(edit, &QDateTimeEdit::dateTimeChanged, [gRef, edit](const QDateTime& /*dt*/) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleTextChanged", "(Ljava/lang/String;)V");
+        if (mid != nullptr) {
+            jstring js = e->NewStringUTF(edit->text().toUtf8().constData());
+            JQT_CALL_VOID(e, gRef, mid, js);
+            e->DeleteLocalRef(js);
+        }
+    });
+    return registerHandle(edit, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDateTimeEdit_nativeSetDisplayFormat(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring format) {
+    QDateTimeEdit* edit = static_cast<QDateTimeEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(format, nullptr);
+    edit->setDisplayFormat(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(format, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDateTimeEdit_nativeSetDateTime(JNIEnv* env, jobject /*thiz*/, jlong handle, jint year, jint month, jint day, jint hour, jint minute, jint second) {
+    QDateTimeEdit* edit = static_cast<QDateTimeEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return;
+    }
+    edit->setDateTime(QDateTime(QDate(year, month, day), QTime(hour, minute, second)));
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDateTimeEdit_nativeText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QDateTimeEdit* edit = static_cast<QDateTimeEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) {
+        return nullptr;
+    }
+    return env->NewStringUTF(edit->text().toUtf8().constData());
 }
