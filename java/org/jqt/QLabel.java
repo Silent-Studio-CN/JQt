@@ -93,4 +93,8 @@ public class QLabel extends QWidget {
             h.accept(url);
         }
     }
+
+    /** 关联控件（设置后 Alt+标签快捷键聚焦目标控件）。 */
+    public void setBuddy(QWidget buddy) { nativeSetBuddy(nativeHandle, buddy.nativeHandle); }
+    private static native void nativeSetBuddy(long handle, long buddyHandle);
 }

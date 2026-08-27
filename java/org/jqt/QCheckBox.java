@@ -55,5 +55,38 @@ public class QCheckBox extends QWidget {
             h.accept(checked);
         }
     }
-}
 
+    // ---- L1 补全（v0.6.0）----
+
+    /** 三态模式（0 未勾选 / 1 部分 / 2 勾选）。 */
+    public void setTristate(boolean tristate) { nativeSetTristate(nativeHandle, tristate); }
+    private static native void nativeSetTristate(long handle, boolean tristate);
+
+    /** 是否三态模式。 */
+    public boolean isTristate() { return nativeIsTristate(nativeHandle); }
+    private static native boolean nativeIsTristate(long handle);
+
+    /** 检查状态：0 未勾选 / 1 部分 / 2 勾选。 */
+    public int checkState() { return nativeCheckState(nativeHandle); }
+    private static native int nativeCheckState(long handle);
+
+    /** 设置检查状态（0/1/2）。 */
+    public void setCheckState(int state) { nativeSetCheckState(nativeHandle, state); }
+    private static native void nativeSetCheckState(long handle, int state);
+
+    private final List<Consumer<Integer>> onCheckStateChangedHandlers = new ArrayList<>();
+    private volatile boolean stateConn;
+
+    /** 检查状态变化回调（参数 0/1/2）。 */
+    public QCheckBox onCheckStateChanged(Consumer<Integer> handler) {
+        onCheckStateChangedHandlers.add(handler);
+        if (!stateConn) { stateConn = true; nativeConnectCheckStateChanged(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectCheckStateChanged(long handle);
+
+    void nativeHandleCheckStateChanged(int state) {
+        for (Consumer<Integer> h : onCheckStateChangedHandlers) h.accept(state);
+    }
+}
