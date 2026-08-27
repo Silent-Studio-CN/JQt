@@ -214,6 +214,31 @@ static jobject g_appJavaRef = nullptr; // JQtApplication Java 全局引用（系
 static std::mutex g_handleMutex;
 static std::unordered_map<int64_t, void*> g_handles;          // id -> QObject*
 static std::unordered_map<int64_t, bool> g_javaOwned;         // id -> 是否归 Java（Cleaner）管理
+
+// 递归显示布局树中的全部子控件。
+// 仅在布局已安装到窗口（parentWidget 非空）且窗口已 show 后调用：
+// 有父窗口的子控件 show() 不会创建顶层窗口，也不会在父窗口显示前闪现或撑大窗口。
+static void jqtShowLayoutChildren(QLayout* layout) {
+    for (int i = 0; i < layout->count(); i++) {
+        QLayoutItem* item = layout->itemAt(i);
+        if (item == nullptr) {
+            continue;
+        }
+        if (item->widget() != nullptr) {
+            QWidget* w = item->widget();
+            w->show();
+            // 递归显示容器内部布局（面板等嵌套内容）——注意跳过 QStackedLayout（页由 setCurrentIndex 管理）
+            if (w->layout() != nullptr && dynamic_cast<QStackedLayout*>(w->layout()) == nullptr) {
+                jqtShowLayoutChildren(w->layout());
+            }
+        } else if (item->layout() != nullptr) {
+            // QStackedLayout 的页可见性由 setCurrentIndex 管理：跳过，避免多页堆叠
+            if (dynamic_cast<QStackedLayout*>(item->layout()) == nullptr) {
+                jqtShowLayoutChildren(item->layout());
+            }
+        }
+    }
+}
 static std::atomic<int64_t> g_nextHandleId{1};
 
 // 取得当前线程的 JNIEnv：已附加 JVM 则复用，否则挂载。
@@ -928,7 +953,10 @@ JNIEXPORT jint JNICALL Java_org_jqt_QWidget_nativeY(JNIEnv* env, jclass /*cls*/,
 
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeShow(JNIEnv* env, jclass /*cls*/, jlong handle) {
     QWidget* widget = static_cast<QWidget*>(requireHandle(env, handle));
-    if (widget != nullptr) { widget->show(); }
+    if (widget == nullptr) {
+        return;
+    }
+    widget->show();
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHide(JNIEnv* env, jclass /*cls*/, jlong handle) {
@@ -1260,6 +1288,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetLayout(JNIEnv* env, job
     }
     widget->setLayout(layout);
     markQtOwned(layoutHandle);  // 归窗口管理
+    jqtShowLayoutChildren(layout);
 }
 
 // JQtWidget：通用 setLayout（任何控件可装布局）
@@ -1274,6 +1303,8 @@ JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetLayout(JNIEnv* env, jclass 
     }
     widget->setLayout(layout);
     markQtOwned(layoutHandle);
+    // 注意：容器（面板）setLayout 时不显示子控件——会触发面板 sizeHint 撑大父窗口；
+    // 面板内容由父窗口 setLayout 的 jqtShowLayoutChildren 递归显示。
 }
 
 // JQtWidget：设置 objectName（QSS #name 选择器）
@@ -1711,7 +1742,11 @@ JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeAddWidget(JNIEnv* env, jobject
     }
     layout->addWidget(child);
     markQtOwned(childHandle);  // 布局加入后归 Qt 管理（最终 reparent 到窗口）
-    child->show();
+    // 布局未安装（parentWidget 为空）时不 show：此时控件无父窗口，show 会闪现顶层窗口；
+    // 等 setLayout 安装后由 jqtShowLayoutChildren 统一显示。
+    if (layout->parentWidget() != nullptr) {
+        child->show();
+    }
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeSetSpacing(JNIEnv* env, jobject /*thiz*/, jlong handle, jint spacing) {
@@ -1743,6 +1778,9 @@ JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeAddLayout(JNIEnv* env, jobject
         return;
     }
     layout->addLayout(child);
+    if (layout->parentWidget() != nullptr) {
+        jqtShowLayoutChildren(child);   // 动态挂到已安装布局时，子布局控件需显示
+    }
     markQtOwned(childLayoutHandle);  // 子布局归父布局管理
 }
 
@@ -3253,7 +3291,7 @@ JNIEXPORT jint JNICALL Java_org_jqt_QTabWidget_nativeAddTab(JNIEnv* env, jobject
     int index = tab->addTab(child, QString::fromUtf8(utf));
     env->ReleaseStringUTFChars(title, utf);
     markQtOwned(childHandle);
-    child->show();
+    // 不 show：QTabWidget 页可见性由自身管理（show 会破坏切换逻辑）
     return index;
 }
 
@@ -3325,7 +3363,7 @@ JNIEXPORT jint JNICALL Java_org_jqt_QStackedLayout_nativeAddPage(JNIEnv* env, jo
     }
     int index = stack->addWidget(child);
     markQtOwned(childHandle);
-    child->show();
+    // 不 show：QStackedLayout 的页可见性由 setCurrentIndex 管理（直接 show 会导致多页堆叠）
     return index;
 }
 
@@ -3378,7 +3416,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeAddWidget(JNIEnv* env, jobje
     }
     split->addWidget(child);
     markQtOwned(childHandle);
-    child->show();
+    child->show();   // 子控件 parent=splitter（非空），不会成顶层窗口
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetSizes(JNIEnv* env, jobject /*thiz*/, jlong handle, jintArray sizes) {
@@ -3603,7 +3641,9 @@ JNIEXPORT void JNICALL Java_org_jqt_QGridLayout_nativeAddWidget(JNIEnv* env, job
     }
     grid->addWidget(child, row, col, rowSpan, colSpan);
     markQtOwned(childHandle);
-    child->show();
+    if (grid->parentWidget() != nullptr) {
+        child->show();
+    }
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QGridLayout_nativeSetColumnStretch(JNIEnv* env, jobject /*thiz*/, jlong handle, jint col, jint stretch) {
@@ -3640,7 +3680,9 @@ JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeAddRowString(JNIEnv* env, 
     form->addRow(QString::fromUtf8(utf), field);
     env->ReleaseStringUTFChars(label, utf);
     markQtOwned(fieldHandle);
-    field->show();
+    if (form->parentWidget() != nullptr) {
+        field->show();
+    }
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeAddRowWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong labelHandle, jlong fieldHandle) {
@@ -3656,8 +3698,10 @@ JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeAddRowWidget(JNIEnv* env, 
     form->addRow(label, field);
     markQtOwned(labelHandle);
     markQtOwned(fieldHandle);
-    label->show();
-    field->show();
+    if (form->parentWidget() != nullptr) {
+        label->show();
+        field->show();
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -3757,7 +3801,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeAddWidget(JNIEnv* env, jobjec
     }
     bar->addWidget(child);
     markQtOwned(childHandle);
-    child->show();
+    child->show();   // 子控件 parent=bar（非空），不会成顶层窗口
 }
 
 JNIEXPORT jlong JNICALL Java_org_jqt_QStatusBar_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
