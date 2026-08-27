@@ -62,6 +62,10 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QTimer>
+#include <QInputDialog>
+#include <QFileDialog>
+#include <QColorDialog>
+#include <QFontDialog>
 #include <QMetaObject>
 #include <QMoveEvent>
 #include <QPushButton>
@@ -113,6 +117,10 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_JQtAnimations.h"
 #include "generated/org_jqt_JQtInfoBar.h"
 #include "generated/org_jqt_QMessageBox.h"
+#include "generated/org_jqt_QInputDialog.h"
+#include "generated/org_jqt_QFileDialog.h"
+#include "generated/org_jqt_QColorDialog.h"
+#include "generated/org_jqt_QFontDialog.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -2748,3 +2756,159 @@ JNIEXPORT void JNICALL Java_org_jqt_JQtInfoBar_nativeShowInfo(JNIEnv* env, jclas
 }
 
 
+
+// ----------------------------------------------------------------------------
+// JQt dialogs: QInputDialog / QFileDialog / QColorDialog / QFontDialog
+// ----------------------------------------------------------------------------
+JNIEXPORT jstring JNICALL Java_org_jqt_QInputDialog_nativeGetText(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring label, jstring text) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(label, nullptr);
+    const char* t3 = env->GetStringUTFChars(text, nullptr);
+    bool ok = false;
+    QString res = QInputDialog::getText(parent, QString::fromUtf8(t1), QString::fromUtf8(t2), QLineEdit::Normal, QString::fromUtf8(t3), &ok);
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(label, t2);
+    env->ReleaseStringUTFChars(text, t3);
+    if (!ok) return nullptr;
+    return env->NewStringUTF(res.toUtf8().constData());
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QInputDialog_nativeGetInt(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring label, jint value, jint min, jint max, jint step) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(label, nullptr);
+    bool ok = false;
+    int res = QInputDialog::getInt(parent, QString::fromUtf8(t1), QString::fromUtf8(t2), value, min, max, step, &ok);
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(label, t2);
+    return ok ? res : value;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QInputDialog_nativeGetItem(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring label, jobjectArray items, jint current) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(label, nullptr);
+    QStringList list;
+    jsize n = env->GetArrayLength(items);
+    for (jsize i = 0; i < n; i++) {
+        jstring s = (jstring)env->GetObjectArrayElement(items, i);
+        const char* c = env->GetStringUTFChars(s, nullptr);
+        list << QString::fromUtf8(c);
+        env->ReleaseStringUTFChars(s, c);
+        env->DeleteLocalRef(s);
+    }
+    bool ok = false;
+    QString res = QInputDialog::getItem(parent, QString::fromUtf8(t1), QString::fromUtf8(t2), list, current, false, &ok);
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(label, t2);
+    if (!ok) return nullptr;
+    return env->NewStringUTF(res.toUtf8().constData());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QFileDialog_nativeGetOpenFileName(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring dir, jstring filter) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(dir, nullptr);
+    const char* t3 = env->GetStringUTFChars(filter, nullptr);
+    QString res = QFileDialog::getOpenFileName(parent, QString::fromUtf8(t1), QString::fromUtf8(t2), QString::fromUtf8(t3));
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(dir, t2);
+    env->ReleaseStringUTFChars(filter, t3);
+    if (res.isEmpty()) return nullptr;
+    return env->NewStringUTF(res.toUtf8().constData());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QFileDialog_nativeGetSaveFileName(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring dir, jstring filter) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(dir, nullptr);
+    const char* t3 = env->GetStringUTFChars(filter, nullptr);
+    QString res = QFileDialog::getSaveFileName(parent, QString::fromUtf8(t1), QString::fromUtf8(t2), QString::fromUtf8(t3));
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(dir, t2);
+    env->ReleaseStringUTFChars(filter, t3);
+    if (res.isEmpty()) return nullptr;
+    return env->NewStringUTF(res.toUtf8().constData());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QFileDialog_nativeGetExistingDirectory(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring dir) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(dir, nullptr);
+    QString res = QFileDialog::getExistingDirectory(parent, QString::fromUtf8(t1), QString::fromUtf8(t2));
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(dir, t2);
+    if (res.isEmpty()) return nullptr;
+    return env->NewStringUTF(res.toUtf8().constData());
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QColorDialog_nativeGetColor(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jint argb) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    QColor col = QColorDialog::getColor(QColor::fromRgba(static_cast<QRgb>(argb)), parent, QString::fromUtf8(t1));
+    env->ReleaseStringUTFChars(title, t1);
+    if (!col.isValid()) return -1;
+    return static_cast<jint>(col.rgba());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QFontDialog_nativeGetFont(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring family, jint size) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    QFont initial = QFont(QString(), size);
+    if (family != nullptr) {
+        const char* f = env->GetStringUTFChars(family, nullptr);
+        initial = QFont(QString::fromUtf8(f), size);
+        env->ReleaseStringUTFChars(family, f);
+    }
+    bool ok = false;
+    QFont res = QFontDialog::getFont(&ok, initial, parent, QString::fromUtf8(t1));
+    env->ReleaseStringUTFChars(title, t1);
+    if (!ok) return nullptr;
+    int ps = res.pointSize();
+    if (ps < 0) ps = res.pixelSize();
+    QString out = res.family() + QString(",") + QString::number(ps);
+    return env->NewStringUTF(out.toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMessageBox_nativeShowWarning(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring text) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(text, nullptr);
+    QMessageBox box(parent);
+    box.setIcon(QMessageBox::Warning);
+    box.setWindowTitle(QString::fromUtf8(t1));
+    box.setText(QString::fromUtf8(t2));
+    box.setStandardButtons(QMessageBox::Ok);
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(text, t2);
+    box.exec();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMessageBox_nativeShowCritical(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring text) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(text, nullptr);
+    QMessageBox box(parent);
+    box.setIcon(QMessageBox::Critical);
+    box.setWindowTitle(QString::fromUtf8(t1));
+    box.setText(QString::fromUtf8(t2));
+    box.setStandardButtons(QMessageBox::Ok);
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(text, t2);
+    box.exec();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMessageBox_nativeShowOkCancel(JNIEnv* env, jclass /*cls*/, jlong winHandle, jstring title, jstring text) {
+    QWidget* parent = static_cast<QWidget*>(requireHandle(env, winHandle));
+    const char* t1 = env->GetStringUTFChars(title, nullptr);
+    const char* t2 = env->GetStringUTFChars(text, nullptr);
+    QMessageBox box(parent);
+    box.setIcon(QMessageBox::Question);
+    box.setWindowTitle(QString::fromUtf8(t1));
+    box.setText(QString::fromUtf8(t2));
+    box.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    env->ReleaseStringUTFChars(title, t1);
+    env->ReleaseStringUTFChars(text, t2);
+    return box.exec() == QMessageBox::Ok ? JNI_TRUE : JNI_FALSE;
+}
