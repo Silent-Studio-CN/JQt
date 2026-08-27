@@ -50,4 +50,10 @@ public class QToolBar extends QWidget {
             h.accept(actionId);
         }
     }
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 清空全部按钮。 */
+    public void clear() { nativeClear(nativeHandle); }
+    private static native void nativeClear(long handle);
 }

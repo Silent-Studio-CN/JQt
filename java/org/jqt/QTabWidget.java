@@ -61,4 +61,14 @@ public class QTabWidget extends QWidget {
             h.accept(index);
         }
     }
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 清空全部页。 */
+    public void clear() { nativeClear(nativeHandle); }
+    private static native void nativeClear(long handle);
+
+    /** 页数量。 */
+    public int count() { return nativeCount(nativeHandle); }
+    private static native int nativeCount(long handle);
 }

@@ -65,6 +65,72 @@ public class QComboBox extends QWidget {
             h.accept(index);
         }
     }
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 清空全部项。 */
+    public void clear() { nativeClear(nativeHandle); }
+    private static native void nativeClear(long handle);
+
+    /** 项数量。 */
+    public int count() { return nativeCount(nativeHandle); }
+    private static native int nativeCount(long handle);
+
+    /** 占位提示（未选择时显示）。 */
+    public void setPlaceholderText(String text) { nativeSetPlaceholderText(nativeHandle, text); }
+    private static native void nativeSetPlaceholderText(long handle, String text);
+
+    /** 占位提示文本。 */
+    public String placeholderText() { return nativePlaceholderText(nativeHandle); }
+    private static native String nativePlaceholderText(long handle);
+
+    /** 可编辑模式（允许输入自定义文本）。 */
+    public void setEditable(boolean editable) { nativeSetEditable(nativeHandle, editable); }
+    private static native void nativeSetEditable(long handle, boolean editable);
+
+    /** 是否可编辑。 */
+    public boolean isEditable() { return nativeIsEditable(nativeHandle); }
+    private static native boolean nativeIsEditable(long handle);
+
+    private final java.util.List<Consumer<Integer>> onActivatedHandlers = new java.util.ArrayList<>();
+    private final java.util.List<Consumer<String>> onCurrentTextChangedHandlers = new java.util.ArrayList<>();
+    private volatile boolean activatedConnected;
+    private volatile boolean currentTextConnected;
+
+    /** 下拉选择回调（activated 信号，参数为选中 index；仅用户操作触发）。 */
+    public QComboBox onActivated(Consumer<Integer> handler) {
+        onActivatedHandlers.add(handler);
+        if (!activatedConnected) {
+            activatedConnected = true;
+            nativeConnectActivated(nativeHandle);
+        }
+        return this;
+    }
+
+    /** 当前文本变化回调（currentTextChanged 信号，参数为新文本）。 */
+    public QComboBox onCurrentTextChanged(Consumer<String> handler) {
+        onCurrentTextChangedHandlers.add(handler);
+        if (!currentTextConnected) {
+            currentTextConnected = true;
+            nativeConnectCurrentTextChanged(nativeHandle);
+        }
+        return this;
+    }
+
+    private native void nativeConnectActivated(long handle);
+    private native void nativeConnectCurrentTextChanged(long handle);
+
+    /** 由 C++ 侧在用户选择时回调（JNI）。 */
+    void nativeHandleActivated(int index) {
+        for (Consumer<Integer> h : onActivatedHandlers) {
+            h.accept(index);
+        }
+    }
+
+    /** 由 C++ 侧在当前文本变化时回调（JNI）。 */
+    void nativeHandleCurrentTextChanged(String text) {
+        for (Consumer<String> h : onCurrentTextChangedHandlers) {
+            h.accept(text);
+        }
+    }
 }
-
-

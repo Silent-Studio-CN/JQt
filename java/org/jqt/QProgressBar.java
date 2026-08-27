@@ -35,6 +35,18 @@ public class QProgressBar extends QWidget {
     private native int nativeValue(long handle);
     private native void nativeSetValue(long handle, int value);
     private native void nativeSetRange(long handle, int min, int max);
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 文本对齐：1 左 / 2 右 / 4 居中。 */
+    public void setAlignment(int alignment) { nativeSetAlignment(nativeHandle, alignment); }
+    private static native void nativeSetAlignment(long handle, int alignment);
+
+    /** 文本对齐。 */
+    public int alignment() { return nativeAlignment(nativeHandle); }
+    private static native int nativeAlignment(long handle);
+
+    /** 当前显示文本（默认 "50%" 形式；未设置格式时）。 */
+    public String text() { return nativeText(nativeHandle); }
+    private static native String nativeText(long handle);
 }
-
-
