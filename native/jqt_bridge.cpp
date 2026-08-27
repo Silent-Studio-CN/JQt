@@ -62,6 +62,10 @@
 #include <QTreeWidget>
 #include <QTableWidgetItem>
 #include <QTreeWidgetItem>
+#include <QTabWidget>
+#include <QGroupBox>
+#include <QStackedLayout>
+#include <QSplitter>
 #include <QMessageBox>
 #include <QTimer>
 #include <QMessageBox>
@@ -127,6 +131,10 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QFontDialog.h"
 #include "generated/org_jqt_QTableWidget.h"
 #include "generated/org_jqt_QTreeWidget.h"
+#include "generated/org_jqt_QTabWidget.h"
+#include "generated/org_jqt_QGroupBox.h"
+#include "generated/org_jqt_QStackedLayout.h"
+#include "generated/org_jqt_QSplitter.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -3148,4 +3156,205 @@ JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeClear(JNIEnv* env, jobject
     tree->clear();
     g_treeItems.clear();
     g_treeItemIds.clear();
+}
+
+// ----------------------------------------------------------------------------
+// JQtTabWidget / JQtGroupBox / JQtStackedLayout / JQtSplitter
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QTabWidget_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QTabWidget* tab = new QTabWidget();
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(tab, &QTabWidget::currentChanged, [gRef](int index) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleCurrentChanged", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(index));
+        }
+    });
+    return registerHandle(tab, /*javaOwned=*/true);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTabWidget_nativeAddTab(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle, jstring title) {
+    QTabWidget* tab = static_cast<QTabWidget*>(requireHandle(env, handle));
+    if (tab == nullptr) {
+        return -1;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return -1;
+    }
+    const char* utf = env->GetStringUTFChars(title, nullptr);
+    int index = tab->addTab(child, QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(title, utf);
+    markQtOwned(childHandle);
+    child->show();
+    return index;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTabWidget_nativeSetCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle, jint index) {
+    QTabWidget* tab = static_cast<QTabWidget*>(requireHandle(env, handle));
+    if (tab != nullptr) {
+        tab->setCurrentIndex(index);
+    }
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTabWidget_nativeCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTabWidget* tab = static_cast<QTabWidget*>(requireHandle(env, handle));
+    return tab != nullptr ? static_cast<jint>(tab->currentIndex()) : -1;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTabWidget_nativeSetTabText(JNIEnv* env, jobject /*thiz*/, jlong handle, jint index, jstring title) {
+    QTabWidget* tab = static_cast<QTabWidget*>(requireHandle(env, handle));
+    if (tab == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(title, nullptr);
+    tab->setTabText(index, QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(title, utf);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QGroupBox_nativeCreate(JNIEnv* env, jobject /*thiz*/, jstring title) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    const char* utf = env->GetStringUTFChars(title, nullptr);
+    QGroupBox* box = new QGroupBox(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(title, utf);
+    return registerHandle(box, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGroupBox_nativeSetTitle(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring title) {
+    QGroupBox* box = static_cast<QGroupBox*>(requireHandle(env, handle));
+    if (box == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(title, nullptr);
+    box->setTitle(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(title, utf);
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QGroupBox_nativeTitle(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGroupBox* box = static_cast<QGroupBox*>(requireHandle(env, handle));
+    if (box == nullptr) {
+        return nullptr;
+    }
+    return env->NewStringUTF(box->title().toUtf8().constData());
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QStackedLayout_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    return registerHandle(new QStackedLayout(), /*javaOwned=*/true);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QStackedLayout_nativeAddPage(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle) {
+    QStackedLayout* stack = static_cast<QStackedLayout*>(requireHandle(env, handle));
+    if (stack == nullptr) {
+        return -1;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return -1;
+    }
+    int index = stack->addWidget(child);
+    markQtOwned(childHandle);
+    child->show();
+    return index;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QStackedLayout_nativeSetCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle, jint index) {
+    QStackedLayout* stack = static_cast<QStackedLayout*>(requireHandle(env, handle));
+    if (stack != nullptr) {
+        stack->setCurrentIndex(index);
+    }
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QStackedLayout_nativeCurrentIndex(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QStackedLayout* stack = static_cast<QStackedLayout*>(requireHandle(env, handle));
+    return stack != nullptr ? static_cast<jint>(stack->currentIndex()) : -1;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QStackedLayout_nativeSetCurrentWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle) {
+    QStackedLayout* stack = static_cast<QStackedLayout*>(requireHandle(env, handle));
+    if (stack == nullptr) {
+        return;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return;
+    }
+    stack->setCurrentWidget(child);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSplitter_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    return registerHandle(new QSplitter(Qt::Horizontal), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetOrientation(JNIEnv* env, jobject /*thiz*/, jlong handle, jint orientation) {
+    QSplitter* split = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (split != nullptr) {
+        split->setOrientation(orientation == 0 ? Qt::Horizontal : Qt::Vertical);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeAddWidget(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong childHandle) {
+    QSplitter* split = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (split == nullptr) {
+        return;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) {
+        return;
+    }
+    split->addWidget(child);
+    markQtOwned(childHandle);
+    child->show();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetSizes(JNIEnv* env, jobject /*thiz*/, jlong handle, jintArray sizes) {
+    QSplitter* split = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (split == nullptr) {
+        return;
+    }
+    jsize n = env->GetArrayLength(sizes);
+    jint* buf = env->GetIntArrayElements(sizes, nullptr);
+    QList<int> list;
+    for (jsize i = 0; i < n; i++) {
+        list << static_cast<int>(buf[i]);
+    }
+    env->ReleaseIntArrayElements(sizes, buf, JNI_ABORT);
+    split->setSizes(list);
+}
+
+JNIEXPORT jintArray JNICALL Java_org_jqt_QSplitter_nativeSizes(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSplitter* split = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (split == nullptr) {
+        return nullptr;
+    }
+    QList<int> list = split->sizes();
+    jintArray arr = env->NewIntArray(static_cast<jsize>(list.size()));
+    if (arr != nullptr && !list.isEmpty()) {
+        std::vector<jint> buf;
+        buf.reserve(list.size());
+        for (int v : list) {
+            buf.push_back(static_cast<jint>(v));
+        }
+        env->SetIntArrayRegion(arr, 0, static_cast<jsize>(buf.size()), buf.data());
+    }
+    return arr;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetHandleWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint width) {
+    QSplitter* split = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (split != nullptr) {
+        split->setHandleWidth(width);
+    }
 }
