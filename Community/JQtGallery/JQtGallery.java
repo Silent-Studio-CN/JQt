@@ -1,453 +1,603 @@
-/*
- * JQt Gallery —— 全功能演示（主题 / 控件 / 动画 / 窗口）
- * 社区贡献（jpackage 打包版随附）；本源码由 gallery.jar 反编译恢复（CFR 0.152），
- * 变量名已泛化——欢迎原作者提供原始源码替换（Community/ 政策：只收源码）。
- * (C) SilentStudio, All rights reserved.
- * SPDX-License-Identifier: LicenseRef-SilentStudio-JQt-1.0
- */
-import java.io.InputStream;
+import org.jqt.*;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import org.jqt.JQtAnimationTheme;
-import org.jqt.QApplication;
-import org.jqt.QPushButton;
-import org.jqt.QCheckBox;
-import org.jqt.QComboBox;
-import org.jqt.JQtEasing;
-import org.jqt.QHBoxLayout;
-import org.jqt.QLabel;
-import org.jqt.QLineEdit;
-import org.jqt.QListWidget;
-import org.jqt.QFrame;
-import org.jqt.JQtPivot;
-import org.jqt.JQtSwitch;
-import org.jqt.QVBoxLayout;
-import org.jqt.QMainWindow;
+import java.nio.file.*;
+import java.util.*;
 
+/**
+ * JQtGallery —— JQt 全功能演示（v0.3 渲染式主题版）
+ * 分区：主题换肤 / 控件 / 动画 / 窗口，每个功能块带中文注释。
+ * 说明：主题模板优先读文件系统 themes/fluent.qss.tpl，找不到时回退 jar 内资源，
+ *       因此 exe 打包版无需外部模板文件也能运行。
+ */
 public class JQtGallery {
     static QApplication app;
     static QMainWindow w;
-    static QLabel logLabel;
-    static QLabel geoLabel;
-    static QFrame themePanel;
-    static QFrame ctrlPanel;
-    static QFrame animPanel;
-    static QFrame winPanel;
-    static Map<String, String> currentVars;
-    static boolean currentLight;
-    static String themeName;
-    static StringBuilder logBuf;
+    static QLabel logLabel, geoLabel;      // 底部事件日志行 / 窗口几何信息行
+    static QFrame themePanel, ctrlPanel, animPanel, winPanel, v5Panel;  // 五个功能分区面板
+    static Map<String, String> currentVars;  // 当前主题的变量表（22 个 %var%）
+    static boolean currentLight = false;     // 当前是否为浅色主题
+    static String themeName = "nord";        // 当前主题名
+    static StringBuilder logBuf = new StringBuilder();
+    static boolean qfLoaded = false;    // qf 皮肤已加载（进入热重载监听）
+    static long qfMtime = -1;           // qf 文件上次修改时间
+    static int qssReloads = 0;          // 热重载次数
+    static QLabel qfStateRef;         // qf 状态行引用
 
-    static void log(String string) {
-        String[] stringArray;
-        String string2;
-        System.out.println("[G] " + string);
-        logBuf.append(string).append('\n');
-        if (logBuf.length() > 400) {
-            logBuf.delete(0, logBuf.length() - 400);
-        }
-        String string3 = string2 = (stringArray = logBuf.toString().split("\\n")).length > 0 ? stringArray[stringArray.length - 1] : "";
-        if (string2.length() > 80) {
-            string2 = string2.substring(string2.length() - 80);
-        }
-        logLabel.setText(string2);
+    // ================= 日志（界面底部实时显示最后一行）=================
+    static void log(String line) {
+        System.out.println("[G] " + line);
+        logBuf.append(line).append('\n');
+        if (logBuf.length() > 400) logBuf.delete(0, logBuf.length() - 400);
+        String[] ls = logBuf.toString().split("\\n");
+        String last = ls.length > 0 ? ls[ls.length - 1] : "";
+        if (last.length() > 80) last = last.substring(last.length() - 80);
+        logLabel.setText(last);
     }
 
-    /*
-     * Enabled aggressive block sorting
-     * Enabled unnecessary exception pruning
-     * Enabled aggressive exception aggregation
-     */
+    // ================= 主题模板读取（文件优先，jar 资源兜底）=================
+    // 打包成 exe 后 cwd 不可控，模板内嵌进 jar，程序自给自足
     static String readThemeTemplate() {
         try {
-            String tpl = new String(Files.readAllBytes(Paths.get("themes/fluent.qss.tpl", new String[0])), StandardCharsets.UTF_8);
-            if (!tpl.isEmpty()) {
-                return tpl;
-            }
-        }
-        catch (Exception exception) {
-            // empty catch block
-        }
+            String f = new String(Files.readAllBytes(Paths.get("themes/fluent.qss.tpl")), StandardCharsets.UTF_8);
+            if (!f.isEmpty()) return f;
+        } catch (Exception ignored) { }
         try (InputStream in = JQtGallery.class.getResourceAsStream("/themes/fluent.qss.tpl")) {
-            if (in == null) return "";
-            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-        }
-        catch (Exception exception) {
-            // empty catch block
-        }
+            if (in != null) return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (Exception ignored) { }
         return "";
     }
 
-    static void renderTheme(String string, Map<String, String> map, boolean bl) {
-        themeName = string;
-        currentVars = new HashMap<String, String>(map);
-        currentLight = bl;
-        String string2 = JQtGallery.readThemeTemplate();
-        if (string2.isEmpty()) {
-            JQtGallery.log("\u8b66\u544a: \u4e3b\u9898\u6a21\u677f\u7f3a\u5931\uff0c\u56de\u9000\u5185\u7f6e fluent-dark");
-            app.setTheme("fluent-dark");
+    // ================= 主题渲染核心 =================
+    // 原理：官方 fluent.qss.tpl 里有 22 个 %var% 占位符（win-bg/fg/accent/btn-*...），
+    //       把变量表填进去生成完整 QSS，再 setStyleSheet —— 不依赖 setTheme 的文件路径
+    static void renderTheme(String name, Map<String, String> vars, boolean light) {
+        themeName = name;
+        currentVars = new HashMap<>(vars);
+        currentLight = light;
+        String tpl = readThemeTemplate();
+        if (tpl.isEmpty()) {
+            log("警告: 主题模板缺失，回退内置 fluent-dark");
+            app.setTheme("fluent-dark");   // 仅当模板完全缺失时兜底
             return;
         }
-        for (Map.Entry<String, String> entry : currentVars.entrySet()) {
-            string2 = string2.replace("%" + entry.getKey() + "%", entry.getValue());
+        for (Map.Entry<String, String> e : currentVars.entrySet()) {
+            tpl = tpl.replace("%" + e.getKey() + "%", e.getValue());
         }
-        app.setStyleSheet(string2);
-        JQtGallery.log("\u4e3b\u9898 -> " + string);
+        app.setStyleSheet(tpl);
+        log("主题 -> " + name);
     }
 
-    static void applyTheme(String string) {
-        if (string.equals("fluent-dark")) {
-            JQtGallery.renderTheme("fluent-dark(\u5b98\u65b9\u6697\u8272)", QApplication.FLUENT_DARK, false);
-        } else if (string.equals("fluent-light")) {
-            JQtGallery.renderTheme("fluent-light(\u5b98\u65b9\u6d45\u8272)", QApplication.FLUENT_LIGHT, true);
-        } else if (string.equals("nord")) {
-            JQtGallery.renderTheme("Nord \u5317\u6781\u84dd", NordTheme.vars(), false);
-        } else if (string.equals("solarized")) {
-            JQtGallery.renderTheme("Solarized \u62a4\u773c", SolarizedTheme.vars(), true);
-        } else if (string.equals("terminal")) {
-            JQtGallery.renderTheme("Terminal \u8367\u5149\u7eff", TerminalTheme.vars(), false);
+    // 切换主题：官方两套 + ThemePack 三套原创
+    static void applyTheme(String name) {
+        if (name.equals("fluent-dark")) {
+            renderTheme("fluent-dark(官方暗色)", QApplication.FLUENT_DARK, false);
+        } else if (name.equals("fluent-light")) {
+            renderTheme("fluent-light(官方浅色)", QApplication.FLUENT_LIGHT, true);
+        } else if (name.equals("nord")) {
+            renderTheme("Nord 北极蓝", NordTheme.vars(), false);
+        } else if (name.equals("solarized")) {
+            renderTheme("Solarized 护眼", SolarizedTheme.vars(), true);
+        } else if (name.equals("terminal")) {
+            renderTheme("Terminal 荧光绿", TerminalTheme.vars(), false);
         }
     }
 
-    static void setAccent(String string) {
+    // 修改强调色：改变量表里的 accent 后重新渲染（模板重绘）
+    static void setAccent(String hex) {
         if (currentVars != null) {
-            currentVars.put("accent", string);
+            currentVars.put("accent", hex);
             currentVars.put("accent-fg", currentLight ? "#FFFFFF" : "#000000");
-            JQtGallery.renderTheme(themeName + " + \u5f3a\u8c03\u8272", currentVars, currentLight);
+            renderTheme(themeName + " + 强调色", currentVars, currentLight);
         } else {
-            app.setAccentColor(string);
+            app.setAccentColor(hex);
         }
-        JQtGallery.log("\u5f3a\u8c03\u8272 -> " + string);
+        log("强调色 -> " + hex);
     }
 
-    static QPushButton makeBtn(String string, Runnable runnable) {
-        QPushButton QPushButton = new QPushButton(string);
-        QPushButton.onClicked(runnable);
-        return QPushButton;
+    // 快捷建按钮：文字 + 点击回调
+    static QPushButton makeBtn(String text, Runnable act) {
+        QPushButton b = new QPushButton(text);
+        b.onClicked(act);
+        return b;
     }
 
-    public static void main(String[] stringArray) {
-        QMainWindow QMainWindow;
-        boolean bl2 = Long.getLong("g.auto", 0L) > 0L;
+    // ================= 主界面 =================
+    public static void main(String[] args) {
+        boolean auto = Long.getLong("g.auto", 0L) > 0;
         app = new QApplication();
-        w = QMainWindow = new QMainWindow("JQt Gallery \u5168\u529f\u80fd\u6f14\u793a", 560, 780);
-        QMainWindow.setFrameless(true);
-        QMainWindow.setRoundedCorners(true);
-        QMainWindow.setDraggable(true);
-        QLabel QLabel = new QLabel("JQt Gallery \u5168\u529f\u80fd\u6f14\u793a");
-        QLabel QLabel2 = new QLabel("\u4e3b\u9898 / \u63a7\u4ef6 / \u52a8\u753b / \u7a97\u53e3 \u00b7 \u6bcf\u9879\u90fd\u53ef\u70b9\u51fb\u4f53\u9a8c");
-        QLabel2.setObjectName("cardMeta");
-        JQtPivot jQtPivot = new JQtPivot();
-        jQtPivot.addItem("\u4e3b\u9898");
-        jQtPivot.addItem("\u63a7\u4ef6");
-        jQtPivot.addItem("\u52a8\u753b");
-        jQtPivot.addItem("\u7a97\u53e3");
+        // 注意：不要用 app.setTheme("fluent-dark")（它读文件系统模板，exe 版会炸），
+        // 一律走下面渲染式的 applyTheme()
+        QMainWindow win = new QMainWindow("JQt Gallery 全功能演示", 1280, 720);   // 16:9
+        w = win;
+        win.setFrameless(true);      // 无边框窗口
+        win.setRoundedCorners(true); // 圆角窗口
+        win.setDraggable(true);      // 窗口可拖动（无边框时靠标题区拖动）
+
+        // ---- 标题区 ----
+        QLabel title = new QLabel("JQt Gallery 全功能演示");
+        QLabel sub = new QLabel("主题 / 控件 / 动画 / 窗口 · 每项都可点击体验");
+        sub.setObjectName("cardMeta");
+
+        // ---- 顶部选项卡导航（四个分区切换）----
+        JQtPivot pivot = new JQtPivot();
+        pivot.addItem("主题"); pivot.addItem("控件"); pivot.addItem("动画"); pivot.addItem("窗口"); pivot.addItem("v0.5 新控件");
+
+        // ================ 分区 1：主题换肤 ================
         themePanel = new QFrame();
         themePanel.setObjectName("card1");
-        QVBoxLayout QVBoxLayout = new QVBoxLayout();
-        QVBoxLayout.setSpacing(8);
-        QVBoxLayout.addWidget(new QLabel("\u2460 \u4e3b\u9898\u5207\u6362\uff08ThemePack \u4e09\u5957\u539f\u521b + \u5b98\u65b9\u4e24\u5957\uff09"));
-        QHBoxLayout QHBoxLayout = new QHBoxLayout();
-        QHBoxLayout.setSpacing(6);
-        QHBoxLayout.addWidget(JQtGallery.makeBtn("Nord \u5317\u6781\u84dd", () -> JQtGallery.applyTheme("nord")));
-        QHBoxLayout.addWidget(JQtGallery.makeBtn("Solarized \u62a4\u773c", () -> JQtGallery.applyTheme("solarized")));
-        QHBoxLayout.addWidget(JQtGallery.makeBtn("Terminal \u8367\u5149\u7eff", () -> JQtGallery.applyTheme("terminal")));
-        QVBoxLayout.addLayout(QHBoxLayout);
-        QHBoxLayout QHBoxLayout2 = new QHBoxLayout();
-        QHBoxLayout2.setSpacing(6);
-        QHBoxLayout2.addWidget(JQtGallery.makeBtn("\u5b98\u65b9\u6697\u8272", () -> JQtGallery.applyTheme("fluent-dark")));
-        QHBoxLayout2.addWidget(JQtGallery.makeBtn("\u5b98\u65b9\u6d45\u8272", () -> JQtGallery.applyTheme("fluent-light")));
-        QVBoxLayout.addLayout(QHBoxLayout2);
-        QVBoxLayout.addWidget(new QLabel("\u2461 \u5f3a\u8c03\u8272\uff08\u6539 %accent% \u53d8\u91cf\u91cd\u6e32\u67d3\u6a21\u677f\uff09"));
-        QHBoxLayout QHBoxLayout3 = new QHBoxLayout();
-        QHBoxLayout3.setSpacing(6);
-        QHBoxLayout3.addWidget(JQtGallery.makeBtn("\u84dd #0078D4", () -> JQtGallery.setAccent("#0078D4")));
-        QHBoxLayout3.addWidget(JQtGallery.makeBtn("\u9752 #00BFA5", () -> JQtGallery.setAccent("#00BFA5")));
-        QHBoxLayout3.addWidget(JQtGallery.makeBtn("\u7d2b #9C27B0", () -> JQtGallery.setAccent("#9C27B0")));
-        QHBoxLayout3.addWidget(JQtGallery.makeBtn("\u6a59 #FF6D00", () -> JQtGallery.setAccent("#FF6D00")));
-        QVBoxLayout.addLayout(QHBoxLayout3);
-        QVBoxLayout.addWidget(new QLabel("\u2462 \u5f3a\u8c03\u8272\u9884\u89c8\uff1a\u52fe\u9009\u4e0b\u9762\u7684\u6309\u94ae / \u590d\u9009\u6846\u770b %accent% \u6548\u679c"));
-        QHBoxLayout QHBoxLayout4 = new QHBoxLayout();
-        QHBoxLayout4.setSpacing(6);
-        QPushButton QPushButton = new QPushButton("\u52fe\u9009\u6211\uff08\u9009\u4e2d\u6001=\u5f3a\u8c03\u8272\uff09");
-        QPushButton.setCheckable(true);
-        QPushButton.onToggled(bl -> JQtGallery.log("\u5f3a\u8c03\u8272\u6309\u94ae -> " + bl + "\uff08QPushButton:checked \u7528 %accent% \u586b\u5145\uff09"));
-        QCheckBox QCheckBox = new QCheckBox("\u5f3a\u8c03\u8272\u590d\u9009\u6846");
-        QCheckBox.onToggled(bl -> JQtGallery.log("\u5f3a\u8c03\u8272\u590d\u9009\u6846 -> " + bl + "\uff08indicator:checked \u7528 %accent% \u586b\u5145\uff09"));
-        QHBoxLayout4.addWidget(QPushButton);
-        QHBoxLayout4.addWidget(QCheckBox);
-        QVBoxLayout.addLayout(QHBoxLayout4);
-        QVBoxLayout.addWidget(new QLabel("\u2463 \u8ddf\u968f\u7cfb\u7edf\u6df1\u6d45\u8272 + \u5168\u5c40\u52a8\u753b\u8282\u594f"));
-        QHBoxLayout QHBoxLayout5 = new QHBoxLayout();
-        QHBoxLayout5.setSpacing(6);
-        JQtSwitch jQtSwitch = new JQtSwitch(false);
-        jQtSwitch.onToggled(bl -> {
-            app.setAutoTheme((boolean)bl);
-            JQtGallery.log("\u81ea\u52a8\u4e3b\u9898 -> " + bl);
+        QVBoxLayout tBox = new QVBoxLayout();
+        tBox.setSpacing(8);
+        tBox.addWidget(new QLabel("① 主题切换（ThemePack 三套原创 + 官方两套）"));
+        QHBoxLayout tRow = new QHBoxLayout();
+        tRow.setSpacing(6);
+        tRow.addWidget(makeBtn("Nord 北极蓝", () -> applyTheme("nord")));
+        tRow.addWidget(makeBtn("Solarized 护眼", () -> applyTheme("solarized")));
+        tRow.addWidget(makeBtn("Terminal 荧光绿", () -> applyTheme("terminal")));
+        tBox.addLayout(tRow);
+        QHBoxLayout tRow2 = new QHBoxLayout();
+        tRow2.setSpacing(6);
+        tRow2.addWidget(makeBtn("官方暗色", () -> applyTheme("fluent-dark")));
+        tRow2.addWidget(makeBtn("官方浅色", () -> applyTheme("fluent-light")));
+        tBox.addLayout(tRow2);
+        tBox.addWidget(new QLabel("② 强调色（改 %accent% 变量重渲染模板）"));
+        QHBoxLayout aRow = new QHBoxLayout();
+        aRow.setSpacing(6);
+        aRow.addWidget(makeBtn("蓝 #0078D4", () -> setAccent("#0078D4")));
+        aRow.addWidget(makeBtn("青 #00BFA5", () -> setAccent("#00BFA5")));
+        aRow.addWidget(makeBtn("紫 #9C27B0", () -> setAccent("#9C27B0")));
+        aRow.addWidget(makeBtn("橙 #FF6D00", () -> setAccent("#FF6D00")));
+        tBox.addLayout(aRow);
+        tBox.addWidget(new QLabel("③ 强调色预览：勾选下面的按钮 / 复选框看 %accent% 效果"));
+        QHBoxLayout pRow = new QHBoxLayout();
+        pRow.setSpacing(6);
+        QPushButton accentBtn = new QPushButton("勾选我（选中态=强调色）");
+        accentBtn.setCheckable(true);
+        accentBtn.onToggled(b -> log("强调色按钮 -> " + b + "（QPushButton:checked 用 %accent% 填充）"));
+        QCheckBox accentCb = new QCheckBox("强调色复选框");
+        accentCb.onToggled(b -> log("强调色复选框 -> " + b + "（indicator:checked 用 %accent% 填充）"));
+        pRow.addWidget(accentBtn);
+        pRow.addWidget(accentCb);
+        tBox.addLayout(pRow);
+        tBox.addWidget(new QLabel("④ 跟随系统深浅色 + 全局动画节奏"));
+        QHBoxLayout sRow = new QHBoxLayout();
+        sRow.setSpacing(6);
+        JQtSwitch autoSw = new JQtSwitch(false);   // 自动跟随 Windows 明暗模式
+        autoSw.onToggled(b -> { app.setAutoTheme(b); log("自动主题 -> " + b); });
+        sRow.addWidget(new QLabel("自动主题"));
+        sRow.addWidget(autoSw);
+        QComboBox animCb = new QComboBox();    // 动画节奏预设
+        animCb.addItem("动画节奏: 默认"); animCb.addItem("动画节奏: 快");
+        animCb.addItem("动画节奏: 舒缓"); animCb.addItem("动画节奏: 关闭");
+        animCb.onCurrentIndexChanged(i -> {
+            JQtAnimationTheme th = i == 0 ? JQtAnimationTheme.DEFAULT : i == 1 ? JQtAnimationTheme.FAST
+                    : i == 2 ? JQtAnimationTheme.RELAXED : JQtAnimationTheme.OFF;
+            QApplication.setAnimationTheme(th);
+            log("动画节奏 -> " + i);
         });
-        QHBoxLayout5.addWidget(new QLabel("\u81ea\u52a8\u4e3b\u9898"));
-        QHBoxLayout5.addWidget(jQtSwitch);
-        QComboBox QComboBox = new QComboBox();
-        QComboBox.addItem("\u52a8\u753b\u8282\u594f: \u9ed8\u8ba4");
-        QComboBox.addItem("\u52a8\u753b\u8282\u594f: \u5feb");
-        QComboBox.addItem("\u52a8\u753b\u8282\u594f: \u8212\u7f13");
-        QComboBox.addItem("\u52a8\u753b\u8282\u594f: \u5173\u95ed");
-        QComboBox.onCurrentIndexChanged(n -> {
-            JQtAnimationTheme jQtAnimationTheme = n == 0 ? JQtAnimationTheme.DEFAULT : (n == 1 ? JQtAnimationTheme.FAST : (n == 2 ? JQtAnimationTheme.RELAXED : JQtAnimationTheme.OFF));
-            QApplication.setAnimationTheme(jQtAnimationTheme);
-            JQtGallery.log("\u52a8\u753b\u8282\u594f -> " + n);
+        sRow.addWidget(animCb);
+        tBox.addLayout(sRow);
+        tBox.addWidget(new QLabel("⑤ 滑条调色器（拖 RGB → 应用到强调色）"));
+        QHBoxLayout cs1 = new QHBoxLayout();
+        cs1.addWidget(new QLabel("R"));
+        QSlider rS = new QSlider(0, 255, 0);
+        cs1.addWidget(rS);
+        tBox.addLayout(cs1);
+        QHBoxLayout cs2 = new QHBoxLayout();
+        cs2.addWidget(new QLabel("G"));
+        QSlider gS = new QSlider(0, 255, 120);
+        cs2.addWidget(gS);
+        tBox.addLayout(cs2);
+        QHBoxLayout cs3 = new QHBoxLayout();
+        cs3.addWidget(new QLabel("B"));
+        QSlider bS = new QSlider(0, 255, 212);
+        cs3.addWidget(bS);
+        tBox.addLayout(cs3);
+        QHBoxLayout c4 = new QHBoxLayout();
+        c4.setSpacing(6);
+        QFrame cPreview = new QFrame();
+        cPreview.setObjectName("card");
+        cPreview.addWidget(new QLabel("预览"));
+        QLabel hexLbl = new QLabel("#0078D4");
+        hexLbl.setObjectName("cardMeta");
+        QPushButton applyBtn = new QPushButton("应用为强调色");
+        c4.addWidget(cPreview);
+        c4.addWidget(hexLbl);
+        c4.addWidget(applyBtn);
+        tBox.addLayout(c4);
+        // 滑块联动：预览面板实时变色 + hex 显示 + 应用到强调色
+        Runnable upd = () -> {
+            String h = String.format("#%02X%02X%02X", rS.value(), gS.value(), bS.value());
+            cPreview.setStyleSheet("QFrame { background: " + h + "; border-radius: 8px; }");
+            hexLbl.setText(h);
+        };
+        rS.onValueChanged(v -> upd.run());
+        gS.onValueChanged(v -> upd.run());
+        bS.onValueChanged(v -> upd.run());
+        applyBtn.onClicked(() -> setAccent(String.format("#%02X%02X%02X", rS.value(), gS.value(), bS.value())));
+        upd.run();
+        tBox.addWidget(new QLabel("⑥ QSS 热重载（编辑 qf-dark-jqt.qss 存盘即生效）"));
+        QHBoxLayout qfRow = new QHBoxLayout();
+        qfRow.setSpacing(6);
+        QPushButton loadQfBtn = new QPushButton("加载 qf 皮肤");
+        QPushButton restoreBtn = new QPushButton("恢复模板主题");
+        QLabel qfState = new QLabel("未加载");
+        qfState.setObjectName("cardMeta");
+        qfRow.addWidget(loadQfBtn);
+        qfRow.addWidget(restoreBtn);
+        qfRow.addWidget(qfState);
+        tBox.addLayout(qfRow);
+        loadQfBtn.onClicked(() -> {
+            loadQfSkin();
+            qfMtime = -1;
         });
-        QHBoxLayout5.addWidget(QComboBox);
-        QVBoxLayout.addLayout(QHBoxLayout5);
-        themePanel.setLayout(QVBoxLayout);
+        restoreBtn.onClicked(() -> {
+            qfLoaded = false;
+            applyTheme(themeName);
+            qfState.setText("未加载");
+        });
+        qfLoaded = false;
+        qfMtime = -1;
+        qfStateRef = qfState;
+        themePanel.setLayout(tBox);
+
+        // ================ 分区 2：控件 ================
         ctrlPanel = new QFrame();
         ctrlPanel.setObjectName("card1");
-        QVBoxLayout QVBoxLayout2 = new QVBoxLayout();
-        QVBoxLayout2.setSpacing(8);
-        QVBoxLayout2.addWidget(new QLabel("\u2460 \u5f00\u5173 / \u590d\u9009\u6846\uff08toggled \u4e8b\u4ef6\uff09"));
-        QHBoxLayout QHBoxLayout6 = new QHBoxLayout();
-        JQtSwitch jQtSwitch2 = new JQtSwitch(true);
-        jQtSwitch2.onToggled(bl -> JQtGallery.log("\u5f00\u5173 -> " + bl));
-        QCheckBox QCheckBox2 = new QCheckBox("\u52fe\u9009\u6211");
-        QCheckBox2.onToggled(bl -> JQtGallery.log("\u590d\u9009\u6846 -> " + bl));
-        QHBoxLayout6.addWidget(jQtSwitch2);
-        QHBoxLayout6.addWidget(QCheckBox2);
-        QVBoxLayout2.addLayout(QHBoxLayout6);
-        QVBoxLayout2.addWidget(new QLabel("\u2461 \u8f93\u5165\u6846\uff08\u5b9e\u65f6 textChanged / \u56de\u8f66\u786e\u8ba4\uff09"));
-        QLineEdit QLineEdit = new QLineEdit("");
-        QLineEdit.setPlaceholderText("\u5728\u8fd9\u91cc\u8f93\u5165\u6587\u5b57\uff0c\u6309\u56de\u8f66...");
-        QLineEdit.onTextChanged(string -> {
-            if (!string.isEmpty()) {
-                JQtGallery.log("\u8f93\u5165: " + string);
-            }
+        QVBoxLayout cBox = new QVBoxLayout();
+        cBox.setSpacing(8);
+        cBox.addWidget(new QLabel("① 开关 / 复选框（toggled 事件）"));
+        QHBoxLayout c1 = new QHBoxLayout();
+        JQtSwitch sw = new JQtSwitch(true);        // Fluent 滑动开关
+        sw.onToggled(b -> log("开关 -> " + b));
+        QCheckBox cb = new QCheckBox("勾选我"); // 复选框
+        cb.onToggled(b -> log("复选框 -> " + b));
+        c1.addWidget(sw); c1.addWidget(cb);
+        cBox.addLayout(c1);
+        cBox.addWidget(new QLabel("② 输入框（实时 textChanged / 回车确认）"));
+        QLineEdit edit = new QLineEdit("");
+        edit.setPlaceholderText("在这里输入文字，按回车...");
+        edit.onTextChanged(s -> { if (!s.isEmpty()) log("输入: " + s); });
+        edit.onReturnPressed(() -> log("回车确认: " + edit.text()));
+        cBox.addWidget(edit);
+        cBox.addWidget(new QLabel("③ 下拉框 + 列表（选择事件）"));
+        QHBoxLayout c2 = new QHBoxLayout();
+        QComboBox combo = new QComboBox();
+        combo.addItem("选项 A"); combo.addItem("选项 B"); combo.addItem("选项 C");
+        combo.onCurrentIndexChanged(i -> log("下拉框 -> " + i + " " + combo.currentText()));
+        QListWidget list = new QListWidget();
+        list.addItem("行 1"); list.addItem("行 2"); list.addItem("行 3");
+        list.onItemClicked(i -> log("列表点击 -> " + i));
+        c2.addWidget(combo); c2.addWidget(list);
+        cBox.addLayout(c2);
+        cBox.addWidget(new QLabel("④ 禁用 / 悬垂保护（内存管理演示）"));
+        QHBoxLayout c3 = new QHBoxLayout();
+        QPushButton victim = makeBtn("我可能被禁用", () -> log("按钮被点击了"));
+        QPushButton disBtn = makeBtn("禁用 / 启用", () -> {
+            victim.setEnabled(!victim.isEnabled());   // v0.3 新增的禁用 API
+            log("按钮可用 -> " + victim.isEnabled());
         });
-        QLineEdit.onReturnPressed(() -> JQtGallery.log("\u56de\u8f66\u786e\u8ba4: " + QLineEdit.text()));
-        QVBoxLayout2.addWidget(QLineEdit);
-        QVBoxLayout2.addWidget(new QLabel("\u2462 \u4e0b\u62c9\u6846 + \u5217\u8868\uff08\u9009\u62e9\u4e8b\u4ef6\uff09"));
-        QHBoxLayout QHBoxLayout7 = new QHBoxLayout();
-        QComboBox QComboBox2 = new QComboBox();
-        QComboBox2.addItem("\u9009\u9879 A");
-        QComboBox2.addItem("\u9009\u9879 B");
-        QComboBox2.addItem("\u9009\u9879 C");
-        QComboBox2.onCurrentIndexChanged(n -> JQtGallery.log("\u4e0b\u62c9\u6846 -> " + n + " " + QComboBox2.currentText()));
-        QListWidget QListWidget = new QListWidget();
-        QListWidget.addItem("\u884c 1");
-        QListWidget.addItem("\u884c 2");
-        QListWidget.addItem("\u884c 3");
-        QListWidget.onItemClicked(n -> JQtGallery.log("\u5217\u8868\u70b9\u51fb -> " + n));
-        QHBoxLayout7.addWidget(QComboBox2);
-        QHBoxLayout7.addWidget(QListWidget);
-        QVBoxLayout2.addLayout(QHBoxLayout7);
-        QVBoxLayout2.addWidget(new QLabel("\u2463 \u7981\u7528 / \u60ac\u5782\u4fdd\u62a4\uff08\u5185\u5b58\u7ba1\u7406\u6f14\u793a\uff09"));
-        QHBoxLayout QHBoxLayout8 = new QHBoxLayout();
-        QPushButton QPushButton2 = JQtGallery.makeBtn("\u6211\u53ef\u80fd\u88ab\u7981\u7528", () -> JQtGallery.log("\u6309\u94ae\u88ab\u70b9\u51fb\u4e86"));
-        QPushButton QPushButton3 = JQtGallery.makeBtn("\u7981\u7528 / \u542f\u7528", () -> {
-            QPushButton2.setEnabled(!QPushButton2.isEnabled());
-            JQtGallery.log("\u6309\u94ae\u53ef\u7528 -> " + QPushButton2.isEnabled());
-        });
-        QPushButton QPushButton4 = JQtGallery.makeBtn("\u60ac\u5782\u6f14\u793a", () -> {
+        QPushButton dangBtn = makeBtn("悬垂演示", () -> {
+            // 悬垂保护：dispose 释放 native 句柄后再调用会抛 IllegalStateException
             try {
-                QPushButton ghostBtn = new QPushButton("ghost");
-                ghostBtn.dispose();
-                ghostBtn.setText("boom");
-                JQtGallery.log("\u60ac\u5782\u4fdd\u62a4\u672a\u751f\u6548 (\u5f02\u5e38)");
-            }
-            catch (IllegalStateException illegalStateException) {
-                JQtGallery.log("\u60ac\u5782\u4fdd\u62a4 OK: " + illegalStateException.getMessage());
+                QPushButton ghost = new QPushButton("ghost");
+                ghost.dispose();                      // 释放原生资源
+                ghost.setText("boom");                // 悬垂调用 -> 应抛异常
+                log("悬垂保护未生效 (异常)");
+            } catch (IllegalStateException e) {
+                log("悬垂保护 OK: " + e.getMessage());
             }
         });
-        QHBoxLayout8.addWidget(QPushButton2);
-        QHBoxLayout8.addWidget(QPushButton3);
-        QHBoxLayout8.addWidget(QPushButton4);
-        QVBoxLayout2.addLayout(QHBoxLayout8);
-        ctrlPanel.setLayout(QVBoxLayout2);
+        c3.addWidget(victim); c3.addWidget(disBtn); c3.addWidget(dangBtn);
+        cBox.addLayout(c3);
+        ctrlPanel.setLayout(cBox);
+
+        // ================ 分区 3：动画 ================
         animPanel = new QFrame();
         animPanel.setObjectName("card1");
-        QVBoxLayout QVBoxLayout3 = new QVBoxLayout();
-        QVBoxLayout3.setSpacing(8);
-        QVBoxLayout3.addWidget(new QLabel("\u2460 \u7a97\u53e3\u52a8\u753b\uff08\u6de1\u5165 / \u6de1\u51fa\uff09"));
-        QHBoxLayout QHBoxLayout9 = new QHBoxLayout();
-        QHBoxLayout9.addWidget(JQtGallery.makeBtn("\u7a97\u53e3\u6de1\u5165 400ms", () -> {
-            w.fadeIn(400L);
-            JQtGallery.log("\u7a97\u53e3\u6de1\u5165");
-        }));
-        QHBoxLayout9.addWidget(JQtGallery.makeBtn("\u7a97\u53e3\u6de1\u51fa 400ms", () -> {
-            w.fadeOut(400L);
-            JQtGallery.log("\u7a97\u53e3\u6de1\u51fa");
-        }));
-        QVBoxLayout3.addLayout(QHBoxLayout9);
-        QVBoxLayout3.addWidget(new QLabel("\u2461 \u5361\u7247\u7f29\u653e\u52a8\u753b\uff085 \u79cd\u7f13\u52a8\u53ef\u9009\uff09"));
-        QHBoxLayout QHBoxLayout10 = new QHBoxLayout();
-        QFrame QFrame = new QFrame();
-        QFrame.setObjectName("card");
-        QFrame.setBorderRadius(10);
-        QFrame.addWidget(new QLabel("\u5361\u7247"));
-        QComboBox QComboBox3 = new QComboBox();
-        QComboBox3.addItem("\u56de\u5f39 OUT_BOUNCE");
-        QComboBox3.addItem("\u6a61\u76ae\u7b4b OUT_ELASTIC");
-        QComboBox3.addItem("\u8fc7\u51b2 OUT_BACK");
-        QComboBox3.addItem("\u7f13\u5165\u7f13\u51fa IN_OUT_CUBIC");
-        QComboBox3.addItem("\u5300\u901f LINEAR");
-        QPushButton QPushButton5 = JQtGallery.makeBtn("\u653e\u5927 300x120", () -> {
-            JQtEasing jQtEasing = QComboBox3.currentIndex() == 0 ? JQtEasing.OUT_BOUNCE : (QComboBox3.currentIndex() == 1 ? JQtEasing.OUT_ELASTIC : (QComboBox3.currentIndex() == 2 ? JQtEasing.OUT_BACK : (QComboBox3.currentIndex() == 3 ? JQtEasing.IN_OUT_CUBIC : JQtEasing.LINEAR)));
-            QFrame.animateResize(300, 120, 500L, jQtEasing);
-            JQtGallery.log("\u5361\u7247\u653e\u5927 300x120 " + QComboBox3.currentText());
+        QVBoxLayout aBox = new QVBoxLayout();
+        aBox.setSpacing(8);
+        aBox.addWidget(new QLabel("① 窗口动画（淡入 / 淡出）"));
+        QHBoxLayout m1 = new QHBoxLayout();
+        m1.addWidget(makeBtn("窗口淡入 400ms", () -> { w.fadeIn(400); log("窗口淡入"); }));
+        m1.addWidget(makeBtn("窗口淡出 400ms", () -> { w.fadeOut(400); log("窗口淡出"); }));
+        aBox.addLayout(m1);
+        aBox.addWidget(new QLabel("② 卡片缩放动画（5 种缓动可选）"));
+        QHBoxLayout m2 = new QHBoxLayout();
+        QFrame card = new QFrame();
+        card.setObjectName("card");
+        card.setBorderRadius(10);                     // v0.3 圆角 API
+        card.addWidget(new QLabel("卡片"));
+        QComboBox easeCb = new QComboBox();       // 缓动函数选择
+        easeCb.addItem("回弹 OUT_BOUNCE"); easeCb.addItem("橡皮筋 OUT_ELASTIC");
+        easeCb.addItem("过冲 OUT_BACK"); easeCb.addItem("缓入缓出 IN_OUT_CUBIC");
+        easeCb.addItem("匀速 LINEAR");
+        QPushButton scaleBtn = makeBtn("放大 300x120", () -> {
+            JQtEasing e = easeCb.currentIndex() == 0 ? JQtEasing.OUT_BOUNCE
+                    : easeCb.currentIndex() == 1 ? JQtEasing.OUT_ELASTIC
+                    : easeCb.currentIndex() == 2 ? JQtEasing.OUT_BACK
+                    : easeCb.currentIndex() == 3 ? JQtEasing.IN_OUT_CUBIC : JQtEasing.LINEAR;
+            card.animateResize(300, 120, 500, e);    // 属性动画：尺寸插值
+            log("卡片放大 300x120 " + easeCb.currentText());
         });
-        QPushButton QPushButton6 = JQtGallery.makeBtn("\u8fd8\u539f 180x60", () -> {
-            QFrame.animateResize(180, 60, 300L, JQtEasing.OUT_QUAD);
-            JQtGallery.log("\u5361\u7247\u8fd8\u539f 180x60");
+        QPushButton scaleBack = makeBtn("还原 180x60", () -> {
+            card.animateResize(180, 60, 300, JQtEasing.OUT_QUAD);
+            log("卡片还原 180x60");
         });
-        QHBoxLayout10.addWidget(QPushButton5);
-        QHBoxLayout10.addWidget(QPushButton6);
-        QVBoxLayout3.addLayout(QHBoxLayout10);
-        QVBoxLayout3.addWidget(QFrame);
-        QVBoxLayout3.addWidget(QComboBox3);
-        QVBoxLayout3.addWidget(new QLabel("\u2462 \u9634\u5f71 / \u5706\u89d2\uff08v0.3 \u6837\u5f0f API\uff09"));
-        QHBoxLayout QHBoxLayout11 = new QHBoxLayout();
-        QHBoxLayout11.addWidget(JQtGallery.makeBtn("\u52a0\u6295\u5f71", () -> {
-            QFrame.setDropShadow(0, 6, 24, 50);
-            JQtGallery.log("\u6295\u5f71\u5f00");
-        }));
-        QHBoxLayout11.addWidget(JQtGallery.makeBtn("\u53bb\u6295\u5f71", () -> {
-            QFrame.clearDropShadow();
-            JQtGallery.log("\u6295\u5f71\u5173");
-        }));
-        QHBoxLayout11.addWidget(JQtGallery.makeBtn("\u5706\u89d2 16", () -> {
-            QFrame.setBorderRadius(16);
-            JQtGallery.log("\u5706\u89d2 16");
-        }));
-        QVBoxLayout3.addLayout(QHBoxLayout11);
-        animPanel.setLayout(QVBoxLayout3);
+        m2.addWidget(scaleBtn); m2.addWidget(scaleBack);
+        aBox.addLayout(m2);
+        aBox.addWidget(card);
+        aBox.addWidget(easeCb);
+        aBox.addWidget(new QLabel("③ 阴影 / 圆角（v0.3 样式 API）"));
+        QHBoxLayout m3 = new QHBoxLayout();
+        m3.addWidget(makeBtn("加投影", () -> { card.setDropShadow(0, 6, 24, 50); log("投影开"); }));
+        m3.addWidget(makeBtn("去投影", () -> { card.clearDropShadow(); log("投影关"); }));
+        m3.addWidget(makeBtn("圆角 16", () -> { card.setBorderRadius(16); log("圆角 16"); }));
+        aBox.addLayout(m3);
+        animPanel.setLayout(aBox);
+
+        // ================ 分区 4：窗口 ================
         winPanel = new QFrame();
         winPanel.setObjectName("card1");
-        QVBoxLayout QVBoxLayout4 = new QVBoxLayout();
-        QVBoxLayout4.setSpacing(8);
-        QVBoxLayout4.addWidget(new QLabel("\u2460 \u7a97\u53e3\u7279\u6027\u5f00\u5173\uff08\u5b9e\u65f6\u5207\u6362\uff09"));
-        QHBoxLayout QHBoxLayout12 = new QHBoxLayout();
-        JQtSwitch jQtSwitch3 = new JQtSwitch(true);
-        jQtSwitch3.onToggled(bl -> {
-            w.setAcrylic((boolean)bl);
-            JQtGallery.log("\u6bdb\u73bb\u7483 -> " + bl);
-        });
-        JQtSwitch jQtSwitch4 = new JQtSwitch(true);
-        jQtSwitch4.onToggled(bl -> {
-            w.setRoundedCorners((boolean)bl);
-            JQtGallery.log("\u5706\u89d2 -> " + bl);
-        });
-        JQtSwitch jQtSwitch5 = new JQtSwitch(false);
-        jQtSwitch5.onToggled(bl -> {
-            w.setFrameless((boolean)bl);
-            JQtGallery.log("\u65e0\u8fb9\u6846 -> " + bl);
-        });
-        QHBoxLayout12.addWidget(new QLabel("\u6bdb\u73bb\u7483"));
-        QHBoxLayout12.addWidget(jQtSwitch3);
-        QHBoxLayout12.addWidget(new QLabel("\u5706\u89d2"));
-        QHBoxLayout12.addWidget(jQtSwitch4);
-        QHBoxLayout12.addWidget(new QLabel("\u8fb9\u6846"));
-        QHBoxLayout12.addWidget(jQtSwitch5);
-        QVBoxLayout4.addLayout(QHBoxLayout12);
-        QVBoxLayout4.addWidget(new QLabel("\u2461 \u7a97\u53e3\u63a7\u5236"));
-        QHBoxLayout QHBoxLayout13 = new QHBoxLayout();
-        QHBoxLayout13.addWidget(JQtGallery.makeBtn("\u6700\u5c0f\u5316", () -> {
-            w.minimize();
-            JQtGallery.log("\u6700\u5c0f\u5316");
-        }));
-        QHBoxLayout13.addWidget(JQtGallery.makeBtn("\u6700\u5927\u5316", () -> {
-            w.maximize();
-            JQtGallery.log("\u6700\u5927\u5316");
-        }));
-        QHBoxLayout13.addWidget(JQtGallery.makeBtn("\u5207\u6362\u6700\u5927", () -> {
-            w.toggleMaximize();
-            JQtGallery.log("\u5207\u6362\u6700\u5927\u5316");
-        }));
-        QVBoxLayout4.addLayout(QHBoxLayout13);
-        geoLabel = new QLabel("\u51e0\u4f55\u4fe1\u606f: -");
+        QVBoxLayout wBox = new QVBoxLayout();
+        wBox.setSpacing(8);
+        wBox.addWidget(new QLabel("① 窗口特性开关（实时切换）"));
+        QHBoxLayout w1 = new QHBoxLayout();
+        JQtSwitch acrylicSw = new JQtSwitch(true);    // 亚克力毛玻璃
+        acrylicSw.onToggled(b -> { w.setAcrylic(b); log("毛玻璃 -> " + b); });
+        JQtSwitch roundSw = new JQtSwitch(true);      // 圆角
+        roundSw.onToggled(b -> { w.setRoundedCorners(b); log("圆角 -> " + b); });
+        JQtSwitch frameSw = new JQtSwitch(false);     // 无边框
+        frameSw.onToggled(b -> { w.setFrameless(b); log("无边框 -> " + b); });
+        w1.addWidget(new QLabel("毛玻璃")); w1.addWidget(acrylicSw);
+        w1.addWidget(new QLabel("圆角")); w1.addWidget(roundSw);
+        w1.addWidget(new QLabel("边框")); w1.addWidget(frameSw);
+        wBox.addLayout(w1);
+        wBox.addWidget(new QLabel("② 窗口控制"));
+        QHBoxLayout w2 = new QHBoxLayout();
+        w2.addWidget(makeBtn("最小化", () -> { w.minimize(); log("最小化"); }));
+        w2.addWidget(makeBtn("最大化", () -> { w.maximize(); log("最大化"); }));
+        w2.addWidget(makeBtn("切换最大", () -> { w.toggleMaximize(); log("切换最大化"); }));
+        wBox.addLayout(w2);
+        geoLabel = new QLabel("几何信息: -");
         geoLabel.setObjectName("cardMeta");
-        QVBoxLayout4.addWidget(geoLabel);
-        winPanel.setLayout(QVBoxLayout4);
-        logLabel = new QLabel("\u5c31\u7eea");
-        logLabel.setObjectName("logLine");
-        QVBoxLayout QVBoxLayout5 = new QVBoxLayout();
-        QVBoxLayout5.setContentsMargins(14, 10, 14, 10);
-        QVBoxLayout5.setSpacing(8);
-        QVBoxLayout5.addWidget(QLabel);
-        QVBoxLayout5.addWidget(QLabel2);
-        QVBoxLayout5.addWidget(jQtPivot);
-        QVBoxLayout5.addWidget(themePanel);
-        QVBoxLayout5.addWidget(ctrlPanel);
-        QVBoxLayout5.addWidget(animPanel);
-        QVBoxLayout5.addWidget(winPanel);
-        QVBoxLayout5.addWidget(logLabel);
-        QMainWindow.setLayout(QVBoxLayout5);
-        ctrlPanel.hide();
-        animPanel.hide();
-        winPanel.hide();
-        jQtPivot.onChanged(n -> {
-            if (n == 0) {
-                themePanel.show();
-            } else {
-                themePanel.hide();
-            }
-            if (n == 1) {
-                ctrlPanel.show();
-            } else {
-                ctrlPanel.hide();
-            }
-            if (n == 2) {
-                animPanel.show();
-            } else {
-                animPanel.hide();
-            }
-            if (n == 3) {
-                winPanel.show();
-            } else {
-                winPanel.hide();
-            }
-            JQtGallery.log("\u5206\u533a -> " + n);
+        wBox.addWidget(geoLabel);
+        winPanel.setLayout(wBox);
+
+        // ================ 分区 5：v0.5 新控件（Q 类时代新增） ================
+        v5Panel = new QFrame();
+        v5Panel.setObjectName("card1");
+        QVBoxLayout v5 = new QVBoxLayout();
+        v5.setSpacing(8);
+        v5.addWidget(new QLabel("① 表格 QTableWidget（3x3 + 表头 + 单元格点击）"));
+        QTableWidget table = new QTableWidget(3, 3);
+        table.setColumnHeaders(new String[]{"名称", "类型", "状态"});
+        for (int r = 0; r < 3; r++) {
+            for (int c = 0; c < 3; c++) table.setItemText(r, c, "单元格" + r + "," + c);
+        }
+        table.resizeColumnsToContents();
+        table.onCellClicked((r, c) -> log("表格点击 -> " + r + "," + c + " = " + table.itemText(r, c)));
+        v5.addWidget(table);
+
+        v5.addWidget(new QLabel("② 树 QTreeWidget（顶层 + 子节点 + 展开）"));
+        QTreeWidget tree = new QTreeWidget();
+        int root1 = tree.addTopLevelItem("项目根");
+        tree.addChild(root1, "子节点 1");
+        tree.addChild(root1, "子节点 2");
+        tree.expandAll();
+        tree.onItemClicked(i -> log("树点击 -> " + tree.itemText(i)));
+        v5.addWidget(tree);
+
+        v5.addWidget(new QLabel("③ 选项卡 QTabWidget（两页切换）"));
+        QTabWidget tabs = new QTabWidget();
+        QFrame page1 = new QFrame();
+        page1.addWidget(new QLabel("页面 1 内容"));
+        QFrame page2 = new QFrame();
+        page2.addWidget(new QLabel("页面 2 内容"));
+        tabs.addTab(page1, "页 1");
+        tabs.addTab(page2, "页 2");
+        tabs.onCurrentChanged(i -> log("选项卡 -> " + i));
+        v5.addWidget(tabs);
+
+        v5.addWidget(new QLabel("④ 数值联动 QSpinBox ↔ QDial + 单选按钮"));
+        QHBoxLayout v5row = new QHBoxLayout();
+        v5row.setSpacing(6);
+        QSpinBox spin = new QSpinBox();
+        spin.setRange(0, 100);
+        spin.setValue(30);
+        QDial dial = new QDial();
+        dial.setRange(0, 100);
+        dial.setValue(30);
+        spin.onValueChanged(v -> dial.setValue(v));
+        dial.onValueChanged(v -> spin.setValue(v));
+        QRadioButton ra = new QRadioButton("A");
+        QRadioButton rb = new QRadioButton("B");
+        QRadioButton rc = new QRadioButton("C");
+        ra.setChecked(true);
+        QRadioButton[] radios = {ra, rb, rc};
+        for (int i = 0; i < 3; i++) {
+            final int idx = i;
+            radios[i].onToggled(b -> {
+                if (b) {
+                    log("单选 -> " + idx);
+                    for (int j = 0; j < 3; j++) if (j != idx) radios[j].setChecked(false);
+                }
+            });
+        }
+        v5row.addWidget(spin);
+        v5row.addWidget(dial);
+        v5row.addWidget(ra);
+        v5row.addWidget(rb);
+        v5row.addWidget(rc);
+        v5.addLayout(v5row);
+
+        v5.addWidget(new QLabel("⑤ 富文本 QTextEdit + ⑥ 自绘画布 QCanvasWidget"));
+        QHBoxLayout v5row2 = new QHBoxLayout();
+        v5row2.setSpacing(6);
+        QTextEdit ted = new QTextEdit();
+        ted.setPlainText("富文本编辑区，点「追加」添加日志");
+        QCanvasWidget canvas = new QCanvasWidget();
+        canvas.onPaint(p -> {
+            p.setColor(0xFF8800CC);
+            p.fillCircle(50, 50, 25);
+            p.setColor(0xFF00AAFF);
+            p.drawCircle(110, 50, 30);
+            p.setColor(0xFFFF6600);
+            p.drawLine(10, 110, 190, 110);
+            p.setColor(0xFFFFFFFF);
+            p.drawText(10, 130, "JQt Canvas");
         });
-        JQtGallery.scheduleGeo(1000L);
-        QMainWindow.onClose(() -> app.quit());
-        JQtGallery.applyTheme("nord");
-        QMainWindow.show();
-        QMainWindow.fadeIn(300L);
-        JQtGallery.log("\u6f14\u793a\u5c31\u7eea\uff0c\u4e3b\u9898=Nord");
-        if (bl2) {
-            app.schedule(() -> JQtGallery.applyTheme("solarized"), 1600L);
-            app.schedule(() -> JQtGallery.setAccent("#00BFA5"), 2600L);
-            app.schedule(() -> jQtPivot.setCurrentIndex(1), 3600L);
-            app.schedule(() -> jQtSwitch2.setChecked(false), 4600L);
+        v5row2.addWidget(ted);
+        v5row2.addWidget(canvas);
+        v5.addLayout(v5row2);
+
+        v5.addWidget(new QLabel("⑦ 工具栏 / 菜单 / 托盘 / 后台线程 / 状态栏"));
+        QToolBar toolbar = new QToolBar();
+        toolbar.addButton("工具 1");
+        toolbar.addButton("工具 2");
+        toolbar.onTriggered(i -> log("工具栏 -> " + i));
+        v5.addWidget(toolbar);
+        final QPushButton[] menuBtnRef = new QPushButton[1];
+        menuBtnRef[0] = makeBtn("弹出菜单", () -> {
+            QMenu menu = new QMenu();
+            menu.addItem("菜单项 A");
+            menu.addItem("菜单项 B");
+            menu.onTriggered(i -> log("菜单 -> " + i));
+            menu.popup(menuBtnRef[0]);
+        });
+        QPushButton menuBtn = menuBtnRef[0];
+        QPushButton trayBtn = makeBtn("托盘提示", () -> {
+            QSystemTrayIcon tray = new QSystemTrayIcon();
+            tray.setToolTip("JQt Gallery");
+            tray.show();
+            tray.showMessage("JQt", "托盘消息（3 秒）", 3000);
+        });
+        QPushButton uiBtn = makeBtn("后台线程更新 UI", () -> {
+            new Thread(() -> {
+                try { Thread.sleep(1000); } catch (Exception ignored) { }
+                QApplication.runOnUiThread(() -> log("runOnUiThread: 后台线程安全更新 UI ✓"));
+            }).start();
+        });
+        QPushButton repaintBtn = makeBtn("画布重绘", () -> canvas.repaint());
+        QPushButton appendBtn = makeBtn("富文本追加", () -> ted.append("追加 " + System.currentTimeMillis() % 10000));
+        QHBoxLayout v5row3 = new QHBoxLayout();
+        v5row3.setSpacing(6);
+        v5row3.addWidget(menuBtn);
+        v5row3.addWidget(trayBtn);
+        v5row3.addWidget(uiBtn);
+        v5row3.addWidget(repaintBtn);
+        v5row3.addWidget(appendBtn);
+        v5.addLayout(v5row3);
+
+        QStatusBar sbar = new QStatusBar();
+        sbar.showMessage("状态栏消息（5 秒）", 5000);
+        v5.addWidget(sbar);
+        v5.addWidget(new QLabel("⑧ 渲染后端: " + QApplication.rhiBackend()));
+        v5Panel.setLayout(v5);
+
+        // ---- 根布局（单列 VBox，v0.3 支持嵌套布局）----
+        logLabel = new QLabel("就绪");
+        logLabel.setObjectName("logLine");
+        QVBoxLayout root = new QVBoxLayout();
+        root.setContentsMargins(14, 10, 14, 10);
+        root.setSpacing(8);
+        root.addWidget(title);
+        root.addWidget(sub);
+        root.addWidget(pivot);
+        root.addWidget(themePanel);
+        root.addWidget(ctrlPanel);
+        root.addWidget(animPanel);
+        root.addWidget(winPanel);
+        root.addWidget(v5Panel);
+        root.addWidget(logLabel);
+        win.setLayout(root);
+
+        // 分区切换：选项卡变化时只显示对应面板（其余隐藏）
+        ctrlPanel.hide(); animPanel.hide(); winPanel.hide(); v5Panel.hide();
+        pivot.onChanged(i -> {
+            if (i == 0) { themePanel.show(); } else { themePanel.hide(); }
+            if (i == 1) { ctrlPanel.show(); } else { ctrlPanel.hide(); }
+            if (i == 2) { animPanel.show(); } else { animPanel.hide(); }
+            if (i == 3) { winPanel.show(); } else { winPanel.hide(); }
+            if (i == 4) { v5Panel.show(); } else { v5Panel.hide(); }
+            log("分区 -> " + i);
+        });
+
+        // 窗口几何信息每秒刷新（v0.3 几何查询 API）
+        scheduleGeo(1000);
+
+        win.onClose(() -> app.quit());
+        applyTheme("nord");     // 初始主题：Nord 北极蓝
+        win.show();
+        win.fadeIn(300);
+        log("演示就绪，主题=Nord");
+
+        // ---- 自动化演示模式（-Dg.auto=1）：顺序触发各功能验证 ----
+        if (auto) {
+            app.schedule(() -> applyTheme("solarized"), 1600);
+            app.schedule(() -> setAccent("#00BFA5"), 2600);
+            app.schedule(() -> pivot.setCurrentIndex(1), 3600);
+            app.schedule(() -> sw.setChecked(false), 4600);
             app.schedule(() -> {
                 try {
-                    QPushButton closeBtn = new QPushButton("x");
-                    closeBtn.dispose();
-                    closeBtn.setText("y");
-                    JQtGallery.log("\u81ea\u52a8\u60ac\u5782\u672a\u751f\u6548 (\u5f02\u5e38)");
-                }
-                catch (IllegalStateException illegalStateException) {
-                    JQtGallery.log("\u81ea\u52a8\u60ac\u5782\u4fdd\u62a4 OK");
-                }
-            }, 5600L);
-            app.schedule(() -> {
-                JQtGallery.log("\u81ea\u52a8\u6f14\u793a\u5b8c\u6210");
-                app.quit();
-            }, 6500L);
+                    QPushButton g = new QPushButton("x"); g.dispose(); g.setText("y");
+                    log("自动悬垂未生效 (异常)");
+                } catch (IllegalStateException e) { log("自动悬垂保护 OK"); }
+            }, 5600);
+            app.schedule(() -> { log("自动演示完成"); app.quit(); }, 6500);
         }
         app.exec();
     }
 
-    static void scheduleGeo(long l) {
-        app.schedule(() -> {
-            geoLabel.setText("\u51e0\u4f55\u4fe1\u606f: x=" + w.x() + " y=" + w.y() + " \u5bbd=" + w.width() + " \u9ad8=" + w.height() + " \u53ef\u89c1=" + w.isVisible());
-            JQtGallery.scheduleGeo(1000L);
-        }, l);
+    // ================= QSS 热重载 =================
+    // 读取 qf 皮肤（外部文件，可热重载；不打包进 jar 以规避 GPL 分发问题）
+    static String readQf() {
+        try {
+            String f = new String(Files.readAllBytes(Paths.get("qf-dark-jqt.qss")), StandardCharsets.UTF_8);
+            if (!f.isEmpty()) return f;
+        } catch (Exception ignored) { }
+        return "";
     }
 
-    static {
-        currentLight = false;
-        themeName = "nord";
-        logBuf = new StringBuilder();
+    static void loadQfSkin() {
+        String qss = readQf();
+        if (qss.isEmpty()) {
+            log("qf 皮肤缺失：请把 qf-dark-jqt.qss 放到程序目录");
+            return;
+        }
+        app.setStyleSheet(qss);   // 整体替换样式表 = qf 皮肤
+        qfLoaded = true;
+        qfStateRef.setText("监听中 · 重载 " + qssReloads + " 次");
+        log("qf 皮肤加载 (" + qss.length() + " 字符)");
+    }
+
+    // 每秒检查 qf 文件修改时间，变化即热重载
+    static void checkQssHotReload() {
+        if (!qfLoaded) return;
+        try {
+            long m = Files.getLastModifiedTime(Paths.get("qf-dark-jqt.qss")).toMillis();
+            if (qfMtime < 0) {
+                qfMtime = m;
+            } else if (m != qfMtime) {
+                qfMtime = m;
+                String qss = readQf();
+                if (!qss.isEmpty()) {
+                    app.setStyleSheet(qss);
+                    qssReloads++;
+                    qfStateRef.setText("监听中 · 重载 " + qssReloads + " 次");
+                    log("QSS 热重载 #" + qssReloads + " (" + qss.length() + " 字符)");
+                }
+            }
+        } catch (Exception ignored) { }
+    }
+
+    // 每秒刷新窗口几何信息（位置/尺寸/可见性）+ QSS 热重载检查
+    static void scheduleGeo(long delay) {
+        app.schedule(() -> {
+            geoLabel.setText("几何信息: x=" + w.x() + " y=" + w.y() + " 宽=" + w.width() + " 高=" + w.height()
+                    + " 可见=" + w.isVisible());
+            checkQssHotReload();
+            scheduleGeo(1000);
+        }, delay);
     }
 }
