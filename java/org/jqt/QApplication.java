@@ -38,11 +38,33 @@ public class QApplication {
     /** 全局动画主题（动效节奏 + 默认缓动）。 */
     private static volatile JQtAnimationTheme animationTheme = JQtAnimationTheme.DEFAULT;
 
+    /** 渲染后端（null = Qt 默认；见 {@link #rhiBackend(String)}）。 */
+    private static volatile String rhiBackend = null;
+
     // 主题渲染状态（setAccentColor 重渲染用）
     private String themeTemplatePath;          // 非 null = 模板模式
     private java.util.Map<String, String> themeVars;
     private boolean themeLight;
     private String currentAccent;              // 自定义主题色（切换主题时保留）
+
+    /**
+     * 设置渲染后端（必须在构造 {@link QApplication} 之前调用）：
+     * <ul>
+     *   <li>{@code "d3d11"} — Direct3D 11（Windows 默认，最稳）</li>
+     *   <li>{@code "software"} — 软件光栅（无 GPU / 远程桌面兜底）</li>
+     *   <li>{@code "opengl"} / {@code "vulkan"} — 仅影响 Qt Quick；Qt Widgets
+     *       在 Windows 上固定使用 D3D11（Qt 限制，请求 OpenGL/Vulkan 会被忽略并回退 D3D11）</li>
+     * </ul>
+     * 也可用 JVM 参数 {@code -Djqt.rhi=d3d11|opengl|vulkan|software} 设置。
+     */
+    public static void rhiBackend(String backend) {
+        rhiBackend = (backend == null || backend.isEmpty()) ? null : backend;
+    }
+
+    /** 当前配置的渲染后端（null = 默认）。 */
+    public static String rhiBackend() {
+        return rhiBackend;
+    }
 
     /**
      * 设置全局动画主题：所有 JQt 动效（hover / 入场 / 退场 / pivot 指示器）
@@ -66,7 +88,11 @@ public class QApplication {
      * 若 JVM 参数包含 {@code -Djqt.lightMode=true}，自动切换浅色配色。
      */
     public QApplication() {
-        nativeHandle = nativeCreateApp();
+        String backend = rhiBackend;
+        if (backend == null) {
+            backend = System.getProperty("jqt.rhi");
+        }
+        nativeHandle = nativeCreateApp(backend);
         if (Boolean.getBoolean("jqt.lightMode")) {
             setColorScheme(true);
         }
@@ -75,7 +101,7 @@ public class QApplication {
         nativeSetFont(systemFontFamily(), 13);
     }
 
-    private native long nativeCreateApp();
+    private native long nativeCreateApp(String rhiBackend);
 
     /** 跨平台中文字体族（Qt 找不到时会自动回退，不会产生问号）。 */
     private static String systemFontFamily() {
