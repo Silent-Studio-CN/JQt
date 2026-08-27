@@ -42,8 +42,14 @@
 ## ⚡ 快速开始（Hello World）
 
 ```powershell
-# 下载发布包（GitHub Releases）→ 解压 → jar 加入 classpath
-java -Djava.library.path=lib -cp "lib/jqt-0.1.0-alpha.jar;." Hello
+# 下载 jqt-0.5.0-TEST-windows-x64.zip → 解压
+# 运行注意：jqt.dll 依赖 Qt6*.dll，需把 lib 目录加入 DLL 搜索路径
+# （cd 到 lib 目录，或把 lib 加入 PATH）——-Djava.library.path 只定位 jqt.dll 本身
+cd lib
+java -Djava.library.path=. -cp "jqt-0.5.0-TEST.jar;.." Hello
+# 或：不切目录，用 PATH 方式
+# $env:PATH = "$PWD\lib;$env:PATH"
+# java -Djava.library.path=lib -cp "lib\jqt-0.5.0-TEST.jar;." Hello
 ```
 
 ```java
