@@ -166,4 +166,20 @@ public class QListWidget extends QWidget {
     /** 当前项行号（无选中返回 -1）。 */
     public int currentItem() { return nativeCurrentItem(nativeHandle); }
     private static native int nativeCurrentItem(long handle);
+
+    private final List<Consumer<Integer>> onCurrentItemChangedHandlers = new ArrayList<>();
+    private volatile boolean curItemConn;
+
+    /** 当前项变化回调（参数为新行号，取消选中为 -1）。 */
+    public QListWidget onCurrentItemChanged(Consumer<Integer> handler) {
+        onCurrentItemChangedHandlers.add(handler);
+        if (!curItemConn) { curItemConn = true; nativeConnectCurrentItemChanged(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectCurrentItemChanged(long handle);
+
+    void nativeHandleCurrentItemChanged(int row) {
+        for (Consumer<Integer> h : onCurrentItemChangedHandlers) h.accept(row);
+    }
 }

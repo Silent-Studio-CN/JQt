@@ -176,4 +176,20 @@ public class QTreeWidget extends QWidget {
     void nativeHandleItemEntered(int itemId) {
         for (Consumer<Integer> h : onItemEnteredHandlers) h.accept(itemId);
     }
+
+    private final List<Runnable> onItemSelectionChangedHandlers = new ArrayList<>();
+    private volatile boolean selConn;
+
+    /** 选区变化回调。 */
+    public QTreeWidget onItemSelectionChanged(Runnable handler) {
+        onItemSelectionChangedHandlers.add(handler);
+        if (!selConn) { selConn = true; nativeConnectItemSelectionChanged(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectItemSelectionChanged(long handle);
+
+    void nativeHandleItemSelectionChanged() {
+        for (Runnable h : onItemSelectionChangedHandlers) h.run();
+    }
 }

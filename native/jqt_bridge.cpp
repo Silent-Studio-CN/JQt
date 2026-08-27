@@ -71,6 +71,8 @@
 #include <QRadioButton>
 #include <QDateTimeEdit>
 #include <QDateTime>
+#include <QClipboard>
+#include <QSettings>
 #include <QGridLayout>
 #include <QFormLayout>
 #include <QMenu>
@@ -181,6 +183,8 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QTextEdit.h"
 #include "generated/org_jqt_QPainter.h"
 #include "generated/org_jqt_QCanvasWidget.h"
+#include "generated/org_jqt_QClipboard.h"
+#include "generated/org_jqt_QSettings.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -4840,3 +4844,125 @@ JNIEXPORT jint JNICALL Java_org_jqt_QListWidget_nativeCurrentItem(JNIEnv* env, j
 
 JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeSetIconSize(JNIEnv* env, jclass, jlong h, jint s) { QToolBar* w = static_cast<QToolBar*>(requireHandle(env, h)); if (w) w->setIconSize(QSize(s, s)); }
 JNIEXPORT jint JNICALL Java_org_jqt_QToolBar_nativeIconSize(JNIEnv* env, jclass, jlong h) { QToolBar* w = static_cast<QToolBar*>(requireHandle(env, h)); return w ? static_cast<jint>(w->iconSize().width()) : 0; }
+
+// L1 补全批 G：QMenu exec / 树列表信号 / QApplication font / QWidget sizePolicy / QClipboard / QSettings
+// QMenu exec
+JNIEXPORT jint JNICALL Java_org_jqt_QMenu_nativeExec(JNIEnv* env, jclass, jlong h, jint x, jint y) {
+    QMenu* w = static_cast<QMenu*>(requireHandle(env, h));
+    if (!w) return -1;
+    QAction* act = w->exec(QPoint(x, y));
+    return act ? static_cast<jint>(act->data().toInt()) : -1;
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QMenu_nativeExecAnchor(JNIEnv* env, jclass, jlong h, jlong ah) {
+    QMenu* w = static_cast<QMenu*>(requireHandle(env, h));
+    QWidget* a = static_cast<QWidget*>(requireHandle(env, ah));
+    if (!w || !a) return -1;
+    QAction* act = w->exec(a->mapToGlobal(QPoint(0, a->height())));
+    return act ? static_cast<jint>(act->data().toInt()) : -1;
+}
+// QTreeWidget itemSelectionChanged
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemSelectionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QTreeWidget::itemSelectionChanged, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleItemSelectionChanged", "()V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid);
+    });
+}
+// QListWidget currentItemChanged
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectCurrentItemChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QListWidget::currentItemChanged, [gRef, w](QListWidgetItem* cur, QListWidgetItem*) {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleCurrentItemChanged", "(I)V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(cur ? w->row(cur) : -1));
+    });
+}
+// QApplication font
+JNIEXPORT jstring JNICALL Java_org_jqt_QApplication_nativeFont(JNIEnv* env, jclass) {
+    const QFont fnt = QApplication::font();
+    int ps = fnt.pointSize();
+    if (ps < 0) ps = fnt.pixelSize();
+    return env->NewStringUTF((fnt.family() + QString(",") + QString::number(ps)).toUtf8().constData());
+}
+// QWidget sizePolicy
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetSizePolicy(JNIEnv* env, jclass, jlong h, jint hpol, jint vpol) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, h));
+    if (w) w->setSizePolicy(static_cast<QSizePolicy::Policy>(hpol), static_cast<QSizePolicy::Policy>(vpol));
+}
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWidget_nativeSizePolicy(JNIEnv* env, jclass, jlong h) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, h));
+    if (!w) return nullptr;
+    jintArray arr = env->NewIntArray(2);
+    jint v[2] = { static_cast<jint>(w->sizePolicy().horizontalPolicy()), static_cast<jint>(w->sizePolicy().verticalPolicy()) };
+    env->SetIntArrayRegion(arr, 0, 2, v);
+    return arr;
+}
+// QClipboard
+JNIEXPORT jstring JNICALL Java_org_jqt_QClipboard_nativeText(JNIEnv* env, jclass) {
+    return env->NewStringUTF(QApplication::clipboard()->text().toUtf8().constData());
+}
+JNIEXPORT void JNICALL Java_org_jqt_QClipboard_nativeSetText(JNIEnv* env, jclass, jstring text) {
+    const char* u = env->GetStringUTFChars(text, nullptr);
+    QApplication::clipboard()->setText(QString::fromUtf8(u));
+    env->ReleaseStringUTFChars(text, u);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QClipboard_nativeClear(JNIEnv* env, jclass) {
+    QApplication::clipboard()->clear();
+}
+// QSettings
+JNIEXPORT jlong JNICALL Java_org_jqt_QSettings_nativeCreate(JNIEnv* env, jobject) {
+    if (requireApp(env) == nullptr) return 0;
+    // 指定组织/应用名：空 org 名时 Qt 无处写入（注册表路径缺失）
+    return registerHandle(new QSettings(QStringLiteral("JQt"), QStringLiteral("app")), /*javaOwned=*/true);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QSettings_nativeDispose(JNIEnv* env, jclass, jlong h) {
+    QObject* obj = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_handleMutex);
+        auto it = g_handles.find(static_cast<int64_t>(h));
+        if (it == g_handles.end()) return;
+        auto oit = g_javaOwned.find(static_cast<int64_t>(h));
+        if (oit == g_javaOwned.end() || !oit->second) return;
+        obj = static_cast<QObject*>(it->second);
+        g_handles.erase(it);
+        g_javaOwned.erase(oit);
+    }
+    if (obj && g_app) QMetaObject::invokeMethod(g_app, [obj]() { delete obj; }, Qt::QueuedConnection);
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QSettings_nativeValue(JNIEnv* env, jobject, jlong h, jstring key) {
+    QSettings* s = static_cast<QSettings*>(requireHandle(env, h));
+    if (!s) return 0;
+    const char* u = env->GetStringUTFChars(key, nullptr);
+    int v = s->value(QString::fromUtf8(u)).toInt();
+    env->ReleaseStringUTFChars(key, u);
+    return v;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QSettings_nativeSetValue(JNIEnv* env, jobject, jlong h, jstring key, jint value) {
+    QSettings* s = static_cast<QSettings*>(requireHandle(env, h));
+    if (!s) return;
+    const char* u = env->GetStringUTFChars(key, nullptr);
+    s->setValue(QString::fromUtf8(u), value);
+    env->ReleaseStringUTFChars(key, u);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSettings_nativeContains(JNIEnv* env, jobject, jlong h, jstring key) {
+    QSettings* s = static_cast<QSettings*>(requireHandle(env, h));
+    if (!s) return JNI_FALSE;
+    const char* u = env->GetStringUTFChars(key, nullptr);
+    bool ok = s->contains(QString::fromUtf8(u));
+    env->ReleaseStringUTFChars(key, u);
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QSettings_nativeRemove(JNIEnv* env, jobject, jlong h, jstring key) {
+    QSettings* s = static_cast<QSettings*>(requireHandle(env, h));
+    if (!s) return;
+    const char* u = env->GetStringUTFChars(key, nullptr);
+    s->remove(QString::fromUtf8(u));
+    env->ReleaseStringUTFChars(key, u);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QSettings_nativeClear(JNIEnv* env, jobject, jlong h) {
+    QSettings* s = static_cast<QSettings*>(requireHandle(env, h));
+    if (s) s->clear();
+}

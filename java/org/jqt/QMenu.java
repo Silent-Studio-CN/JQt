@@ -77,4 +77,12 @@ public class QMenu extends QWidget {
     /** 设置菜单标题。 */
     public void setTitle(String title) { nativeSetTitle(nativeHandle, title); }
     private static native void nativeSetTitle(long handle, String title);
+
+    /** 模态弹出菜单（阻塞直到选择/关闭），返回选中项 actionId（取消返回 -1）。 */
+    public int exec(int x, int y) { return nativeExec(nativeHandle, x, y); }
+    private static native int nativeExec(long handle, int x, int y);
+
+    /** 模态弹出菜单（在锚点控件下方），返回选中项 actionId（取消返回 -1）。 */
+    public int exec(QWidget anchor) { return nativeExecAnchor(nativeHandle, anchor.nativeHandle); }
+    private static native int nativeExecAnchor(long handle, long anchorHandle);
 }

@@ -308,6 +308,17 @@ public abstract class QWidget {
     public boolean graphicsEffect() { return nativeGraphicsEffect(nativeHandle); }
     static native boolean nativeGraphicsEffect(long handle);
 
+    /**
+     * 尺寸策略（水平, 垂直）：0 Fixed / 1 Minimum / 2 Maximum / 3 Preferred /
+     * 4 MinimumExpanding / 5 Expanding / 6 Ignored。
+     */
+    public void setSizePolicy(int horizontal, int vertical) { nativeSetSizePolicy(nativeHandle, horizontal, vertical); }
+    static native void nativeSetSizePolicy(long handle, int horizontal, int vertical);
+
+    /** 尺寸策略 [水平, 垂直]。 */
+    public int[] sizePolicy() { return nativeSizePolicy(nativeHandle); }
+    static native int[] nativeSizePolicy(long handle);
+
 
     /**
      * 手动释放 C++ 侧对象（通常无需调用——GC 时会自动释放）。
