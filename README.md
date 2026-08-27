@@ -83,12 +83,12 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 
 ---
 
-## 📦 发布包（v0.4.0-alpha）
+## 📦 发布包（v0.4.1-alpha）
 
 | 资产 | 平台 |
 |------|------|
-| `jqt-0.4.0-alpha.jar` | 全部（Java API） |
-| `jqt-0.4.0-alpha-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
+| `jqt-0.4.1-alpha.jar` | 全部（Java API） |
+| `jqt-0.4.1-alpha-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库（双 Qt 版本） |
 | `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
 | `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux（双版本） |
