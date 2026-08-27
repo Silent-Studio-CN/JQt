@@ -133,4 +133,32 @@ public class QComboBox extends QWidget {
             h.accept(text);
         }
     }
+
+    private final List<Consumer<String>> onEditTextChangedHandlers = new java.util.ArrayList<>();
+    private final List<Consumer<Integer>> onHighlightedHandlers = new java.util.ArrayList<>();
+    private volatile boolean editConn, hlConn;
+
+    /** 编辑文本变化回调（可编辑模式下输入，参数为新文本）。 */
+    public QComboBox onEditTextChanged(Consumer<String> handler) {
+        onEditTextChangedHandlers.add(handler);
+        if (!editConn) { editConn = true; nativeConnectEditTextChanged(nativeHandle); }
+        return this;
+    }
+
+    /** 高亮项变化回调（键盘/悬停，参数为 index）。 */
+    public QComboBox onHighlighted(Consumer<Integer> handler) {
+        onHighlightedHandlers.add(handler);
+        if (!hlConn) { hlConn = true; nativeConnectHighlighted(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectEditTextChanged(long handle);
+    private native void nativeConnectHighlighted(long handle);
+
+    void nativeHandleEditTextChanged(String text) {
+        for (Consumer<String> h : onEditTextChangedHandlers) h.accept(text);
+    }
+    void nativeHandleHighlighted(int index) {
+        for (Consumer<Integer> h : onHighlightedHandlers) h.accept(index);
+    }
 }
