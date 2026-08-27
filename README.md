@@ -42,14 +42,14 @@
 ## ⚡ 快速开始（Hello World）
 
 ```powershell
-# 下载 jqt-0.5.0-TEST-windows-x64.zip → 解压
+# 下载 jqt-0.5.1-TEST-windows-x64.zip → 解压
 # 运行注意：jqt.dll 依赖 Qt6*.dll，需把 lib 目录加入 DLL 搜索路径
 # （cd 到 lib 目录，或把 lib 加入 PATH）——-Djava.library.path 只定位 jqt.dll 本身
 cd lib
-java -Djava.library.path=. -cp "jqt-0.5.0-TEST.jar;.." Hello
+java -Djava.library.path=. -cp "jqt-0.5.1-TEST.jar;.." Hello
 # 或：不切目录，用 PATH 方式
 # $env:PATH = "$PWD\lib;$env:PATH"
-# java -Djava.library.path=lib -cp "lib\jqt-0.5.0-TEST.jar;." Hello
+# java -Djava.library.path=lib -cp "lib\jqt-0.5.1-TEST.jar;." Hello
 ```
 
 ```java
@@ -89,12 +89,12 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 
 ---
 
-## 📦 发布包（v0.5.0-TEST）
+## 📦 发布包（v0.5.1-TEST）
 
 | 资产 | 平台 |
 |------|------|
-| `jqt-0.5.0-TEST.jar` | 全部（Java API） |
-| `jqt-0.5.0-TEST-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
+| `jqt-0.5.1-TEST.jar` | 全部（Java API） |
+| `jqt-0.5.1-TEST-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库（双 Qt 版本） |
 | `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
 | `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux（双版本） |
