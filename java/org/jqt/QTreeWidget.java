@@ -160,4 +160,20 @@ public class QTreeWidget extends QWidget {
     void nativeHandleItemPressed(int itemId) {
         for (Consumer<Integer> h : onItemPressedHandlers) h.accept(itemId);
     }
+
+    private final List<Consumer<Integer>> onItemEnteredHandlers = new ArrayList<>();
+    private volatile boolean entConn;
+
+    /** 悬停节点回调（参数为 itemId）。 */
+    public QTreeWidget onItemEntered(Consumer<Integer> handler) {
+        onItemEnteredHandlers.add(handler);
+        if (!entConn) { entConn = true; nativeConnectItemEntered(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectItemEntered(long handle);
+
+    void nativeHandleItemEntered(int itemId) {
+        for (Consumer<Integer> h : onItemEnteredHandlers) h.accept(itemId);
+    }
 }

@@ -8,6 +8,10 @@ package org.jqt;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 
 /**
@@ -185,7 +189,5 @@ public class QMainWindow extends QWidget {
             h.accept(x, y);
         }
     }
+    // L1：toolbar 相关信号由 QToolBar 提供（JQtWindowShell 非 QMainWindow 类型）
 }
-
-
-

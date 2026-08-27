@@ -56,4 +56,42 @@ public class QToolBar extends QWidget {
     /** 清空全部按钮。 */
     public void clear() { nativeClear(nativeHandle); }
     private static native void nativeClear(long handle);
+
+    /** 图标尺寸（像素）。 */
+    public void setIconSize(int size) { nativeSetIconSize(nativeHandle, size); }
+    private static native void nativeSetIconSize(long handle, int size);
+
+    /** 图标尺寸。 */
+    public int iconSize() { return nativeIconSize(nativeHandle); }
+    private static native int nativeIconSize(long handle);
+
+    // ---- L1 补全（v0.6.0）----
+
+    private final List<Consumer<Integer>> onIconSizeChangedHandlers = new ArrayList<>();
+    private final List<Consumer<Integer>> onToolButtonStyleChangedHandlers = new ArrayList<>();
+    private volatile boolean iconConn, styleConn;
+
+    /** 图标尺寸变化回调（参数为新尺寸）。 */
+    public QToolBar onIconSizeChanged(Consumer<Integer> handler) {
+        onIconSizeChangedHandlers.add(handler);
+        if (!iconConn) { iconConn = true; nativeConnectIconSizeChanged(nativeHandle); }
+        return this;
+    }
+
+    /** 按钮样式变化回调（参数为样式值）。 */
+    public QToolBar onToolButtonStyleChanged(Consumer<Integer> handler) {
+        onToolButtonStyleChangedHandlers.add(handler);
+        if (!styleConn) { styleConn = true; nativeConnectToolButtonStyleChanged(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectIconSizeChanged(long handle);
+    private native void nativeConnectToolButtonStyleChanged(long handle);
+
+    void nativeHandleIconSizeChanged(int size) {
+        for (Consumer<Integer> h : onIconSizeChangedHandlers) h.accept(size);
+    }
+    void nativeHandleToolButtonStyleChanged(int style) {
+        for (Consumer<Integer> h : onToolButtonStyleChangedHandlers) h.accept(style);
+    }
 }
