@@ -28,8 +28,8 @@
 8. **渲染后端可选**：
    - `QApplication.rhiBackend(String)` 静态配置（构造前调用，native 侧 qputenv：QSG_RHI_BACKEND + QT_WIDGETS_RHI=1）
    - 命令行 `--rhi=d3d11|opengl|vulkan|software` 透传
-   - Windows 默认 D3D11（最稳）；OpenGL 兼容性兜底；Vulkan 实验性
-   - **三后端冒烟矩阵**：FluentDemo / QfDemo / JQtGallery × {d3d11, opengl, vulkan}，截图对比；CI 无 GPU 用 software + llvmpipe 兜底，真显卡人工验证
+   - **实测结论**：QSG_RHI_BACKEND 只影响 Qt Quick；Qt Widgets 在 Windows 固定 D3D11（opengl/vulkan 请求被 Qt 忽略并回退 d3d11，已实测确认）
+   - **落地范围**：d3d11（默认）与 software（QT_WIDGETS_RHI=0 兜底）双路径真实生效；冒烟矩阵 = FluentDemo/QfDemo/JQtGallery × {d3d11, software}
    - 自绘控件（JQtSwitch 等）重点验证渐变/抗锯齿差异
 
 ### 批 4：能力

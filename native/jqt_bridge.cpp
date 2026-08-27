@@ -584,8 +584,21 @@ protected:
 // JQtApplication：QApplication 的封装
 // ----------------------------------------------------------------------------
 
-JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeCreateApp(JNIEnv* env, jobject thiz) {
+JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeCreateApp(JNIEnv* env, jobject thiz, jstring rhiBackend) {
     env->GetJavaVM(&g_jvm);
+    if (rhiBackend != nullptr) {
+        const char* b = env->GetStringUTFChars(rhiBackend, nullptr);
+        const QString backend = QString::fromUtf8(b);
+        env->ReleaseStringUTFChars(rhiBackend, b);
+        if (backend == "software") {
+            qputenv("QT_WIDGETS_RHI", "0");          // 强制软件光栅
+        } else {
+            qputenv("QT_WIDGETS_RHI", "1");          // Widgets 走 RHI 后端
+            qputenv("QSG_RHI_BACKEND", backend.toUtf8());  // d3d11 / opengl / vulkan
+        }
+        fprintf(stderr, "[JQt] RHI backend=%s widgetsRHI=%s\n",
+                qgetenv("QSG_RHI_BACKEND").constData(), qgetenv("QT_WIDGETS_RHI").constData());
+    }
     if (g_app == nullptr) {
         // QApplication 需要 argc/argv；JVM 的命令行参数不适用于 Qt，伪造一份最小参数。
         static int argc = 1;

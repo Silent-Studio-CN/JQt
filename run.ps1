@@ -15,6 +15,7 @@ param(
     [string]$JDK = "C:\Program Files\Java\latest\jdk-26",
     [string]$AnimTheme = "",
     [string]$Qss = "",
+    [string]$Rhi = "",
     [switch]$Fluent
 )
 
@@ -47,6 +48,7 @@ $javaArgs = @(
 if ($AutoClose -gt 0) { $javaArgs += "-Djqt.autoClose=$AutoClose" }
 if ($AnimTheme -ne "") { $javaArgs += "-Djqt.animTheme=$AnimTheme" }
 if ($Qss -ne "") { $javaArgs += "-Djqt.qss=$Qss" }
+if ($Rhi -ne "") { $javaArgs += "-Djqt.rhi=$Rhi" }
 if ($Fluent) { $javaArgs += "-Djqt.demoFluent=1" }
 $javaArgs += $Class
 
