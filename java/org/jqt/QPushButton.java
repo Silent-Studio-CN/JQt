@@ -51,6 +51,12 @@ public class QPushButton extends QWidget {
     public void setChecked(boolean checked) {
         nativeSetChecked(nativeHandle, checked);
     }
+
+    /** 当前是否勾选。 */
+    public boolean isChecked() {
+        return nativeIsChecked(nativeHandle);
+    }
+    private static native boolean nativeIsChecked(long handle);
     private native void nativeSetChecked(long handle, boolean checked);
 
     /** 注册点击回调（Qt clicked 信号）。 */
@@ -104,7 +110,16 @@ public class QPushButton extends QWidget {
             h.accept(checked);
         }
     }
+
+    // ---- L1 补全（v0.6.0，QAbstractButton）----
+
+    /** 程序化点击（触发 onClicked）。 */
+    public void click() { nativeClick(nativeHandle); }
+    private static native void nativeClick(long handle);
+
+    /** 切换勾选状态（需 setCheckable(true)）。 */
+    public void toggle() { nativeToggle(nativeHandle); }
+    private static native void nativeToggle(long handle);
+
+    /** 可勾选模式（已在类首部定义）。 */
 }
-
-
-

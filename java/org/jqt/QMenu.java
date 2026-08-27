@@ -63,4 +63,18 @@ public class QMenu extends QWidget {
             h.accept(actionId);
         }
     }
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 清空全部菜单项。 */
+    public void clear() { nativeClear(nativeHandle); }
+    private static native void nativeClear(long handle);
+
+    /** 菜单标题。 */
+    public String title() { return nativeTitle(nativeHandle); }
+    private static native String nativeTitle(long handle);
+
+    /** 设置菜单标题。 */
+    public void setTitle(String title) { nativeSetTitle(nativeHandle, title); }
+    private static native void nativeSetTitle(long handle, String title);
 }

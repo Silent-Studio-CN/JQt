@@ -68,6 +68,18 @@ public class QListWidget extends QWidget {
             h.accept(row);
         }
     }
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 清空全部项。 */
+    public void clear() { nativeClear(nativeHandle); }
+    private static native void nativeClear(long handle);
+
+    /** 项数量。 */
+    public int count() { return nativeCount(nativeHandle); }
+    private static native int nativeCount(long handle);
+
+    /** 指定行文本（越界返回 null）。 */
+    public String item(int row) { return nativeItem(nativeHandle, row); }
+    private static native String nativeItem(long handle, int row);
 }
-
-
