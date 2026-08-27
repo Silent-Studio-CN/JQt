@@ -134,4 +134,32 @@ public class QListWidget extends QWidget {
     void nativeHandleCurrentTextChanged(String text) {
         for (Consumer<String> h : onCurrentTextChangedHandlers) h.accept(text);
     }
+
+    private final List<Consumer<Integer>> onItemPressedHandlers = new ArrayList<>();
+    private final List<Runnable> onItemSelectionChangedHandlers = new ArrayList<>();
+    private volatile boolean pressConn, selConn;
+
+    /** 按下回调（参数为行号）。 */
+    public QListWidget onItemPressed(Consumer<Integer> handler) {
+        onItemPressedHandlers.add(handler);
+        if (!pressConn) { pressConn = true; nativeConnectItemPressed(nativeHandle); }
+        return this;
+    }
+
+    /** 选区变化回调。 */
+    public QListWidget onItemSelectionChanged(Runnable handler) {
+        onItemSelectionChangedHandlers.add(handler);
+        if (!selConn) { selConn = true; nativeConnectItemSelectionChanged(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectItemPressed(long handle);
+    private native void nativeConnectItemSelectionChanged(long handle);
+
+    void nativeHandleItemPressed(int row) {
+        for (Consumer<Integer> h : onItemPressedHandlers) h.accept(row);
+    }
+    void nativeHandleItemSelectionChanged() {
+        for (Runnable h : onItemSelectionChangedHandlers) h.run();
+    }
 }

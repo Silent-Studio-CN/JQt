@@ -184,6 +184,32 @@ public class QLineEdit extends QWidget {
             h.accept(text);
         }
     }
+
+    private final List<Runnable> onSelectionChangedHandlers = new ArrayList<>();
+    private final List<Consumer<Integer>> onCursorPositionChangedHandlers = new ArrayList<>();
+    private volatile boolean selConn, curConn;
+
+    /** 选区变化回调。 */
+    public QLineEdit onSelectionChanged(Runnable handler) {
+        onSelectionChangedHandlers.add(handler);
+        if (!selConn) { selConn = true; nativeConnectSelectionChanged(nativeHandle); }
+        return this;
+    }
+
+    /** 光标位置变化回调（参数为新位置）。 */
+    public QLineEdit onCursorPositionChanged(Consumer<Integer> handler) {
+        onCursorPositionChangedHandlers.add(handler);
+        if (!curConn) { curConn = true; nativeConnectCursorPositionChanged(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectSelectionChanged(long handle);
+    private native void nativeConnectCursorPositionChanged(long handle);
+
+    void nativeHandleSelectionChanged() {
+        for (Runnable h : onSelectionChangedHandlers) h.run();
+    }
+    void nativeHandleCursorPositionChanged(int pos) {
+        for (Consumer<Integer> h : onCursorPositionChangedHandlers) h.accept(pos);
+    }
 }
-
-

@@ -44,6 +44,10 @@ public class QMessageBox {
         return nativeShowOkCancel(parent.nativeHandle(), title, text);
     }
     static native boolean nativeShowOkCancel(long winHandle, String title, String text);
+
+    /** 关于框（确定）。阻塞调用。 */
+    public static void showAbout(QMainWindow parent, String title, String text) {
+        nativeShowAbout(parent.nativeHandle(), title, text);
+    }
+    static native void nativeShowAbout(long winHandle, String title, String text);
 }
-
-
