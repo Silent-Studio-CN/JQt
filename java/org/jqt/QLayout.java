@@ -71,6 +71,12 @@ public abstract class QLayout {
     public void addWidget(QWidget widget) {
         nativeAddWidget(nativeHandle, widget.nativeHandle());
     }
+
+    /** 加入固定间距（像素，如 addSpacing(12) 在控件间留白）。 */
+    public void addSpacing(int spacing) {
+        nativeAddSpacing(nativeHandle, spacing);
+    }
+    protected native void nativeAddSpacing(long handle, int spacing);
     protected native void nativeAddWidget(long handle, long childHandle);
 
     /** 嵌套子布局（如 VBox 中嵌入 HBox 作为标题栏/工具行）。 */

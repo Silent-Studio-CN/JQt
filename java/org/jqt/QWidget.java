@@ -233,6 +233,10 @@ public abstract class QWidget {
     public int[] geometry() { return nativeGeometry(nativeHandle); }
     static native int[] nativeGeometry(long handle);
 
+    /** 控件位置 [x, y]（相对父控件）。 */
+    public int[] pos() { return nativePos(nativeHandle); }
+    static native int[] nativePos(long handle);
+
     /** 内容边距 [左, 上, 右, 下]。 */
     public int[] contentsMargins() { return nativeContentsMargins(nativeHandle); }
     static native int[] nativeContentsMargins(long handle);

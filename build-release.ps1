@@ -45,7 +45,8 @@ Get-ChildItem $Lib -Directory | Copy-Item -Destination $Pkg -Recurse
 # 文档（双语）
 Copy-Item (Join-Path $Root "README.md"), (Join-Path $Root "LICENSE.md"), (Join-Path $Root "LICENSE"),
           (Join-Path $Root "LGPL-3.0.txt"), (Join-Path $Root "THIRD-PARTY-NOTICES.md"),
-          (Join-Path $Root "CHANGELOG.md"), (Join-Path $Root "VERSION") $Pkg
+          (Join-Path $Root "CHANGELOG.md"), (Join-Path $Root "VERSION"),
+          (Join-Path $Root "docsqt-mapping.md"), (Join-Path $Root "docsapi-implemented.md") $Pkg
 
 # 示例代码（用户快速上手）
 New-Item -ItemType Directory -Force -Path (Join-Path $Pkg "examples") | Out-Null
