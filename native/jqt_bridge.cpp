@@ -4489,3 +4489,114 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QPushButton_nativeIsChecked(JNIEnv* env,
     QPushButton* w = static_cast<QPushButton*>(requireHandle(env, h));
     return (w != nullptr && w->isChecked()) ? JNI_TRUE : JNI_FALSE;
 }
+
+// L1 补全批 C：QTextEdit/QTreeWidget/QListWidget/QScrollArea/QSplitter/QApplication
+// QTextEdit
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeClear(JNIEnv* env, jclass, jlong h) { QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (w) w->clear(); }
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeCopy(JNIEnv* env, jclass, jlong h) { QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (w) w->copy(); }
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeCut(JNIEnv* env, jclass, jlong h) { QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (w) w->cut(); }
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativePaste(JNIEnv* env, jclass, jlong h) { QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (w) w->paste(); }
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeUndo(JNIEnv* env, jclass, jlong h) { QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (w) w->undo(); }
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeRedo(JNIEnv* env, jclass, jlong h) { QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (w) w->redo(); }
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeSelectAll(JNIEnv* env, jclass, jlong h) { QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (w) w->selectAll(); }
+
+// QTreeWidget
+JNIEXPORT jint JNICALL Java_org_jqt_QTreeWidget_nativeCurrentItem(JNIEnv* env, jclass, jlong h) {
+    QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h));
+    if (!w) return -1;
+    QTreeWidgetItem* it = w->currentItem();
+    auto f = it ? g_treeItemIds.find(it) : g_treeItemIds.end();
+    return (f != g_treeItemIds.end()) ? static_cast<jint>(f->second) : -1;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectCurrentItemChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QTreeWidget::currentItemChanged, [gRef](QTreeWidgetItem* cur, QTreeWidgetItem*) {
+        JNIEnv* e = callbackEnv();
+        auto f = cur ? g_treeItemIds.find(cur) : g_treeItemIds.end();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleCurrentItemChanged", "(I)V");
+        if (mid && f != g_treeItemIds.end()) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(f->second));
+    });
+}
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemDoubleClicked(JNIEnv* env, jobject thiz, jlong h) {
+    QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QTreeWidget::itemDoubleClicked, [gRef](QTreeWidgetItem* item, int) {
+        JNIEnv* e = callbackEnv();
+        auto f = item ? g_treeItemIds.find(item) : g_treeItemIds.end();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleItemDoubleClicked", "(I)V");
+        if (mid && f != g_treeItemIds.end()) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(f->second));
+    });
+}
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemActivated(JNIEnv* env, jobject thiz, jlong h) {
+    QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QTreeWidget::itemActivated, [gRef](QTreeWidgetItem* item, int) {
+        JNIEnv* e = callbackEnv();
+        auto f = item ? g_treeItemIds.find(item) : g_treeItemIds.end();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleItemActivated", "(I)V");
+        if (mid && f != g_treeItemIds.end()) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(f->second));
+    });
+}
+
+// QListWidget
+JNIEXPORT jstring JNICALL Java_org_jqt_QListWidget_nativeCurrentText(JNIEnv* env, jclass, jlong h) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h));
+    if (!w) return nullptr;
+    QListWidgetItem* it = w->currentItem();
+    return it ? env->NewStringUTF(it->text().toUtf8().constData()) : nullptr;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemDoubleClicked(JNIEnv* env, jobject thiz, jlong h) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QListWidget::itemDoubleClicked, [gRef, w](QListWidgetItem* item) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleItemDoubleClicked", "(I)V");
+        if (mid && item) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(w->row(item)));
+    });
+}
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemActivated(JNIEnv* env, jobject thiz, jlong h) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QListWidget::itemActivated, [gRef, w](QListWidgetItem* item) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleItemActivated", "(I)V");
+        if (mid && item) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(w->row(item)));
+    });
+}
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectCurrentTextChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QListWidget::currentTextChanged, [gRef](const QString& text) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleCurrentTextChanged", "(Ljava/lang/String;)V");
+        if (mid) { jstring js = e->NewStringUTF(text.toUtf8().constData()); JQT_CALL_VOID(e, gRef, mid, js); e->DeleteLocalRef(js); }
+    });
+}
+
+// QScrollArea
+JNIEXPORT void JNICALL Java_org_jqt_QScrollArea_nativeSetAlignment(JNIEnv* env, jclass, jlong h, jint a) { QScrollArea* w = static_cast<QScrollArea*>(requireHandle(env, h)); if (w) w->setAlignment(static_cast<Qt::Alignment>(a)); }
+JNIEXPORT jint JNICALL Java_org_jqt_QScrollArea_nativeAlignment(JNIEnv* env, jclass, jlong h) { QScrollArea* w = static_cast<QScrollArea*>(requireHandle(env, h)); return w ? static_cast<jint>(w->alignment()) : 0; }
+
+// QSplitter
+JNIEXPORT jint JNICALL Java_org_jqt_QSplitter_nativeCount(JNIEnv* env, jclass, jlong h) { QSplitter* w = static_cast<QSplitter*>(requireHandle(env, h)); return w ? static_cast<jint>(w->count()) : 0; }
+
+// QApplication
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeBeep(JNIEnv* env, jclass) { QApplication::beep(); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QApplication_nativeStyleSheet(JNIEnv* env, jclass) {
+    return env->NewStringUTF(qApp->styleSheet().toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeSetCurrentItem(JNIEnv* env, jclass, jlong h, jint itemId) {
+    QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h));
+    if (!w) return;
+    auto it = g_treeItems.find(itemId);
+    if (it != g_treeItems.end()) w->setCurrentItem(it->second);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeSetCurrentRow(JNIEnv* env, jobject, jlong h, jint row) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h));
+    if (w) w->setCurrentRow(row);
+}

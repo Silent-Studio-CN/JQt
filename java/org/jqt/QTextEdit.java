@@ -66,4 +66,34 @@ public class QTextEdit extends QWidget {
             h.run();
         }
     }
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 清空内容。 */
+    public void clear() { nativeClear(nativeHandle); }
+    private static native void nativeClear(long handle);
+
+    /** 复制选中内容。 */
+    public void copy() { nativeCopy(nativeHandle); }
+    private static native void nativeCopy(long handle);
+
+    /** 剪切选中内容。 */
+    public void cut() { nativeCut(nativeHandle); }
+    private static native void nativeCut(long handle);
+
+    /** 粘贴。 */
+    public void paste() { nativePaste(nativeHandle); }
+    private static native void nativePaste(long handle);
+
+    /** 撤销。 */
+    public void undo() { nativeUndo(nativeHandle); }
+    private static native void nativeUndo(long handle);
+
+    /** 重做。 */
+    public void redo() { nativeRedo(nativeHandle); }
+    private static native void nativeRedo(long handle);
+
+    /** 全选。 */
+    public void selectAll() { nativeSelectAll(nativeHandle); }
+    private static native void nativeSelectAll(long handle);
 }
