@@ -12,6 +12,24 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.6.0-TEST（2026-08-27）— L1 常用 API 补全 + 社区反馈修复
+
+**L1 补全（114514.md 对齐，135 → 149/205 直接对应；可实现口径 ~99%）**：
+- QWidget 基类：close/move/resize/update/repaint/size/geometry/pos/contentsMargins/styleSheet/toolTip/windowTitle/windowState/focusPolicy/acceptDrops/cursor/font/palette/graphicsEffect + windowTitleChanged/customContextMenuRequested 信号
+- 控件类：QLineEdit 编辑全套+4 信号 / QComboBox count-editable+4 信号 / QLabel alignment-wordWrap-margin-indent-buddy+2 信号 / QListWidget count-item-currentText+6 信号 / QTreeWidget currentItem+6 信号 / QCheckBox 三态+checkStateChanged / QSlider 自绘刻度 / QSpinBox prefix-suffix-step-minmax-cleanText / QTextEdit 编辑七件套+find+2 信号 / QTabWidget clear-count / QMenu exec-title / QToolBar iconSize+2 信号 / QProgressBar text-alignment / QScrollArea alignment / QSplitter count / QPushButton click-toggle-isChecked-menu / QMessageBox showAbout
+- 工具类：QClipboard / QSettings / QFile / QDir + 值类 QPoint / QSize / QRect
+- 应用级：beep/alert/styleSheet/font/setFont/rhiBackend
+
+**社区反馈修复**：
+- 用户显式 hide() 的控件不再被窗口 show 强制显示
+- QLayout.addSpacing / QWidget.pos() / palette() 简化查询
+- README 旧 API 示例全部 Q 化；发布 zip 附带 qt-mapping/api-implemented 文档
+- 新增 docs/behavior.md 行为契约（显示规则/QStackedLayout 用法/主题双轨/动画清理/DPI/迁移速查）
+
+**Community**：QraftLab 入库（QSS 美术指南/分离样式/四区实验室）；JQT_PITFALLS.md 移除
+
+**规模**：API ~470 方法 / 47 类；双 Qt（6.8.3+6.11.2）× x64/ARM64 CI 全绿
+
 ### v0.5.1-TEST（2026-08-27）— 启动体验修复 + 主题降级健壮性
 
 **修复**：
@@ -163,6 +181,16 @@
 
 <a id="en"></a>
 ## English Version
+
+### v0.6.0-TEST (2026-08-27) — L1 API completion + community feedback fixes
+
+**L1 completion (114514.md aligned, ~99% of feasible)**: QWidget base 20+ / widget classes full edit+signals / QCheckBox tristate / QSlider custom ticks / QSpinBox complete / QTextEdit editing / dialogs / QMenu exec / tools QClipboard QSettings QFile QDir / value classes QPoint QSize QRect / app-level beep alert font palette
+
+**Feedback fixes**: user hide() respected; QLayout.addSpacing / QWidget.pos() / palette(); README Q-prefixed; zip ships qt-mapping + api-implemented; docs/behavior.md behavior contract
+
+**Community**: QraftLab added (QSS art guide / separated styles / lab demo) - thanks to the site-builder AI
+
+**Scale**: ~470 methods / 47 classes; dual Qt CI green
 
 ### v0.5.1-TEST (2026-08-27) — Startup polish + theme degrade robustness
 
