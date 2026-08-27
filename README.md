@@ -42,14 +42,14 @@
 ## ⚡ 快速开始（Hello World）
 
 ```powershell
-# 下载 jqt-0.5.1-TEST-windows-x64.zip → 解压
+# 下载 jqt-0.6.0-TEST-windows-x64.zip → 解压
 # 运行注意：jqt.dll 依赖 Qt6*.dll，需把 lib 目录加入 DLL 搜索路径
 # （cd 到 lib 目录，或把 lib 加入 PATH）——-Djava.library.path 只定位 jqt.dll 本身
 cd lib
-java -Djava.library.path=. -cp "jqt-0.5.1-TEST.jar;.." Hello
+java -Djava.library.path=. -cp "jqt-0.6.0-TEST.jar;.." Hello
 # 或：不切目录，用 PATH 方式
 # $env:PATH = "$PWD\lib;$env:PATH"
-# java -Djava.library.path=lib -cp "lib\jqt-0.5.1-TEST.jar;." Hello
+# java -Djava.library.path=lib -cp "lib\jqt-0.6.0-TEST.jar;." Hello
 ```
 
 ```java
@@ -89,12 +89,12 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 
 ---
 
-## 📦 发布包（v0.5.1-TEST）
+## 📦 发布包（v0.6.0-TEST）
 
 | 资产 | 平台 |
 |------|------|
-| `jqt-0.5.1-TEST.jar` | 全部（Java API） |
-| `jqt-0.5.1-TEST-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
+| `jqt-0.6.0-TEST.jar` | 全部（Java API） |
+| `jqt-0.6.0-TEST-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库（双 Qt 版本） |
 | `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
 | `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux（双版本） |
@@ -122,6 +122,7 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 | [jqt-theme-pack](Community/jqt-theme-pack/) | 三个原创主题：**Nord**（北极蓝·暗）/ **Solarized**（米黄护眼·亮）/ **Terminal**（荧光绿·暗） |
 | [FluentAnimDemo](Community/FluentAnimDemo/) | qfluentwidgets 经典动效的 JQt 映射演示（缩放/按压下沉/滑块/淡入） |
 | [JQtGallery](Community/JQtGallery/) | 全功能演示：5 套主题 / 强调色 / 自动跟随 / 控件 / 动画 / 窗口（含 jpackage 打包方案） |
+| [QraftLab](Community/QraftLab/) | QSS 美术实验室：立体感按钮公式 / 5 种按钮形态 / 分离样式 / 动画画布渲染四区 demo（**感谢构建方贡献** 🎨） |
 
 ```java
 // 社区主题即插即用（一套模板，无限主题）
@@ -130,6 +131,8 @@ app.setTheme("themes/fluent.qss.tpl", SolarizedTheme.vars(), true);   // 亮色
 ```
 
 > 想提交自己的作品？把源码放进 `Community/`（请勿提交编译产物），我们审核后合入。
+>
+> 🙏 **特别致谢**：QraftLab（QSS 美术指南与分离样式实验）由网站构建方 AI 贡献，经审核收录。
 
 ---
 
