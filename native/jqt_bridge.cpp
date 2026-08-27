@@ -58,6 +58,10 @@
 #include <QLayout>
 #include <QLineEdit>
 #include <QListWidget>
+#include <QTableWidget>
+#include <QTreeWidget>
+#include <QTableWidgetItem>
+#include <QTreeWidgetItem>
 #include <QMessageBox>
 #include <QTimer>
 #include <QMessageBox>
@@ -121,6 +125,8 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QFileDialog.h"
 #include "generated/org_jqt_QColorDialog.h"
 #include "generated/org_jqt_QFontDialog.h"
+#include "generated/org_jqt_QTableWidget.h"
+#include "generated/org_jqt_QTreeWidget.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -2911,4 +2917,235 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QMessageBox_nativeShowOkCancel(JNIEnv* e
     env->ReleaseStringUTFChars(title, t1);
     env->ReleaseStringUTFChars(text, t2);
     return box.exec() == QMessageBox::Ok ? JNI_TRUE : JNI_FALSE;
+}
+
+// ----------------------------------------------------------------------------
+// JQtTableWidget / JQtTreeWidget：表格与树
+// ----------------------------------------------------------------------------
+static std::unordered_map<long, QTreeWidgetItem*> g_treeItems;      // itemId -> item
+static std::unordered_map<QTreeWidgetItem*, long> g_treeItemIds;    // item -> itemId
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QTableWidget_nativeCreate(JNIEnv* env, jobject thiz, jint rows, jint cols) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QTableWidget* table = new QTableWidget(rows, cols);
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(table, &QTableWidget::cellClicked, [gRef](int row, int col) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleCellClicked", "(II)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(row), static_cast<jint>(col));
+        }
+    });
+    QObject::connect(table, &QTableWidget::currentCellChanged, [gRef](int row, int /*col*/, int /*prevRow*/, int /*prevCol*/) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleCurrentRowChanged", "(I)V");
+        if (mid != nullptr) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(row));
+        }
+    });
+    return registerHandle(table, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTableWidget_nativeSetItemText(JNIEnv* env, jobject /*thiz*/, jlong handle, jint row, jint col, jstring text) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    QTableWidgetItem* item = table->item(row, col);
+    if (item == nullptr) {
+        item = new QTableWidgetItem();
+        table->setItem(row, col, item);
+    }
+    item->setText(QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QTableWidget_nativeItemText(JNIEnv* env, jobject /*thiz*/, jlong handle, jint row, jint col) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table == nullptr) {
+        return nullptr;
+    }
+    QTableWidgetItem* item = table->item(row, col);
+    if (item == nullptr) {
+        return nullptr;
+    }
+    return env->NewStringUTF(item->text().toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTableWidget_nativeSetColumnHeaders(JNIEnv* env, jobject /*thiz*/, jlong handle, jobjectArray headers) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table == nullptr) {
+        return;
+    }
+    QStringList list;
+    jsize n = env->GetArrayLength(headers);
+    for (jsize i = 0; i < n; i++) {
+        jstring s = (jstring)env->GetObjectArrayElement(headers, i);
+        const char* c = env->GetStringUTFChars(s, nullptr);
+        list << QString::fromUtf8(c);
+        env->ReleaseStringUTFChars(s, c);
+        env->DeleteLocalRef(s);
+    }
+    table->setHorizontalHeaderLabels(list);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTableWidget_nativeSetRowCount(JNIEnv* env, jobject /*thiz*/, jlong handle, jint rows) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table != nullptr) {
+        table->setRowCount(rows);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTableWidget_nativeSetColumnCount(JNIEnv* env, jobject /*thiz*/, jlong handle, jint cols) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table != nullptr) {
+        table->setColumnCount(cols);
+    }
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTableWidget_nativeRowCount(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    return table != nullptr ? static_cast<jint>(table->rowCount()) : 0;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTableWidget_nativeColumnCount(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    return table != nullptr ? static_cast<jint>(table->columnCount()) : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTableWidget_nativeSetColumnWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint col, jint width) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table != nullptr) {
+        table->setColumnWidth(col, width);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTableWidget_nativeSetRowHeight(JNIEnv* env, jobject /*thiz*/, jlong handle, jint row, jint height) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table != nullptr) {
+        table->setRowHeight(row, height);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTableWidget_nativeResizeColumnsToContents(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table != nullptr) {
+        table->resizeColumnsToContents();
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTableWidget_nativeClearContents(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    if (table != nullptr) {
+        table->clearContents();
+    }
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTableWidget_nativeCurrentRow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTableWidget* table = static_cast<QTableWidget*>(requireHandle(env, handle));
+    return table != nullptr ? static_cast<jint>(table->currentRow()) : -1;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QTreeWidget_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) {
+        return 0;
+    }
+    QTreeWidget* tree = new QTreeWidget();
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(tree, &QTreeWidget::itemClicked, [gRef](QTreeWidgetItem* item, int /*column*/) {
+        JNIEnv* e = callbackEnv();
+        auto it = g_treeItemIds.find(item);
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleItemClicked", "(I)V");
+        if (mid != nullptr && it != g_treeItemIds.end()) {
+            JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(it->second));
+        }
+    });
+    return registerHandle(tree, /*javaOwned=*/true);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTreeWidget_nativeAddTopLevelItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jint itemId, jstring text) {
+    QTreeWidget* tree = static_cast<QTreeWidget*>(requireHandle(env, handle));
+    if (tree == nullptr) {
+        return -1;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    QTreeWidgetItem* item = new QTreeWidgetItem(tree);
+    item->setText(0, QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+    g_treeItems[itemId] = item;
+    g_treeItemIds[item] = itemId;
+    return itemId;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTreeWidget_nativeAddChild(JNIEnv* env, jobject /*thiz*/, jlong handle, jint parentItemId, jint itemId, jstring text) {
+    QTreeWidget* tree = static_cast<QTreeWidget*>(requireHandle(env, handle));
+    if (tree == nullptr) {
+        return -1;
+    }
+    auto pit = g_treeItems.find(parentItemId);
+    if (pit == g_treeItems.end()) {
+        return -1;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    QTreeWidgetItem* item = new QTreeWidgetItem(pit->second);
+    item->setText(0, QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+    g_treeItems[itemId] = item;
+    g_treeItemIds[item] = itemId;
+    return itemId;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QTreeWidget_nativeItemText(JNIEnv* env, jobject /*thiz*/, jlong handle, jint itemId) {
+    QTreeWidget* tree = static_cast<QTreeWidget*>(requireHandle(env, handle));
+    if (tree == nullptr) {
+        return nullptr;
+    }
+    auto it = g_treeItems.find(itemId);
+    if (it == g_treeItems.end() || it->second == nullptr) {
+        return nullptr;
+    }
+    return env->NewStringUTF(it->second->text(0).toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeSetItemText(JNIEnv* env, jobject /*thiz*/, jlong handle, jint itemId, jstring text) {
+    QTreeWidget* tree = static_cast<QTreeWidget*>(requireHandle(env, handle));
+    if (tree == nullptr) {
+        return;
+    }
+    auto it = g_treeItems.find(itemId);
+    if (it == g_treeItems.end() || it->second == nullptr) {
+        return;
+    }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    it->second->setText(0, QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeExpandAll(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTreeWidget* tree = static_cast<QTreeWidget*>(requireHandle(env, handle));
+    if (tree != nullptr) {
+        tree->expandAll();
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeCollapseAll(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTreeWidget* tree = static_cast<QTreeWidget*>(requireHandle(env, handle));
+    if (tree != nullptr) {
+        tree->collapseAll();
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeClear(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QTreeWidget* tree = static_cast<QTreeWidget*>(requireHandle(env, handle));
+    if (tree == nullptr) {
+        return;
+    }
+    tree->clear();
+    g_treeItems.clear();
+    g_treeItemIds.clear();
 }
