@@ -12,6 +12,29 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.5.0-TEST（开发中）— 控件海啸 + 窗口体系 + 渲染适配 + 自绘画布/多线程
+
+**批 1 控件海啸**：
+- 对话框家族：QInputDialog / QFileDialog / QColorDialog / QFontDialog；QMessageBox 增强（showWarning / showCritical / showOkCancel）
+- 数据表格/树：QTableWidget（单元格/表头/行列/点击信号）、QTreeWidget（itemId 节点体系/父子/展开折叠）
+- 选项卡/分组/分割：QTabWidget / QGroupBox / QStackedLayout（addPage）/ QSplitter（方向/尺寸/手柄）
+- 输入控件：QSpinBox / QDial / QRadioButton / QDateTimeEdit
+- 布局升级：QGridLayout（行列/跨行跨列/拉伸）/ QFormLayout（标签行）
+
+**批 2 窗口体系**：
+- 菜单/工具栏/状态栏/托盘：QMenu / QToolBar / QStatusBar / QSystemTrayIcon
+- 富文本编辑：QTextEdit（纯文本/追加/只读/textChanged）
+
+**批 3 渲染适配**：
+- QApplication.rhiBackend() + --rhi 参数（d3d11 默认 / software 兜底）
+- 实测结论：QSG_RHI_BACKEND 仅影响 Qt Quick；QWidget 在 Windows 固定 D3D11（opengl/vulkan 请求回退 d3d11，已在 API 文档注明）
+
+**批 4 能力**：
+- 自绘画布：QCanvasWidget + QPainter（线/矩形/圆/圆角/文本/字体/平移/旋转，12 个 2D API）
+- 多线程：QApplication.runOnUiThread()（后台线程安全回 UI 线程）
+
+**本次修复**：QTimer::singleShot 缺少 context 导致跨线程 schedule 永不执行（已修复）。
+
 ### v0.4.1-alpha（2026-08-27）— Qt API 对齐（类名 Q 化 + 信号对齐 + 链式）
 
 **命名策略（SilentStudio 理念：好好对待程序员）**：
@@ -130,6 +153,15 @@
 
 <a id="en"></a>
 ## English Version
+
+### v0.5.0-TEST (in development) — Widget wave + Window family + Rendering + Canvas/Multithreading
+
+**Batch 1 — widget wave**: QInputDialog/QFileDialog/QColorDialog/QFontDialog (+QMessageBox showWarning/showCritical/showOkCancel) · QTableWidget/QTreeWidget · QTabWidget/QGroupBox/QStackedLayout/QSplitter · QSpinBox/QDial/QRadioButton/QDateTimeEdit · QGridLayout/QFormLayout
+**Batch 2 — window family**: QMenu/QToolBar/QStatusBar/QSystemTrayIcon · QTextEdit
+**Batch 3 — rendering**: QApplication.rhiBackend() + --rhi (d3d11 default / software fallback); verified: QSG_RHI_BACKEND only affects Qt Quick — QWidget is fixed D3D11 on Windows
+**Batch 4 — capability**: QCanvasWidget + QPainter (12 2D APIs) · QApplication.runOnUiThread()
+
+**Fixes**: QTimer::singleShot without context never fired across threads (fixed).
 
 ### v0.4.0-alpha (2026-08-27) — Six new widgets / ARM64
 
