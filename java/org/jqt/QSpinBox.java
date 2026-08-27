@@ -55,4 +55,50 @@ public class QSpinBox extends QWidget {
             h.accept(value);
         }
     }
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 前缀（如 "$"）。 */
+    public void setPrefix(String prefix) { nativeSetPrefix(nativeHandle, prefix); }
+    private static native void nativeSetPrefix(long handle, String prefix);
+
+    /** 前缀。 */
+    public String prefix() { return nativePrefix(nativeHandle); }
+    private static native String nativePrefix(long handle);
+
+    /** 后缀（如 " kg"）。 */
+    public void setSuffix(String suffix) { nativeSetSuffix(nativeHandle, suffix); }
+    private static native void nativeSetSuffix(long handle, String suffix);
+
+    /** 后缀。 */
+    public String suffix() { return nativeSuffix(nativeHandle); }
+    private static native String nativeSuffix(long handle);
+
+    /** 步进。 */
+    public void setSingleStep(int step) { nativeSetSingleStep(nativeHandle, step); }
+    private static native void nativeSetSingleStep(long handle, int step);
+
+    /** 步进。 */
+    public int singleStep() { return nativeSingleStep(nativeHandle); }
+    private static native int nativeSingleStep(long handle);
+
+    /** 最小值。 */
+    public int minimum() { return nativeMinimum(nativeHandle); }
+    private static native int nativeMinimum(long handle);
+
+    /** 最大值。 */
+    public int maximum() { return nativeMaximum(nativeHandle); }
+    private static native int nativeMaximum(long handle);
+
+    /** 设置最小值。 */
+    public void setMinimum(int min) { nativeSetMinimum(nativeHandle, min); }
+    private static native void nativeSetMinimum(long handle, int min);
+
+    /** 设置最大值。 */
+    public void setMaximum(int max) { nativeSetMaximum(nativeHandle, max); }
+    private static native void nativeSetMaximum(long handle, int max);
+
+    /** 无前后缀的干净文本。 */
+    public String cleanText() { return nativeCleanText(nativeHandle); }
+    private static native String nativeCleanText(long handle);
 }

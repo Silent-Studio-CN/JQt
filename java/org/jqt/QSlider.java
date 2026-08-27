@@ -56,6 +56,22 @@ public class QSlider extends QWidget {
     private native int nativeValue(long handle);
     private native void nativeSetValue(long handle, int value);
     private native void nativeSetRange(long handle, int min, int max);
+
+    // ---- L1 补全（v0.6.0）----
+
+    /** 刻度间距（0 = 自动）。 */
+    public void setTickInterval(int interval) { nativeSetTickInterval(nativeHandle, interval); }
+    private static native void nativeSetTickInterval(long handle, int interval);
+
+    /** 刻度间距。 */
+    public int tickInterval() { return nativeTickInterval(nativeHandle); }
+    private static native int nativeTickInterval(long handle);
+
+    /** 刻度位置：0 无 / 1 上（左）/ 2 下（右）/ 3 两侧。 */
+    public void setTickPosition(int position) { nativeSetTickPosition(nativeHandle, position); }
+    private static native void nativeSetTickPosition(long handle, int position);
+
+    /** 刻度位置。 */
+    public int tickPosition() { return nativeTickPosition(nativeHandle); }
+    private static native int nativeTickPosition(long handle);
 }
-
-

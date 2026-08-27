@@ -2271,6 +2271,16 @@ protected:
         // 已填充（主题色）
         p.setBrush(g_accentColor);
         p.drawRoundedRect(QRectF(pad, trackY, pad + usable * ratio - pad, trackH), trackH / 2.0, trackH / 2.0);
+        // 刻度（setTickPosition 启用时绘制）
+        if (m_tickPosition != 0 && m_tickInterval > 0 && m_max > m_min) {
+            p.setPen(QPen(QColor(0, 0, 0, 60), 1));
+            for (int tv = m_min; tv <= m_max; tv += m_tickInterval) {
+                const double tx = pad + usable * (tv - m_min) / static_cast<double>(m_max - m_min);
+                const double tickTop = (m_tickPosition == 1) ? 3.0 : h - 8.0;
+                const double tickH = 5.0;
+                p.drawLine(QPointF(tx, tickTop), QPointF(tx, tickTop + tickH));
+            }
+        }
         // 圆钮
         const double r = h / 2.0 - 3.0;
         const double cx = pad + usable * ratio;
@@ -2311,6 +2321,22 @@ protected:
         m_dragging = false;
         QWidget::mouseReleaseEvent(event);
     }
+
+    // 刻度（自绘支持；与 Qt QSlider::TickPosition 数值一致）
+    int m_tickInterval = 0;
+    int m_tickPosition = 0;
+
+public:
+    void setTickInterval(int interval) {
+        m_tickInterval = interval;
+        update();
+    }
+    int tickInterval() const { return m_tickInterval; }
+    void setTickPosition(int position) {
+        m_tickPosition = position;
+        update();
+    }
+    int tickPosition() const { return m_tickPosition; }
 
 private:
     int m_min;
@@ -4693,4 +4719,63 @@ JNIEXPORT void JNICALL Java_org_jqt_QMessageBox_nativeShowAbout(JNIEnv* env, jcl
     env->ReleaseStringUTFChars(title, t1);
     env->ReleaseStringUTFChars(text, t2);
     box.exec();
+}
+
+// L1 补全批 E：QCheckBox 三态 / QSlider 刻度 / QSpinBox 完整 / QLabel buddy / QApplication alert / QTextEdit find
+// QCheckBox
+JNIEXPORT void JNICALL Java_org_jqt_QCheckBox_nativeSetTristate(JNIEnv* env, jclass, jlong h, jboolean t) { QCheckBox* w = static_cast<QCheckBox*>(requireHandle(env, h)); if (w) w->setTristate(t == JNI_TRUE); }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QCheckBox_nativeIsTristate(JNIEnv* env, jclass, jlong h) { QCheckBox* w = static_cast<QCheckBox*>(requireHandle(env, h)); return (w && w->isTristate()) ? JNI_TRUE : JNI_FALSE; }
+JNIEXPORT jint JNICALL Java_org_jqt_QCheckBox_nativeCheckState(JNIEnv* env, jclass, jlong h) { QCheckBox* w = static_cast<QCheckBox*>(requireHandle(env, h)); return w ? static_cast<jint>(w->checkState()) : 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QCheckBox_nativeSetCheckState(JNIEnv* env, jclass, jlong h, jint s) { QCheckBox* w = static_cast<QCheckBox*>(requireHandle(env, h)); if (w) w->setCheckState(static_cast<Qt::CheckState>(s)); }
+JNIEXPORT void JNICALL Java_org_jqt_QCheckBox_nativeConnectCheckStateChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QCheckBox* w = static_cast<QCheckBox*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QCheckBox::checkStateChanged, [gRef](Qt::CheckState s) {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleCheckStateChanged", "(I)V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(s));
+    });
+}
+// QSlider
+JNIEXPORT void JNICALL Java_org_jqt_QSlider_nativeSetTickInterval(JNIEnv* env, jclass, jlong h, jint i) { JQtSliderWidget* w = static_cast<JQtSliderWidget*>(requireHandle(env, h)); if (w) w->setTickInterval(i); }
+JNIEXPORT jint JNICALL Java_org_jqt_QSlider_nativeTickInterval(JNIEnv* env, jclass, jlong h) { JQtSliderWidget* w = static_cast<JQtSliderWidget*>(requireHandle(env, h)); return w ? static_cast<jint>(w->tickInterval()) : 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QSlider_nativeSetTickPosition(JNIEnv* env, jclass, jlong h, jint p) { JQtSliderWidget* w = static_cast<JQtSliderWidget*>(requireHandle(env, h)); if (w) w->setTickPosition(p); }
+JNIEXPORT jint JNICALL Java_org_jqt_QSlider_nativeTickPosition(JNIEnv* env, jclass, jlong h) { JQtSliderWidget* w = static_cast<JQtSliderWidget*>(requireHandle(env, h)); return w ? static_cast<jint>(w->tickPosition()) : 0; }
+// QSpinBox
+JNIEXPORT void JNICALL Java_org_jqt_QSpinBox_nativeSetPrefix(JNIEnv* env, jclass, jlong h, jstring p) {
+    QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); if (!w) return;
+    const char* u = env->GetStringUTFChars(p, nullptr); w->setPrefix(QString::fromUtf8(u)); env->ReleaseStringUTFChars(p, u);
+}
+JNIEXPORT jstring JNICALL Java_org_jqt_QSpinBox_nativePrefix(JNIEnv* env, jclass, jlong h) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); return w ? env->NewStringUTF(w->prefix().toUtf8().constData()) : nullptr; }
+JNIEXPORT void JNICALL Java_org_jqt_QSpinBox_nativeSetSuffix(JNIEnv* env, jclass, jlong h, jstring s) {
+    QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); if (!w) return;
+    const char* u = env->GetStringUTFChars(s, nullptr); w->setSuffix(QString::fromUtf8(u)); env->ReleaseStringUTFChars(s, u);
+}
+JNIEXPORT jstring JNICALL Java_org_jqt_QSpinBox_nativeSuffix(JNIEnv* env, jclass, jlong h) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); return w ? env->NewStringUTF(w->suffix().toUtf8().constData()) : nullptr; }
+JNIEXPORT void JNICALL Java_org_jqt_QSpinBox_nativeSetSingleStep(JNIEnv* env, jclass, jlong h, jint s) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); if (w) w->setSingleStep(s); }
+JNIEXPORT jint JNICALL Java_org_jqt_QSpinBox_nativeSingleStep(JNIEnv* env, jclass, jlong h) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); return w ? static_cast<jint>(w->singleStep()) : 0; }
+JNIEXPORT jint JNICALL Java_org_jqt_QSpinBox_nativeMinimum(JNIEnv* env, jclass, jlong h) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); return w ? static_cast<jint>(w->minimum()) : 0; }
+JNIEXPORT jint JNICALL Java_org_jqt_QSpinBox_nativeMaximum(JNIEnv* env, jclass, jlong h) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); return w ? static_cast<jint>(w->maximum()) : 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QSpinBox_nativeSetMinimum(JNIEnv* env, jclass, jlong h, jint m) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); if (w) w->setMinimum(m); }
+JNIEXPORT void JNICALL Java_org_jqt_QSpinBox_nativeSetMaximum(JNIEnv* env, jclass, jlong h, jint m) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); if (w) w->setMaximum(m); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QSpinBox_nativeCleanText(JNIEnv* env, jclass, jlong h) { QSpinBox* w = static_cast<QSpinBox*>(requireHandle(env, h)); return w ? env->NewStringUTF(w->cleanText().toUtf8().constData()) : nullptr; }
+// QLabel buddy
+JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeSetBuddy(JNIEnv* env, jclass, jlong h, jlong bh) {
+    QLabel* w = static_cast<QLabel*>(requireHandle(env, h));
+    QWidget* b = static_cast<QWidget*>(requireHandle(env, bh));
+    if (w && b) w->setBuddy(b);
+}
+// QApplication alert
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeAlert(JNIEnv* env, jclass, jlong winHandle, jint ms) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, winHandle));
+    if (w) QApplication::alert(w, ms);
+}
+// QTextEdit find
+JNIEXPORT jboolean JNICALL Java_org_jqt_QTextEdit_nativeFind(JNIEnv* env, jclass, jlong h, jstring text) {
+    QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h));
+    if (!w) return JNI_FALSE;
+    const char* u = env->GetStringUTFChars(text, nullptr);
+    bool ok = w->find(QString::fromUtf8(u));
+    env->ReleaseStringUTFChars(text, u);
+    return ok ? JNI_TRUE : JNI_FALSE;
 }

@@ -96,4 +96,8 @@ public class QTextEdit extends QWidget {
     /** 全选。 */
     public void selectAll() { nativeSelectAll(nativeHandle); }
     private static native void nativeSelectAll(long handle);
+
+    /** 查找文本（高亮第一处匹配，返回是否找到）。 */
+    public boolean find(String text) { return nativeFind(nativeHandle, text); }
+    private static native boolean nativeFind(long handle, String text);
 }

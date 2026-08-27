@@ -148,6 +148,12 @@ public class QApplication {
     }
     private static native void nativeBeep();
 
+    /** 提醒窗口（任务栏闪烁，ms 毫秒；0 = 无限直到窗口激活）。 */
+    public static void alert(QMainWindow window, int ms) {
+        nativeAlert(window.nativeHandle(), ms);
+    }
+    private static native void nativeAlert(long winHandle, int ms);
+
     /** 当前全局样式表（QSS）。 */
     public String styleSheet() {
         return nativeStyleSheet();
