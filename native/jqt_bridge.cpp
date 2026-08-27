@@ -4779,3 +4779,64 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QTextEdit_nativeFind(JNIEnv* env, jclass
     env->ReleaseStringUTFChars(text, u);
     return ok ? JNI_TRUE : JNI_FALSE;
 }
+
+// L1 补全批 F：剩余信号
+// QToolBar
+JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeConnectIconSizeChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QToolBar* w = static_cast<QToolBar*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QToolBar::iconSizeChanged, [gRef](const QSize& s) {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleIconSizeChanged", "(I)V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(s.width()));
+    });
+}
+JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeConnectToolButtonStyleChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QToolBar* w = static_cast<QToolBar*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QToolBar::toolButtonStyleChanged, [gRef](Qt::ToolButtonStyle s) {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleToolButtonStyleChanged", "(I)V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(s));
+    });
+}
+// QTextEdit
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeConnectSelectionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QTextEdit::selectionChanged, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleSelectionChanged", "()V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid);
+    });
+}
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeConnectCursorPositionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    QTextEdit* w = static_cast<QTextEdit*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QTextEdit::cursorPositionChanged, [gRef, w]() {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleCursorPositionChanged", "(I)V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(w->textCursor().position()));
+    });
+}
+// QTreeWidget itemEntered
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemEntered(JNIEnv* env, jobject thiz, jlong h) {
+    QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QTreeWidget::itemEntered, [gRef](QTreeWidgetItem* item, int) {
+        JNIEnv* e = callbackEnv();
+        auto f = item ? g_treeItemIds.find(item) : g_treeItemIds.end();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleItemEntered", "(I)V");
+        if (mid && f != g_treeItemIds.end()) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(f->second));
+    });
+}
+// QListWidget currentItem
+JNIEXPORT jint JNICALL Java_org_jqt_QListWidget_nativeCurrentItem(JNIEnv* env, jclass, jlong h) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h));
+    return w ? static_cast<jint>(w->currentRow()) : -1;
+}
+// QMainWindow
+// QMainWindow 的 toolbar 信号由 QToolBar 提供（JQtWindowShell 非 QMainWindow 类型，无此信号）
+
+JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeSetIconSize(JNIEnv* env, jclass, jlong h, jint s) { QToolBar* w = static_cast<QToolBar*>(requireHandle(env, h)); if (w) w->setIconSize(QSize(s, s)); }
+JNIEXPORT jint JNICALL Java_org_jqt_QToolBar_nativeIconSize(JNIEnv* env, jclass, jlong h) { QToolBar* w = static_cast<QToolBar*>(requireHandle(env, h)); return w ? static_cast<jint>(w->iconSize().width()) : 0; }

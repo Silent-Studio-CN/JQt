@@ -133,6 +133,11 @@ public class QApplication {
     }
     private native void nativeSetFont(String family, int size);
 
+    /** 设置全局字体（Qt API 名，等同 setFontFamily）。 */
+    public void setFont(String family, int pointSize) {
+        nativeSetFont(family, pointSize);
+    }
+
     /**
      * 进入 Qt 事件循环（阻塞调用）。
      * 当最后一个窗口关闭时返回（对应 Qt 的 quitOnLastWindowClosed）。

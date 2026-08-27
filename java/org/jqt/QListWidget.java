@@ -162,4 +162,8 @@ public class QListWidget extends QWidget {
     void nativeHandleItemSelectionChanged() {
         for (Runnable h : onItemSelectionChangedHandlers) h.run();
     }
+
+    /** 当前项行号（无选中返回 -1）。 */
+    public int currentItem() { return nativeCurrentItem(nativeHandle); }
+    private static native int nativeCurrentItem(long handle);
 }

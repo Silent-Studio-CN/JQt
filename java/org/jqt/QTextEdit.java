@@ -8,6 +8,10 @@ package org.jqt;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 多行文本编辑器：封装 C++ 侧的 {@code QTextEdit}（富文本/纯文本均可）。
@@ -100,4 +104,32 @@ public class QTextEdit extends QWidget {
     /** 查找文本（高亮第一处匹配，返回是否找到）。 */
     public boolean find(String text) { return nativeFind(nativeHandle, text); }
     private static native boolean nativeFind(long handle, String text);
+
+    private final List<Runnable> onSelectionChangedHandlers = new ArrayList<>();
+    private final List<Consumer<Integer>> onCursorPositionChangedHandlers = new ArrayList<>();
+    private volatile boolean selConn, curConn;
+
+    /** 选区变化回调。 */
+    public QTextEdit onSelectionChanged(Runnable handler) {
+        onSelectionChangedHandlers.add(handler);
+        if (!selConn) { selConn = true; nativeConnectSelectionChanged(nativeHandle); }
+        return this;
+    }
+
+    /** 光标位置变化回调（参数为新位置）。 */
+    public QTextEdit onCursorPositionChanged(Consumer<Integer> handler) {
+        onCursorPositionChangedHandlers.add(handler);
+        if (!curConn) { curConn = true; nativeConnectCursorPositionChanged(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectSelectionChanged(long handle);
+    private native void nativeConnectCursorPositionChanged(long handle);
+
+    void nativeHandleSelectionChanged() {
+        for (Runnable h : onSelectionChangedHandlers) h.run();
+    }
+    void nativeHandleCursorPositionChanged(int pos) {
+        for (Consumer<Integer> h : onCursorPositionChangedHandlers) h.accept(pos);
+    }
 }
