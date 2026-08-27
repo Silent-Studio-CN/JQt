@@ -90,6 +90,7 @@
 #include <QFileDialog>
 #include <QColorDialog>
 #include <QFontDialog>
+#include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QMetaObject>
@@ -188,6 +189,7 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QClipboard.h"
 #include "generated/org_jqt_QSettings.h"
 #include "generated/org_jqt_QFile.h"
+#include "generated/org_jqt_QDir.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -5024,4 +5026,82 @@ JNIEXPORT jintArray JNICALL Java_org_jqt_QWidget_nativePos(JNIEnv* env, jclass, 
 JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeAddSpacing(JNIEnv* env, jobject, jlong handle, jint spacing) {
     QBoxLayout* layout = static_cast<QBoxLayout*>(requireHandle(env, handle));
     if (layout) layout->addSpacing(spacing);
+}
+
+// L1 补全批 I：剩余可做项
+// QLayout getters
+JNIEXPORT jint JNICALL Java_org_jqt_QLayout_nativeCount(JNIEnv* env, jobject, jlong h) { QLayout* w = static_cast<QLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->count()) : 0; }
+JNIEXPORT jint JNICALL Java_org_jqt_QLayout_nativeSpacing(JNIEnv* env, jobject, jlong h) { QLayout* w = static_cast<QLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->spacing()) : 0; }
+// QGridLayout getters
+JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeCount(JNIEnv* env, jobject, jlong h) { QGridLayout* w = static_cast<QGridLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->count()) : 0; }
+JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeSpacing(JNIEnv* env, jobject, jlong h) { QGridLayout* w = static_cast<QGridLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->spacing()) : 0; }
+// QListWidget itemEntered
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemEntered(JNIEnv* env, jobject thiz, jlong h) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QListWidget::itemEntered, [gRef, w](QListWidgetItem* item) {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleItemEntered", "(I)V");
+        if (mid && item) JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(w->row(item)));
+    });
+}
+// QPushButton menu
+JNIEXPORT void JNICALL Java_org_jqt_QPushButton_nativeSetMenu(JNIEnv* env, jclass, jlong h, jlong mh) {
+    QPushButton* w = static_cast<QPushButton*>(requireHandle(env, h));
+    QMenu* m = static_cast<QMenu*>(requireHandle(env, mh));
+    if (w && m) w->setMenu(m);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPushButton_nativeHasMenu(JNIEnv* env, jclass, jlong h) { QPushButton* w = static_cast<QPushButton*>(requireHandle(env, h)); return (w && w->menu()) ? JNI_TRUE : JNI_FALSE; }
+// QLabel linkHovered
+JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeConnectLinkHovered(JNIEnv* env, jobject thiz, jlong h) {
+    QLabel* w = static_cast<QLabel*>(requireHandle(env, h)); if (!w) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QLabel::linkHovered, [gRef](const QString& url) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleLinkHovered", "(Ljava/lang/String;)V");
+        if (mid) { jstring js = e->NewStringUTF(url.toUtf8().constData()); JQT_CALL_VOID(e, gRef, mid, js); e->DeleteLocalRef(js); }
+    });
+}
+// QWidget/QApplication palette
+JNIEXPORT jint JNICALL Java_org_jqt_QWidget_nativePalette(JNIEnv* env, jclass, jlong h) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, h));
+    if (!w) return 0;
+    return static_cast<jint>(w->palette().color(QPalette::Window).rgba());
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativePalette(JNIEnv* env, jclass) {
+    return static_cast<jint>(QApplication::palette().color(QPalette::Window).rgba());
+}
+// QDir
+JNIEXPORT jstring JNICALL Java_org_jqt_QDir_nativeCurrent(JNIEnv* env, jclass) {
+    return env->NewStringUTF(QDir::current().absolutePath().toUtf8().constData());
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDir_nativeRemove(JNIEnv* env, jclass, jstring path) {
+    const char* u = env->GetStringUTFChars(path, nullptr);
+    bool ok = QDir().rmdir(QString::fromUtf8(u));
+    env->ReleaseStringUTFChars(path, u);
+    return ok ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QDir_nativeCount(JNIEnv* env, jclass, jstring path) {
+    const char* u = env->GetStringUTFChars(path, nullptr);
+    int n = QDir(QString::fromUtf8(u)).count();
+    env->ReleaseStringUTFChars(path, u);
+    return n;
+}
+// QClipboard selectionChanged
+JNIEXPORT void JNICALL Java_org_jqt_QClipboard_nativeConnectSelectionChanged(JNIEnv* env, jclass) {
+    QClipboard* c = QApplication::clipboard();
+    QObject::connect(c, &QClipboard::dataChanged, []() {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->FindClass("org/jqt/QClipboard");
+        jmethodID mid = e->GetStaticMethodID(cls, "nativeHandleSelectionChanged", "()V");
+        if (mid) e->CallStaticVoidMethod(cls, mid);
+    });
+}
+// QFile resize
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFile_nativeResize(JNIEnv* env, jclass, jstring path, jlong size) {
+    const char* u = env->GetStringUTFChars(path, nullptr);
+    bool ok = QFile::resize(QString::fromUtf8(u), size);
+    env->ReleaseStringUTFChars(path, u);
+    return ok ? JNI_TRUE : JNI_FALSE;
 }

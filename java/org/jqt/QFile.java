@@ -43,4 +43,10 @@ public class QFile {
         return nativeSize(path);
     }
     private static native long nativeSize(String path);
+
+    /** 截断/扩展文件到指定大小（字节），成功返回 true。 */
+    public static boolean resize(String path, long size) {
+        return nativeResize(path, size);
+    }
+    private static native boolean nativeResize(String path, long size);
 }

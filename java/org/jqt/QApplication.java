@@ -169,6 +169,10 @@ public class QApplication {
     }
     private static native String nativeStyleSheet();
 
+    /** 全局背景色（0xAARRGGBB；简化形态的 palette 查询）。 */
+    public static int palette() { return nativePalette(); }
+    private static native int nativePalette();
+
     /** 延迟 {@code ms} 毫秒后自动退出事件循环（演示 / 自动化测试用）。 */
     public native void scheduleQuit(long ms);
 

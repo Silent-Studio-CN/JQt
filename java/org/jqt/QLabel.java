@@ -97,4 +97,20 @@ public class QLabel extends QWidget {
     /** 关联控件（设置后 Alt+标签快捷键聚焦目标控件）。 */
     public void setBuddy(QWidget buddy) { nativeSetBuddy(nativeHandle, buddy.nativeHandle); }
     private static native void nativeSetBuddy(long handle, long buddyHandle);
+
+    private final List<Consumer<String>> onLinkHoveredHandlers = new ArrayList<>();
+    private volatile boolean linkHoverConn;
+
+    /** 链接悬停回调（linkHovered 信号，参数为链接 URL）。 */
+    public QLabel onLinkHovered(Consumer<String> handler) {
+        onLinkHoveredHandlers.add(handler);
+        if (!linkHoverConn) { linkHoverConn = true; nativeConnectLinkHovered(nativeHandle); }
+        return this;
+    }
+
+    private native void nativeConnectLinkHovered(long handle);
+
+    void nativeHandleLinkHovered(String url) {
+        for (Consumer<String> h : onLinkHoveredHandlers) h.accept(url);
+    }
 }

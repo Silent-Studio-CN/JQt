@@ -237,6 +237,10 @@ public abstract class QWidget {
     public int[] pos() { return nativePos(nativeHandle); }
     static native int[] nativePos(long handle);
 
+    /** 控件背景色（0xAARRGGBB；简化形态的 palette 查询）。 */
+    public int palette() { return nativePalette(nativeHandle); }
+    static native int nativePalette(long handle);
+
     /** 内容边距 [左, 上, 右, 下]。 */
     public int[] contentsMargins() { return nativeContentsMargins(nativeHandle); }
     static native int[] nativeContentsMargins(long handle);

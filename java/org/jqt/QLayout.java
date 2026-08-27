@@ -110,6 +110,16 @@ public abstract class QLayout {
         nativeAddStretch(nativeHandle, stretch);
     }
     protected native void nativeAddStretch(long handle, int stretch);
+
+    // ---- 查询（v0.6.0）----
+
+    /** 子项数量（控件 + 间距 + 嵌套布局）。 */
+    public int count() { return nativeCount(nativeHandle); }
+    protected native int nativeCount(long handle);
+
+    /** 控件间距（像素）。 */
+    public int spacing() { return nativeSpacing(nativeHandle); }
+    protected native int nativeSpacing(long handle);
 }
 
 
