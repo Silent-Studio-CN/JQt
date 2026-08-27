@@ -1,0 +1,121 @@
+/* ============================================================
+ * QraftLab 自定义样式（%变量% 模板，由 renderTheme 填充）
+ * 分离自 QraftLab.java —— QSS 与 Java 逻辑解耦
+ * 变量：%accent% %accent-fg% %accent-hover% %accent-pressed%
+ *       %accent-deep% %accent-light% %accent-ghost-hover% %accent-ghost-pressed%
+ * ============================================================ */
+
+/* ---------- 实心按钮（qf 立体边：底边深 25%，pressed 压平） ---------- */
+QPushButton#solidPrimary {
+    background: %accent%;
+    color: %accent-fg%;
+    border: 1px solid %accent-pressed%;
+    border-bottom: 1px solid %accent-deep%;
+    border-radius: 6px;
+    padding: 10px 24px;
+    font-weight: bold;
+    font-size: 13px;
+}
+QPushButton#solidPrimary:hover { background: %accent-hover%; }
+QPushButton#solidPrimary:pressed {
+    background: %accent-pressed%;
+    border-bottom: 1px solid %accent-pressed%;
+    padding-top: 11px;
+    padding-bottom: 9px;
+}
+
+QPushButton#solidSuccess {
+    background: #107c10; color: #ffffff;
+    border: 1px solid #0b5f0b; border-bottom: 1px solid #084508;
+    border-radius: 6px; padding: 10px 24px; font-weight: bold;
+}
+QPushButton#solidSuccess:hover { background: #1a8a1a; }
+QPushButton#solidSuccess:pressed {
+    background: #0b5f0b; border-bottom: 1px solid #0b5f0b;
+    padding-top: 11px; padding-bottom: 9px;
+}
+
+QPushButton#solidDanger {
+    background: #e81123; color: #ffffff;
+    border: 1px solid #b90d1e; border-bottom: 1px solid #8a0a16;
+    border-radius: 6px; padding: 10px 24px; font-weight: bold;
+}
+QPushButton#solidDanger:hover { background: #f14c58; }
+QPushButton#solidDanger:pressed {
+    background: #b90d1e; border-bottom: 1px solid #b90d1e;
+    padding-top: 11px; padding-bottom: 9px;
+}
+
+QPushButton#solidTeal {
+    background: #00bfa5; color: #ffffff;
+    border: 1px solid #009e8a; border-bottom: 1px solid #007a6a;
+    border-radius: 6px; padding: 10px 24px; font-weight: bold;
+}
+QPushButton#solidTeal:hover { background: #00d4b8; }
+QPushButton#solidTeal:pressed {
+    background: #009e8a; border-bottom: 1px solid #009e8a;
+    padding-top: 11px; padding-bottom: 9px;
+}
+
+/* ---------- 幽灵 / 描边 / 胶囊 ---------- */
+QPushButton#ghost {
+    background: transparent; color: %accent%;
+    border: none; border-radius: 6px;
+    padding: 10px 24px; font-weight: bold;
+}
+QPushButton#ghost:hover { background: %accent-ghost-hover%; }
+QPushButton#ghost:pressed {
+    background: %accent-ghost-pressed%;
+    padding-top: 11px; padding-bottom: 9px;
+}
+
+QPushButton#outline {
+    background: transparent; color: %accent%;
+    border: 1px solid %accent%; border-radius: 6px;
+    padding: 9px 23px; font-weight: bold;
+}
+QPushButton#outline:hover { background: %accent-ghost-hover%; }
+QPushButton#outline:pressed {
+    background: %accent-ghost-pressed%;
+    padding-top: 10px; padding-bottom: 8px;
+}
+
+QPushButton#pill {
+    background: %accent%; color: %accent-fg%;
+    border: 1px solid %accent-pressed%; border-bottom: 1px solid %accent-deep%;
+    border-radius: 20px; padding: 10px 30px; font-weight: bold;
+}
+QPushButton#pill:hover { background: %accent-hover%; }
+QPushButton#pill:pressed {
+    background: %accent-pressed%; border-bottom: 1px solid %accent-pressed%;
+    padding-top: 11px; padding-bottom: 9px;
+}
+
+/* ---------- 动画 / 画布 / 通用 ---------- */
+QPushButton#pulseBtn {
+    background: %accent%; color: %accent-fg%;
+    border: none; border-radius: 28px;
+    font-size: 20px; font-weight: bold;
+}
+QPushButton#pulseBtn:hover { background: %accent-hover%; }
+QPushButton#pulseBtn:pressed { background: %accent-pressed%; }
+
+QFrame#card {
+    background: %card-bg%;
+    border: 1px solid %card-border%;
+    border-radius: 14px;
+}
+
+QLabel#cardMeta { color: %fg-hint%; font-size: 12px; }
+QLabel#btnNote  { color: %fg-hint%; font-size: 11px; }
+QLabel#logLine  { color: %fg-hint%; font-size: 11px; }
+
+QPushButton#smallBtn {
+    background: %btn-bg%; color: %fg%;
+    border: 1px solid %input-border%;
+    border-radius: 4px;
+    padding: 5px 12px;
+    font-size: 12px;
+}
+QPushButton#smallBtn:hover { background: %btn-hover%; }
+QPushButton#smallBtn:pressed { background: %btn-pressed%; }
