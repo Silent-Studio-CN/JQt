@@ -14,7 +14,7 @@ public class JQtGallery {
     static QApplication app;
     static QMainWindow w;
     static QLabel logLabel, geoLabel;      // 底部事件日志行 / 窗口几何信息行
-    static QFrame themePanel, ctrlPanel, animPanel, winPanel, v5Panel, v6Panel, v61Panel;  // 七个功能分区面板
+    static QFrame themePanel, ctrlPanel, animPanel, winPanel, v5Panel;  // 五个功能分区面板
     static Map<String, String> currentVars;  // 当前主题的变量表（22 个 %var%）
     static boolean currentLight = false;     // 当前是否为浅色主题
     static String themeName = "nord";        // 当前主题名
@@ -102,25 +102,6 @@ public class JQtGallery {
         return b;
     }
 
-    // v0.6 分区按钮：同 makeBtn，但登记进自动演示点击列表（auto 模式逐一点击验证新 API）
-    // v0.6 的 QPushButton 没有 text() 读取方法，用并行 Map 记住按钮文字
-    static java.util.List<QPushButton> v6btns = new java.util.ArrayList<>();
-    static java.util.Map<QPushButton, String> v6btnText = new java.util.IdentityHashMap<>();
-    static java.util.List<QPushButton> v61btns = new java.util.ArrayList<>();   // v0.6.1 分区按钮（同 v6btn 注册，auto 也点击）
-    static QPushButton v6btn(String text, Runnable act) {
-        QPushButton b = makeBtn(text, act);
-        v6btns.add(b);
-        v6btnText.put(b, text);
-        return b;
-    }
-    // v0.6.1 分区按钮：同 v6btn，登记进 v61btns（auto 模式先切分区再点击）
-    static QPushButton v61btn(String text, Runnable act) {
-        QPushButton b = makeBtn(text, act);
-        v61btns.add(b);
-        v6btnText.put(b, text);
-        return b;
-    }
-
     // ================= 主界面 =================
     public static void main(String[] args) {
         boolean auto = Long.getLong("g.auto", 0L) > 0;
@@ -140,7 +121,7 @@ public class JQtGallery {
 
         // ---- 顶部选项卡导航（四个分区切换）----
         JQtPivot pivot = new JQtPivot();
-        pivot.addItem("主题"); pivot.addItem("控件"); pivot.addItem("动画"); pivot.addItem("窗口"); pivot.addItem("v0.5 新控件"); pivot.addItem("v0.6 新功能"); pivot.addItem("v0.6.1 独家");
+        pivot.addItem("主题"); pivot.addItem("控件"); pivot.addItem("动画"); pivot.addItem("窗口"); pivot.addItem("v0.5 新控件");
 
         // ================ 分区 1：主题换肤 ================
         themePanel = new QFrame();
@@ -513,231 +494,6 @@ public class JQtGallery {
         v5.addWidget(sbar);
         v5.addWidget(new QLabel("⑧ 渲染后端: " + QApplication.rhiBackend()));
         v5Panel.setLayout(v5);
-        // ================ 分区 6：v0.6 L1 补全（全 API + 直观反馈） ================
-        v6Panel = new QFrame();
-        v6Panel.setObjectName("card1");
-        QVBoxLayout v6 = new QVBoxLayout();
-        v6.setSpacing(8);
-
-        // 大字反馈标签：所有操作结果直接显示在这里（不只是日志行）
-        QLabel fb = new QLabel("v0.6 新功能演示 —— 操作结果在这里实时显示");
-        fb.setObjectName("fbLabel");
-        fb.setStyleSheet("QLabel#fbLabel { font-size: 15px; font-weight: bold; color: #4cc2ff; background: rgba(76,194,255,0.10); border: 1px solid rgba(76,194,255,0.45); border-radius: 8px; padding: 8px 12px; }");
-        v6.addWidget(fb);
-
-        v6.addWidget(new QLabel("① 剪贴板 QClipboard（复制/粘贴，反馈直显）"));
-        QHBoxLayout v6r1 = new QHBoxLayout();
-        v6r1.setSpacing(6);
-        QLineEdit cbEdit = new QLineEdit("剪贴板测试文本");
-        QPushButton cbCopy = v6btn("复制", () -> { QClipboard.setText(cbEdit.text()); fb.setText("已复制到剪贴板: " + cbEdit.text()); log("剪贴板复制: " + cbEdit.text()); });
-        QPushButton cbPaste = v6btn("粘贴", () -> { cbEdit.setText(QClipboard.text()); fb.setText("已从剪贴板粘贴: " + QClipboard.text()); log("剪贴板粘贴: " + QClipboard.text()); });
-        v6r1.addWidget(cbEdit);
-        v6r1.addWidget(cbCopy);
-        v6r1.addWidget(cbPaste);
-        v6.addLayout(v6r1);
-
-        v6.addWidget(new QLabel("② 文件系统 QFile/QDir（exists/count/size）"));
-        QHBoxLayout v6r2 = new QHBoxLayout();
-        v6r2.setSpacing(6);
-        QPushButton dirBtn = v6btn("统计当前目录", () -> { int n = QDir.count("."); fb.setText("当前目录共 " + n + " 个条目（QDir.count）"); log("QDir.count = " + n); });
-        QPushButton fileBtn = v6btn("检查 qf 皮肤", () -> { boolean e1 = QFile.exists("qf-dark-jqt.qss"); fb.setText("qf-dark-jqt.qss 存在: " + e1); log("QFile.exists = " + e1); });
-        QPushButton sizeBtn = v6btn("QFile.size", () -> { long sz = QFile.size("qf-dark-jqt.qss"); fb.setText("qf 皮肤大小: " + sz + " 字节"); log("QFile.size = " + sz); });
-        v6r2.addWidget(dirBtn);
-        v6r2.addWidget(fileBtn);
-        v6r2.addWidget(sizeBtn);
-        v6.addLayout(v6r2);
-
-        v6.addWidget(new QLabel("③ 配置 QSettings（保存/读取，反馈直显）"));
-        QHBoxLayout v6r3 = new QHBoxLayout();
-        v6r3.setSpacing(6);
-        QSettings settings = new QSettings();
-        QPushButton setBtn = v6btn("计数器 +1", () -> { int n = settings.value("counter") + 1; settings.setValue("counter", n); fb.setText("QSettings 计数器 = " + n); log("counter=" + n); });
-        QPushButton getBtn = v6btn("读取计数", () -> { int n = settings.value("counter"); fb.setText("QSettings 当前值 = " + n); log("read=" + n); });
-        v6r3.addWidget(setBtn);
-        v6r3.addWidget(getBtn);
-        v6.addLayout(v6r3);
-
-        v6.addWidget(new QLabel("④ QWidget 几何 API（move + pos()/size() 反馈直显）"));
-        QHBoxLayout v6r4 = new QHBoxLayout();
-        v6r4.setSpacing(6);
-        // 说明：布局里的控件会被布局管理器重新摆放，move() 演示直接作用于主窗口（无边框，效果直观）
-        final int[] winOrig = w.pos();
-        v6r4.addWidget(v6btn("move(30,30)", () -> { w.move(30, 30); fb.setText("窗口已移动，pos=" + java.util.Arrays.toString(w.pos())); log("pos=" + java.util.Arrays.toString(w.pos())); }));
-        v6r4.addWidget(v6btn("读 pos/size", () -> { fb.setText("窗口 pos=" + java.util.Arrays.toString(w.pos()) + " size=" + java.util.Arrays.toString(w.size())); log("pos=" + java.util.Arrays.toString(w.pos())); }));
-        v6r4.addWidget(v6btn("还原位置", () -> { w.move(winOrig[0], winOrig[1]); fb.setText("窗口已还原 pos=" + java.util.Arrays.toString(w.pos())); }));
-        v6.addLayout(v6r4);
-
-        v6.addWidget(new QLabel("⑤ 右键菜单 onCustomContextMenuRequested（区域点右键）"));
-        QFrame ctxFrame = new QFrame();
-        ctxFrame.setObjectName("card");
-        ctxFrame.addWidget(new QLabel("在这个区域点右键"));
-        ctxFrame.onCustomContextMenuRequested((x, y) -> {
-            QMenu m = new QMenu();
-            m.addItem("右键菜单 A");
-            m.addItem("右键菜单 B");
-            m.onTriggered(i -> { fb.setText("右键菜单选择了: " + i); log("右键菜单 -> " + i); });
-            m.popup(ctxFrame);
-        });
-        v6.addWidget(ctxFrame);
-
-        v6.addWidget(new QLabel("⑥ QLineEdit 编辑操作（copy/cut/paste/undo/redo/selectAll）"));
-        QHBoxLayout v6r5 = new QHBoxLayout();
-        v6r5.setSpacing(4);
-        QLineEdit ed = new QLineEdit("可编辑文本");
-        QPushButton bCopy = v6btn("copy", () -> { ed.copy(); fb.setText("已复制选中文本"); });
-        QPushButton bCut = v6btn("cut", () -> { ed.cut(); fb.setText("已剪切"); });
-        QPushButton bPaste = v6btn("paste", () -> { ed.paste(); fb.setText("已粘贴: " + ed.text()); });
-        QPushButton bUndo = v6btn("undo", () -> { ed.undo(); fb.setText("已撤销"); });
-        QPushButton bRedo = v6btn("redo", () -> { ed.redo(); fb.setText("已重做"); });
-        QPushButton bSel = v6btn("selectAll", () -> { ed.selectAll(); fb.setText("已全选"); });
-        v6r5.addWidget(ed);
-        v6r5.addWidget(bCopy);
-        v6r5.addWidget(bCut);
-        v6r5.addWidget(bPaste);
-        v6r5.addWidget(bUndo);
-        v6r5.addWidget(bRedo);
-        v6r5.addWidget(bSel);
-        v6.addLayout(v6r5);
-
-        v6.addWidget(new QLabel("⑦ 三态复选框 + toggle + QLabel 换行/对齐（v0.6 增强）"));
-        QHBoxLayout v6r6 = new QHBoxLayout();
-        v6r6.setSpacing(6);
-        QCheckBox tri = new QCheckBox("三态复选框");
-        tri.setTristate(true);
-        tri.onCheckStateChanged(s -> { fb.setText("三态状态: " + s); log("三态 -> " + s); });
-        QPushButton toggler = new QPushButton("toggle 我");
-        toggler.onClicked(() -> { toggler.toggle(); fb.setText("toggle -> checked=" + toggler.isChecked()); });
-        QLabel wrapLbl = new QLabel("长文本换行演示：这一行文字很长，用来展示 wordWrap 效果，点击按钮切换开关看变化");
-        QPushButton wrapBtn = v6btn("切换换行", () -> { wrapLbl.setWordWrap(!wrapLbl.wordWrap()); fb.setText("wordWrap = " + wrapLbl.wordWrap()); });
-        QPushButton alignBtn = v6btn("居中/左对齐", () -> { wrapLbl.setAlignment(wrapLbl.alignment() == 4 ? 1 : 4); fb.setText("alignment = " + wrapLbl.alignment()); });
-        v6r6.addWidget(tri);
-        v6r6.addWidget(toggler);
-        v6r6.addWidget(wrapBtn);
-        v6r6.addWidget(alignBtn);
-        v6.addLayout(v6r6);
-        v6.addWidget(wrapLbl);
-
-        v6.addWidget(new QLabel("⑧ 输入/数值增强：QComboBox 可编辑 + QSpinBox 前后缀 + QProgressBar 文本"));
-        QHBoxLayout v6r7 = new QHBoxLayout();
-        v6r7.setSpacing(6);
-        QComboBox edCombo = new QComboBox();
-        edCombo.addItem("可编辑项 1");
-        edCombo.addItem("可编辑项 2");
-        edCombo.setEditable(true);
-        edCombo.setPlaceholderText("选择或输入...");
-        edCombo.onActivated(i -> { fb.setText("combo activated: " + i + " [" + edCombo.currentText() + "]"); log("combo -> " + edCombo.currentText()); });
-        QSpinBox preSpin = new QSpinBox();
-        preSpin.setRange(0, 100);
-        preSpin.setValue(42);
-        preSpin.setPrefix("¥");
-        preSpin.setSuffix(" 元");
-        preSpin.setSingleStep(5);
-        preSpin.onValueChanged(v -> fb.setText("金额: " + preSpin.cleanText()));
-        QProgressBar pbar = new QProgressBar();
-        pbar.setRange(0, 100);
-        pbar.setValue(40);
-        QPushButton pInc = v6btn("进度 +10", () -> { pbar.setValue(pbar.value() + 10); fb.setText("进度 " + pbar.value() + "% 文本: " + pbar.text()); });
-        QPushButton pAlign = v6btn("进度文本居中", () -> { pbar.setAlignment(4); fb.setText("进度对齐已居中"); });
-        v6r7.addWidget(edCombo);
-        v6r7.addWidget(preSpin);
-        v6r7.addWidget(pbar);
-        v6r7.addWidget(pInc);
-        v6r7.addWidget(pAlign);
-        v6.addLayout(v6r7);
-
-        v6.addWidget(new QLabel("⑨ 系统反馈 + 几何类 + toolTip"));
-        QHBoxLayout v6r8 = new QHBoxLayout();
-        v6r8.setSpacing(6);
-        v6r8.addWidget(v6btn("beep", () -> { QApplication.beep(); fb.setText("beep 已响"); }));
-        v6r8.addWidget(v6btn("alert 闪烁", () -> { QApplication.alert(w, 2000); fb.setText("窗口闪烁 2 秒"); }));
-        v6r8.addWidget(makeBtn("showAbout", () -> QMessageBox.showAbout(w, "JQt", "JQt v0.6.0 - L1 API 补全演示")));
-        QRect rectInfo = new QRect(10, 20, 100, 200);
-        v6r8.addWidget(v6btn("QRect 信息", () -> { fb.setText("QRect: x=" + rectInfo.x + " y=" + rectInfo.y + " " + rectInfo.width + "x" + rectInfo.height); log(rectInfo.toString()); }));
-        QPushButton tipBtn = v6btn("悬停看 toolTip", () -> {});
-        tipBtn.setToolTip("这是 QWidget.setToolTip 的效果（v0.6 新增）");
-        v6r8.addWidget(tipBtn);
-        v6.addLayout(v6r8);
-
-        v6Panel.setLayout(v6);
-
-        // ================ 分区 7：v0.6.1 Exclusive Kit（Windows 独家能力） ================
-        v61Panel = new QFrame();
-        v61Panel.setObjectName("card1");
-        QVBoxLayout v61 = new QVBoxLayout();
-        v61.setSpacing(8);
-
-        // 大字反馈标签（橙色系，区分 v0.6 分区的蓝色）
-        QLabel fb61 = new QLabel("v0.6.1 Exclusive Kit —— 操作结果在这里实时显示");
-        fb61.setObjectName("fbLabel");
-        fb61.setStyleSheet("QLabel#fbLabel { font-size: 15px; font-weight: bold; color: #ffb74d; background: rgba(255,183,77,0.10); border: 1px solid rgba(255,183,77,0.45); border-radius: 8px; padding: 8px 12px; }");
-        v61.addWidget(fb61);
-
-        v61.addWidget(new QLabel("① Mica 背景材质（Win11 22H2+，开启后窗口背景变 Mica 质感）"));
-        QHBoxLayout v61r1 = new QHBoxLayout();
-        v61r1.setSpacing(6);
-        v61r1.addWidget(v61btn("Mica 开", () -> { w.setMicaBackground(true); fb61.setText("Mica 背景已开启"); log("mica=true"); }));
-        v61r1.addWidget(v61btn("Mica 关", () -> { w.setMicaBackground(false); fb61.setText("Mica 背景已关闭"); log("mica=false"); }));
-        v61.addLayout(v61r1);
-
-        v61.addWidget(new QLabel("② DWM 原生边框/标题栏/文字颜色（Win11 22H2+；0xAARRGGBB）"));
-        QHBoxLayout v61r2 = new QHBoxLayout();
-        v61r2.setSpacing(6);
-        v61r2.addWidget(v61btn("边框 青色", () -> { w.setNativeBorderColor(0xFF00BFA5); fb61.setText("原生边框色 -> #00BFA5"); log("border=#00BFA5"); }));
-        v61r2.addWidget(v61btn("边框 品红", () -> { w.setNativeBorderColor(0xFFFF2D92); fb61.setText("原生边框色 -> #FF2D92"); log("border=#FF2D92"); }));
-        v61r2.addWidget(v61btn("标题栏 深蓝", () -> { w.setNativeCaptionColor(0xFF1E2A44); fb61.setText("原生标题栏色 -> #1E2A44"); log("caption=#1E2A44"); }));
-        v61r2.addWidget(v61btn("文字 白色", () -> { w.setNativeCaptionTextColor(0xFFFFFFFF); fb61.setText("标题栏文字色 -> 白"); log("captionText=white"); }));
-        v61r2.addWidget(v61btn("深色标题栏", () -> { w.setNativeDarkTitleBar(true); fb61.setText("深色标题栏 开（Win10 1809+）"); log("darkTitleBar=true"); }));
-        v61r2.addWidget(v61btn("恢复浅色", () -> { w.setNativeDarkTitleBar(false); fb61.setText("深色标题栏 关"); log("darkTitleBar=false"); }));
-        v61.addLayout(v61r2);
-
-        v61.addWidget(new QLabel("③ 任务栏图标进度（Win10+；ITaskbarList3）"));
-        QHBoxLayout v61r3 = new QHBoxLayout();
-        v61r3.setSpacing(6);
-        v61r3.addWidget(v61btn("进度 30%", () -> { w.setTaskbarProgress(30, 100); fb61.setText("任务栏进度 30/100"); log("taskbar=30/100"); }));
-        v61r3.addWidget(v61btn("进度 70%", () -> { w.setTaskbarProgress(70, 100); fb61.setText("任务栏进度 70/100"); log("taskbar=70/100"); }));
-        v61r3.addWidget(v61btn("进度 100%", () -> { w.setTaskbarProgress(100, 100); fb61.setText("任务栏进度 100/100"); log("taskbar=100/100"); }));
-        v61r3.addWidget(v61btn("清除进度", () -> { w.clearTaskbarProgress(); fb61.setText("任务栏进度已清除"); log("taskbar cleared"); }));
-        v61.addLayout(v61r3);
-
-        v61.addWidget(new QLabel("④ 全局热键 GlobalHotkey（应用失焦也生效；Ctrl+Alt+G）"));
-        QHBoxLayout v61r4 = new QHBoxLayout();
-        v61r4.setSpacing(6);
-        final int[] hkCount = {0};
-        final GlobalHotkey[] hkRef = new GlobalHotkey[1];
-        v61r4.addWidget(v61btn("注册热键", () -> {
-            GlobalHotkey hk = new GlobalHotkey();
-            boolean ok = hk.register("Ctrl+Alt+G", () -> {
-                hkCount[0]++;
-                fb61.setText("全局热键 Ctrl+Alt+G 触发 #" + hkCount[0] + "（失焦也生效）");
-                log("hotkey #" + hkCount[0]);
-            });
-            hkRef[0] = ok ? hk : null;
-            fb61.setText(ok ? "热键注册成功，按 Ctrl+Alt+G 试试" : "热键注册失败（可能被占用）");
-            log("hotkey register = " + ok);
-        }));
-        v61r4.addWidget(v61btn("注销热键", () -> {
-            if (hkRef[0] != null) { hkRef[0].unregister(); hkRef[0] = null; fb61.setText("热键已注销"); log("hotkey unregistered"); }
-            else { fb61.setText("尚未注册热键"); }
-        }));
-        v61.addLayout(v61r4);
-
-        v61.addWidget(new QLabel("⑤ 开机自启 setAutoStart（HKCU Run 注册表；Windows 需传 exe 路径）"));
-        QHBoxLayout v61r5 = new QHBoxLayout();
-        v61r5.setSpacing(6);
-        // 自启会写注册表，不进 auto 点击列表，避免自动演示污染系统
-        v61r5.addWidget(makeBtn("开启自启", () -> {
-            boolean ok = QApplication.setAutoStart(true, "");
-            fb61.setText("开机自启开启 " + (ok ? "成功" : "失败"));
-            log("autostart on = " + ok);
-        }));
-        v61r5.addWidget(makeBtn("关闭自启", () -> {
-            boolean ok = QApplication.setAutoStart(false, "");
-            fb61.setText("开机自启关闭 " + (ok ? "成功" : "失败"));
-            log("autostart off = " + ok);
-        }));
-        v61.addLayout(v61r5);
-
-        v61Panel.setLayout(v61);
 
         // ---- 根布局（单列 VBox，v0.3 支持嵌套布局）----
         logLabel = new QLabel("就绪");
@@ -753,21 +509,17 @@ public class JQtGallery {
         root.addWidget(animPanel);
         root.addWidget(winPanel);
         root.addWidget(v5Panel);
-        root.addWidget(v6Panel);
-        root.addWidget(v61Panel);
         root.addWidget(logLabel);
         win.setLayout(root);
 
         // 分区切换：选项卡变化时只显示对应面板（其余隐藏）
-        ctrlPanel.hide(); animPanel.hide(); winPanel.hide(); v5Panel.hide(); v6Panel.hide(); v61Panel.hide();
+        ctrlPanel.hide(); animPanel.hide(); winPanel.hide(); v5Panel.hide();
         pivot.onChanged(i -> {
             if (i == 0) { themePanel.show(); } else { themePanel.hide(); }
             if (i == 1) { ctrlPanel.show(); } else { ctrlPanel.hide(); }
             if (i == 2) { animPanel.show(); } else { animPanel.hide(); }
             if (i == 3) { winPanel.show(); } else { winPanel.hide(); }
             if (i == 4) { v5Panel.show(); } else { v5Panel.hide(); }
-            if (i == 5) { v6Panel.show(); } else { v6Panel.hide(); }
-            if (i == 6) { v61Panel.show(); } else { v61Panel.hide(); }
             log("分区 -> " + i);
         });
 
@@ -792,30 +544,7 @@ public class JQtGallery {
                     log("自动悬垂未生效 (异常)");
                 } catch (IllegalStateException e) { log("自动悬垂保护 OK"); }
             }, 5600);
-            // 切到 v0.6 分区，逐个点击新 API 按钮（反馈大字标签实时显示）
-            log("v6 自动按钮数 = " + v6btns.size());
-            app.schedule(() -> { log("v6 分区切换触发"); pivot.setCurrentIndex(5); }, 6400);
-            int[] ai = {0};
-            for (QPushButton b : v6btns) {
-                final QPushButton bb = b;
-                app.schedule(() -> {
-                    try { bb.click(); log("自动点击: " + v6btnText.get(bb)); }
-                    catch (Exception ex) { log("点击异常: " + v6btnText.get(bb) + " -> " + ex); }
-                }, 6800 + 400L * ai[0]++);
-            }
-            // v0.6.1 分区：切过去后逐个点击（Mica/DWM/任务栏进度/热键）
-            long v61start = 6800L + 400L * v6btns.size() + 600;
-            app.schedule(() -> { log("v61 分区切换触发"); pivot.setCurrentIndex(6); }, v61start);
-            int[] aj = {0};
-            for (QPushButton b : v61btns) {
-                final QPushButton bb = b;
-                app.schedule(() -> {
-                    try { bb.click(); log("自动点击: " + v6btnText.get(bb)); }
-                    catch (Exception ex) { log("点击异常: " + v6btnText.get(bb) + " -> " + ex); }
-                }, v61start + 400 + 400L * aj[0]++);
-            }
-            app.schedule(() -> { log("自动演示完成"); app.quit(); },
-                    v61start + 400 + 400L * v61btns.size() + 800);
+            app.schedule(() -> { log("自动演示完成"); app.quit(); }, 6500);
         }
         app.exec();
     }
