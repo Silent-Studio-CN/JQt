@@ -14,7 +14,7 @@ public class JQtGallery {
     static QApplication app;
     static QMainWindow w;
     static QLabel logLabel, geoLabel;      // 底部事件日志行 / 窗口几何信息行
-    static QFrame themePanel, ctrlPanel, animPanel, winPanel, v5Panel, v6Panel, v61Panel, v7Panel;  // 八个功能分区面板
+    static QFrame themePanel, ctrlPanel, animPanel, winPanel, v5Panel, v6Panel, v61Panel, v7Panel, v74Panel;  // 九个功能分区面板
     static Map<String, String> currentVars;  // 当前主题的变量表（22 个 %var%）
     static boolean currentLight = false;     // 当前是否为浅色主题
     static String themeName = "nord";        // 当前主题名
@@ -32,7 +32,7 @@ public class JQtGallery {
         String[] ls = logBuf.toString().split("\\n");
         String last = ls.length > 0 ? ls[ls.length - 1] : "";
         if (last.length() > 80) last = last.substring(last.length() - 80);
-        logLabel.setText(last);
+        if (logLabel != null) logLabel.setText(last);   // 窗口构建早期回调（如 GL init）时 logLabel 可能未创建
     }
 
     // ================= 主题模板读取（文件优先，jar 资源兜底）=================
@@ -108,6 +108,7 @@ public class JQtGallery {
     static java.util.Map<QPushButton, String> v6btnText = new java.util.IdentityHashMap<>();
     static java.util.List<QPushButton> v61btns = new java.util.ArrayList<>();   // v0.6.1 分区按钮（同 v6btn 注册，auto 也点击）
     static java.util.List<QPushButton> v7btns = new java.util.ArrayList<>();    // v0.7 分区按钮（auto 也点击；弹窗类按钮不进列表）
+    static java.util.List<QPushButton> v74btns = new java.util.ArrayList<>();   // v0.7.3/0.7.4 分区按钮（auto 也点击）
     static QPushButton v6btn(String text, Runnable act) {
         QPushButton b = makeBtn(text, act);
         v6btns.add(b);
@@ -125,6 +126,13 @@ public class JQtGallery {
     static QPushButton v7btn(String text, Runnable act) {
         QPushButton b = makeBtn(text, act);
         v7btns.add(b);
+        v6btnText.put(b, text);
+        return b;
+    }
+    // v0.7.3/0.7.4 分区按钮：同 v7btn，登记进 v74btns
+    static QPushButton v74btn(String text, Runnable act) {
+        QPushButton b = makeBtn(text, act);
+        v74btns.add(b);
         v6btnText.put(b, text);
         return b;
     }
@@ -168,7 +176,7 @@ public class JQtGallery {
 
         // ---- 顶部选项卡导航（四个分区切换）----
         JQtPivot pivot = new JQtPivot();
-        pivot.addItem("主题"); pivot.addItem("控件"); pivot.addItem("动画"); pivot.addItem("窗口"); pivot.addItem("v0.5 新控件"); pivot.addItem("v0.6 新功能"); pivot.addItem("v0.6.1 独家"); pivot.addItem("v0.7 工业包");
+        pivot.addItem("主题"); pivot.addItem("控件"); pivot.addItem("动画"); pivot.addItem("窗口"); pivot.addItem("v0.5 新控件"); pivot.addItem("v0.6 新功能"); pivot.addItem("v0.6.1 独家"); pivot.addItem("v0.7 工业包"); pivot.addItem("v0.7.3 GPU+串口");
 
         // ================ 分区 1：主题换肤 ================
         themePanel = new QFrame();
@@ -962,6 +970,93 @@ public class JQtGallery {
 
         v7Panel.setLayout(v7);
 
+        // ================ 分区 9：v0.7.3 GPU 画布 + v0.7.4 工业串口 ================
+        v74Panel = new QFrame();
+        v74Panel.setObjectName("card1");
+        QVBoxLayout v74 = new QVBoxLayout();
+        v74.setSpacing(8);
+
+        // 大字反馈标签（青绿色系）
+        QLabel fb74 = new QLabel("v0.7.3 GPU / v0.7.4 串口 —— 操作结果在这里实时显示");
+        fb74.setObjectName("fbLabel");
+        fb74.setStyleSheet("QLabel#fbLabel { font-size: 15px; font-weight: bold; color: #69f0ae; background: rgba(105,240,174,0.10); border: 1px solid rgba(105,240,174,0.45); border-radius: 8px; padding: 8px 12px; }");
+        v74.addWidget(fb74);
+
+        v74.addWidget(new QLabel("① QOpenGLWidget GPU 画布（v0.7.3；onInitialize/onPaint/onResized 回调）"));
+        QHBoxLayout v74r1 = new QHBoxLayout();
+        v74r1.setSpacing(6);
+        final int[] glInit = {0}, glPaint = {0}, glResized = {0};
+        final QOpenGLWidget[] glwRef = new QOpenGLWidget[1];
+        try {
+            glwRef[0] = new QOpenGLWidget();
+            glwRef[0].setFixedSize(220, 90);
+            glwRef[0].onInitialize(() -> { glInit[0]++; log("gl init #" + glInit[0]); });
+            glwRef[0].onPaint(() -> { glPaint[0]++; });
+            glwRef[0].onResized((wd, h) -> { glResized[0]++; });
+            glwRef[0].setClearColor(0xFF263238);
+            glwRef[0].setAutoClear(true);
+            glwRef[0].show();
+        } catch (UnsupportedOperationException e) {
+            glwRef[0] = null;
+            fb74.setText("平台不支持 QOpenGLWidget（macOS/ARM64）");
+        }
+        if (glwRef[0] != null) {
+            v74r1.addWidget(glwRef[0]);
+            v74r1.addWidget(v74btn("查 GL 回调计数", () -> {
+                fb74.setText("init=" + glInit[0] + " paint=" + glPaint[0] + " resize=" + glResized[0]);
+                log("gl init=" + glInit[0] + " paint=" + glPaint[0] + " resize=" + glResized[0]);
+            }));
+            v74r1.addWidget(v74btn("重绘", () -> { glwRef[0].update(); fb74.setText("已请求重绘"); log("gl update"); }));
+        } else {
+            v74r1.addWidget(new QLabel("（当前平台不支持 OpenGLWidget）"));
+        }
+        v74.addLayout(v74r1);
+
+        v74.addWidget(new QLabel("② QSerialPort 工业串口（v0.7.4；枚举/配置/开关/读写）"));
+        QHBoxLayout v74r2 = new QHBoxLayout();
+        v74r2.setSpacing(6);
+        v74r2.addWidget(v74btn("枚举端口", () -> {
+            java.util.List<String> ports = QSerialPort.availablePorts();
+            fb74.setText("可用端口: " + ports);
+            log("ports=" + ports);
+        }));
+        v74r2.addWidget(v74btn("配置 COM", () -> {
+            QSerialPort sp = new QSerialPort("COM1");
+            boolean b1 = sp.setBaudRate(9600);
+            sp.setDataBits(QSerialPort.DataBits.DATA_8);
+            sp.setParity(QSerialPort.Parity.NO_PARITY);
+            sp.setStopBits(QSerialPort.StopBits.ONE_STOP);
+            sp.setFlowControl(QSerialPort.FlowControl.NO_FLOW_CONTROL);
+            fb74.setText("配置完成 baud=9600/8N1 返回值=" + b1);
+            log("serial config baud=" + b1);
+        }));
+        v74r2.addWidget(v74btn("尝试打开", () -> {
+            QSerialPort sp = new QSerialPort("COM1");
+            sp.setBaudRate(9600);
+            boolean ok = sp.open(QSerialPort.OpenMode.READ_WRITE);
+            fb74.setText("open COM1: " + ok + " err=" + sp.errorString());
+            log("serial open=" + ok + " err=" + sp.errorString());
+            if (ok) { sp.close(); }
+        }));
+        v74r2.addWidget(v74btn("写测试串", () -> {
+            QSerialPort sp = new QSerialPort("COM1");
+            sp.setBaudRate(9600);
+            if (sp.open(QSerialPort.OpenMode.WRITE_ONLY)) {
+                int n = sp.write("JQt serial test");
+                sp.flush();
+                fb74.setText("写入 " + n + " 字节");
+                log("serial write=" + n);
+                sp.close();
+            } else {
+                fb74.setText("未打开（无设备）: " + sp.errorString());
+                log("serial write skipped");
+            }
+        }));
+        v74.addLayout(v74r2);
+
+        v74Panel.setLayout(v74);
+
+
 
         // ---- 根布局：标题固定，分区面板放滚动区（窗口固定 1280x720，内容超高可滚动）----
         logLabel = new QLabel("就绪");
@@ -986,6 +1081,7 @@ public class JQtGallery {
         panelLay.addWidget(v6Panel);
         panelLay.addWidget(v61Panel);
         panelLay.addWidget(v7Panel);
+        panelLay.addWidget(v74Panel);
         panelHost.setLayout(panelLay);
         QScrollArea scroll = new QScrollArea();
         scroll.setWidgetResizable(true);
@@ -995,7 +1091,7 @@ public class JQtGallery {
         win.setLayout(root);
 
         // 分区切换：选项卡变化时只显示对应面板（其余隐藏）
-        ctrlPanel.hide(); animPanel.hide(); winPanel.hide(); v5Panel.hide(); v6Panel.hide(); v61Panel.hide(); v7Panel.hide();
+        ctrlPanel.hide(); animPanel.hide(); winPanel.hide(); v5Panel.hide(); v6Panel.hide(); v61Panel.hide(); v7Panel.hide(); v74Panel.hide();
         pivot.onChanged(i -> {
             if (i == 0) { themePanel.show(); } else { themePanel.hide(); }
             if (i == 1) { ctrlPanel.show(); } else { ctrlPanel.hide(); }
@@ -1005,6 +1101,7 @@ public class JQtGallery {
             if (i == 5) { v6Panel.show(); } else { v6Panel.hide(); }
             if (i == 6) { v61Panel.show(); } else { v61Panel.hide(); }
             if (i == 7) { v7Panel.show(); } else { v7Panel.hide(); }
+            if (i == 8) { v74Panel.show(); } else { v74Panel.hide(); }
             log("分区 -> " + i);
         });
 
@@ -1062,10 +1159,21 @@ public class JQtGallery {
                     catch (Exception ex) { log("点击异常: " + v6btnText.get(bb) + " -> " + ex); }
                 }, v7start + 400 + 400L * ak[0]++);
             }
+            // v0.7.3/0.7.4 分区：切过去后逐个点击（GL 回调/串口）
+            long v74start = v7start + 400 + 400L * v7btns.size() + 400;
+            app.schedule(() -> { log("v74 分区切换触发"); pivot.setCurrentIndex(8); }, v74start);
+            int[] al = {0};
+            for (QPushButton b : v74btns) {
+                final QPushButton bb = b;
+                app.schedule(() -> {
+                    try { bb.click(); log("自动点击: " + v6btnText.get(bb)); }
+                    catch (Exception ex) { log("点击异常: " + v6btnText.get(bb) + " -> " + ex); }
+                }, v74start + 400 + 400L * al[0]++);
+            }
             // 收尾：切回 v0.6 分区（用户手动切换路径）
-            app.schedule(() -> { log("切回 v0.6 分区"); pivot.setCurrentIndex(5); }, v7start + 400 + 400L * v7btns.size() + 200);
+            app.schedule(() -> { log("切回 v0.6 分区"); pivot.setCurrentIndex(5); }, v74start + 400 + 400L * v74btns.size() + 200);
             app.schedule(() -> { log("自动演示完成"); app.quit(); },
-                    v7start + 400 + 400L * v7btns.size() + 1200);
+                    v74start + 400 + 400L * v74btns.size() + 1200);
         }
         app.exec();
     }
