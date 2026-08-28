@@ -64,9 +64,23 @@ jobs:
           rm -rf /tmp/qt683 /tmp/qtbase683.7z /tmp/icu683.7z
           test -f /opt/Qt683/6.8.3/gcc_64/bin/qmake || { echo "qmake missing"; exit 1; }
 
-      - name: Build libjqt.so (Qt 6.8.3)
+      - name: Build qtserialport 6.11.2 (source)
         run: |
-          chmod +x build-linux.sh
+          curl -sL -A "Mozilla/5.0" -o /tmp/qtserialport.zip "https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/qtserialport-everywhere-src-6.11.2.zip"
+          cd /tmp && unzip -q qtserialport.zip && cd qtserialport-everywhere-src-6.11.2
+          cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/6.11.2/gcc_64 -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+          cmake --build build -j$(nproc)
+          sudo cmake --install build
+
+      - name: Build qtserialport 6.8.3 (source)
+        run: |
+          curl -sL -A "Mozilla/5.0" -o /tmp/qtserialport683.zip "https://download.qt.io/official_releases/qt/6.8/6.8.3/submodules/qtserialport-everywhere-src-6.8.3.zip"
+          cd /tmp && unzip -q qtserialport683.zip && cd qtserialport-everywhere-src-6.8.3
+          cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/Qt683/6.8.3/gcc_64 -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+          cmake --build build -j$(nproc)
+          sudo cmake --install build
+
+      - name: Build libjqt.so (Qt 6.8.3)
           QT_BASE=/opt/Qt683/6.8.3/gcc_64 ./build-linux.sh
           mv lib/libjqt.so lib/libjqt-6.8.3.so
 
@@ -129,6 +143,12 @@ jobs:
           echo "smoke v0.7.3 exit code: $CODE5"
           cat smoke_v073.txt
           if [ $CODE5 -ne 0 ]; then exit $CODE5; fi
+          # QSerialPort 冒烟（v0.7.4）
+          QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class org.jqt.SmokeV074 -AutoClose 1000 > smoke_v074.txt 2>&1
+          CODE6=$?
+          echo "smoke v0.7.4 exit code: $CODE6"
+          cat smoke_v074.txt
+          if [ $CODE6 -ne 0 ]; then exit $CODE6; fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -160,7 +180,7 @@ jobs:
           Write-Host "=== Updates.xml probe ==="
           curl.exe -s -o NUL -w 'HTTP %{http_code}\n' "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6112/qt6_6112/Updates.xml"
           Write-Host "=== install-qt (with config) ==="
-          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_mingw --outputdir C:/Qt --archives qtbase *> aqt_qt.log
+          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_mingw --outputdir C:/Qt --archives qtbase -m qtserialport *> aqt_qt.log
           Write-Host "install-qt exit=$LASTEXITCODE"
           Get-Content aqt_qt.log -Tail 12
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -225,6 +245,13 @@ jobs:
             Get-Content smoke_v073_log.txt -Tail 40
             exit $LASTEXITCODE
           }
+          # QSerialPort 冒烟（v0.7.4）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeV074 -AutoClose 1000 *> smoke_v074_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE V074 FAILED, tail of smoke_v074_log.txt ==="
+            Get-Content smoke_v074_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -269,6 +296,9 @@ jobs:
           $qtRoot = Split-Path (Split-Path $qmake.FullName)
           Write-Host "QTBASE=$qtRoot"
           "QTBASE=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
+          # v0.7.4: qtserialport 模块
+          curl.exe -fsSL -o C:/qtserialport.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_683/qt6_683/qt.qt6.683.addons.qtserialport.win64_msvc2022_arm64/6.8.3-0-202503201308qtserialport-Windows-Windows_11_22H2-MSVC2022-Windows-Windows_11_22H2-AARCH64.7z"
+          7z x -y -oC:/Qt C:/qtserialport.7z | Out-Null
 
       - name: Build jqt.dll (MSVC ARM64, Qt 6.8.3)
         shell: pwsh
@@ -326,6 +356,13 @@ jobs:
             Get-Content smoke_v073_log.txt -Tail 40
             exit $LASTEXITCODE
           }
+          # QSerialPort 冒烟（v0.7.4）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeV074 -AutoClose 1000 *> smoke_v074_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE V074 FAILED, tail of smoke_v074_log.txt ==="
+            Get-Content smoke_v074_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
 
       - name: Install Qt 6.11.2 win64_arm64 (manual 7z)
         shell: pwsh
@@ -340,6 +377,9 @@ jobs:
           $qtRoot = Split-Path (Split-Path $qmake.FullName)
           Write-Host "QTBASE6112=$qtRoot"
           "QTBASE6112=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
+          # v0.7.4: qtserialport 模块
+          curl.exe -fsSL -o C:/qtserialport6112.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.addons.qtserialport.win64_msvc2022_arm64/6.11.2-0-202608131017qtserialport-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
+          7z x -y -oC:/Qt6112 C:/qtserialport6112.7z | Out-Null
 
       - name: Build jqt.dll (MSVC ARM64, Qt 6.11.2)
         shell: pwsh
@@ -383,12 +423,12 @@ jobs:
           python3 -m venv /tmp/aqt-venv
           /tmp/aqt-venv/bin/pip install aqtinstall
           printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
-          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.11.2 clang_64 --outputdir $HOME/Qt
+          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.11.2 clang_64 --outputdir $HOME/Qt -m qtserialport
           test -f "$HOME/Qt/6.11.2/macos/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
 
       - name: Install Qt 6.8.3 for macOS (clang_64)
         run: |
-          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.8.3 clang_64 --outputdir $HOME/Qt683
+          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.8.3 clang_64 --outputdir $HOME/Qt683 -m qtserialport
           test -f "$HOME/Qt683/6.8.3/macos/lib/QtWidgets.framework/Headers/QWidget" || exit 1
 
       - name: Build libjqt.dylib (Qt 6.8.3)
@@ -417,6 +457,8 @@ jobs:
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeV072 -AutoClose 1000
           # QOpenGLWidget 冒烟（v0.7.3，offscreen 容错）
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeV073 -AutoClose 1000
+          # QSerialPort 冒烟（v0.7.4）
+          QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeV074 -AutoClose 1000
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
