@@ -400,6 +400,32 @@ public abstract class QWidget {
     public long nativeHandle() {
         return nativeHandle;
     }
+
+    // ---- L1 补全（v0.8.0）：find / layout / windowIcon ----
+
+    /**
+     * 按原生窗口句柄查找控件（QWidget::find 静态版）。
+     * 返回控件句柄（可配合 nativeHandle() 使用）；未找到返回 0。
+     */
+    public static long find(long winId) {
+        return nativeFind(winId);
+    }
+    private static native long nativeFind(long winId);
+
+    /**
+     * 当前布局管理器句柄（QWidget::layout 简化版）。
+     * 返回 C++ 侧 QLayout 句柄（可与 QLayout 对象互操作）；未设置返回 0。
+     */
+    public long layout() {
+        return nativeLayout(nativeHandle);
+    }
+    private native long nativeLayout(long handle);
+
+    /** 设置窗口图标（图片文件路径；QWidget::setWindowIcon 以路径简化传递）。 */
+    public void setWindowIcon(String iconPath) {
+        nativeSetWindowIcon(nativeHandle, iconPath);
+    }
+    private native void nativeSetWindowIcon(long handle, String iconPath);
 }
 
 

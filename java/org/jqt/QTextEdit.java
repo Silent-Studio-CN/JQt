@@ -59,6 +59,18 @@ public class QTextEdit extends QWidget {
     private native boolean nativeIsReadOnly(long handle);
 
     /** 内容变化回调。 */
+    /** 设置占位提示文本（QPlainTextEdit::setPlaceholderText）。 */
+    public void setPlaceholderText(String text) {
+        nativeSetPlaceholderText(nativeHandle, text);
+    }
+    private native void nativeSetPlaceholderText(long handle, String text);
+
+    /** 当前占位提示文本。 */
+    public String placeholderText() {
+        return nativePlaceholderText(nativeHandle);
+    }
+    private native String nativePlaceholderText(long handle);
+
     public QTextEdit onTextChanged(Runnable handler) {
         onTextChangedHandlers.add(handler);
         return this;

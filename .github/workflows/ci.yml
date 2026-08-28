@@ -105,6 +105,14 @@ jobs:
           echo "smoke exclusive exit code: $CODE2"
           cat smoke_exclusive.txt
           if [ $CODE2 -ne 0 ]; then exit $CODE2; fi
+          # L1 收尾冒烟（v0.7.1）
+          for SMOKE in org.jqt.SmokeL1 org.jqt.SmokeL1b2; do
+            QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class $SMOKE -AutoClose 1000 > smoke_l1.txt 2>&1
+            CODE3=$?
+            echo "smoke $SMOKE exit code: $CODE3"
+            cat smoke_l1.txt
+            if [ $CODE3 -ne 0 ]; then exit $CODE3; fi
+          done
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -172,6 +180,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE EXCLUSIVE FAILED, tail of smoke_exclusive_log.txt ==="
             Get-Content smoke_exclusive_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+          # L1 收尾冒烟（v0.7.1）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeL1 -AutoClose 1000 *> smoke_l1_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE L1 FAILED, tail of smoke_l1_log.txt ==="
+            Get-Content smoke_l1_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeL1b2 -AutoClose 1000 *> smoke_l1b2_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE L1B2 FAILED, tail of smoke_l1b2_log.txt ==="
+            Get-Content smoke_l1b2_log.txt -Tail 40
             exit $LASTEXITCODE
           }
       - name: Upload build log on failure
@@ -246,6 +267,19 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE EXCLUSIVE FAILED, tail of smoke_exclusive_log.txt ==="
             Get-Content smoke_exclusive_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+          # L1 收尾冒烟（v0.7.1）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeL1 -AutoClose 1000 *> smoke_l1_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE L1 FAILED, tail of smoke_l1_log.txt ==="
+            Get-Content smoke_l1_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeL1b2 -AutoClose 1000 *> smoke_l1b2_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE L1B2 FAILED, tail of smoke_l1b2_log.txt ==="
+            Get-Content smoke_l1b2_log.txt -Tail 40
             exit $LASTEXITCODE
           }
 
@@ -332,6 +366,9 @@ jobs:
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
           # Exclusive Kit 跨平台 API 冒烟（v0.7.0）
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeExclusive -AutoClose 1000
+          # L1 收尾冒烟（v0.7.1）
+          QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeL1 -AutoClose 1000
+          QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeL1b2 -AutoClose 1000
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

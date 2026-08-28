@@ -23,6 +23,7 @@ public class QListWidget extends QWidget {
 
     private final List<Consumer<Integer>> onItemClickedHandlers = new ArrayList<>();
     private final List<Consumer<Integer>> onCurrentRowChangedHandlers = new ArrayList<>();
+    private final List<Consumer<List<String>>> onItemChangedHandlers = new ArrayList<>();
 
     public QListWidget() {
         nativeHandle = nativeCreate();
@@ -60,6 +61,33 @@ public class QListWidget extends QWidget {
         onCurrentRowChangedHandlers.add(handler);
         return this;
     }
+
+    /**
+     * 注册列表项文本修改回调（itemChanged 信号，参数为 [行号, 新文本]）。
+     * 通过 setItem(row, text) 修改时触发（QListWidget::itemChanged 语义）。
+     */
+    public QListWidget onItemChanged(Consumer<List<String>> handler) {
+        onItemChangedHandlers.add(handler);
+        nativeConnectItemChanged(nativeHandle);
+        return this;
+    }
+    private native void nativeConnectItemChanged(long handle);
+
+    /** 由 C++ 侧在列表项文本修改时回调（JNI，v0.8.0）。 */
+    void nativeHandleItemChanged(int row, String text) {
+        for (Consumer<List<String>> h : onItemChangedHandlers) {
+            List<String> ev = new java.util.ArrayList<>();
+            ev.add(String.valueOf(row));
+            ev.add(text);
+            h.accept(ev);
+        }
+    }
+
+    /** 返回指定文本项所在行号（未找到返回 -1；QListWidget::row 简化版）。 */
+    public int row(String itemText) {
+        return nativeRow(nativeHandle, itemText);
+    }
+    private static native int nativeRow(long handle, String itemText);
 
     /** 由 C++ 侧在点击列表项时回调（JNI）。 */
     void nativeHandleItemClicked(int row) {

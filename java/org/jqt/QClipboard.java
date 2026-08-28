@@ -32,6 +32,21 @@ public class QClipboard {
     }
     private static native void nativeClear();
 
+    /**
+     * 复制图像到剪贴板（PNG/JPEG 编码字节；QClipboard::setImage）。
+     * 图像从字节流解码后放入剪贴板。
+     */
+    public static void setPixmap(byte[] pngOrJpegBytes) {
+        nativeSetPixmap(pngOrJpegBytes);
+    }
+    private static native void nativeSetPixmap(byte[] bytes);
+
+    /** 读取剪贴板图像（返回 PNG 编码字节；无图像返回 null）。 */
+    public static byte[] pixmap() {
+        return nativePixmap();
+    }
+    private static native byte[] nativePixmap();
+
     private static final java.util.List<Runnable> onSelectionChangedHandlers = new java.util.ArrayList<>();
     private static volatile boolean selectionConnected;
 

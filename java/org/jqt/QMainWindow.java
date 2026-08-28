@@ -189,6 +189,35 @@ public class QMainWindow extends QWidget {
             h.accept(x, y);
         }
     }
+
+    // ---- L1 补全（v0.8.0）：iconSizeChanged / toolButtonStyleChanged 信号 ----
+
+    private final List<Consumer<Integer>> onIconSizeChangedHandlers = new ArrayList<>();
+    private final List<Consumer<Integer>> onToolButtonStyleChangedHandlers = new ArrayList<>();
+
+    /** 工具栏图标尺寸变化回调（iconSizeChanged 信号，参数为图标边长像素）。 */
+    public QMainWindow onIconSizeChanged(Consumer<Integer> handler) {
+        onIconSizeChangedHandlers.add(handler);
+        nativeConnectIconSizeChanged(nativeHandle);
+        return this;
+    }
+    private native void nativeConnectIconSizeChanged(long handle);
+
+    /** 工具栏按钮样式变化回调（toolButtonStyleChanged 信号，参数为 Qt::ToolButtonStyle：0 仅图标 / 1 仅文字 / 2 文字在图标旁 / 3 文字在图标下）。 */
+    public QMainWindow onToolButtonStyleChanged(Consumer<Integer> handler) {
+        onToolButtonStyleChangedHandlers.add(handler);
+        nativeConnectToolButtonStyleChanged(nativeHandle);
+        return this;
+    }
+    private native void nativeConnectToolButtonStyleChanged(long handle);
+
+    void nativeHandleIconSizeChanged(int size) {
+        for (Consumer<Integer> h : onIconSizeChangedHandlers) h.accept(size);
+    }
+
+    void nativeHandleToolButtonStyleChanged(int style) {
+        for (Consumer<Integer> h : onToolButtonStyleChangedHandlers) h.accept(style);
+    }
     // ---- Exclusive Kit（跨平台独家能力，Qt 官方未封装）----
     //   v0.6.1 : Windows —— DWM 边框/标题栏/文字颜色 + 深色标题栏 + Mica + 任务栏进度
     //   v0.7.0 : macOS —— Dock 徽章 + 透明标题栏 + 全尺寸内容视图（对齐 Windows 任务栏进度/DWM 能力）

@@ -12,6 +12,23 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.7.1-Universal-Kit（2026-08-29）— L1 收尾：190/205（92.7%）
+
+**L1 补全（149 → 190/205；剩余 15 项全部为 ⛔ 阻塞归档：model/validator/pixmap 对象化依赖、Qt 6 不存在的 API）**：
+
+- **新类 4 个**：
+  - `QAction`（text/icon/shortcut/toolTip/font/toggle/toggled/triggered/trigger + checkable）
+  - `QDialog`（exec/open/accept/reject，模态+非模态）
+  - `QMenuBar`（addMenu/clear/triggered）
+  - `QListView`（QStringListModel 内部实现：addItem/setItems/spacing/wordWrap/selectionChanged/currentItem）
+- **QMessageBox 实例化**（setText/setWindowTitle/setIcon/exec/open/close，原有静态 show* 保留）
+- **QFile 实例 API**（open(READ/WRITE/APPEND)/close/isOpen/write/readAll/readLine）
+- **QClipboard 图像**（setPixmap(byte[] PNG/JPEG)/pixmap()）
+- **QTextEdit 底层改 QPlainTextEdit**（placeholderText 支持，纯文本语义对齐 qplaintextedit）
+- **补丁**：placeholderText getter（QLineEdit/QTextEdit）、QPushButton icon/shortcut/text、QMenu icon、QListWidget itemChanged/row、QMainWindow iconSizeChanged/toolButtonStyleChanged（委托 QToolBar 信号）、QWidget find/layout/setWindowIcon、QColorDialog.open+colorSelected、QLabel buddy（已有）、QSize width()/height()、QColor 值类（HSV 分量）、QApplication.paletteText/palettePlaceholderText
+
+**验证**：新增 SmokeL1/SmokeL1b2 冒烟，接入四平台 CI；本地全 PASS。
+
 ### v0.7.0-Universal-Kit（2026-08-29）— 跨平台独家能力包
 
 **Exclusive Kit 从 Windows 扩展到 macOS / Linux（不区别对待，同一 API 三平台同语义）**：

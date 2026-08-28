@@ -12,9 +12,6 @@ package org.jqt;
  */
 public class QMessageBox {
 
-    private QMessageBox() {
-    }
-
     /** 是/否 询问框，返回用户选择（true = 是）。阻塞调用。 */
     public static boolean showQuestion(QMainWindow parent, String title, String text) {
         return nativeShowQuestion(parent.nativeHandle(), title, text);
@@ -50,4 +47,54 @@ public class QMessageBox {
         nativeShowAbout(parent.nativeHandle(), title, text);
     }
     static native void nativeShowAbout(long winHandle, String title, String text);
+
+    // ---- L1 补全（v0.8.0）：QMessageBox 实例化（Qt 风格 setText/setIcon/exec/open）----
+
+    /** 图标类型（QMessageBox::Icon）。 */
+    public enum Icon { NO_ICON, INFORMATION, WARNING, CRITICAL, QUESTION }
+
+    private long nativeHandle;
+
+    /** 创建消息框实例（需调用 exec() 或 open() 显示）。 */
+    public QMessageBox() {
+        nativeHandle = nativeCreate();
+    }
+
+    /** 设置正文文本。 */
+    public void setText(String text) {
+        nativeSetText(nativeHandle, text);
+    }
+
+    /** 设置标题（窗口标题）。 */
+    public void setWindowTitle(String title) {
+        nativeSetWindowTitle(nativeHandle, title);
+    }
+
+    /** 设置图标类型。 */
+    public void setIcon(Icon icon) {
+        nativeSetIcon(nativeHandle, icon.ordinal());
+    }
+
+    /** 阻塞显示并返回用户选择（1 = 确定 / 0 = 取消；QMessageBox::exec）。 */
+    public int exec() {
+        return nativeExec(nativeHandle);
+    }
+
+    /** 非阻塞显示（QMessageBox::open；配合 finished 语义使用 exec 返回值）。 */
+    public void open() {
+        nativeOpen(nativeHandle);
+    }
+
+    /** 隐藏并关闭。 */
+    public void close() {
+        nativeClose(nativeHandle);
+    }
+
+    private native long nativeCreate();
+    private native void nativeSetText(long handle, String text);
+    private native void nativeSetWindowTitle(long handle, String title);
+    private native void nativeSetIcon(long handle, int icon);
+    private native int nativeExec(long handle);
+    private native void nativeOpen(long handle);
+    private native void nativeClose(long handle);
 }
