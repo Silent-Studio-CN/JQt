@@ -118,7 +118,11 @@ jobs:
           CODE4=$?
           echo "smoke v0.7.2 exit code: $CODE4"
           cat smoke_v072.txt
-          if [ $CODE4 -ne 0 ]; then exit $CODE4; fi
+          if [ $CODE4 -ne 0 ]; then
+            echo "=== HS_ERR (native frames) ==="
+            cat hs_err_pid*.log 2>/dev/null | head -120
+            exit $CODE4
+          fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
