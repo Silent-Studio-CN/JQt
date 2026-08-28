@@ -6780,3 +6780,105 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QSerialPort_nativeErrorString(JNIEnv* env
 
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeConnectReadyRead(JNIEnv* env, jobject, jlong) { (void)env; }
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeConnectBytesWritten(JNIEnv* env, jobject, jlong) { (void)env; }
+
+// ============================================================================
+// L2 批次（v0.7.4）：QWidget 高频少用 API
+// ============================================================================
+
+static jlong jqtPackSize(const QSize& s) {
+    const int64_t packed = (static_cast<int64_t>(s.width()) << 32) | (static_cast<uint32_t>(s.height()));
+    return static_cast<jlong>(packed);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMinimumSize(JNIEnv* env, jobject, jlong handle, jint w, jint h) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->setMinimumSize(w, h);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMaximumSize(JNIEnv* env, jobject, jlong handle, jint w, jint h) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->setMaximumSize(w, h);
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QWidget_nativeMinimumSize(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return wd ? jqtPackSize(wd->minimumSize()) : 0;
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QWidget_nativeMaximumSize(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return wd ? jqtPackSize(wd->maximumSize()) : 0;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFixedWidth(JNIEnv* env, jobject, jlong handle, jint w) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->setFixedWidth(w);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFixedHeight(JNIEnv* env, jobject, jlong handle, jint h) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->setFixedHeight(h);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeHasFocus(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return (wd && wd->hasFocus()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFocus(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->setFocus();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeClearFocus(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->clearFocus();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMouseTracking(JNIEnv* env, jobject, jlong handle, jboolean on) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->setMouseTracking(on ? true : false);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeHasMouseTracking(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return (wd && wd->hasMouseTracking()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeIsActiveWindow(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return (wd && wd->isActiveWindow()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeActivateWindow(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->activateWindow();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeRaise(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->raise();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeLower(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->lower();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowOpacity(JNIEnv* env, jobject, jlong handle, jdouble opacity) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->setWindowOpacity(opacity);
+}
+JNIEXPORT jdouble JNICALL Java_org_jqt_QWidget_nativeWindowOpacity(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return wd ? static_cast<jdouble>(wd->windowOpacity()) : 1.0;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeIsFullScreen(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return (wd && wd->isFullScreen()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeIsMinimized(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return (wd && wd->isMinimized()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAutoFillBackground(JNIEnv* env, jobject, jlong handle, jboolean on) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->setAutoFillBackground(on ? true : false);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeAutoFillBackground(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    return (wd && wd->autoFillBackground()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeGrabKeyboard(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->grabKeyboard();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeReleaseKeyboard(JNIEnv* env, jobject, jlong handle) {
+    QWidget* wd = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wd) wd->releaseKeyboard();
+}
