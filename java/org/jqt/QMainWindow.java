@@ -189,7 +189,10 @@ public class QMainWindow extends QWidget {
             h.accept(x, y);
         }
     }
-    // ---- Exclusive Kit（v0.6.1：Windows 独家能力，Qt 官方未封装）----
+    // ---- Exclusive Kit（跨平台独家能力，Qt 官方未封装）----
+    //   v0.6.1 : Windows —— DWM 边框/标题栏/文字颜色 + 深色标题栏 + Mica + 任务栏进度
+    //   v0.7.0 : macOS —— Dock 徽章 + 透明标题栏 + 全尺寸内容视图（对齐 Windows 任务栏进度/DWM 能力）
+    //   v0.7.0 : Linux —— XDG 开机自启 + D-Bus 防息屏/通知（见 QApplication）
 
     /**
      * 设置原生窗口边框颜色（0xAARRGGBB）。
@@ -231,6 +234,44 @@ public class QMainWindow extends QWidget {
 
     private static native void nativeSetDwmAttribute(long handle, int kind, int argb);
     private static native void nativeTaskbarProgress(long handle, int value, int max);
+
+    // ---- macOS 独家能力（v0.7.0；Windows/Linux 上为无操作）----
+
+    /**
+     * Dock 图标徽章（macOS 通知角标，如未读消息数）。
+     * 对齐 Windows 任务栏进度：macOS 没有任务栏进度概念，用 Dock 角标呈现应用状态。
+     * null 或空串清除；非 macOS 平台无操作。
+     */
+    public void setDockBadge(String badge) {
+        nativeSetDockBadge(nativeHandle, badge);
+    }
+
+    /** 清除 Dock 徽章（macOS）。 */
+    public void clearDockBadge() {
+        nativeSetDockBadge(nativeHandle, null);
+    }
+
+    /**
+     * 透明标题栏（macOS：保留红黄绿窗口按钮，标题栏区域透明，内容可延伸至顶部）。
+     * Qt 官方只能"全有或全无"（无边框 = 连窗口按钮一起去掉）；
+     * 此 API 保留原生窗口按钮的同时实现沉浸式布局。
+     * 建议在窗口 show() 之前调用；非 macOS 平台无操作。
+     */
+    public void setMacTitlebarTransparent(boolean transparent) {
+        nativeSetMacWindowAttribute(nativeHandle, 1, transparent);
+    }
+
+    /**
+     * 全尺寸内容视图（macOS：内容视图延伸到标题栏区域，配合
+     * setMacTitlebarTransparent 实现无边框观感但保留红黄绿按钮）。
+     * 非 macOS 平台无操作。
+     */
+    public void setMacFullSizeContentView(boolean on) {
+        nativeSetMacWindowAttribute(nativeHandle, 2, on);
+    }
+
+    private static native void nativeSetDockBadge(long handle, String badge);
+    private static native void nativeSetMacWindowAttribute(long handle, int kind, boolean value);
 
     // ---- End Exclusive Kit ----
 

@@ -576,3 +576,32 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 | 类 Class | 方法 Methods |
 |----------|--------------|
 | QApplication+ | `rhiBackend(String/无参)` `runOnUiThread` |
+
+---
+
+## 新增（v0.7.0-Universal-Kit）· New in v0.7.0-Universal-Kit
+
+> 跨平台独家能力：Exclusive Kit 从 Windows 扩展到 macOS / Linux，同一 API 三平台一致语义。
+> Cross-platform exclusive capabilities: Exclusive Kit extended to macOS/Linux with identical API semantics.
+
+**统一 API（三平台同签名）· Unified APIs (same signature on all 3 platforms)**
+
+| API | Windows | macOS | Linux |
+|-----|---------|-------|-------|
+| `QApplication.preventSleep(boolean)` | SetThreadExecutionState（阻止睡眠+关屏） | NSProcessInfo idleSystemSleepDisabled | D-Bus ScreenSaver/gnome-SessionManager Inhibit |
+| `QApplication.setAutoStart(boolean, path)` | HKCU Run 注册表（v0.6.1） | LaunchAgent plist | XDG autostart .desktop |
+| `QApplication.showNotification(title, body, ms)` | 托盘气泡（QSystemTrayIcon） | NSUserNotification（通知中心） | D-Bus org.freedesktop.Notifications |
+
+**macOS 独家 · macOS exclusive**
+
+| API | 说明 |
+|-----|------|
+| `QMainWindow.setDockBadge(String)` / `clearDockBadge()` | Dock 角标（对齐 Windows 任务栏进度） |
+| `QMainWindow.setMacTitlebarTransparent(boolean)` | 透明标题栏（保留红黄绿按钮） |
+| `QMainWindow.setMacFullSizeContentView(boolean)` | 全尺寸内容视图（内容延伸到标题栏） |
+
+**已知限制 · Known limits**
+
+- Linux 全局热键（X11 XGrabKey / Wayland portal）需 libX11 依赖且 Wayland 受限，列为 v0.7.x 候选，暂未实现
+- macOS 通知使用 NSUserNotification（Apple 已弃用但可用，无需权限弹窗）；Windows 通知为托盘气泡而非通知中心 Toast（Toast 需打包身份）
+- macOS 标题栏 API 建议在窗口 show() 前调用（NSWindow styleMask 修改时机）

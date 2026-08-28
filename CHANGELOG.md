@@ -12,6 +12,26 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.7.0-Universal-Kit（2026-08-29）— 跨平台独家能力包
+
+**Exclusive Kit 从 Windows 扩展到 macOS / Linux（不区别对待，同一 API 三平台同语义）**：
+
+- **防休眠/防息屏**（QApplication.preventSleep）— Windows SetThreadExecutionState / macOS NSProcessInfo / Linux D-Bus Inhibit（ScreenSaver 优先，gnome-SessionManager 回退）
+- **开机自启**（QApplication.setAutoStart）— 三平台统一：Windows Run 注册表（已有）/ macOS LaunchAgent plist / Linux XDG autostart .desktop
+- **桌面通知**（QApplication.showNotification）— Linux D-Bus Notifications / Windows 托盘气泡 / macOS NSUserNotification
+
+**macOS 独家（对齐 Windows 任务栏进度 / DWM 能力）**：
+
+- **Dock 角标**（setDockBadge / clearDockBadge，NSDockTile）
+- **透明标题栏**（setMacTitlebarTransparent，保留红黄绿按钮 + 内容上延）
+- **全尺寸内容视图**（setMacFullSizeContentView，沉浸式布局）
+
+**构建**：build-linux.sh 增加 QtDBus 链接；build-macos.sh 链接 AppKit/Foundation/CoreFoundation；CI 三平台冒烟新增 SmokeExclusive（新 API 全量调用验证）。
+
+**已知限制**：Linux 全局热键（X11/Wayland）依赖与限制较多，列为 v0.7.x 候选。
+
+版本命名：x.x.x-Universal-Kit（跨平台统一独家能力包标识）。
+
 ### v0.6.1-Exclusive-Kit（2026-08-28）— Windows 独家能力包
 
 **Qt 官方未封装的 Windows 能力，JQt 首次 API 化**：
