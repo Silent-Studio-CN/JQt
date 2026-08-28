@@ -74,6 +74,11 @@ $clArgs = @(
     "advapi32.lib", "ws2_32.lib", "winmm.lib", "netapi32.lib", "userenv.lib",
     "version.lib", "comdlg32.lib", "oleaut32.lib"
 )
+# v0.7.4 诊断：确认 QtSerialPort 头可见
+Write-Host "=== QtSerialPort diag ==="
+Write-Host "incDir=$(Join-Path $QtRoot 'includeQtSerialPort')"
+Get-ChildItem (Join-Path $QtRoot "includeQtSerialPort") -ErrorAction SilentlyContinue | Select-Object -First 8 -ExpandProperty Name | Out-Host
+Test-Path (Join-Path $QtRoot "includeQtSerialPortQSerialPort") | Out-Host
 & cl.exe @clArgs
 if ($LASTEXITCODE -ne 0) { throw "cl.exe failed" }
 
