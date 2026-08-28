@@ -3,12 +3,12 @@
 Full-featured JQt demo: themes / widgets / motion / window / v0.5+ widgets.
 
 **Versioning convention (since v0.6.0):**
-- Root directory = latest version (currently v0.6.1 compatible)
+- Root directory = latest version (currently v0.7.2 compatible)
 - Old versions archived in subdirectories: v5.0/
 
 | Version | Compatible JQt | Notes |
 |---------|---------------|-------|
-| root    | v0.6.1+        | Latest: v0.6 L1 API + v0.6.1 Exclusive Kit (Mica/DWM/taskbar/GlobalHotkey) |
+| root    | v0.7.2+        | Latest: v0.6 L1 + v0.6.1 Exclusive Kit + v0.7 Universal Kit (QPrinter/QSql/QAction/QListView/QClipboard image) |
 | v5.0/   | v0.5.x         | Five sections: theme/widgets/motion/window/v0.5 widgets, 16:9 window |
 
 ## Sections (pivot navigation)
@@ -33,11 +33,20 @@ Full-featured JQt demo: themes / widgets / motion / window / v0.5+ widgets.
    dark title bar, taskbar progress (30/70/100/clear), GlobalHotkey Ctrl+Alt+G
    register/unregister, QApplication.setAutoStart (manual only, not in auto demo)
    (auto demo also clicks these after switching to section 6)
+8. v0.7 Universal-Kit:
+   ① QPrinter PDF export (QTextEdit.printToPdf / QWidget.printToPdf / QPrinter A4 config)
+   ② QSql SQLite (create/insert/query/delete, in-memory db)
+   ③ QAction + QMenuBar (shortcut/trigger/toggle)
+   ④ QListView (items/selection callback)
+   ⑤ QClipboard image (setPixmap/pixmap)
+   ⑥ QDialog/QMessageBox instances (exec modal / open non-modal)
+   ⑦ preventSleep / showNotification / DockBadge (macOS)
+   (auto demo clicks these after switching to section 7)
 
 ## Build
 
-    javac -encoding UTF-8 -cp jqt-0.6.1-Exclusive-Kit.jar;theme-pack -d out JQtGallery.java
-    java --enable-native-access=ALL-UNNAMED -Djava.library.path=<runtime> -cp "out;jqt-0.6.1-Exclusive-Kit.jar;theme-pack" JQtGallery
+    javac -encoding UTF-8 -cp jqt-0.7.2-Universal-Kit.jar;theme-pack -d out JQtGallery.java
+    java --enable-native-access=ALL-UNNAMED -DQT_PLUGIN_PATH=<runtime>/plugins -Djava.library.path=<runtime> -cp "out;jqt-0.7.2-Universal-Kit.jar;theme-pack" JQtGallery
 
 Themes: NordTheme/SolarizedTheme/TerminalTheme (in this dir, version-independent).
 
