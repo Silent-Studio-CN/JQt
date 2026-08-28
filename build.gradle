@@ -1,0 +1,40 @@
+// JQt — Gradle build for JitPack distribution (Java API jar only).
+// Native libraries (jqt.dll / libjqt.so / libjqt.dylib) ship via GitHub Releases:
+// https://github.com/Silent-Studio-CN/JQt/releases
+plugins {
+    id 'java-library'
+}
+
+group = 'com.github.Silent-Studio-CN'
+version = new File("${rootDir}/VERSION").text.trim()
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+    withJavadocJar()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['java']
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// Javadoc in Chinese is fine; JitPack hosts it automatically.
+javadoc {
+    options.encoding = 'UTF-8'
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+// JitPack expects the jar artifact; javadoc/sources jars are published alongside.
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
