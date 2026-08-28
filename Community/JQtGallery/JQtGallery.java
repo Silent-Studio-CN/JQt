@@ -132,6 +132,7 @@ public class JQtGallery {
         win.setFrameless(true);      // 无边框窗口
         win.setRoundedCorners(true); // 圆角窗口
         win.setDraggable(true);      // 窗口可拖动（无边框时靠标题区拖动）
+        win.setFixedSize(1280, 720); // 固定 16:9 尺寸，内容超高时内部滚动（v0.6.1 分区实测会撑大窗口）
 
         // ---- 标题区 ----
         QLabel title = new QLabel("JQt Gallery 全功能演示");
@@ -721,7 +722,19 @@ public class JQtGallery {
         }));
         v61.addLayout(v61r4);
 
-        v61.addWidget(new QLabel("⑤ 开机自启 setAutoStart（HKCU Run 注册表；Windows 需传 exe 路径）"));
+        v61.addWidget(new QLabel("⑤ 边框热更新：先开原生边框（DWM 边框色才可见），宽度即时生效，改完可直接看颜色"));
+        QHBoxLayout v61r5b = new QHBoxLayout();
+        v61r5b.setSpacing(6);
+        v61r5b.addWidget(v61btn("原生边框 开", () -> { w.setFrameless(false); w.setBorderWidth(2); fb61.setText("已切原生边框（DWM 边框可见，宽 2）"); log("frameless=false border=2"); }));
+        v61r5b.addWidget(v61btn("无边框 回", () -> { w.setFrameless(true); w.setBorderWidth(0); fb61.setText("已切回无边框"); log("frameless=true border=0"); }));
+        v61r5b.addWidget(v61btn("边框宽 1", () -> { w.setBorderWidth(1); fb61.setText("边框宽 1"); log("borderWidth=1"); }));
+        v61r5b.addWidget(v61btn("边框宽 4", () -> { w.setBorderWidth(4); fb61.setText("边框宽 4"); log("borderWidth=4"); }));
+        v61r5b.addWidget(v61btn("边框宽 8", () -> { w.setBorderWidth(8); fb61.setText("边框宽 8"); log("borderWidth=8"); }));
+        v61r5b.addWidget(v61btn("圆角 开", () -> { w.setRoundedCorners(true); fb61.setText("圆角开"); log("rounded=true"); }));
+        v61r5b.addWidget(v61btn("圆角 关", () -> { w.setRoundedCorners(false); fb61.setText("圆角关"); log("rounded=false"); }));
+        v61.addLayout(v61r5b);
+
+        v61.addWidget(new QLabel("⑥ 开机自启 setAutoStart（HKCU Run 注册表；Windows 需传 exe 路径）"));
         QHBoxLayout v61r5 = new QHBoxLayout();
         v61r5.setSpacing(6);
         // 自启会写注册表，不进 auto 点击列表，避免自动演示污染系统
@@ -739,7 +752,7 @@ public class JQtGallery {
 
         v61Panel.setLayout(v61);
 
-        // ---- 根布局（单列 VBox，v0.3 支持嵌套布局）----
+        // ---- 根布局：标题固定，分区面板放滚动区（窗口固定 1280x720，内容超高可滚动）----
         logLabel = new QLabel("就绪");
         logLabel.setObjectName("logLine");
         QVBoxLayout root = new QVBoxLayout();
@@ -748,13 +761,24 @@ public class JQtGallery {
         root.addWidget(title);
         root.addWidget(sub);
         root.addWidget(pivot);
-        root.addWidget(themePanel);
-        root.addWidget(ctrlPanel);
-        root.addWidget(animPanel);
-        root.addWidget(winPanel);
-        root.addWidget(v5Panel);
-        root.addWidget(v6Panel);
-        root.addWidget(v61Panel);
+        // 面板容器（放进滚动区，避免切换分区时窗口被内容撑大）
+        QFrame panelHost = new QFrame();
+        panelHost.setObjectName("card1");
+        QVBoxLayout panelLay = new QVBoxLayout();
+        panelLay.setContentsMargins(0, 0, 0, 0);
+        panelLay.setSpacing(8);
+        panelLay.addWidget(themePanel);
+        panelLay.addWidget(ctrlPanel);
+        panelLay.addWidget(animPanel);
+        panelLay.addWidget(winPanel);
+        panelLay.addWidget(v5Panel);
+        panelLay.addWidget(v6Panel);
+        panelLay.addWidget(v61Panel);
+        panelHost.setLayout(panelLay);
+        QScrollArea scroll = new QScrollArea();
+        scroll.setWidgetResizable(true);
+        scroll.setWidget(panelHost);
+        root.addWidget(scroll);
         root.addWidget(logLabel);
         win.setLayout(root);
 
@@ -814,8 +838,10 @@ public class JQtGallery {
                     catch (Exception ex) { log("点击异常: " + v6btnText.get(bb) + " -> " + ex); }
                 }, v61start + 400 + 400L * aj[0]++);
             }
+            // 复现：v61 分区点完后切回 v0.6 分区（用户手动切换路径）
+            app.schedule(() -> { log("切回 v0.6 分区"); pivot.setCurrentIndex(5); }, v61start + 400 + 400L * v61btns.size() + 200);
             app.schedule(() -> { log("自动演示完成"); app.quit(); },
-                    v61start + 400 + 400L * v61btns.size() + 800);
+                    v61start + 400 + 400L * v61btns.size() + 1200);
         }
         app.exec();
     }
