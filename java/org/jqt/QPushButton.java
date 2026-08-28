@@ -127,6 +127,30 @@ public class QPushButton extends QWidget {
     public void setMenu(QMenu menu) { nativeSetMenu(nativeHandle, menu.nativeHandle); }
     private static native void nativeSetMenu(long handle, long menuHandle);
 
+    /** 当前文本（QAbstractButton::text）。 */
+    public String text() { return nativeText(nativeHandle); }
+    private static native String nativeText(long handle);
+
+    /** 设置图标（图片文件路径，QAbstractButton::setIcon）。 */
+    public void setIcon(String iconPath) {
+        nativeSetIcon(nativeHandle, iconPath);
+    }
+    private static native void nativeSetIcon(long handle, String iconPath);
+
+    /** 当前图标路径（未设置返回 null）。 */
+    public String icon() { return nativeIcon(nativeHandle); }
+    private static native String nativeIcon(long handle);
+
+    /** 设置快捷键（QAbstractButton::setShortcut，如 "Ctrl+O"）。 */
+    public void setShortcut(String shortcut) {
+        nativeSetShortcut(nativeHandle, shortcut);
+    }
+    private static native void nativeSetShortcut(long handle, String shortcut);
+
+    /** 当前快捷键。 */
+    public String shortcut() { return nativeShortcut(nativeHandle); }
+    private static native String nativeShortcut(long handle);
+
     /** 是否关联了菜单。 */
     public boolean menu() { return nativeHasMenu(nativeHandle); }
     private static native boolean nativeHasMenu(long handle);

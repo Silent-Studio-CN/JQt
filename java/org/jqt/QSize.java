@@ -12,6 +12,12 @@ public class QSize {
     public int width;
     public int height;
 
+    /** 宽度（与字段 width 等价，Qt 风格方法）。 */
+    public int width() { return width; }
+
+    /** 高度（与字段 height 等价，Qt 风格方法）。 */
+    public int height() { return height; }
+
     public QSize() {
         this(0, 0);
     }

@@ -579,6 +579,42 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 ---
 
+## 新增（v0.7.1-Universal-Kit）· New in v0.7.1-Universal-Kit
+
+> L1 收尾：149 → 190/205（92.7%）；剩余 15 项 ⛔ 阻塞归档（model/validator/pixmap 对象化、Qt 6 无此 API）。
+
+**新类 · New classes**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QAction | `text` `setText` `icon` `setIcon(路径)` `shortcut` `setShortcut` `toolTip` `setToolTip` `setFont` `checkable` `checked` `toggle` `trigger` `onTriggered` `onToggled` `setMenu` |
+| QDialog | `exec` `open` `accept` `reject` |
+| QMenuBar | `addMenu(String/QMenu)` `clear` `onTriggered` |
+| QListView | `addItem` `setItems` `item` `count` `clear` `setSpacing/spacing` `setWordWrap/wordWrap` `currentItem` `setCurrentItem` `onSelectionChanged` |
+
+**补全 · Completions**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QMessageBox | 实例化：`setText` `setWindowTitle` `setIcon` `exec` `open` `close` |
+| QFile | 实例：`open(READ_ONLY/WRITE_ONLY/READ_WRITE/APPEND)` `close` `isOpen` `write` `readAll` `readLine` |
+| QClipboard | `setPixmap(byte[] PNG/JPEG)` `pixmap()` |
+| QTextEdit | `setPlaceholderText/placeholderText`（底层 QPlainTextEdit） |
+| QLineEdit | `placeholderText` getter |
+| QPushButton | `text` `setIcon/icon` `setShortcut/shortcut` |
+| QMenu | `setIcon/icon` |
+| QListWidget | `onItemChanged` `row(text)` |
+| QMainWindow | `onIconSizeChanged` `onToolButtonStyleChanged`（委托 QToolBar 信号） |
+| QWidget | `find(winId)` `layout()` `setWindowIcon(路径)` |
+| QColorDialog | `open()` `onColorSelected`（非阻塞） |
+| QSize | `width()` `height()` 方法 |
+| QColor | 值类：`value/hue/saturation(#RRGGBB)` |
+| QApplication | `paletteText()` `palettePlaceholderText()` |
+
+**⛔ 阻塞归档 · Blocked (documented)**：QComboBox model/validator、QLineEdit validator、QLabel movie/picture/pixmap、QIcon pixmap、QCursor mask/pixmap、QFont Stretch、QUrl clear、QWidget mask、QPlainTextEdit print、QSpinBox textChanged（Qt 6 无）、QBoxLayout stretch（Qt 6 无）
+
+---
+
 ## 新增（v0.7.0-Universal-Kit）· New in v0.7.0-Universal-Kit
 
 > 跨平台独家能力：Exclusive Kit 从 Windows 扩展到 macOS / Linux，同一 API 三平台一致语义。

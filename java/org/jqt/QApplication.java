@@ -173,6 +173,14 @@ public class QApplication {
     public static int palette() { return nativePalette(); }
     private static native int nativePalette();
 
+    /** 全局正文颜色（QPalette::Text，0xAARRGGBB；v0.7.1 L1 补全）。 */
+    public static int paletteText() { return nativePaletteText(); }
+    private static native int nativePaletteText();
+
+    /** 全局占位提示颜色（QPalette::PlaceholderText，0xAARRGGBB；v0.7.1 L1 补全）。 */
+    public static int palettePlaceholderText() { return nativePalettePlaceholderText(); }
+    private static native int nativePalettePlaceholderText();
+
     /**
      * 开机自启（跨平台统一 API）。
      * <ul>

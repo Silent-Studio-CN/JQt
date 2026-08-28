@@ -74,6 +74,16 @@ public class QMenu extends QWidget {
     public String title() { return nativeTitle(nativeHandle); }
     private static native String nativeTitle(long handle);
 
+    /** 设置菜单图标（图片文件路径；QIcon 以路径字符串简化传递）。 */
+    public void setIcon(String iconPath) {
+        nativeSetIcon(nativeHandle, iconPath);
+    }
+    private static native void nativeSetIcon(long handle, String iconPath);
+
+    /** 当前菜单图标路径（未设置返回 null）。 */
+    public String icon() { return nativeIcon(nativeHandle); }
+    private static native String nativeIcon(long handle);
+
     /** 设置菜单标题。 */
     public void setTitle(String title) { nativeSetTitle(nativeHandle, title); }
     private static native void nativeSetTitle(long handle, String title);

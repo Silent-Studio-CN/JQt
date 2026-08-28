@@ -49,6 +49,12 @@ public class QLineEdit extends QWidget {
     }
     private native void nativeSetPlaceholderText(long handle, String text);
 
+    /** 当前占位提示文本（输入为空时显示）。 */
+    public String placeholderText() {
+        return nativePlaceholderText(nativeHandle);
+    }
+    private native String nativePlaceholderText(long handle);
+
     /** 注册文本变化回调（textChanged 信号，参数为最新文本）。 */
     public QLineEdit onTextChanged(Consumer<String> handler) {
         onTextChangedHandlers.add(handler);
