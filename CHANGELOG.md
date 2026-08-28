@@ -188,7 +188,7 @@
 
 **Feedback fixes**: user hide() respected; QLayout.addSpacing / QWidget.pos() / palette(); README Q-prefixed; zip ships qt-mapping + api-implemented; docs/behavior.md behavior contract
 
-**Community**: QraftLab added (QSS art guide / separated styles / lab demo) - thanks to the site-builder AI
+**Community**: QraftLab added (QSS art guide / separated styles / lab demo) - credit: QraftLab
 
 **Scale**: ~470 methods / 47 classes; dual Qt CI green
 
