@@ -48,6 +48,19 @@ $javaFiles = Get-ChildItem (Join-Path $Root "java") -Recurse -Filter "*.java" | 
 if ($LASTEXITCODE -ne 0) { throw "javac failed" }
 
 # ---- 3) Compile native bridge (cl.exe, ARM64) ----
+# v0.7.4: 确保 QtSerialPort 头完整（转发头 + qserialport.h）——7z 解压可能不完整或嵌套
+$spInc = Join-Path $QtRoot "include\QtSerialPort"
+if (-not (Test-Path (Join-Path $spInc "qserialport.h"))) {
+    Write-Host "WARN: qserialport.h missing at $spInc - searching source"
+    $src = Get-ChildItem C:/Qt -Recurse -Filter qserialport.h -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notlike "$spInc*" } | Select-Object -First 1
+    if ($src) {
+        $srcDir = $src.Directory
+        while ($srcDir.Name -ne "QtSerialPort" -and $srcDir.Parent) { $srcDir = $srcDir.Parent }
+        New-Item -ItemType Directory -Force -Path $spInc | Out-Null
+        Copy-Item "$srcDir\*" $spInc -Recurse -Force
+        Write-Host "qserialport.h recovered from $srcDir"
+    } else { Write-Host "WARN: no qserialport.h source found" }
+} else { Write-Host "QtSerialPort headers OK" }
 Write-Host "==> [3/5] Compiling native bridge (jqt.dll, ARM64)"
 if (-not (Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort"))) {
     Write-Host "WARN: QtSerialPort headers missing at $(Join-Path $QtRoot 'include\QtSerialPort') - listing include:"
