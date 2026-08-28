@@ -62,7 +62,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
     -install_name @rpath/libjqt.dylib \
     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/darwin" \
-    -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" \
+    -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
     -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework AppKit -framework Foundation -framework CoreFoundation
