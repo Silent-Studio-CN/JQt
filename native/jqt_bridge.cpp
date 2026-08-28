@@ -6212,7 +6212,8 @@ JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativePalettePlaceholderText(JN
 
 // ---- QPrinter（非 QObject：独立句柄表）----
 static std::mutex g_printerMutex;
-static std::unordered_map<jlong, QPrinter*> g_printers;
+// 堆分配：避免 JVM 退出时静态析构顺序问题（QSqlDatabase 值对象二次释放崩溃）
+static std::unordered_map<jlong, QPrinter*>* g_printers = new std::unordered_map<jlong, QPrinter*>();
 static jlong g_nextPrinterId = 0x6000;
 
 JNIEXPORT jlong JNICALL Java_org_jqt_QPrinter_nativeCreate(JNIEnv* env, jobject) {
@@ -6220,22 +6221,22 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QPrinter_nativeCreate(JNIEnv* env, jobject)
     QPrinter* p = new QPrinter();
     std::lock_guard<std::mutex> lock(g_printerMutex);
     const jlong id = g_nextPrinterId++;
-    g_printers[id] = p;
+    (*g_printers)[id] = p;
     return id;
 }
 
 static QPrinter* jqtPrinter(JNIEnv* env, jlong handle) {
     std::lock_guard<std::mutex> lock(g_printerMutex);
-    auto it = g_printers.find(handle);
-    return it == g_printers.end() ? nullptr : it->second;
+    auto it = g_printers->find(handle);
+    return it == g_printers->end() ? nullptr : it->second;
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QPrinter_nativeDispose(JNIEnv* env, jobject, jlong handle) {
     QPrinter* p = nullptr;
     {
         std::lock_guard<std::mutex> lock(g_printerMutex);
-        auto it = g_printers.find(handle);
-        if (it != g_printers.end()) { p = it->second; g_printers.erase(it); }
+        auto it = g_printers->find(handle);
+        if (it != g_printers->end()) { p = it->second; g_printers->erase(it); }
     }
     delete p;
 }
@@ -6303,8 +6304,8 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativePrintToPdf(JNIEnv* env, jo
 
 // ---- QSqlDatabase（QSqlDatabase 为值类：独立句柄表存值）----
 static std::mutex g_sqlMutex;
-static std::unordered_map<jlong, QSqlDatabase> g_sqlDbs;
-static std::unordered_map<jlong, QSqlQuery*> g_sqlQueries;
+static std::unordered_map<jlong, QSqlDatabase>* g_sqlDbs = new std::unordered_map<jlong, QSqlDatabase>();
+static std::unordered_map<jlong, QSqlQuery*>* g_sqlQueries = new std::unordered_map<jlong, QSqlQuery*>();
 static jlong g_nextSqlId = 0x7000;
 
 JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeAddDatabase(JNIEnv* env, jclass, jstring driver, jstring connName) {
@@ -6326,8 +6327,15 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeAddDatabase(JNIEnv* env,
     if (!db.isValid()) {
         const QString lower = drv.toLower();
         QString pluginPath;
+#ifdef _WIN32
+        const QString ext = QStringLiteral(".dll");
+#elif defined(__linux__)
+        const QString ext = QStringLiteral(".so");
+#else
+        const QString ext = QStringLiteral(".dylib");
+#endif
         for (const QString& base : QCoreApplication::libraryPaths()) {
-            const QString cand = base + QStringLiteral("/sqldrivers/q") + lower + QStringLiteral(".dll");
+            const QString cand = base + QStringLiteral("/sqldrivers/q") + lower + ext;
             if (QFile::exists(cand)) { pluginPath = cand; break; }
         }
         if (!pluginPath.isEmpty()) {
@@ -6360,14 +6368,14 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeAddDatabase(JNIEnv* env,
 
     std::lock_guard<std::mutex> lock(g_sqlMutex);
     const jlong id = g_nextSqlId++;
-    g_sqlDbs[id] = db;
+    (*g_sqlDbs)[id] = db;
     return id;
 }
 
 static QSqlDatabase* jqtSqlDb(JNIEnv* env, jlong handle) {
     std::lock_guard<std::mutex> lock(g_sqlMutex);
-    auto it = g_sqlDbs.find(handle);
-    return it == g_sqlDbs.end() ? nullptr : &it->second;
+    auto it = g_sqlDbs->find(handle);
+    return it == g_sqlDbs->end() ? nullptr : &it->second;
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeSetDatabaseName(JNIEnv* env, jobject, jlong handle, jstring name) {
@@ -6431,7 +6439,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeExec(JNIEnv* env, jobjec
     env->ReleaseStringUTFChars(sql, t);
     std::lock_guard<std::mutex> lock(g_sqlMutex);
     const jlong id = g_nextSqlId++;
-    g_sqlQueries[id] = q;
+    (*g_sqlQueries)[id] = q;
     return id;
 }
 
@@ -6444,15 +6452,15 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QSqlDatabase_nativeLastError(JNIEnv* env,
 
 JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeDispose(JNIEnv* env, jobject, jlong handle) {
     std::lock_guard<std::mutex> lock(g_sqlMutex);
-    g_sqlDbs.erase(handle);
+    g_sqlDbs->erase(handle);
 }
 
 // ---- QSqlQuery ----
 
 static QSqlQuery* jqtSqlQuery(JNIEnv* env, jlong handle) {
     std::lock_guard<std::mutex> lock(g_sqlMutex);
-    auto it = g_sqlQueries.find(handle);
-    return it == g_sqlQueries.end() ? nullptr : it->second;
+    auto it = g_sqlQueries->find(handle);
+    return it == g_sqlQueries->end() ? nullptr : it->second;
 }
 
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlQuery_nativeNext(JNIEnv* env, jobject, jlong handle) {
@@ -6494,8 +6502,8 @@ JNIEXPORT void JNICALL Java_org_jqt_QSqlQuery_nativeDispose(JNIEnv* env, jobject
     QSqlQuery* q = nullptr;
     {
         std::lock_guard<std::mutex> lock(g_sqlMutex);
-        auto it = g_sqlQueries.find(handle);
-        if (it != g_sqlQueries.end()) { q = it->second; g_sqlQueries.erase(it); }
+        auto it = g_sqlQueries->find(handle);
+        if (it != g_sqlQueries->end()) { q = it->second; g_sqlQueries->erase(it); }
     }
     delete q;
 }
