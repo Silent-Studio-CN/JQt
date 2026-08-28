@@ -306,9 +306,9 @@ jobs:
           $spDir = $sp.Directory
           while ($spDir -and $spDir.Name -ne "QtSerialPort" -and $spDir.Parent) { $spDir = $spDir.Parent }
           if (-not $spDir) { throw "QtSerialPort dir not found" }
-          Copy-Item $spDir.FullName "$qtRoot\include\" -Recurse -Force
+          if (-not (Test-Path "$qtRoot\include\QtSerialPort")) { Copy-Item $spDir.FullName "$qtRoot\include\\" -Recurse -Force }
           $splib = Get-ChildItem C:/Qt -Recurse -Filter "Qt6SerialPort.lib" | Select-Object -First 1
-          if ($splib) { Copy-Item $splib.FullName "$qtRoot\lib\" -Force }
+          if ($splib) { Copy-Item $splib.FullName "$qtRoot\lib\\" -Force -ErrorAction SilentlyContinue }
           Write-Host "qtserialport copied to QTBASE"
 
       - name: Build jqt.dll (MSVC ARM64, Qt 6.8.3)
@@ -396,9 +396,9 @@ jobs:
           $spDir = $sp.Directory
           while ($spDir -and $spDir.Name -ne "QtSerialPort" -and $spDir.Parent) { $spDir = $spDir.Parent }
           if (-not $spDir) { throw "QtSerialPort dir not found for 6.11.2" }
-          Copy-Item $spDir.FullName "$env:QTBASE6112\include\" -Recurse -Force
+          if (-not (Test-Path "$env:QTBASE6112\include\QtSerialPort")) { Copy-Item $spDir.FullName "$env:QTBASE6112\include\\" -Recurse -Force }
           $splib = Get-ChildItem C:/Qt6112 -Recurse -Filter "Qt6SerialPort.lib" | Select-Object -First 1
-          if ($splib) { Copy-Item $splib.FullName "$env:QTBASE6112\lib\" -Force }
+          if ($splib) { Copy-Item $splib.FullName "$env:QTBASE6112\lib\\" -Force -ErrorAction SilentlyContinue }
           Write-Host "qtserialport 6.11.2 copied"
 
       - name: Build jqt.dll (MSVC ARM64, Qt 6.11.2)
