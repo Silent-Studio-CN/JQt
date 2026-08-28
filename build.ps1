@@ -50,10 +50,12 @@ $gppArgs = @(
     "-I", (Join-Path $Kit "include\QtCore"),
     "-I", (Join-Path $Kit "include\QtPrintSupport"),
     "-I", (Join-Path $Kit "include\QtSql"),
+    "-I", (Join-Path $Kit "include\QtOpenGLWidgets"),
+    "-I", (Join-Path $Kit "include\QtOpenGL"),
     "-I", $NativeDir,
     (Join-Path $NativeDir "jqt_bridge.cpp"),
     "-L", (Join-Path $Kit "lib"),
-    "-lQt6Widgets", "-lQt6Gui", "-lQt6Core", "-lQt6PrintSupport", "-lQt6Sql", "-lole32", "-luuid", "-loleaut32",
+    "-lQt6Widgets", "-lQt6Gui", "-lQt6Core", "-lQt6PrintSupport", "-lQt6Sql", "-lQt6OpenGLWidgets", "-lQt6OpenGL", "-lole32", "-luuid", "-loleaut32",
     "-static-libgcc", "-static-libstdc++"
 )
 & "$Mingw\bin\g++.exe" @gppArgs

@@ -123,6 +123,12 @@ jobs:
             cat hs_err_pid*.log 2>/dev/null | head -120
             exit $CODE4
           fi
+          # QOpenGLWidget 冒烟（v0.7.3，offscreen 容错）
+          QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class org.jqt.SmokeV073 -AutoClose 1000 > smoke_v073.txt 2>&1
+          CODE5=$?
+          echo "smoke v0.7.3 exit code: $CODE5"
+          cat smoke_v073.txt
+          if [ $CODE5 -ne 0 ]; then exit $CODE5; fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -210,6 +216,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE V072 FAILED, tail of smoke_v072_log.txt ==="
             Get-Content smoke_v072_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+          # QOpenGLWidget 冒烟（v0.7.3，offscreen 容错）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeV073 -AutoClose 1000 *> smoke_v073_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE V073 FAILED, tail of smoke_v073_log.txt ==="
+            Get-Content smoke_v073_log.txt -Tail 40
             exit $LASTEXITCODE
           }
       - name: Upload build log on failure
@@ -306,6 +319,13 @@ jobs:
             Get-Content smoke_v072_log.txt -Tail 40
             exit $LASTEXITCODE
           }
+          # QOpenGLWidget 冒烟（v0.7.3，offscreen 容错）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeV073 -AutoClose 1000 *> smoke_v073_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE V073 FAILED, tail of smoke_v073_log.txt ==="
+            Get-Content smoke_v073_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
 
       - name: Install Qt 6.11.2 win64_arm64 (manual 7z)
         shell: pwsh
@@ -395,6 +415,8 @@ jobs:
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeL1b2 -AutoClose 1000
           # 工业模块冒烟（v0.7.2：PDF + SQLite）
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeV072 -AutoClose 1000
+          # QOpenGLWidget 冒烟（v0.7.3，offscreen 容错）
+          QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeV073 -AutoClose 1000
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

@@ -59,6 +59,8 @@ $clArgs = @(
     "/I", (Join-Path $QtRoot "include\QtCore"),
     "/I", (Join-Path $QtRoot "include\QtPrintSupport"),
     "/I", (Join-Path $QtRoot "include\QtSql"),
+    "/I", (Join-Path $QtRoot "include\QtOpenGLWidgets"),
+    "/I", (Join-Path $QtRoot "include\QtOpenGL"),
     "/I", (Join-Path $Root "native"),
     (Join-Path $Root "native\jqt_bridge.cpp"),
     ("/Fe:" + (Join-Path $LibDir "jqt.dll")),
@@ -68,6 +70,8 @@ $clArgs = @(
     (Join-Path $QtRoot "lib\Qt6Core.lib"),
     (Join-Path $QtRoot "lib\Qt6PrintSupport.lib"),
     (Join-Path $QtRoot "lib\Qt6Sql.lib"),
+    (Join-Path $QtRoot "lib\Qt6OpenGLWidgets.lib"),
+    (Join-Path $QtRoot "lib\Qt6OpenGL.lib"),
     "ole32.lib", "user32.lib", "dwmapi.lib", "shell32.lib", "gdi32.lib",
     "advapi32.lib", "ws2_32.lib", "winmm.lib", "netapi32.lib", "userenv.lib",
     "version.lib", "comdlg32.lib", "oleaut32.lib"

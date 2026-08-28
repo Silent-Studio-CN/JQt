@@ -579,6 +579,18 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 ---
 
+## 新增（v0.7.3-Universal-Kit）· New in v0.7.3-Universal-Kit
+
+> QOpenGLWidget 绑定：通用 GPU 渲染画布（Qt6OpenGLWidgets）。
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QOpenGLWidget | `onInitialize`（initializeGL）`onPaint`（paintGL，context current）`onResized`（resizeGL）`setClearColor(0xAARRGGBB)` `setAutoClear(boolean)` `makeCurrent` `doneCurrent` |
+
+**LWJGL 挂接**：paintGL 回调内 GL context 已 current，Java 侧 `GL.createCapabilities()` 直接可用；JQt 提供画布与 context，GL 调用由 Java 生态标准（LWJGL）接管。
+
+---
+
 ## 新增（v0.7.2-Universal-Kit）· New in v0.7.2-Universal-Kit
 
 > 工业模块：QPrinter（打印/PDF）+ QSql（数据库）。

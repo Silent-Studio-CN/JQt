@@ -131,6 +131,9 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QtSql/QSqlRecord>
 #include <QtSql/QSqlDriver>
 #include <QtSql/QSqlDriverPlugin>
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+#include <QOpenGLContext>
 #include <QPluginLoader>
 #include <QLibraryInfo>
 #include <QDir>
@@ -249,6 +252,7 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QMainWindow.h"
 #include "generated/org_jqt_QColor.h"
 #include "generated/org_jqt_QPrinter.h"
+#include "generated/org_jqt_QOpenGLWidget.h"
 #include "generated/org_jqt_QSqlDatabase.h"
 #include "generated/org_jqt_QSqlQuery.h"
 #include "generated/org_jqt_QAction.h"
@@ -6509,4 +6513,79 @@ JNIEXPORT void JNICALL Java_org_jqt_QSqlQuery_nativeDispose(JNIEnv* env, jobject
         if (it != g_sqlQueries->end()) { q = it->second; g_sqlQueries->erase(it); }
     }
     delete q;
+}
+
+// ============================================================================
+// v0.7.3：QOpenGLWidget 绑定（Qt6OpenGLWidgets）——通用 GL 画布
+// ============================================================================
+
+// QOpenGLWidget 子类：initializeGL/paintGL/resizeGL 回调到 Java
+class JQtGLWidget : public QOpenGLWidget {
+public:
+    explicit JQtGLWidget() : QOpenGLWidget() {}
+    jobject gRef = nullptr;
+    QRgb clearColor = 0xFF000000;
+    bool autoClear = true;
+
+protected:
+    void initializeGL() override {
+        if (!gRef) return;
+        JNIEnv* e = callbackEnv();
+        if (!e) return;
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleInitialize", "()V");
+        if (mid) e->CallVoidMethod(gRef, mid);
+    }
+
+    void paintGL() override {
+        if (autoClear) {
+            // GL 函数为运行时解析（QOpenGLFunctions），不能直接链接
+            QOpenGLFunctions* f = QOpenGLContext::currentContext()->functions();
+            f->glClearColor(qRed(clearColor) / 255.0f, qGreen(clearColor) / 255.0f,
+                            qBlue(clearColor) / 255.0f, qAlpha(clearColor) / 255.0f);
+            f->glClear(GL_COLOR_BUFFER_BIT);
+        }
+        if (!gRef) return;
+        JNIEnv* e = callbackEnv();
+        if (!e) return;
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandlePaint", "()V");
+        if (mid) e->CallVoidMethod(gRef, mid);
+    }
+
+    void resizeGL(int w, int h) override {
+        if (!gRef) return;
+        JNIEnv* e = callbackEnv();
+        if (!e) return;
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleResized", "(II)V");
+        if (mid) e->CallVoidMethod(gRef, mid, w, h);
+    }
+};
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QOpenGLWidget_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) return 0;
+    JQtGLWidget* w = new JQtGLWidget();
+    w->gRef = env->NewGlobalRef(thiz);
+    return registerHandle(w, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeSetClearColor(JNIEnv* env, jobject, jlong handle, jint argb) {
+    JQtGLWidget* w = static_cast<JQtGLWidget*>(requireHandle(env, handle));
+    if (w) w->clearColor = static_cast<QRgb>(argb);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeSetAutoClear(JNIEnv* env, jobject, jlong handle, jboolean on) {
+    JQtGLWidget* w = static_cast<JQtGLWidget*>(requireHandle(env, handle));
+    if (w) w->autoClear = on ? true : false;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeMakeCurrent(JNIEnv* env, jobject, jlong handle) {
+    JQtGLWidget* w = static_cast<JQtGLWidget*>(requireHandle(env, handle));
+    if (w) w->makeCurrent();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeDoneCurrent(JNIEnv* env, jobject, jlong handle) {
+    JQtGLWidget* w = static_cast<JQtGLWidget*>(requireHandle(env, handle));
+    if (w) w->doneCurrent();
 }

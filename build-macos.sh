@@ -26,7 +26,7 @@ rm -f "$ROOT/.jqt_sources.txt"
 # ---- 2. Qt layout ----
 QT_BASE="${QT_BASE:?set QT_BASE to the Qt for macOS install dir}"
 QTLIB="$QT_BASE/lib"
-QTINC="$QTLIB/QtWidgets.framework/Headers $QTLIB/QtGui.framework/Headers $QTLIB/QtCore.framework/Headers $QTLIB/QtPrintSupport.framework/Headers $QTLIB/QtSql.framework/Headers"
+QTINC="$QTLIB/QtWidgets.framework/Headers $QTLIB/QtGui.framework/Headers $QTLIB/QtCore.framework/Headers $QTLIB/QtPrintSupport.framework/Headers $QTLIB/QtSql.framework/Headers $QTLIB/QtOpenGLWidgets.framework/Headers $QTLIB/QtOpenGL.framework/Headers"
 
 echo "QTINC=$QTINC"
 ls "$QTLIB/QtGui.framework/Headers/qevent.h" && echo "QtGui headers OK"
@@ -58,7 +58,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
-    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework AppKit -framework Foundation -framework CoreFoundation
+    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtOpenGLWidgets -framework QtOpenGL -framework AppKit -framework Foundation -framework CoreFoundation
 
 # ---- 3. Deploy license notices ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true
