@@ -50,12 +50,21 @@ ls -la "$QTLIB/QtGui.framework/Headers/QCloseEvent" 2>&1
 head -3 "$QTLIB/QtGui.framework/Headers/QCloseEvent" 2>&1
 echo "=== diag: QtWidgets dir ==="
 ls "$QTLIB/QtWidgets.framework/Headers/" 2>&1 | head -8
+# v0.7.4: QtSerialPort framework 头为扁平布局，为 <QtSerialPort/...> 前缀 include 创建别名目录
+if [ -d "$QTLIB/QtSerialPort.framework" ]; then
+  SPVER="$QTLIB/QtSerialPort.framework/Versions/A"
+  mkdir -p "$SPVER"
+  [ ! -e "$SPVER/QtSerialPort" ] && ln -sfn Headers "$SPVER/QtSerialPort"
+  echo "=== QtSerialPort framework diag ==="
+  ls "$QTLIB/QtSerialPort.framework/Headers/" 2>&1 | head -8
+  ls "$SPVER/QtSerialPort/" 2>&1 | head -5
+fi
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
     -install_name @rpath/libjqt.dylib \
     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/darwin" \
-    -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$QTLIB/QtSerialPort.framework/Headers" -I"$QTLIB/QtSerialPort.framework/Versions/A/Headers" \
+    -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$QTLIB/QtSerialPort.framework/Headers" -I"$QTLIB/QtSerialPort.framework/Versions/A/Headers" -I"$QTLIB/QtSerialPort.framework/Versions/A" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
     -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework AppKit -framework Foundation -framework CoreFoundation
