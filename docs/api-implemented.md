@@ -579,6 +579,18 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 ---
 
+## 新增（v0.7.4-Universal-Kit）· New in v0.7.4-Universal-Kit
+
+> QSerialPort 完整绑定（Qt SerialPort 模块）。
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QSerialPort | 静态 `availablePorts()`；`setPortName/portName` `setBaudRate/baudRate` `setDataBits` `setParity` `setStopBits` `setFlowControl` `open(READ/WRITE/READ_WRITE)` `close` `isOpen` `write(byte[]/String)` `readAll` `readAllText` `readLine` `bytesAvailable` `waitForReadyRead(ms)` `flush` `clear` `errorString` `onReadyRead` `onBytesWritten` |
+
+**依赖**：qtserialport 为独立 Qt 模块；发布包含 Qt6SerialPort 运行库。
+
+---
+
 ## 新增（v0.7.3-Universal-Kit）· New in v0.7.3-Universal-Kit
 
 > QOpenGLWidget 绑定：通用 GPU 渲染画布（Qt6OpenGLWidgets）。
