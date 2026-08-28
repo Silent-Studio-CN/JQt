@@ -1192,20 +1192,44 @@ JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeClose(JNIEnv* env, jobject
 // ---- Fluent 窗口能力（偷师 qframelesswindow / qfluentwidgets）----
 
 // 无边框模式：FramelessWindowHint + DWM 阴影 + 缩放热区（WM_NCHITTEST）
+// 修复：setWindowFlag 只改 Qt 内部标志，已显示窗口的 HWND 样式不会更新（边框热切换失效）。
+//       这里直接操作 Win32 样式位 + 清除 DWM 扩展边框 + SWP_FRAMECHANGED 强制立即生效。
 JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetFrameless(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean on) {
     JQtWindowShell* win = static_cast<JQtWindowShell*>(requireHandle(env, handle));
     if (win == nullptr) {
         return;
     }
     win->frameless = (on == JNI_TRUE);
-    if (win->frameless) {
-        win->setWindowFlag(Qt::FramelessWindowHint, true);
+    win->setWindowFlag(Qt::FramelessWindowHint, win->frameless);
 #ifdef _WIN32
+    HWND hwnd = reinterpret_cast<HWND>(win->winId());
+    if (win->frameless) {
+        // 去掉系统标题栏/边框样式（含最小化/最大化/系统菜单位）
+        LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+        style &= ~(WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+        SetWindowLongPtrW(hwnd, GWL_STYLE, style);
         win->applyShadow();
-#endif
     } else {
-        win->setWindowFlag(Qt::FramelessWindowHint, false);
+        // 恢复系统标题栏/边框样式
+        LONG_PTR style = GetWindowLongPtrW(hwnd, GWL_STYLE);
+        style |= WS_CAPTION | WS_THICKFRAME | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+        SetWindowLongPtrW(hwnd, GWL_STYLE, style);
+        // 清除 DWM 扩展边框（applyShadow 设过 margins=1，不恢复会吞掉原生边框）
+        HMODULE dwm = GetModuleHandleW(L"dwmapi.dll");
+        if (!dwm) dwm = LoadLibraryW(L"dwmapi.dll");
+        if (dwm) {
+            typedef HRESULT(WINAPI* DwmExtendFrameFunc)(HWND, const MARGINS*);
+            auto fn = (DwmExtendFrameFunc)GetProcAddress(dwm, "DwmExtendFrameIntoClientArea");
+            if (fn) {
+                MARGINS margins{ 0, 0, 0, 0 };
+                fn(hwnd, &margins);
+            }
+        }
     }
+    // 强制非客户区立即重算（否则新样式要到下次 resize/show 才生效）
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+#endif
     win->show();
 }
 
