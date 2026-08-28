@@ -122,7 +122,7 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 | [jqt-theme-pack](Community/jqt-theme-pack/) | 三个原创主题：**Nord**（北极蓝·暗）/ **Solarized**（米黄护眼·亮）/ **Terminal**（荧光绿·暗） |
 | [FluentAnimDemo](Community/FluentAnimDemo/) | qfluentwidgets 经典动效的 JQt 映射演示（缩放/按压下沉/滑块/淡入） |
 | [JQtGallery](Community/JQtGallery/) | 全功能演示：5 套主题 / 强调色 / 自动跟随 / 控件 / 动画 / 窗口（含 jpackage 打包方案） |
-| [QraftLab](Community/QraftLab/) | QSS 美术实验室：立体感按钮公式 / 5 种按钮形态 / 分离样式 / 动画画布渲染四区 demo（**感谢构建方贡献** 🎨） |
+| [QraftLab](Community/QraftLab/) | QraftLab 贡献：QSS 美术指南 / 分离样式 / 按钮-动画-画布-渲染四区 demo |
 
 ```java
 // 社区主题即插即用（一套模板，无限主题）
@@ -132,7 +132,7 @@ app.setTheme("themes/fluent.qss.tpl", SolarizedTheme.vars(), true);   // 亮色
 
 > 想提交自己的作品？把源码放进 `Community/`（请勿提交编译产物），我们审核后合入。
 >
-> 🙏 **特别致谢**：QraftLab（QSS 美术指南与分离样式实验）由网站构建方 AI 贡献，经审核收录。
+> 🙏 **特别致谢**：QraftLab 的贡献（QSS 美术指南与分离样式实验），经审核收录。
 
 ---
 
