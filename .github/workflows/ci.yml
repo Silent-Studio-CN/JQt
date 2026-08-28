@@ -99,6 +99,12 @@ jobs:
             fi
             exit $CODE
           fi
+          # Exclusive Kit 跨平台 API 冒烟（v0.7.0）
+          QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class org.jqt.SmokeExclusive -AutoClose 1000 > smoke_exclusive.txt 2>&1
+          CODE2=$?
+          echo "smoke exclusive exit code: $CODE2"
+          cat smoke_exclusive.txt
+          if [ $CODE2 -ne 0 ]; then exit $CODE2; fi
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -159,6 +165,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
             Get-Content smoke_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+          # Exclusive Kit 跨平台 API 冒烟（v0.7.0）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeExclusive -AutoClose 1000 *> smoke_exclusive_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE EXCLUSIVE FAILED, tail of smoke_exclusive_log.txt ==="
+            Get-Content smoke_exclusive_log.txt -Tail 40
             exit $LASTEXITCODE
           }
       - name: Upload build log on failure
@@ -226,6 +239,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE FAILED, tail of smoke_log.txt ==="
             Get-Content smoke_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+          # Exclusive Kit 跨平台 API 冒烟（v0.7.0）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeExclusive -AutoClose 1000 *> smoke_exclusive_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE EXCLUSIVE FAILED, tail of smoke_exclusive_log.txt ==="
+            Get-Content smoke_exclusive_log.txt -Tail 40
             exit $LASTEXITCODE
           }
 
@@ -310,6 +330,8 @@ jobs:
           cp lib/libjqt-6.11.2.dylib lib/libjqt.dylib
           export QT_BASE="$HOME/Qt/6.11.2/macos"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
+          # Exclusive Kit 跨平台 API 冒烟（v0.7.0）
+          QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeExclusive -AutoClose 1000
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

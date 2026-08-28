@@ -173,11 +173,53 @@ public class QApplication {
     public static int palette() { return nativePalette(); }
     private static native int nativePalette();
 
-    /** 开机自启（写入当前用户 Run 注册表；exePath 为应用可执行文件路径）。 */
+    /**
+     * 开机自启（跨平台统一 API）。
+     * <ul>
+     *   <li>Windows — 写入当前用户 Run 注册表（HKCU\...\Run）</li>
+     *   <li>macOS — 生成 LaunchAgent plist（~/Library/LaunchAgents/com.silentstudio.&lt;应用名&gt;.plist）</li>
+     *   <li>Linux — 生成 XDG autostart 项（~/.config/autostart/&lt;应用名&gt;.desktop）</li>
+     * </ul>
+     * @param exePath 应用可执行文件路径；Windows 必填，macOS/Linux 传 null 时自动取当前可执行文件
+     * @return 是否成功
+     */
     public static boolean setAutoStart(boolean enable, String exePath) {
         return nativeSetAutoStart(enable, exePath);
     }
     private static native boolean nativeSetAutoStart(boolean enable, String exePath);
+
+    /**
+     * 阻止系统休眠/息屏（跨平台统一 API，防息屏场景：会议、演示、直播、下载）。
+     * <ul>
+     *   <li>Windows — SetThreadExecutionState（阻止系统睡眠 + 关闭显示器）</li>
+     *   <li>macOS — NSProcessInfo idleSystemSleepDisabled（阻止系统休眠）</li>
+     *   <li>Linux — org.freedesktop.ScreenSaver Inhibit（D-Bus；GNOME/KDE 均支持，
+     *       失败时回退 org.gnome.SessionManager Inhibit）</li>
+     * </ul>
+     * 调用 {@code preventSleep(false)} 恢复系统默认策略。
+     * @return 是否成功（Linux 无 D-Bus 会话总线或桌面未实现 Inhibit 时返回 false）
+     */
+    public static boolean preventSleep(boolean on) {
+        return nativePreventSleep(on);
+    }
+    private static native boolean nativePreventSleep(boolean on);
+
+    /**
+     * 发送桌面通知（跨平台统一 API）。
+     * <ul>
+     *   <li>Linux — org.freedesktop.Notifications（D-Bus，GNOME/KDE 通知中心）</li>
+     *   <li>Windows — 托盘气泡（QSystemTrayIcon::showMessage，零依赖方案）</li>
+     *   <li>macOS — NSUserNotification（通知中心；Apple 已弃用但可用，无需权限弹窗）</li>
+     * </ul>
+     * @param title 标题
+     * @param body 正文
+     * @param timeoutMs 显示时长（毫秒；≤0 用平台默认值；Linux 通知服务可能自行调整）
+     * @return 是否成功送达（Linux 无通知服务时返回 false）
+     */
+    public static boolean showNotification(String title, String body, int timeoutMs) {
+        return nativeShowNotification(title, body, timeoutMs);
+    }
+    private static native boolean nativeShowNotification(String title, String body, int timeoutMs);
 
     /** 延迟 {@code ms} 毫秒后自动退出事件循环（演示 / 自动化测试用）。 */
     public native void scheduleQuit(long ms);

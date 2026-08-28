@@ -38,6 +38,17 @@
 #endif
 #endif
 
+// 平台独家能力所需的系统头（v0.7.0：macOS Dock/NSWindow/NSProcessInfo，Linux D-Bus）
+#if defined(__APPLE__)
+#include <objc/objc.h>
+#include <objc/message.h>
+#include <objc/runtime.h>
+#include <CoreFoundation/CoreFoundation.h>
+#endif
+#if defined(__linux__)
+#include <QtDBus>
+#endif
+
 #include <QApplication>
 #include <QAbstractNativeEventFilter>
 #include <QBoxLayout>
@@ -103,6 +114,8 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QWindow>
+#include <QStandardPaths>
+#include <QTextStream>
 
 #include <atomic>
 #include <functional>
@@ -5217,33 +5230,237 @@ JNIEXPORT void JNICALL Java_org_jqt_GlobalHotkey_nativeUnregister(JNIEnv* env, j
 #endif
 }
 
-// 开机自启（HKCU\Software\Microsoft\Windows\CurrentVersion\Run）
+// 开机自启（v0.7.0 跨平台：Windows Run 注册表 / macOS LaunchAgent / Linux XDG autostart）
 JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeSetAutoStart(JNIEnv* env, jclass, jboolean enable, jstring exePath) {
+    const char* utf = exePath ? env->GetStringUTFChars(exePath, nullptr) : nullptr;
+    const QString path = utf ? QString::fromUtf8(utf) : QString();
+    if (utf) env->ReleaseStringUTFChars(exePath, utf);
+    const QString appName = QCoreApplication::applicationName();
+    const QString name = appName.isEmpty() ? QStringLiteral("JQtApp") : appName;
 #ifdef _WIN32
-    const char* utf = env->GetStringUTFChars(exePath, nullptr);
-    const QString path = QString::fromUtf8(utf);
-    env->ReleaseStringUTFChars(exePath, utf);
     HKEY key = nullptr;
     if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_SET_VALUE, &key) != ERROR_SUCCESS) {
         return JNI_FALSE;
     }
-    const QString appName = QCoreApplication::applicationName();
-    const QString regName = appName.isEmpty() ? QStringLiteral("JQtApp") : appName;
     LONG result = ERROR_SUCCESS;
     if (enable) {
+        if (path.isEmpty()) { RegCloseKey(key); return JNI_FALSE; }
         const std::wstring wpath = path.toStdWString();
-        result = RegSetValueExW(key, reinterpret_cast<LPCWSTR>(regName.utf16()), 0, REG_SZ, reinterpret_cast<const BYTE*>(wpath.c_str()), static_cast<DWORD>((wpath.size() + 1) * sizeof(wchar_t)));
+        result = RegSetValueExW(key, reinterpret_cast<LPCWSTR>(name.utf16()), 0, REG_SZ, reinterpret_cast<const BYTE*>(wpath.c_str()), static_cast<DWORD>((wpath.size() + 1) * sizeof(wchar_t)));
     } else {
-        result = RegDeleteValueW(key, reinterpret_cast<LPCWSTR>(regName.utf16()));
+        result = RegDeleteValueW(key, reinterpret_cast<LPCWSTR>(name.utf16()));
         if (result == ERROR_FILE_NOT_FOUND) result = ERROR_SUCCESS;
     }
     RegCloseKey(key);
     return (result == ERROR_SUCCESS) ? JNI_TRUE : JNI_FALSE;
+#elif defined(__linux__)
+    // XDG autostart: ~/.config/autostart/<name>.desktop
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QStringLiteral("/autostart");
+    const QString file = dir + QLatin1Char('/') + name + QStringLiteral(".desktop");
+    if (enable) {
+        QString execPath = path;
+        if (execPath.isEmpty()) execPath = QCoreApplication::applicationFilePath();
+        if (execPath.isEmpty()) return JNI_FALSE;
+        if (!QDir().mkpath(dir)) return JNI_FALSE;
+        QFile f(file);
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) return JNI_FALSE;
+        QTextStream ts(&f);
+        ts << "[Desktop Entry]\nType=Application\nName=" << name
+           << "\nExec=\"" << execPath << "\"\nX-GNOME-Autostart-enabled=true\n";
+        f.close();
+        return JNI_TRUE;
+    } else {
+        return (QFile::remove(file) || !QFile::exists(file)) ? JNI_TRUE : JNI_FALSE;
+    }
+#elif defined(__APPLE__)
+    // LaunchAgent: ~/Library/LaunchAgents/com.silentstudio.<name>.plist
+    const QString dir = QDir::homePath() + QStringLiteral("/Library/LaunchAgents");
+    const QString label = QStringLiteral("com.silentstudio.") + name;
+    const QString file = dir + QLatin1Char('/') + label + QStringLiteral(".plist");
+    if (enable) {
+        QString execPath = path;
+        if (execPath.isEmpty()) execPath = QCoreApplication::applicationFilePath();
+        if (execPath.isEmpty()) return JNI_FALSE;
+        if (!QDir().mkpath(dir)) return JNI_FALSE;
+        QFile f(file);
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) return JNI_FALSE;
+        QTextStream ts(&f);
+        ts << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+           << "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n"
+           << "<plist version=\"1.0\">\n<dict>\n"
+           << "  <key>Label</key><string>" << label << "</string>\n"
+           << "  <key>ProgramArguments</key>\n  <array>\n    <string>" << execPath << "</string>\n  </array>\n"
+           << "  <key>RunAtLoad</key><true/>\n"
+           << "</dict>\n</plist>\n";
+        f.close();
+        return JNI_TRUE;
+    } else {
+        return (QFile::remove(file) || !QFile::exists(file)) ? JNI_TRUE : JNI_FALSE;
+    }
 #else
-    (void)env; (void)enable; (void)exePath; return JNI_FALSE;
+    (void)env; (void)enable; return JNI_FALSE;
 #endif
 }
 
+// 阻止系统休眠/息屏（v0.7.0 跨平台：Windows SetThreadExecutionState / macOS NSProcessInfo / Linux D-Bus Inhibit）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativePreventSleep(JNIEnv* env, jclass, jboolean on) {
+#if defined(_WIN32)
+    if (on) {
+        return SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED) ? JNI_TRUE : JNI_FALSE;
+    } else {
+        SetThreadExecutionState(ES_CONTINUOUS);   // 恢复默认（ES_CONTINUOUS 必须保留）
+        return JNI_TRUE;
+    }
+#elif defined(__APPLE__)
+    // NSProcessInfo beginActivityWithOptions:reason:（NSActivityIdleSystemSleepDisabled = 1ULL << 20）
+    static id s_activity = nullptr;
+    if (on && !s_activity) {
+        id proc = (id)objc_msgSend((id)objc_getClass("NSProcessInfo"), sel_registerName("processInfo"));
+        if (!proc) return JNI_FALSE;
+        CFStringRef reason = CFStringCreateWithCString(kCFAllocatorDefault, "JQt preventSleep", kCFStringEncodingUTF8);
+        s_activity = (id)objc_msgSend(proc, sel_registerName("beginActivityWithOptions:reason:"), (uint64_t)(1ULL << 20), (id)reason);
+        CFRelease(reason);
+        return s_activity ? JNI_TRUE : JNI_FALSE;
+    } else if (!on && s_activity) {
+        id proc = (id)objc_msgSend((id)objc_getClass("NSProcessInfo"), sel_registerName("processInfo"));
+        objc_msgSend(proc, sel_registerName("endActivity:"), s_activity);
+        s_activity = nullptr;
+    }
+    return JNI_TRUE;
+#elif defined(__linux__)
+    // org.freedesktop.ScreenSaver Inhibit（KDE/GNOME）；失败回退 org.gnome.SessionManager Inhibit
+    static uint s_cookie = 0;
+    static bool s_active = false;
+    if (on && !s_active) {
+        QDBusInterface iface(QStringLiteral("org.freedesktop.ScreenSaver"),
+                             QStringLiteral("/org/freedesktop/ScreenSaver"),
+                             QStringLiteral("org.freedesktop.ScreenSaver"),
+                             QDBusConnection::sessionBus());
+        if (iface.isValid()) {
+            QDBusReply<uint> reply = iface.call(QStringLiteral("Inhibit"),
+                QCoreApplication::applicationName().isEmpty() ? QStringLiteral("JQtApp") : QCoreApplication::applicationName(),
+                QStringLiteral("JQt preventSleep"));
+            if (reply.isValid()) { s_cookie = reply.value(); s_active = true; return JNI_TRUE; }
+        }
+        // GNOME 3.28+ 无 gnome-screensaver：回退 org.gnome.SessionManager
+        QDBusInterface gnome(QStringLiteral("org.gnome.SessionManager"),
+                             QStringLiteral("/org/gnome/SessionManager"),
+                             QStringLiteral("org.gnome.SessionManager"),
+                             QDBusConnection::sessionBus());
+        if (gnome.isValid()) {
+            QDBusReply<QString> reply = gnome.call(QStringLiteral("Inhibit"),
+                QCoreApplication::applicationName().isEmpty() ? QStringLiteral("JQtApp") : QCoreApplication::applicationName(),
+                0u, QStringLiteral("JQt preventSleep"), 8u /* InhibitIdle */);
+            if (reply.isValid()) { s_active = true; return JNI_TRUE; }
+        }
+        return JNI_FALSE;
+    } else if (!on && s_active) {
+        QDBusInterface iface(QStringLiteral("org.freedesktop.ScreenSaver"),
+                             QStringLiteral("/org/freedesktop/ScreenSaver"),
+                             QStringLiteral("org.freedesktop.ScreenSaver"),
+                             QDBusConnection::sessionBus());
+        if (iface.isValid()) iface.call(QStringLiteral("UnInhibit"), s_cookie);
+        s_active = false;
+    }
+    return JNI_TRUE;
+#else
+    (void)env; (void)on; return JNI_FALSE;
+#endif
+}
+
+// 桌面通知（v0.7.0 跨平台：Linux D-Bus Notifications / Windows 托盘气泡 / macOS NSUserNotification）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeShowNotification(JNIEnv* env, jclass, jstring title, jstring body, jint timeoutMs) {
+    const char* t = title ? env->GetStringUTFChars(title, nullptr) : nullptr;
+    const char* b = body ? env->GetStringUTFChars(body, nullptr) : nullptr;
+    const QString qtTitle = t ? QString::fromUtf8(t) : QString();
+    const QString qtBody = b ? QString::fromUtf8(b) : QString();
+    if (t) env->ReleaseStringUTFChars(title, t);
+    if (b) env->ReleaseStringUTFChars(body, b);
+    const QString appName = QCoreApplication::applicationName().isEmpty() ? QStringLiteral("JQtApp") : QCoreApplication::applicationName();
+#if defined(_WIN32)
+    // 托盘气泡（零依赖；Windows 通知中心 Toast 需打包身份，托盘方案对任意应用可用）
+    static QSystemTrayIcon* s_tray = nullptr;
+    if (!s_tray) {
+        s_tray = new QSystemTrayIcon(QApplication::windowIcon());
+        s_tray->show();
+    }
+    if (!s_tray->isVisible()) s_tray->show();
+    s_tray->showMessage(qtTitle, qtBody, QSystemTrayIcon::Information, timeoutMs > 0 ? timeoutMs : 5000);
+    return JNI_TRUE;
+#elif defined(__APPLE__)
+    // NSUserNotification（macOS 10.8+；Apple 弃用但可用，无需权限弹窗与打包身份）
+    id center = (id)objc_msgSend((id)objc_getClass("NSUserNotificationCenter"), sel_registerName("defaultUserNotificationCenter"));
+    if (!center) return JNI_FALSE;
+    id notif = (id)objc_msgSend((id)objc_getClass("NSUserNotification"), sel_registerName("alloc"));
+    notif = (id)objc_msgSend(notif, sel_registerName("init"));
+    const QByteArray tba = qtTitle.toUtf8();
+    const QByteArray bba = qtBody.toUtf8();
+    CFStringRef tstr = CFStringCreateWithCString(kCFAllocatorDefault, tba.constData(), kCFStringEncodingUTF8);
+    CFStringRef bstr = CFStringCreateWithCString(kCFAllocatorDefault, bba.constData(), kCFStringEncodingUTF8);
+    objc_msgSend(notif, sel_registerName("setTitle:"), (id)tstr);
+    objc_msgSend(notif, sel_registerName("setInformativeText:"), (id)bstr);
+    objc_msgSend(center, sel_registerName("deliverNotification:"), notif);
+    CFRelease(tstr); CFRelease(bstr);
+    return JNI_TRUE;
+#elif defined(__linux__)
+    QDBusInterface notif(QStringLiteral("org.freedesktop.Notifications"),
+                         QStringLiteral("/org/freedesktop/Notifications"),
+                         QStringLiteral("org.freedesktop.Notifications"),
+                         QDBusConnection::sessionBus());
+    if (!notif.isValid()) return JNI_FALSE;
+    QVariantList args;
+    args << appName << QVariant(0u) << QVariant(QString()) << qtTitle << qtBody
+         << QVariant(QStringList()) << QVariant(QVariantMap()) << QVariant(timeoutMs > 0 ? timeoutMs : -1);
+    QDBusMessage reply = notif.callWithArgumentList(QDBus::AutoDetect, QStringLiteral("Notify"), args);
+    return reply.type() == QDBusMessage::ReplyMessage ? JNI_TRUE : JNI_FALSE;
+#else
+    (void)env; return JNI_FALSE;
+#endif
+}
+
+// Dock 图标徽章（v0.7.0 macOS 独家：NSDockTile setBadgeLabel:；对齐 Windows 任务栏进度）
+JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetDockBadge(JNIEnv* env, jclass, jlong handle, jstring badge) {
+#if defined(__APPLE__)
+    (void)handle;
+    id app = (id)objc_msgSend((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
+    if (!app) return;
+    id dockTile = (id)objc_msgSend(app, sel_registerName("dockTile"));
+    if (!dockTile) return;
+    if (badge) {
+        const char* utf = env->GetStringUTFChars(badge, nullptr);
+        CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, utf ? utf : "", kCFStringEncodingUTF8);
+        if (utf) env->ReleaseStringUTFChars(badge, utf);
+        objc_msgSend(dockTile, sel_registerName("setBadgeLabel:"), (id)str);
+        CFRelease(str);
+    } else {
+        objc_msgSend(dockTile, sel_registerName("setBadgeLabel:"), (id)nullptr);
+    }
+#else
+    (void)env; (void)handle; (void)badge;
+#endif
+}
+
+// macOS 原生窗口属性（kind: 1=titlebarAppearsTransparent 2=fullSizeContentView；v0.7.0）
+JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetMacWindowAttribute(JNIEnv* env, jclass, jlong handle, jint kind, jboolean value) {
+#if defined(__APPLE__)
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (!w) return;
+    id view = reinterpret_cast<id>(w->winId());   // QWindow::winId() 在 macOS 为 NSView*
+    if (!view) return;
+    id window = (id)objc_msgSend(view, sel_registerName("window"));
+    if (!window) return;
+    if (kind == 1) {
+        objc_msgSend(window, sel_registerName("setTitlebarAppearsTransparent:"), (bool)value);
+    } else if (kind == 2) {
+        // NSFullSizeContentViewWindowMask = 1ULL << 15
+        const uint64_t fullSize = 1ULL << 15;
+        uint64_t mask = (uint64_t)objc_msgSend(window, sel_registerName("styleMask"));
+        objc_msgSend(window, sel_registerName("setStyleMask:"), value ? (mask | fullSize) : (mask & ~fullSize));
+    }
+#else
+    (void)env; (void)handle; (void)kind; (void)value;
+#endif
+}
 // WM_HOTKEY 分发（在 JQtPointerFilter::nativeEventFilter 中调用）
 #ifdef _WIN32
 static void jqtDispatchHotkey(int hotkeyId) {
