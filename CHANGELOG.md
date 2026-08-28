@@ -12,6 +12,19 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.7.3-Universal-Kit（2026-08-29）— QOpenGLWidget 绑定（GPU 渲染画布）
+
+**QOpenGLWidget（Qt6OpenGLWidgets）**：通用 GL 画布，补上 JQt 的 GPU 渲染缺口（此前仅 QPainter 软件光栅化）：
+- 生命周期回调与 Qt 一一对应：`onInitialize`（initializeGL）/ `onPaint`（paintGL，执行时 GL context 已 current）/ `onResized`（resizeGL）
+- `setClearColor(0xAARRGGBB)` + `setAutoClear(boolean)`（默认自动清屏，可关）
+- `makeCurrent` / `doneCurrent`（GUI 线程外初始化 GL 资源用）
+- **LWJGL 挂接**：paintGL 回调内 context current，Java 侧 `GL.createCapabilities()` 直接可用（Minecraft 同款方案）——JQt 提供画布与 context，GL 调用交给 Java 生态标准
+- 2D 加速 / 图像视频帧 / 图表 / 3D 可视化（含 JME/LWJGL 集成路径）通用画布
+
+**构建**：三平台脚本加 Qt6OpenGLWidgets/Qt6OpenGL（qtbase 模块，CI 零新依赖）；GL 函数经 QOpenGLFunctions 运行时解析（不直接链接）。
+
+**验证**：SmokeV073 四平台 CI（offscreen 容错不崩）；本机真实窗口实测回调触发（init=1/paint=4/resize=1）。
+
 ### v0.7.2-Universal-Kit（2026-08-29）— 工业模块：QPrinter（打印/PDF）+ QSql（数据库）
 
 **QPrinter（QtPrintSupport）**：
