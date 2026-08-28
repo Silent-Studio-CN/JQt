@@ -438,6 +438,100 @@ public abstract class QWidget {
         return nativePrintToPdf(nativeHandle, path);
     }
     private native boolean nativePrintToPdf(long handle, String path);
+
+    // ---- L2 批次（v0.7.4：QWidget 高频少用 API）----
+
+    /** 最小尺寸（QWidget::setMinimumSize）。 */
+    public void setMinimumSize(int w, int h) { nativeSetMinimumSize(nativeHandle, w, h); }
+    private native void nativeSetMinimumSize(long handle, int w, int h);
+
+    /** 最大尺寸（QWidget::setMaximumSize）。 */
+    public void setMaximumSize(int w, int h) { nativeSetMaximumSize(nativeHandle, w, h); }
+    private native void nativeSetMaximumSize(long handle, int w, int h);
+
+    /** 最小尺寸，返回高 32 位宽、低 32 位高的打包值（-1 表示未设置）。 */
+    public long minimumSize() { return nativeMinimumSize(nativeHandle); }
+    private native long nativeMinimumSize(long handle);
+
+    /** 最大尺寸，返回高 32 位宽、低 32 位高的打包值（-1 表示未设置）。 */
+    public long maximumSize() { return nativeMaximumSize(nativeHandle); }
+    private native long nativeMaximumSize(long handle);
+
+    /** 固定宽度（高度自适应；QWidget::setFixedWidth）。 */
+    public void setFixedWidth(int w) { nativeSetFixedWidth(nativeHandle, w); }
+    private native void nativeSetFixedWidth(long handle, int w);
+
+    /** 固定高度（宽度自适应；QWidget::setFixedHeight）。 */
+    public void setFixedHeight(int h) { nativeSetFixedHeight(nativeHandle, h); }
+    private native void nativeSetFixedHeight(long handle, int h);
+
+    /** 是否有焦点（QWidget::hasFocus）。 */
+    public boolean hasFocus() { return nativeHasFocus(nativeHandle); }
+    private native boolean nativeHasFocus(long handle);
+
+    /** 获取键盘焦点（QWidget::setFocus）。 */
+    public void setFocus() { nativeSetFocus(nativeHandle); }
+    private native void nativeSetFocus(long handle);
+
+    /** 清除焦点（QWidget::clearFocus）。 */
+    public void clearFocus() { nativeClearFocus(nativeHandle); }
+    private native void nativeClearFocus(long handle);
+
+    /** 鼠标跟踪（QWidget::setMouseTracking；开启后无需按键即可收到 move 事件）。 */
+    public void setMouseTracking(boolean on) { nativeSetMouseTracking(nativeHandle, on); }
+    private native void nativeSetMouseTracking(long handle, boolean on);
+
+    /** 是否启用鼠标跟踪。 */
+    public boolean hasMouseTracking() { return nativeHasMouseTracking(nativeHandle); }
+    private native boolean nativeHasMouseTracking(long handle);
+
+    /** 是否为活动窗口（QWidget::isActiveWindow）。 */
+    public boolean isActiveWindow() { return nativeIsActiveWindow(nativeHandle); }
+    private native boolean nativeIsActiveWindow(long handle);
+
+    /** 激活窗口（QWidget::activateWindow）。 */
+    public void activateWindow() { nativeActivateWindow(nativeHandle); }
+    private native void nativeActivateWindow(long handle);
+
+    /** 置顶（QWidget::raise）。 */
+    public void raise() { nativeRaise(nativeHandle); }
+    private native void nativeRaise(long handle);
+
+    /** 置底（QWidget::lower）。 */
+    public void lower() { nativeLower(nativeHandle); }
+    private native void nativeLower(long handle);
+
+    /** 窗口透明度（0.0-1.0；QWidget::setWindowOpacity）。 */
+    public void setWindowOpacity(double opacity) { nativeSetWindowOpacity(nativeHandle, opacity); }
+    private native void nativeSetWindowOpacity(long handle, double opacity);
+
+    /** 窗口透明度。 */
+    public double windowOpacity() { return nativeWindowOpacity(nativeHandle); }
+    private native double nativeWindowOpacity(long handle);
+
+    /** 是否全屏（QWidget::isFullScreen）。 */
+    public boolean isFullScreen() { return nativeIsFullScreen(nativeHandle); }
+    private native boolean nativeIsFullScreen(long handle);
+
+    /** 是否最小化（QWidget::isMinimized）。 */
+    public boolean isMinimized() { return nativeIsMinimized(nativeHandle); }
+    private native boolean nativeIsMinimized(long handle);
+
+    /** 自动填充背景（QWidget::setAutoFillBackground）。 */
+    public void setAutoFillBackground(boolean on) { nativeSetAutoFillBackground(nativeHandle, on); }
+    private native void nativeSetAutoFillBackground(long handle, boolean on);
+
+    /** 是否自动填充背景。 */
+    public boolean autoFillBackground() { return nativeAutoFillBackground(nativeHandle); }
+    private native boolean nativeAutoFillBackground(long handle);
+
+    /** 独占键盘（QWidget::grabKeyboard）。 */
+    public void grabKeyboard() { nativeGrabKeyboard(nativeHandle); }
+    private native void nativeGrabKeyboard(long handle);
+
+    /** 释放键盘独占（QWidget::releaseKeyboard）。 */
+    public void releaseKeyboard() { nativeReleaseKeyboard(nativeHandle); }
+    private native void nativeReleaseKeyboard(long handle);
 }
 
 
