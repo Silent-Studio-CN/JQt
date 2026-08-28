@@ -55,6 +55,8 @@ ls "$QTLIB/QtWidgets.framework/Headers/" 2>&1 | head -8
 if [ -d "$QTLIB/QtSerialPort.framework/Headers" ]; then
   mkdir -p "$LIB/sp_include/QtSerialPort"
   cp -R "$QTLIB/QtSerialPort.framework/Headers/"* "$LIB/sp_include/QtSerialPort/" 2>/dev/null || true
+  # 无前缀 include（<QSerialPort>）也能解析：头复制到 QtCore Headers
+  cp "$LIB/sp_include/QtSerialPort/"QSerialPort "$LIB/sp_include/QtSerialPort/"QSerialPortInfo "$LIB/sp_include/QtSerialPort/"*.h "$QTLIB/QtCore.framework/Headers/" 2>/dev/null || true
   ls "$LIB/sp_include/QtSerialPort/" 2>&1 | head -5 || true
 fi
 echo "==> Compiling native bridge (libjqt.dylib)"
