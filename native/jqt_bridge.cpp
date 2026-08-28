@@ -131,9 +131,12 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QtSql/QSqlRecord>
 #include <QtSql/QSqlDriver>
 #include <QtSql/QSqlDriverPlugin>
+// QOpenGLWidget 实现仅 Windows/Linux（macOS 与 Windows ARM64 的 Qt 构建不含 OpenGLWidgets 模块）
+#if defined(_WIN32) || defined(__linux__)
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLContext>
+#endif
 #include <QPluginLoader>
 #include <QLibraryInfo>
 #include <QDir>
@@ -6519,17 +6522,8 @@ JNIEXPORT void JNICALL Java_org_jqt_QSqlQuery_nativeDispose(JNIEnv* env, jobject
 // v0.7.3：QOpenGLWidget 绑定（Qt6OpenGLWidgets）——通用 GL 画布
 // ============================================================================
 
-// Windows ARM64 的 Qt 官方构建不含 OpenGLWidgets 模块（qtbase 裁剪），存根降级
-#if defined(_M_ARM64)
-JNIEXPORT jlong JNICALL Java_org_jqt_QOpenGLWidget_nativeCreate(JNIEnv* env, jobject) {
-    (void)env;
-    return 0;   // 平台不支持：Java 侧抛 UnsupportedOperationException
-}
-JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeSetClearColor(JNIEnv* env, jobject, jlong, jint) { (void)env; }
-JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeSetAutoClear(JNIEnv* env, jobject, jlong, jboolean) { (void)env; }
-JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeMakeCurrent(JNIEnv* env, jobject, jlong) { (void)env; }
-JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeDoneCurrent(JNIEnv* env, jobject, jlong) { (void)env; }
-#else
+// macOS / Windows ARM64 的 Qt 构建不含 OpenGLWidgets 模块：存根降级
+#if defined(_WIN32) || defined(__linux__)
 // QOpenGLWidget 子类：initializeGL/paintGL/resizeGL 回调到 Java
 class JQtGLWidget : public QOpenGLWidget {
 public:
@@ -6600,4 +6594,11 @@ JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeDoneCurrent(JNIEnv* env,
     JQtGLWidget* w = static_cast<JQtGLWidget*>(requireHandle(env, handle));
     if (w) w->doneCurrent();
 }
+#else
+// macOS / Windows ARM64 的 Qt 构建不含 OpenGLWidgets 模块：存根降级（Java 侧抛 UnsupportedOperationException）
+JNIEXPORT jlong JNICALL Java_org_jqt_QOpenGLWidget_nativeCreate(JNIEnv* env, jobject) { (void)env; return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeSetClearColor(JNIEnv* env, jobject, jlong, jint) { (void)env; }
+JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeSetAutoClear(JNIEnv* env, jobject, jlong, jboolean) { (void)env; }
+JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeMakeCurrent(JNIEnv* env, jobject, jlong) { (void)env; }
+JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeDoneCurrent(JNIEnv* env, jobject, jlong) { (void)env; }
 #endif

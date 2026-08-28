@@ -43,7 +43,7 @@ public class QOpenGLWidget extends QWidget {
         nativeHandle = nativeCreate();
         if (nativeHandle == 0) {
             throw new UnsupportedOperationException(
-                "QOpenGLWidget 当前平台不可用（Windows ARM64 的 Qt 不含 OpenGLWidgets 模块）");
+                "QOpenGLWidget 当前平台不可用（macOS / Windows ARM64 的 Qt 构建不含 OpenGLWidgets 模块）");
         }
         registerCleaner();
     }
