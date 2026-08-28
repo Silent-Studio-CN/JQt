@@ -12,6 +12,20 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.6.1-Exclusive-Kit（2026-08-28）— Windows 独家能力包
+
+**Qt 官方未封装的 Windows 能力，JQt 首次 API 化**：
+
+- **DWM 原生边框颜色**（setNativeBorderColor，Win11 22H2+）
+- **原生标题栏颜色**（setNativeCaptionColor）+ **标题栏文字颜色**（setNativeCaptionTextColor）
+- **深色标题栏**（setNativeDarkTitleBar，Win10 1809+ 支持）
+- **Mica 背景**（setMicaBackground，Win11 22H2+ 原生材质）
+- **任务栏进度**（setTaskbarProgress/clearTaskbarProgress，Win10+ ITaskbarList3）
+- **全局热键**（GlobalHotkey 类：register("Ctrl+Shift+X", handler)，应用失焦也生效）
+- **开机自启**（QApplication.setAutoStart，HKCU Run 注册表）
+
+版本命名：x.x.x-Exclusive-Kit（独家能力包标识）。旧系统调用静默忽略（不报错不崩溃）。
+
 ### v0.6.0-TEST（2026-08-27）— L1 常用 API 补全 + 社区反馈修复
 
 **L1 补全（114514.md 对齐，135 → 149/205 直接对应；可实现口径 ~99%）**：
