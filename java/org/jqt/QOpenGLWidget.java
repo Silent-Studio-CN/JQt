@@ -34,9 +34,17 @@ public class QOpenGLWidget extends QWidget {
     private final List<Runnable> onPaintHandlers = new ArrayList<>();
     private final List<BiConsumer<Integer, Integer>> onResizedHandlers = new ArrayList<>();
 
-    /** 创建 OpenGL 画布。 */
+    /**
+     * 创建 OpenGL 画布。
+     * @throws UnsupportedOperationException 当前平台 Qt 不含 OpenGLWidgets 模块
+     *         （Windows ARM64 官方构建裁剪了该模块）
+     */
     public QOpenGLWidget() {
         nativeHandle = nativeCreate();
+        if (nativeHandle == 0) {
+            throw new UnsupportedOperationException(
+                "QOpenGLWidget 当前平台不可用（Windows ARM64 的 Qt 不含 OpenGLWidgets 模块）");
+        }
         registerCleaner();
     }
 
