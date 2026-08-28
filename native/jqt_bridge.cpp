@@ -40,6 +40,9 @@
 
 // 平台独家能力所需的系统头（v0.7.0：macOS Dock/NSWindow/NSProcessInfo，Linux D-Bus）
 #if defined(__APPLE__)
+// arm64 上 Xcode 默认把 objc_msgSend 声明为无参原型（OBJC_OLD_DISPATCH_PROTOTYPES=0），
+// 恢复旧式 variadic 原型后才能直接调用
+#define OBJC_OLD_DISPATCH_PROTOTYPES 1
 #include <objc/objc.h>
 #include <objc/message.h>
 #include <objc/runtime.h>
