@@ -298,9 +298,16 @@ jobs:
           $qtRoot = Split-Path (Split-Path $qmake.FullName)
           Write-Host "QTBASE=$qtRoot"
           "QTBASE=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
-          # v0.7.4: qtserialport 模块
+          # v0.7.4: qtserialport 模块（解压后定位并复制到 QTBASE）
           curl.exe -fsSL -o C:/qtserialport.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_683/qt6_683/qt.qt6.683.addons.qtserialport.win64_msvc2022_arm64/6.8.3-0-202503201308qtserialport-Windows-Windows_11_22H2-MSVC2022-Windows-Windows_11_22H2-AARCH64.7z"
           7z x -y -oC:/Qt C:/qtserialport.7z | Out-Null
+          $sp = Get-ChildItem C:/Qt -Recurse -Filter qserialport.h | Select-Object -First 1
+          if ($sp) {
+            $spRoot = Split-Path (Split-Path $sp.DirectoryName)
+            Copy-Item "$spRootincludeQtSerialPort" "$qtRootinclude" -Recurse -Force
+            Copy-Item "$spRootlibQt6SerialPort.lib" "$qtRootlib" -Force
+            Write-Host "qtserialport copied to QTBASE"
+          } else { throw "qserialport.h not found after extraction" }
 
       - name: Build jqt.dll (MSVC ARM64, Qt 6.8.3)
         shell: pwsh
@@ -379,9 +386,16 @@ jobs:
           $qtRoot = Split-Path (Split-Path $qmake.FullName)
           Write-Host "QTBASE6112=$qtRoot"
           "QTBASE6112=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
-          # v0.7.4: qtserialport 模块
+          # v0.7.4: qtserialport 模块（解压后定位并复制到 QTBASE）
           curl.exe -fsSL -o C:/qtserialport6112.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.addons.qtserialport.win64_msvc2022_arm64/6.11.2-0-202608131017qtserialport-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
           7z x -y -oC:/Qt6112 C:/qtserialport6112.7z | Out-Null
+          $sp = Get-ChildItem C:/Qt6112 -Recurse -Filter qserialport.h | Select-Object -First 1
+          if ($sp) {
+            $spRoot = Split-Path (Split-Path $sp.DirectoryName)
+            Copy-Item "$spRootincludeQtSerialPort" "$env:QTBASE6112include" -Recurse -Force
+            Copy-Item "$spRootlibQt6SerialPort.lib" "$env:QTBASE6112lib" -Force
+            Write-Host "qtserialport 6.11.2 copied"
+          } else { throw "qserialport.h not found for 6.11.2" }
 
       - name: Build jqt.dll (MSVC ARM64, Qt 6.11.2)
         shell: pwsh
