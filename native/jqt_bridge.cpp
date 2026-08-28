@@ -62,6 +62,7 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #endif
 
 #include <QApplication>
+#include <QGuiApplication>
 #include <QAbstractNativeEventFilter>
 #include <QBoxLayout>
 #include <QCheckBox>
@@ -5441,10 +5442,11 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeShowNotification(JNIE
 // Dock 图标徽章（v0.7.0 macOS 独家：NSDockTile setBadgeLabel:；对齐 Windows 任务栏进度）
 JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetDockBadge(JNIEnv* env, jclass, jlong handle, jstring badge) {
 #if defined(__APPLE__)
+    // offscreen 等非 cocoa 平台无真实 NSApplication/Dock，直接 no-op
+    if (QGuiApplication::platformName() != QStringLiteral("cocoa")) { (void)handle; return; }
     static const JQtMsg0 s_sharedApp = JQT_OBJC_CAST(JQtMsg0);
     static const JQtMsg0 s_dockTileMsg = JQT_OBJC_CAST(JQtMsg0);
     static const JQtMsgV1 s_setBadge = JQT_OBJC_CAST(JQtMsgV1);
-    (void)handle;
     id app = s_sharedApp((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
     if (!app) return;
     id dockTile = s_dockTileMsg(app, sel_registerName("dockTile"));
@@ -5466,6 +5468,8 @@ JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetDockBadge(JNIEnv* env, 
 // macOS 原生窗口属性（kind: 1=titlebarAppearsTransparent 2=fullSizeContentView；v0.7.0）
 JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetMacWindowAttribute(JNIEnv* env, jclass, jlong handle, jint kind, jboolean value) {
 #if defined(__APPLE__)
+    // offscreen 等非 cocoa 平台 winId() 不是 NSView*，对其实施 objc_msgSend 会 SIGSEGV
+    if (QGuiApplication::platformName() != QStringLiteral("cocoa")) { (void)kind; (void)value; return; }
     static const JQtMsg0 s_windowMsg = JQT_OBJC_CAST(JQtMsg0);
     static const JQtMsgBool s_setTransparent = JQT_OBJC_CAST(JQtMsgBool);
     static const JQtMsgUL s_styleMask = JQT_OBJC_CAST(JQtMsgUL);
