@@ -54,10 +54,13 @@ ls "$QTLIB/QtWidgets.framework/Headers/" 2>&1 | head -8
 if [ -d "$QTLIB/QtSerialPort.framework" ]; then
   SPVER="$QTLIB/QtSerialPort.framework/Versions/A"
   mkdir -p "$SPVER"
-  [ ! -e "$SPVER/QtSerialPort" ] && ln -sfn Headers "$SPVER/QtSerialPort"
+  if [ ! -d "$SPVER/QtSerialPort" ]; then
+    rm -f "$SPVER/QtSerialPort" 2>/dev/null || true
+    ln -sfn Headers "$SPVER/QtSerialPort" || true
+  fi
   echo "=== QtSerialPort framework diag ==="
-  ls "$QTLIB/QtSerialPort.framework/Headers/" 2>&1 | head -8
-  ls "$SPVER/QtSerialPort/" 2>&1 | head -5
+  ls "$QTLIB/QtSerialPort.framework/Headers/" 2>&1 | head -8 || true
+  ls "$SPVER/QtSerialPort/" 2>&1 | head -5 || true
 fi
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
