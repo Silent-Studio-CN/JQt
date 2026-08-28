@@ -41,9 +41,7 @@ publishing {
             groupId = 'com.github.Silent-Studio-CN'
             artifactId = 'jqt'
             version = project.version
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
+            from components.java   // includes jar + sourcesJar + javadocJar
         }
     }
 }
