@@ -6317,14 +6317,11 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeAddDatabase(JNIEnv* env,
     if (d) env->ReleaseStringUTFChars(driver, d);
     if (c) env->ReleaseStringUTFChars(connName, c);
     if (drv.isEmpty()) return 0;
-    // 驱动插件加载 workaround：QFactoryLoader 在 Windows 上不搜索 PATH（libstdc++ 等依赖缺失时
-    // 加载失败）。先用 QPluginLoader 按 Qt 官方插件路径预加载目标驱动，再重试 addDatabase。
-    // 驱动插件加载 workaround：QFactoryLoader 在 Windows 上不搜索 PATH（libstdc++ 等依赖缺失时
-    // 加载失败）。先用 QPluginLoader 按 Qt 官方插件路径预加载目标驱动，再重试 addDatabase。
-    // 驱动插件加载 workaround：QFactoryLoader 在 Windows 上不搜索 PATH，依赖（libstdc++ 等）
-    // 缺失时插件加载失败。QPluginLoader 预加载 + registerSqlDriver 手动注册驱动（Qt 公开 API）。
-    QSqlDatabase db = QSqlDatabase::addDatabase(drv, name);
-    if (!db.isValid()) {
+    // 驱动可用性预检 + 插件 workaround：避免 addDatabase 创建无效连接
+    // （Qt 内部无效连接在 JVM 退出时析构崩溃——Linux typeinfo-for-QObject SIGSEGV）。
+    if (!QSqlDatabase::isDriverAvailable(drv)) {
+        // workaround：QFactoryLoader 在 Windows 上不搜索 PATH（libstdc++ 等依赖缺失时加载失败）。
+        // QPluginLoader 预加载 + registerSqlDriver 手动注册驱动（Qt 公开 API）。
         const QString lower = drv.toLower();
         QString pluginPath;
 #ifdef _WIN32
@@ -6334,9 +6331,14 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeAddDatabase(JNIEnv* env,
 #else
         const QString ext = QStringLiteral(".dylib");
 #endif
-        for (const QString& base : QCoreApplication::libraryPaths()) {
-            const QString cand = base + QStringLiteral("/sqldrivers/q") + lower + ext;
-            if (QFile::exists(cand)) { pluginPath = cand; break; }
+        {
+            // libraryPaths + 编译期 pluginsPath（macOS/Linux 的 Qt 安装插件目录）
+            QStringList bases = QCoreApplication::libraryPaths();
+            bases << QLibraryInfo::path(QLibraryInfo::PluginsPath);
+            for (const QString& base : bases) {
+                const QString cand = base + QStringLiteral("/sqldrivers/q") + lower + ext;
+                if (QFile::exists(cand)) { pluginPath = cand; break; }
+            }
         }
         if (!pluginPath.isEmpty()) {
             QPluginLoader pl(pluginPath);
@@ -6346,25 +6348,25 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeAddDatabase(JNIEnv* env,
                 if (plugin) {
                     // 插件 create 的 key 带 Q 前缀（如 "QSQLITE"）
                     const QString pluginKey = QStringLiteral("Q") + drv.toUpper();
-                    QSqlDriver* driver = plugin->create(pluginKey);
-                    if (driver) {
+                    QSqlDriver* d2 = plugin->create(pluginKey);
+                    if (d2) {
                         struct JQtDriverCreator : public QSqlDriverCreatorBase {
                             QSqlDriver* d;
                             explicit JQtDriverCreator(QSqlDriver* drv) : d(drv) {}
                             QSqlDriver* createObject() const override { return d; }
                         };
-                        QSqlDatabase::registerSqlDriver(drv, new JQtDriverCreator(driver));
-                        db = QSqlDatabase::addDatabase(drv, name);
+                        QSqlDatabase::registerSqlDriver(drv, new JQtDriverCreator(d2));
                     }
                 }
             }
         }
-        if (!db.isValid()) {
-            fprintf(stderr, "[JQt-sql] addDatabase(%s) failed (plugin path: %s)\n",
+        if (!QSqlDatabase::isDriverAvailable(drv)) {
+            fprintf(stderr, "[JQt-sql] driver %s unavailable (plugin: %s)\n",
                     drv.toUtf8().constData(), pluginPath.toUtf8().constData());
             return 0;
         }
     }
+    QSqlDatabase db = QSqlDatabase::addDatabase(drv, name);
 
     std::lock_guard<std::mutex> lock(g_sqlMutex);
     const jlong id = g_nextSqlId++;
