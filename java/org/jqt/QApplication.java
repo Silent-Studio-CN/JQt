@@ -173,6 +173,12 @@ public class QApplication {
     public static int palette() { return nativePalette(); }
     private static native int nativePalette();
 
+    /** 开机自启（写入当前用户 Run 注册表；exePath 为应用可执行文件路径）。 */
+    public static boolean setAutoStart(boolean enable, String exePath) {
+        return nativeSetAutoStart(enable, exePath);
+    }
+    private static native boolean nativeSetAutoStart(boolean enable, String exePath);
+
     /** 延迟 {@code ms} 毫秒后自动退出事件循环（演示 / 自动化测试用）。 */
     public native void scheduleQuit(long ms);
 

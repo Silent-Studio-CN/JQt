@@ -51,7 +51,7 @@ $gppArgs = @(
     "-I", $NativeDir,
     (Join-Path $NativeDir "jqt_bridge.cpp"),
     "-L", (Join-Path $Kit "lib"),
-    "-lQt6Widgets", "-lQt6Gui", "-lQt6Core", "-lole32",
+    "-lQt6Widgets", "-lQt6Gui", "-lQt6Core", "-lole32", "-luuid", "-loleaut32",
     "-static-libgcc", "-static-libstdc++"
 )
 & "$Mingw\bin\g++.exe" @gppArgs

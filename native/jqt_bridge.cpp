@@ -27,6 +27,8 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#include <shobjidl.h>
+#include <winreg.h>
 #include <windowsx.h>
 #include <dwmapi.h>
 #include <objbase.h>
@@ -108,6 +110,10 @@
 // 崩溃日志：Windows SEH 未处理异常时追加 jqt-crash.log（时间/异常码/地址/线程）
 // 写入后继续交给系统默认处理（错误框），便于诊断 native 崩溃。
 #ifdef _WIN32
+#ifdef _WIN32
+static void jqtDispatchHotkey(int hotkeyId);   // 前置声明（定义见 Exclusive Kit 区）
+#endif
+
 static LONG WINAPI jqtCrashHandler(EXCEPTION_POINTERS* ep) {
     FILE* f = fopen("jqt-crash.log", "a");
     if (f != nullptr) {
@@ -190,6 +196,7 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QSettings.h"
 #include "generated/org_jqt_QFile.h"
 #include "generated/org_jqt_QDir.h"
+#include "generated/org_jqt_GlobalHotkey.h"
 #include "generated/org_jqt_JQtNavigation.h"
 #include "generated/org_jqt_JQtPivot.h"
 #include "generated/org_jqt_QProgressBar.h"
@@ -583,6 +590,12 @@ protected:
             *result = 0;
             return true;
         }
+#ifdef _WIN32
+        else if (msg->message == WM_HOTKEY) {
+            jqtDispatchHotkey(static_cast<int>(msg->wParam));   // 全局热键（Exclusive Kit）
+            return true;
+        }
+#endif
 
         return QWidget::nativeEvent(eventType, message, result);
     }
@@ -5105,3 +5118,138 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QFile_nativeResize(JNIEnv* env, jclass, 
     env->ReleaseStringUTFChars(path, u);
     return ok ? JNI_TRUE : JNI_FALSE;
 }
+
+// ============================================================================
+// Exclusive Kit（v0.6.1）：Windows 独家能力（Qt 官方未封装）
+// DWM 边框/标题栏/文字颜色 + 深色标题栏 + Mica + 任务栏进度 + 全局热键 + 开机自启
+// ============================================================================
+#ifdef _WIN32
+#include <dwmapi.h>
+#endif
+
+// DWM 属性设置（kind: 1=border 2=caption 3=text 4=darkTitleBar 5=mica）
+JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetDwmAttribute(JNIEnv* env, jclass, jlong handle, jint kind, jint argb) {
+#ifdef _WIN32
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (!w || !w->windowHandle()) return;
+    HWND hwnd = reinterpret_cast<HWND>(w->windowHandle()->winId());
+    if (!hwnd) return;
+    static auto dwmSet = reinterpret_cast<HRESULT(WINAPI*)(HWND, DWORD, LPCVOID, DWORD)>(GetProcAddress(GetModuleHandleW(L"dwmapi.dll"), "DwmSetWindowAttribute"));
+    if (!dwmSet) return;
+    if (kind == 4) {
+        BOOL dark = (argb != 0) ? TRUE : FALSE;
+        dwmSet(hwnd, 20 /*DWMWA_USE_IMMERSIVE_DARK_MODE*/, &dark, sizeof(dark));   // Win10 1809+
+    } else if (kind == 5) {
+        // DWMWA_SYSTEMBACKDROP_TYPE=38：0 无 / 1 默认 / 2 Mica / 3 Acrylic / 4 Tabbed（Win11 22H2+）
+        int type = (argb != 0) ? 2 : 1;
+        dwmSet(hwnd, 38, &type, sizeof(type));
+    } else {
+        COLORREF color = static_cast<COLORREF>(argb & 0xFFFFFF);
+        DWORD attr = (kind == 1) ? 34 : (kind == 2 ? 35 : 36);   // BORDER_COLOR / CAPTION_COLOR / TEXT_COLOR
+        dwmSet(hwnd, attr, &color, sizeof(color));               // Win11 22H2+
+    }
+#else
+    (void)env; (void)handle; (void)kind; (void)argb;
+#endif
+}
+
+// 任务栏进度（ITaskbarList3::SetProgressValue）
+JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeTaskbarProgress(JNIEnv* env, jclass, jlong handle, jint value, jint max) {
+#ifdef _WIN32
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (!w || !w->windowHandle()) return;
+    HWND hwnd = reinterpret_cast<HWND>(w->windowHandle()->winId());
+    if (!hwnd) return;
+    static ITaskbarList3* taskbar = nullptr;
+    if (!taskbar) {
+        CoInitialize(nullptr);
+        if (CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER, IID_ITaskbarList3, reinterpret_cast<void**>(&taskbar)) != S_OK) {
+            taskbar = nullptr;
+            return;
+        }
+    }
+    if (value < 0 || max <= 0) {
+        taskbar->SetProgressState(hwnd, TBPF_NOPROGRESS);
+    } else {
+        taskbar->SetProgressValue(hwnd, static_cast<ULONGLONG>(value), static_cast<ULONGLONG>(max));
+        taskbar->SetProgressState(hwnd, TBPF_NORMAL);
+    }
+#else
+    (void)env; (void)handle; (void)value; (void)max;
+#endif
+}
+
+// 全局热键注册（combo 如 "Ctrl+Shift+X"）→ 返回 hotkeyId（>0 成功）
+JNIEXPORT jint JNICALL Java_org_jqt_GlobalHotkey_nativeRegister(JNIEnv* env, jclass, jstring combo) {
+#ifdef _WIN32
+    const char* utf = env->GetStringUTFChars(combo, nullptr);
+    const QStringList parts = QString::fromUtf8(utf).split('+');
+    env->ReleaseStringUTFChars(combo, utf);
+    if (parts.size() < 2) return 0;
+    UINT mods = 0;
+    QString key = parts.last();
+    for (int i = 0; i < parts.size() - 1; i++) {
+        const QString m = parts.at(i).trimmed();
+        if (m == "Ctrl") mods |= MOD_CONTROL;
+        else if (m == "Alt") mods |= MOD_ALT;
+        else if (m == "Shift") mods |= MOD_SHIFT;
+        else if (m == "Win") mods |= MOD_WIN;
+        else return 0;
+    }
+    UINT vk = 0;
+    if (key.length() == 1) vk = VkKeyScanW(key.at(0).toLatin1()) & 0xFF;
+    else if (key.startsWith("F") && key.mid(1).toInt() >= 1 && key.mid(1).toInt() <= 24) vk = 0x70 + key.mid(1).toInt() - 1;
+    else return 0;
+    static int nextId = 0x6000;
+    int id = ++nextId;
+    if (!RegisterHotKey(nullptr, id, mods, vk)) return 0;
+    return id;
+#else
+    (void)env; (void)combo; return 0;
+#endif
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_GlobalHotkey_nativeUnregister(JNIEnv* env, jclass, jint hotkeyId) {
+#ifdef _WIN32
+    UnregisterHotKey(nullptr, hotkeyId);
+#else
+    (void)env; (void)hotkeyId;
+#endif
+}
+
+// 开机自启（HKCU\Software\Microsoft\Windows\CurrentVersion\Run）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeSetAutoStart(JNIEnv* env, jclass, jboolean enable, jstring exePath) {
+#ifdef _WIN32
+    const char* utf = env->GetStringUTFChars(exePath, nullptr);
+    const QString path = QString::fromUtf8(utf);
+    env->ReleaseStringUTFChars(exePath, utf);
+    HKEY key = nullptr;
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_SET_VALUE, &key) != ERROR_SUCCESS) {
+        return JNI_FALSE;
+    }
+    const QString appName = QCoreApplication::applicationName();
+    const QString regName = appName.isEmpty() ? QStringLiteral("JQtApp") : appName;
+    LONG result = ERROR_SUCCESS;
+    if (enable) {
+        const std::wstring wpath = path.toStdWString();
+        result = RegSetValueExW(key, reinterpret_cast<LPCWSTR>(regName.utf16()), 0, REG_SZ, reinterpret_cast<const BYTE*>(wpath.c_str()), static_cast<DWORD>((wpath.size() + 1) * sizeof(wchar_t)));
+    } else {
+        result = RegDeleteValueW(key, reinterpret_cast<LPCWSTR>(regName.utf16()));
+        if (result == ERROR_FILE_NOT_FOUND) result = ERROR_SUCCESS;
+    }
+    RegCloseKey(key);
+    return (result == ERROR_SUCCESS) ? JNI_TRUE : JNI_FALSE;
+#else
+    (void)env; (void)enable; (void)exePath; return JNI_FALSE;
+#endif
+}
+
+// WM_HOTKEY 分发（在 JQtPointerFilter::nativeEventFilter 中调用）
+#ifdef _WIN32
+static void jqtDispatchHotkey(int hotkeyId) {
+    JNIEnv* e = callbackEnv();
+    jclass cls = e->FindClass("org/jqt/GlobalHotkey");
+    jmethodID mid = e->GetStaticMethodID(cls, "nativeHandleHotkey", "(I)V");
+    if (mid) e->CallStaticVoidMethod(cls, mid, static_cast<jint>(hotkeyId));
+}
+#endif
