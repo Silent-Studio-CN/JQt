@@ -136,14 +136,9 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLContext>
-// macOS framework 头为扁平布局（无 QtSerialPort/ 模块子目录），用无前缀 include
-#if defined(__APPLE__)
-#include <QSerialPort>
-#include <QSerialPortInfo>
-#else
+// macOS 由 build-macos.sh 复制头到标准模块布局（sp_include），统一用模块前缀
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
-#endif
 #endif
 #include <QPluginLoader>
 #include <QLibraryInfo>
