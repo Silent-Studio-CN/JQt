@@ -49,10 +49,14 @@ if ($LASTEXITCODE -ne 0) { throw "javac failed" }
 
 # ---- 3) Compile native bridge (cl.exe, ARM64) ----
 Write-Host "==> [3/5] Compiling native bridge (jqt.dll, ARM64)"
-if (-not (Test-Path (Join-Path $QtRoot "includeQtSerialPortQSerialPort"))) {
-    Write-Host "WARN: QtSerialPort headers missing at $(Join-Path $QtRoot 'includeQtSerialPort') - listing include:"
+if (-not (Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort"))) {
+    Write-Host "WARN: QtSerialPort headers missing at $(Join-Path $QtRoot 'include\QtSerialPort') - listing include:"
     Get-ChildItem (Join-Path $QtRoot "include") -ErrorAction SilentlyContinue | Select-Object -First 15 -ExpandProperty Name | Out-Host
 }
+# 无前缀 include（<QSerialPort>）也能解析：头复制到 QtCore include
+Get-ChildItem (Join-Path $QtRoot "include\QtSerialPort") -Filter "*.h" -ErrorAction SilentlyContinue | Copy-Item -Destination (Join-Path $QtRoot "include\QtCore") -Force
+Copy-Item (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") (Join-Path $QtRoot "include\QtCore") -Force -ErrorAction SilentlyContinue
+Copy-Item (Join-Path $QtRoot "include\QtSerialPort\QSerialPortInfo") (Join-Path $QtRoot "include\QtCore") -Force -ErrorAction SilentlyContinue
 $clArgs = @(
     "/nologo", "/std:c++17", "/O2", "/LD", "/EHsc", "/MD", "/W3", "/Zc:__cplusplus", "/permissive-",
     "/I", (Join-Path $JDK "include"),
@@ -80,9 +84,9 @@ $clArgs = @(
 )
 # v0.7.4 诊断：确认 QtSerialPort 头可见
 Write-Host "=== QtSerialPort diag ==="
-Write-Host "incDir=$(Join-Path $QtRoot 'includeQtSerialPort')"
-Get-ChildItem (Join-Path $QtRoot "includeQtSerialPort") -ErrorAction SilentlyContinue | Select-Object -First 8 -ExpandProperty Name | Out-Host
-Test-Path (Join-Path $QtRoot "includeQtSerialPortQSerialPort") | Out-Host
+Write-Host "incDir=$(Join-Path $QtRoot 'include\QtSerialPort')"
+Get-ChildItem (Join-Path $QtRoot "include\QtSerialPort") -ErrorAction SilentlyContinue | Select-Object -First 8 -ExpandProperty Name | Out-Host
+Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") | Out-Host
 & cl.exe @clArgs
 if ($LASTEXITCODE -ne 0) { throw "cl.exe failed" }
 
