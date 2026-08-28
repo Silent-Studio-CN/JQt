@@ -132,6 +132,7 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QtSql/QSqlDriver>
 #include <QtSql/QSqlDriverPlugin>
 #include <QPluginLoader>
+#include <QLibraryInfo>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
