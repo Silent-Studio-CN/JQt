@@ -1,168 +1,197 @@
-> 🔗 **全部功能导航：https://jqt.silentstudio.cn/docs **（⚠️ 暂未开放 · Coming Soon）
+# JQt — Qt for Java
 
-# JQt — Java 绑定 Qt 框架 / Java Bindings for Qt
+> Build native desktop apps in Java with the Qt (C++) rendering and event engine underneath.
+> No C++ compiler. No Qt SDK. Just Java.
 
-> 用 Java 写桌面应用，Qt（C++）负责渲染与事件。无需 C++ 编译器、无需 Qt SDK。
-> Desktop apps in Java, powered by Qt underneath.
+**中文版**：[简体中文](README.zh.md) · **English**: this file
 
----
+![CI](https://img.shields.io/badge/CI-4%20platforms%20%E2%9C%93-green) ![Qt](https://img.shields.io/badge/Qt-6.8.3%20%2F%206.11.2-blue) ![API](https://img.shields.io/badge/API-580%2B%20methods%2C%2056%20classes-orange) ![License](https://img.shields.io/badge/License-JSL--1.0%20%2B%20LGPLv3-lightgrey)
 
-## 🛠 怎么实现的（How It Works）
-
-三层架构，Java 只是薄薄一层包装：
-
-```
-┌─────────────────────────────────────────┐
-│  Java 层（你写的代码）                   │
-│  QPushButton btn = new QPushButton("点我");   │
-│  btn.onClicked(() -> ...);               │
-└─────────────────────────────────────────┘
-                    ↕ JNI
-┌─────────────────────────────────────────┐
-│  C++ 胶水层（jqt_bridge.cpp）             │
-│  翻译 Java 调用 → Qt；信号回调回 Java      │
-└─────────────────────────────────────────┘
-                    ↕ 直接调用
-┌─────────────────────────────────────────┐
-│  Qt 框架（QApplication/QWidget/...）      │
-└─────────────────────────────────────────┘
-```
-
-| 机制 | 实现方式 |
-|------|---------|
-| **信号槽** | Qt 信号 → C++ lambda → JNI `CallVoidMethod` → Java `onXxx` 回调（GUI 线程） |
-| **内存管理** | 句柄注册表（自增 ID，destroyed 同步注销）+ Java Cleaner 回收 + 悬垂保护（抛异常不崩溃） |
-| **布局** | QVBoxLayout / QHBoxLayout 封装（间距/弹性空间） |
-| **跨平台** | 三平台 CI（Windows/Linux/macOS），产物 libjqt.so / jqt.dll / libjqt.dylib |
-| **双 Qt 版本** | 同一套代码编译 Qt 6.11.2 与 6.8.3 LTS 两个版本 |
-| **定时任务** | Qt 定时器 → GUI 线程执行 Java Runnable（`app.schedule`，任意线程可调） |
-
----
-
-## ⚡ 快速开始（Hello World）
-
-```powershell
-# 下载 jqt-0.7.4-Universal-Kit-windows-x64.zip → 解压
-# 运行注意：jqt.dll 依赖 Qt6*.dll，需把 lib 目录加入 DLL 搜索路径
-# （cd 到 lib 目录，或把 lib 加入 PATH）——-Djava.library.path 只定位 jqt.dll 本身
-cd lib
-java -Djava.library.path=. -cp "jqt-0.7.4-Universal-Kit.jar;.." Hello
-# 或：不切目录，用 PATH 方式
-# $env:PATH = "$PWD\lib;$env:PATH"
-# java -Djava.library.path=lib -cp "lib\jqt-0.7.4-Universal-Kit.jar;." Hello
-```
+JQt is a Java binding for [Qt 6](https://www.qt.io/), exposing Qt Widgets as plain Java classes.
+Write your UI in Java; Qt handles rendering, events, theming, and platform integration.
+Works on **Windows, Linux, and macOS** (x64 + ARM64), built against **both Qt 6.8.3 LTS and 6.11.2**.
 
 ```java
 import org.jqt.*;
 
 public class Hello {
     public static void main(String[] args) {
-        QApplication app = new QApplication();          // 必须先创建
+        QApplication app = new QApplication();
         QMainWindow window = new QMainWindow("Hello JQt", 640, 480);
-        QPushButton button = new QPushButton("点我");
+        QPushButton button = new QPushButton("Click me");
         button.onClicked(() -> System.out.println("clicked!"));
         QVBoxLayout vbox = new QVBoxLayout();
         vbox.addWidget(button);
-        window.setLayout(vbox);                         // 布局挂载后控件统一显示
+        window.setLayout(vbox);
         window.show();
-        app.exec();                                     // 阻塞至窗口关闭
+        app.exec();   // blocks until window closes
     }
 }
 ```
 
 ---
 
-## ✨ 核心 API（示例）
+## Why JQt?
+
+| | JQt | JavaFX / Swing | QtJambi |
+|---|-----|---------------|---------|
+| Native look & feel | ✅ Qt native | ⚠️ emulated | ✅ |
+| API fidelity to Qt | ✅ 1:1 Widgets mapping | — | ⚠️ Qt Quick oriented |
+| Chinese docs & support | ✅ | — | ❌ |
+| Industrial modules (SQL, Serial, Print) | ✅ built-in | ❌ | ⚠️ |
+| Lightweight runtime story | ✅ single zip | ✅ JDK | ⚠️ heavy |
+
+JQt targets **L1/L2/L3 tiered coverage** of the full Qt 6 API surface (~2172 methods tracked in our roadmap).
+L1 (common API) is **92.7% complete**; industrial modules and platform exclusives are shipping now.
+
+---
+
+## Quick Start
+
+### 1. Download
+
+Grab the latest release zip (self-contained: jar + native lib + Qt runtime):
+
+```bash
+# Windows: jqt-0.7.4-Universal-Kit-windows-x64.zip → extract → cd lib
+java -Djava.library.path=. -cp "jqt-0.7.4-Universal-Kit.jar;.." Hello
+# Linux / macOS: same pattern, or set LD_LIBRARY_PATH / DYLD_LIBRARY_PATH to lib/
+```
+
+> **Note**: the native lib (jqt.dll / libjqt.so / libjqt.dylib) depends on the Qt6 runtime DLLs
+> shipped inside the zip; add the `lib` dir to the DLL search path (PATH / LD_LIBRARY_PATH / DYLD_LIBRARY_PATH).
+
+### 2. Write code
+
+See [docs/getting-started.md](docs/getting-started.md) and the [JQtGallery](Community/JQtGallery/) demo app.
+
+---
+
+## Core API at a Glance
 
 ```java
-app.schedule(() -> window.resize(800, 600), 1000);   // 定时任务（GUI 线程）
-app.onAboutToQuit(() -> save());                      // 退出前保存
+app.schedule(() -> window.resize(800, 600), 1000);   // GUI-thread timer
+app.onAboutToQuit(() -> save());                     // cleanup hook
+app.runOnUiThread(() -> updateUi());                 // from any thread
 
 button.onClicked(() -> ...);     button.onToggled(on -> ...);
 edit.onTextChanged(s -> ...);    edit.onReturnPressed(() -> ...);
 combo.onCurrentIndexChanged(i -> ...);
 list.onItemClicked(row -> ...);  window.onClose(() -> ...);
 window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
+
+// Theming: QSS templates + variable sets = unlimited themes
+app.setTheme("fluent-dark");                                        // built-in
+app.setTheme("themes/fluent.qss.tpl", myTheme.vars(), true);        // custom
 ```
 
-> 🔗 **全部功能与完整 API：https://jqt.silentstudio.cn/docs**（暂未开放 · Coming Soon）
-
----
-
-## ✨ 独家能力包（Exclusive Kit）— 跨平台统一
-
-**同一 API，三平台同语义，不区别对待**：
+### Exclusive Kit — same API on all 3 platforms
 
 | API | Windows | macOS | Linux |
 |-----|---------|-------|-------|
-| `preventSleep(boolean)` 防休眠/防息屏 | SetThreadExecutionState | NSProcessInfo | D-Bus Inhibit |
-| `setAutoStart(enable, path)` 开机自启 | Run 注册表 | LaunchAgent | XDG .desktop |
-| `showNotification(t, b, ms)` 桌面通知 | 托盘气泡 | 通知中心 | D-Bus Notifications |
-| 任务栏进度 / Dock 角标 | `setTaskbarProgress`（v0.6.1） | `setDockBadge`（v0.7.0） | — |
-| DWM 原生窗口样式 | `setNativeBorderColor` 等（v0.6.1） | `setMacTitlebarTransparent` 等（v0.7.0） | — |
-| 全局热键 | GlobalHotkey（v0.6.1） | — | 候选（v0.7.x，X11 依赖） |
+| `preventSleep(boolean)` | SetThreadExecutionState | NSProcessInfo | D-Bus Inhibit |
+| `setAutoStart(enable, path)` | Run registry | LaunchAgent | XDG .desktop |
+| `showNotification(t, b, ms)` | tray balloon | Notification Center | D-Bus Notifications |
+| Taskbar progress / Dock badge | `setTaskbarProgress` | `setDockBadge` | — |
+| Native window styling | DWM colors / Mica | transparent titlebar | — |
+| Global hotkey | GlobalHotkey | — | planned |
 
-## 📦 发布包（v0.7.4-Universal-Kit）
+### Industrial modules
 
-| 资产 | 平台 |
-|------|------|
-| `jqt-0.7.4-Universal-Kit.jar` | 全部（Java API） |
-| `jqt-0.7.4-Universal-Kit-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
-| `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库（双 Qt 版本） |
+- **QSerialPort** — full serial-port API (ports, baud, parity, flow control, async read/write)
+- **QSql** — SQLite/PostgreSQL/MySQL via Qt SQL (open/query/result iteration)
+- **QPrinter** — native printing + PDF export (`QTextEdit.printToPdf`, `QWidget.printToPdf`)
+- **QOpenGLWidget** — GPU canvas; LWJGL attachable (GL context is current inside paintGL)
+- **QAction / QDialog / QMenuBar / QListView / QColor / ...** — 56 classes and growing
+
+---
+
+## Releases
+
+Latest: [v0.7.4-Universal-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v0.7.4-Universal-Kit)
+
+| Asset | Platform |
+|-------|----------|
+| `jqt-0.7.4-Universal-Kit.jar` | all (Java API) |
+| `jqt-0.7.4-Universal-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
+| `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 bare libs (both Qt versions) |
 | `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
-| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux（双版本） |
-| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS（双版本） |
+| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux (both versions) |
+| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS (both versions) |
 
-> 最新发布见 [GitHub Releases](https://github.com/Silent-Studio-CN/JQt/releases)
-## 📄 仓库内文档
+CI builds all 4 platforms (Windows x64/ARM64, Linux, macOS) × 2 Qt versions on every push —
+[see the workflow](.github/workflows/ci.yml).
 
-| 文档 | 内容 |
-|------|------|
-| [docs/api-implemented.md](docs/api-implemented.md) | 已实现 API 完整清单（双语） |
-| [docs/user-guide.md](docs/user-guide.md) | 安装配置 / 三平台运行 / FAQ |
-| [docs/api-tiering.md](docs/api-tiering.md) | API 分级设计（L1/L2/L3） |
-| [CHANGELOG.md](CHANGELOG.md) | 变更日志 |
+---
 
-## 🎁 社区资源（Community）
+## Documentation
 
-仓库 [Community/](Community/) 目录收录社区贡献的**全部开源免费**资源：
+| Doc | What |
+|-----|------|
+| [docs/getting-started.md](docs/getting-started.md) | Install, run, FAQ |
+| [docs/api-implemented.md](docs/api-implemented.md) | Full implemented-API list (bilingual) |
+| [docs/api-tiering.md](docs/api-tiering.md) | L1/L2/L3 tiering design |
+| [docs/behavior.md](docs/behavior.md) | Behavior contract (display rules, theming, DPI) |
+| [CHANGELOG.md](CHANGELOG.md) | Changelog |
 
-- **许可**：JSL-1.0（与 JQt 相同，见 [LICENSE.md](LICENSE.md)）——**免费使用、免费修改、免费分发**（遵守 JSL-1.0 条款即可）
-- **当前收录**：
+---
 
-| 资源 | 说明 |
-|------|------|
-| [jqt-theme-pack](Community/jqt-theme-pack/) | 三个原创主题：**Nord**（北极蓝·暗）/ **Solarized**（米黄护眼·亮）/ **Terminal**（荧光绿·暗） |
-| [FluentAnimDemo](Community/FluentAnimDemo/) | qfluentwidgets 经典动效的 JQt 映射演示（缩放/按压下沉/滑块/淡入） |
-| [JQtGallery](Community/JQtGallery/) | 全功能演示：5 套主题 / 强调色 / 自动跟随 / 控件 / 动画 / 窗口（含 jpackage 打包方案） |
-| [QraftLab](Community/QraftLab/) | QraftLab 贡献：QSS 美术指南 / 分离样式 / 按钮-动画-画布-渲染四区 demo |
+## Community
 
-```java
-// 社区主题即插即用（一套模板，无限主题）
-app.setTheme("themes/fluent.qss.tpl", NordTheme.vars(), false);       // 暗色
-app.setTheme("themes/fluent.qss.tpl", SolarizedTheme.vars(), true);   // 亮色
+The [Community/](Community/) directory collects open-source, free contributions:
+
+| Resource | What |
+|----------|------|
+| [jqt-theme-pack](Community/jqt-theme-pack/) | 3 original themes: **Nord** / **Solarized** / **Terminal** |
+| [FluentAnimDemo](Community/FluentAnimDemo/) | qfluentwidgets-style motion demos mapped to JQt |
+| [JQtGallery](Community/JQtGallery/) | Full-featured gallery: 5 themes, controls, animations, jpackage packaging |
+| [QraftLab](Community/QraftLab/) | QSS art guide + separated styles + 4-zone lab demo |
+
+Want to contribute? Put your source in `Community/` (no build artifacts) — reviewed and merged.
+
+---
+
+## How It Works
+
+```
+┌─────────────────────────────────────────┐
+│  Java layer (your code)                 │
+│  QPushButton btn = new QPushButton("Hi");   │
+│  btn.onClicked(() -> ...);              │
+└─────────────────────────────────────────┘
+                    ↕ JNI
+┌─────────────────────────────────────────┐
+│  C++ glue (native/jqt_bridge.cpp)       │
+│  Java calls → Qt; Qt signals → Java     │
+└─────────────────────────────────────────┘
+                    ↕ direct
+┌─────────────────────────────────────────┐
+│  Qt framework (QApplication/QWidget...) │
+└─────────────────────────────────────────┘
 ```
 
-> 想提交自己的作品？把源码放进 `Community/`（请勿提交编译产物），我们审核后合入。
->
-> 🙏 **特别致谢**：QraftLab 的贡献（QSS 美术指南与分离样式实验），经审核收录。
+| Mechanism | Implementation |
+|-----------|----------------|
+| Signals/slots | Qt signal → C++ lambda → JNI `CallVoidMethod` → Java `onXxx` callback (GUI thread) |
+| Memory | handle registry (incrementing IDs, destroyed-sync) + Java Cleaner + dangling protection (throws, no crash) |
+| Layouts | QVBoxLayout / QHBoxLayout / QGridLayout / QFormLayout / QStackedLayout |
+| Cross-platform | 3-platform CI, artifacts libjqt.so / jqt.dll / libjqt.dylib |
+| Dual Qt | same code → Qt 6.11.2 + 6.8.3 LTS |
+| Timers | Qt timers → GUI-thread Java runnables (`app.schedule`, callable from any thread) |
 
 ---
 
-## 👥 贡献者（Contributors）
+## License
 
-| 头像 | 贡献者 | 角色 |
-|------|--------|------|
-| <img src="assets/deepseek-2.svg" width="64" alt="DeepSeek-Work-In-SilentStudio"/> | **DeepSeek-Work-In-SilentStudio** (@DeepSeek-Work-In-SilentStudio) | AI 开发（提交署名，GitHub 账号头像；`.mailmap` 映射全部历史提交） |
-| | **Silent-xiaomiao** | 项目发起 / 发布（GitHub: [Silent-xiaomiao](https://github.com/Silent-xiaomiao)） |
-
+- **JQt**: JSL-1.0 (JQt Source License) — free to use, modify, and distribute; see [LICENSE.md](LICENSE.md)
+- **Qt runtime**: LGPLv3 (dynamic linking) — see [LGPL-3.0.txt](LGPL-3.0.txt) and [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
 
 ---
 
-## 🤝 参与
+## Contributors
 
-- 提交政策：仅限 SilentStudio 成员（CONTRIBUTING.md）；反馈：GitHub Issues
-- 许可：JSL-1.0 分层授权（LICENSE.md）；Qt 运行时 LGPLv3（LGPL-3.0.txt）
+- **DeepSeek-Work-In-SilentStudio** — AI development (all commits mapped via .mailmap)
+- **Silent-xiaomiao** — project initiator / releases ([GitHub](https://github.com/Silent-xiaomiao))
 
 ---
 
