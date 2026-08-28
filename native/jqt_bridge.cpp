@@ -44,9 +44,18 @@
 #include <objc/message.h>
 #include <objc/runtime.h>
 #include <CoreFoundation/CoreFoundation.h>
-// objc_msgSend 原型随 Xcode/SDK 变化（arm64 新 SDK 为 void(void)，无法直接调用），
-// 统一用显式 variadic 函数指针 cast 调用，绕开 SDK 原型差异
-#define JQT_OBJC_CALL(RET, obj, sel, ...)     ((RET(*)(id, SEL, ...))objc_msgSend)((id)(obj), sel_registerName(sel), ##__VA_ARGS__)
+// objc_msgSend 原型随 Xcode/SDK 变化（arm64 新 SDK 为 void(void)），
+// 且 variadic 调用对多参数混合类型在 arm64 上不可靠（beginActivity reason 传空）——
+// 统一用精确签名函数指针 cast，完全绕开原型与 variadic 传递问题。
+typedef id    (*JQtMsg0)(id, SEL);
+typedef id    (*JQtMsg1)(id, SEL, id);
+typedef void  (*JQtMsgV1)(id, SEL, id);
+typedef id    (*JQtMsgOpt)(id, SEL, unsigned long, id);   // beginActivityWithOptions:reason:
+typedef void  (*JQtMsgEnd)(id, SEL, id);                  // endActivity:
+typedef void  (*JQtMsgBool)(id, SEL, bool);               // setTitlebarAppearsTransparent:
+typedef unsigned long (*JQtMsgUL)(id, SEL);               // styleMask
+typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
+#define JQT_OBJC_CAST(FN) reinterpret_cast<FN>(objc_msgSend)
 #endif
 #if defined(__linux__)
 #include <QtDBus>
@@ -5315,18 +5324,23 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativePreventSleep(JNIEnv* 
         return JNI_TRUE;
     }
 #elif defined(__APPLE__)
-    // NSProcessInfo beginActivityWithOptions:reason:（NSActivityIdleSystemSleepDisabled = 1ULL << 20）
+    // NSProcessInfo beginActivityWithOptions:reason:（NSActivityIdleSystemSleepDisabled = 1<<20）
+    // 精确签名函数指针：绕开 arm64 上 variadic 传参不可靠的问题（reason 传空会抛异常）
+    static const JQtMsg0 s_processInfo = JQT_OBJC_CAST(JQtMsg0);
+    static const JQtMsgOpt s_begin = JQT_OBJC_CAST(JQtMsgOpt);
+    static const JQtMsgEnd s_end = JQT_OBJC_CAST(JQtMsgEnd);
     static id s_activity = nullptr;
     if (on && !s_activity) {
-        id proc = JQT_OBJC_CALL(id, objc_getClass("NSProcessInfo"), "processInfo");
+        id proc = s_processInfo((id)objc_getClass("NSProcessInfo"), sel_registerName("processInfo"));
         if (!proc) return JNI_FALSE;
         CFStringRef reason = CFStringCreateWithCString(kCFAllocatorDefault, "JQt preventSleep", kCFStringEncodingUTF8);
-        s_activity = JQT_OBJC_CALL(id, proc, "beginActivityWithOptions:reason:", (uint64_t)(1ULL << 20), (id)reason);
+        if (!reason) return JNI_FALSE;
+        s_activity = s_begin(proc, sel_registerName("beginActivityWithOptions:reason:"), 1UL << 20, (id)reason);
         CFRelease(reason);
         return s_activity ? JNI_TRUE : JNI_FALSE;
     } else if (!on && s_activity) {
-        id proc = JQT_OBJC_CALL(id, objc_getClass("NSProcessInfo"), "processInfo");
-        JQT_OBJC_CALL(void, proc, "endActivity:", s_activity);
+        id proc = s_processInfo((id)objc_getClass("NSProcessInfo"), sel_registerName("processInfo"));
+        if (proc) s_end(proc, sel_registerName("endActivity:"), s_activity);
         s_activity = nullptr;
     }
     return JNI_TRUE;
@@ -5392,18 +5406,21 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeShowNotification(JNIE
     return JNI_TRUE;
 #elif defined(__APPLE__)
     // NSUserNotification（macOS 10.8+；Apple 弃用但可用，无需权限弹窗与打包身份）
-    id center = JQT_OBJC_CALL(id, objc_getClass("NSUserNotificationCenter"), "defaultUserNotificationCenter");
+    static const JQtMsg0 s_msg0 = JQT_OBJC_CAST(JQtMsg0);
+    static const JQtMsgV1 s_msgV1 = JQT_OBJC_CAST(JQtMsgV1);
+    id center = s_msg0((id)objc_getClass("NSUserNotificationCenter"), sel_registerName("defaultUserNotificationCenter"));
     if (!center) return JNI_FALSE;
-    id notif = JQT_OBJC_CALL(id, objc_getClass("NSUserNotification"), "alloc");
-    notif = JQT_OBJC_CALL(id, notif, "init");
+    id notif = s_msg0((id)objc_getClass("NSUserNotification"), sel_registerName("alloc"));
+    notif = s_msg0(notif, sel_registerName("init"));
     const QByteArray tba = qtTitle.toUtf8();
     const QByteArray bba = qtBody.toUtf8();
     CFStringRef tstr = CFStringCreateWithCString(kCFAllocatorDefault, tba.constData(), kCFStringEncodingUTF8);
     CFStringRef bstr = CFStringCreateWithCString(kCFAllocatorDefault, bba.constData(), kCFStringEncodingUTF8);
-    JQT_OBJC_CALL(void, notif, "setTitle:", (id)tstr);
-    JQT_OBJC_CALL(void, notif, "setInformativeText:", (id)bstr);
-    JQT_OBJC_CALL(void, center, "deliverNotification:", notif);
-    CFRelease(tstr); CFRelease(bstr);
+    if (tstr) s_msgV1(notif, sel_registerName("setTitle:"), (id)tstr);
+    if (bstr) s_msgV1(notif, sel_registerName("setInformativeText:"), (id)bstr);
+    s_msgV1(center, sel_registerName("deliverNotification:"), notif);
+    if (tstr) CFRelease(tstr);
+    if (bstr) CFRelease(bstr);
     return JNI_TRUE;
 #elif defined(__linux__)
     QDBusInterface notif(QStringLiteral("org.freedesktop.Notifications"),
@@ -5424,19 +5441,22 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeShowNotification(JNIE
 // Dock 图标徽章（v0.7.0 macOS 独家：NSDockTile setBadgeLabel:；对齐 Windows 任务栏进度）
 JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetDockBadge(JNIEnv* env, jclass, jlong handle, jstring badge) {
 #if defined(__APPLE__)
+    static const JQtMsg0 s_sharedApp = JQT_OBJC_CAST(JQtMsg0);
+    static const JQtMsg0 s_dockTileMsg = JQT_OBJC_CAST(JQtMsg0);
+    static const JQtMsgV1 s_setBadge = JQT_OBJC_CAST(JQtMsgV1);
     (void)handle;
-    id app = JQT_OBJC_CALL(id, objc_getClass("NSApplication"), "sharedApplication");
+    id app = s_sharedApp((id)objc_getClass("NSApplication"), sel_registerName("sharedApplication"));
     if (!app) return;
-    id dockTile = JQT_OBJC_CALL(id, app, "dockTile");
+    id dockTile = s_dockTileMsg(app, sel_registerName("dockTile"));
     if (!dockTile) return;
     if (badge) {
         const char* utf = env->GetStringUTFChars(badge, nullptr);
         CFStringRef str = CFStringCreateWithCString(kCFAllocatorDefault, utf ? utf : "", kCFStringEncodingUTF8);
         if (utf) env->ReleaseStringUTFChars(badge, utf);
-        JQT_OBJC_CALL(void, dockTile, "setBadgeLabel:", (id)str);
-        CFRelease(str);
+        if (str) s_setBadge(dockTile, sel_registerName("setBadgeLabel:"), (id)str);
+        if (str) CFRelease(str);
     } else {
-        JQT_OBJC_CALL(void, dockTile, "setBadgeLabel:", (id)nullptr);
+        s_setBadge(dockTile, sel_registerName("setBadgeLabel:"), (id)nullptr);
     }
 #else
     (void)env; (void)handle; (void)badge;
@@ -5446,19 +5466,23 @@ JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetDockBadge(JNIEnv* env, 
 // macOS 原生窗口属性（kind: 1=titlebarAppearsTransparent 2=fullSizeContentView；v0.7.0）
 JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetMacWindowAttribute(JNIEnv* env, jclass, jlong handle, jint kind, jboolean value) {
 #if defined(__APPLE__)
+    static const JQtMsg0 s_windowMsg = JQT_OBJC_CAST(JQtMsg0);
+    static const JQtMsgBool s_setTransparent = JQT_OBJC_CAST(JQtMsgBool);
+    static const JQtMsgUL s_styleMask = JQT_OBJC_CAST(JQtMsgUL);
+    static const JQtMsgSetMask s_setMask = JQT_OBJC_CAST(JQtMsgSetMask);
     QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
     if (!w) return;
     id view = reinterpret_cast<id>(w->winId());   // QWindow::winId() 在 macOS 为 NSView*
     if (!view) return;
-    id window = JQT_OBJC_CALL(id, view, "window");
+    id window = s_windowMsg(view, sel_registerName("window"));
     if (!window) return;
     if (kind == 1) {
-        JQT_OBJC_CALL(void, window, "setTitlebarAppearsTransparent:", (bool)value);
+        s_setTransparent(window, sel_registerName("setTitlebarAppearsTransparent:"), (bool)value);
     } else if (kind == 2) {
-        // NSFullSizeContentViewWindowMask = 1ULL << 15
-        const uint64_t fullSize = 1ULL << 15;
-        uint64_t mask = JQT_OBJC_CALL(uint64_t, window, "styleMask");
-        JQT_OBJC_CALL(void, window, "setStyleMask:", value ? (mask | fullSize) : (mask & ~fullSize));
+        // NSFullSizeContentViewWindowMask = 1UL << 15
+        const unsigned long fullSize = 1UL << 15;
+        unsigned long mask = s_styleMask(window, sel_registerName("styleMask"));
+        s_setMask(window, sel_registerName("setStyleMask:"), value ? (mask | fullSize) : (mask & ~fullSize));
     }
 #else
     (void)env; (void)handle; (void)kind; (void)value;
