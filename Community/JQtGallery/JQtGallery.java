@@ -725,8 +725,22 @@ public class JQtGallery {
         v61.addWidget(new QLabel("⑤ 边框热更新：先开原生边框（DWM 边框色才可见），宽度即时生效，改完可直接看颜色"));
         QHBoxLayout v61r5b = new QHBoxLayout();
         v61r5b.setSpacing(6);
-        v61r5b.addWidget(v61btn("原生边框 开", () -> { w.setFrameless(false); w.setBorderWidth(2); fb61.setText("已切原生边框（DWM 边框可见，宽 2）"); log("frameless=false border=2"); }));
-        v61r5b.addWidget(v61btn("无边框 回", () -> { w.setFrameless(true); w.setBorderWidth(0); fb61.setText("已切回无边框"); log("frameless=true border=0"); }));
+        // 注：窗口已显示后 setFrameless 底层 setWindowFlag 不会立即重建窗口，
+        //     第一次切换不生效（要先关再开才显示）。这里强制 hide/show 触发重建。
+        v61r5b.addWidget(v61btn("原生边框 开", () -> {
+            w.setFrameless(false);
+            w.setBorderWidth(2);
+            w.hide(); w.show();   // 强制重建窗口，原生边框立即生效
+            fb61.setText("已切原生边框（DWM 边框可见，宽 2）");
+            log("frameless=false border=2");
+        }));
+        v61r5b.addWidget(v61btn("无边框 回", () -> {
+            w.setFrameless(true);
+            w.setBorderWidth(0);
+            w.hide(); w.show();   // 强制重建，阴影恢复
+            fb61.setText("已切回无边框");
+            log("frameless=true border=0");
+        }));
         v61r5b.addWidget(v61btn("边框宽 1", () -> { w.setBorderWidth(1); fb61.setText("边框宽 1"); log("borderWidth=1"); }));
         v61r5b.addWidget(v61btn("边框宽 4", () -> { w.setBorderWidth(4); fb61.setText("边框宽 4"); log("borderWidth=4"); }));
         v61r5b.addWidget(v61btn("边框宽 8", () -> { w.setBorderWidth(8); fb61.setText("边框宽 8"); log("borderWidth=8"); }));
