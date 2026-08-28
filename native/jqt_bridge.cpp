@@ -132,7 +132,7 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QtSql/QSqlDriver>
 #include <QtSql/QSqlDriverPlugin>
 // QOpenGLWidget 实现仅 Windows/Linux（macOS 与 Windows ARM64 的 Qt 构建不含 OpenGLWidgets 模块）
-#if defined(_WIN32) || defined(__linux__)
+#if (defined(_WIN32) && !defined(_M_ARM64)) || defined(__linux__)
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLContext>
@@ -6523,7 +6523,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QSqlQuery_nativeDispose(JNIEnv* env, jobject
 // ============================================================================
 
 // macOS / Windows ARM64 的 Qt 构建不含 OpenGLWidgets 模块：存根降级
-#if defined(_WIN32) || defined(__linux__)
+#if (defined(_WIN32) && !defined(_M_ARM64)) || defined(__linux__)
 // QOpenGLWidget 子类：initializeGL/paintGL/resizeGL 回调到 Java
 class JQtGLWidget : public QOpenGLWidget {
 public:
