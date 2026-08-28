@@ -3,6 +3,7 @@
 // https://github.com/Silent-Studio-CN/JQt/releases
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
 
 group = 'com.github.Silent-Studio-CN'
@@ -33,8 +34,16 @@ javadoc {
     options.addStringOption('Xdoclint:none', '-quiet')
 }
 
-// JitPack expects the jar artifact; javadoc/sources jars are published alongside.
-artifacts {
-    archives javadocJar
-    archives sourcesJar
+// JitPack publishes via maven-publish (auto-detected); javadoc/sources included.
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = 'com.github.Silent-Studio-CN'
+            artifactId = 'jqt'
+            version = project.version
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
 }
