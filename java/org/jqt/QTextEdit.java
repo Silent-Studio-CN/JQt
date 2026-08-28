@@ -59,6 +59,31 @@ public class QTextEdit extends QWidget {
     private native boolean nativeIsReadOnly(long handle);
 
     /** 内容变化回调。 */
+    // ---- v0.7.2 工业模块：打印 ----
+
+    /**
+     * 打印到打印机/PDF（QPlainTextEdit::print）。
+     * @param printer 目标打印机（PDF 模式时输出到 setOutputFileName 的文件）
+     * @return 是否成功
+     */
+    public boolean print(QPrinter printer) {
+        return nativePrint(nativeHandle, printer.nativeHandle());
+    }
+    private native boolean nativePrint(long handle, long printerHandle);
+
+    /**
+     * 便捷导出 PDF（内部创建 PDF 打印机，一页内容）。
+     * @return 是否成功
+     */
+    public boolean printToPdf(String path) {
+        QPrinter p = new QPrinter();
+        p.setOutputFormat(QPrinter.OutputFormat.PDF);
+        p.setOutputFileName(path);
+        boolean ok = print(p);
+        p.disposePdf();
+        return ok;
+    }
+
     /** 设置占位提示文本（QPlainTextEdit::setPlaceholderText）。 */
     public void setPlaceholderText(String text) {
         nativeSetPlaceholderText(nativeHandle, text);

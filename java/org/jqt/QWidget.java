@@ -426,6 +426,18 @@ public abstract class QWidget {
         nativeSetWindowIcon(nativeHandle, iconPath);
     }
     private native void nativeSetWindowIcon(long handle, String iconPath);
+
+    // ---- v0.7.2 工业模块：打印 ----
+
+    /**
+     * 将控件渲染导出为 PDF（QWidget::render 到 PDF 打印机）。
+     * @param path 输出 PDF 路径
+     * @return 是否成功
+     */
+    public boolean printToPdf(String path) {
+        return nativePrintToPdf(nativeHandle, path);
+    }
+    private native boolean nativePrintToPdf(long handle, String path);
 }
 
 

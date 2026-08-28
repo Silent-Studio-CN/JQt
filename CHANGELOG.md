@@ -12,6 +12,23 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.7.2-Universal-Kit（2026-08-29）— 工业模块：QPrinter（打印/PDF）+ QSql（数据库）
+
+**QPrinter（QtPrintSupport）**：
+- `QPrinter` 类：setOutputFormat(NATIVE/PDF)/setOutputFileName/setResolution/setPageSize(A4/A3/A5/Letter/Legal)/newPage
+- **QTextEdit.print(QPrinter) / printToPdf(path)** — 解锁 L1 阻塞项 qplaintextedit::print
+- **QWidget.printToPdf(path)** — 控件渲染导出 PDF（render）
+
+**QSql（Qt6Sql）**：
+- `QSqlDatabase`：addDatabase(SQLITE/PSQL/MYSQL)/setDatabaseName/setUserName/setPassword/setHostName/setPort/open/close/isOpen/exec/lastError
+- `QSqlQuery`：next/value/valueCount/isSelect/numRowsAffected/lastError
+- **Windows 驱动插件 workaround**：QFactoryLoader 不搜 PATH 导致 qsqlite.dll 加载失败 → QPluginLoader 预加载 + registerSqlDriver 手动注册（Qt 公开 API），SQLite 开箱即用
+- 构建：build.ps1 自动部署 plugins/sqldrivers/qsqlite.dll
+
+**构建**：三平台构建脚本加 Qt6PrintSupport/Qt6Sql（均为 qtbase 模块，CI 零新依赖）。
+
+**验证**：SmokeV072（PDF 三路 + SQLite 增删查）接入四平台 CI。
+
 ### v0.7.1-Universal-Kit（2026-08-29）— L1 收尾：190/205（92.7%）
 
 **L1 补全（149 → 190/205；剩余 15 项全部为 ⛔ 阻塞归档：model/validator/pixmap 对象化依赖、Qt 6 不存在的 API）**：
