@@ -12,6 +12,20 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.7.4-Universal-Kit（2026-08-29）— QSerialPort 完整绑定（工业串口）
+
+**QSerialPort（Qt SerialPort 模块，完整实现）**：
+- 端口枚举：`availablePorts()`（QSerialPortInfo）
+- 配置：`setPortName/setBaudRate/setDataBits/setParity/setStopBits/setFlowControl`（Qt 枚举一一对应）
+NaN
+- 读写：`write(byte[])/write(String)/readAll()/readAllText()/readLine()/bytesAvailable()/waitForReadyRead(ms)/flush()/clear()`
+- 错误：`errorString()`
+- 信号：`onReadyRead`（数据到达）/ `onBytesWritten`（写入完成）
+
+**构建**：qtserialport 为独立 Qt 模块（qtbase 外）——本机由源码编译安装（qmake 已移除，用 CMake + windres 显式指定解决 MinGW RC 反斜杠路径问题）；CI 四平台依赖：Windows aqt `-m qtserialport` / Linux 源码编译 ×2 版本 / macOS aqt `-m qtserialport` / ARM64 官方 7z ×2 版本。
+
+**验证**：SmokeV074（端口枚举真实返回 4 个 COM 口 + 全配置 + 无设备 open 失败不崩）四平台 CI。
+
 ### v0.7.3-Universal-Kit（2026-08-29）— QOpenGLWidget 绑定（GPU 渲染画布）
 
 **QOpenGLWidget（Qt6OpenGLWidgets）**：通用 GL 画布，补上 JQt 的 GPU 渲染缺口（此前仅 QPainter 软件光栅化）：

@@ -136,6 +136,8 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QOpenGLContext>
+#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
 #endif
 #include <QPluginLoader>
 #include <QLibraryInfo>
@@ -256,6 +258,7 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QColor.h"
 #include "generated/org_jqt_QPrinter.h"
 #include "generated/org_jqt_QOpenGLWidget.h"
+#include "generated/org_jqt_QSerialPort.h"
 #include "generated/org_jqt_QSqlDatabase.h"
 #include "generated/org_jqt_QSqlQuery.h"
 #include "generated/org_jqt_QAction.h"
@@ -6602,3 +6605,175 @@ JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeSetAutoClear(JNIEnv* env
 JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeMakeCurrent(JNIEnv* env, jobject, jlong) { (void)env; }
 JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeDoneCurrent(JNIEnv* env, jobject, jlong) { (void)env; }
 #endif
+
+// ============================================================================
+// v0.7.4：QSerialPort（Qt SerialPort 模块）——完整串口绑定
+// ============================================================================
+
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNIEnv* env, jclass) {
+    const QList<QSerialPortInfo> infos = QSerialPortInfo::availablePorts();
+    jclass strCls = env->FindClass("java/lang/String");
+    jobjectArray arr = env->NewObjectArray(static_cast<jsize>(infos.size()), strCls, nullptr);
+    for (int i = 0; i < infos.size(); i++) {
+        jstring js = env->NewStringUTF(infos.at(i).portName().toUtf8().constData());
+        env->SetObjectArrayElement(arr, i, js);
+        env->DeleteLocalRef(js);
+    }
+    return arr;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeCreate(JNIEnv* env, jobject thiz) {
+    if (requireApp(env) == nullptr) return 0;
+    QSerialPort* port = new QSerialPort();
+    const jlong h = registerHandle(port, /*javaOwned=*/true);
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(port, &QSerialPort::readyRead, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleReadyRead", "()V");
+        if (mid) e->CallVoidMethod(gRef, mid);
+    });
+    QObject::connect(port, &QSerialPort::bytesWritten, [gRef](qint64 n) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleBytesWritten", "(I)V");
+        if (mid) e->CallVoidMethod(gRef, mid, static_cast<jint>(n));
+    });
+    return h;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (port) { port->close(); delete port; }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetPortName(JNIEnv* env, jobject, jlong handle, jstring name) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (!port) return;
+    const char* t = name ? env->GetStringUTFChars(name, nullptr) : nullptr;
+    port->setPortName(t ? QString::fromUtf8(t) : QString());
+    if (t) env->ReleaseStringUTFChars(name, t);
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSerialPort_nativePortName(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (!port) return nullptr;
+    return env->NewStringUTF(port->portName().toUtf8().constData());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetBaudRate(JNIEnv* env, jobject, jlong handle, jint baudRate) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    return (port && port->setBaudRate(baudRate)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeBaudRate(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    return port ? static_cast<jint>(port->baudRate()) : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetDataBits(JNIEnv* env, jobject, jlong handle, jint bits) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (port) port->setDataBits(static_cast<QSerialPort::DataBits>(bits));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetParity(JNIEnv* env, jobject, jlong handle, jint parity) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (port) port->setParity(static_cast<QSerialPort::Parity>(parity));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetStopBits(JNIEnv* env, jobject, jlong handle, jint bits) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (port) port->setStopBits(static_cast<QSerialPort::StopBits>(bits));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetFlowControl(JNIEnv* env, jobject, jlong handle, jint flow) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (port) port->setFlowControl(static_cast<QSerialPort::FlowControl>(flow));
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeOpen(JNIEnv* env, jobject, jlong handle, jint mode) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (!port) return JNI_FALSE;
+    QIODevice::OpenMode om = QIODevice::ReadOnly;
+    if (mode == 1) om = QIODevice::WriteOnly;
+    else if (mode == 2) om = QIODevice::ReadWrite;
+    return port->open(om) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeClose(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (port) port->close();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsOpen(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    return (port && port->isOpen()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeWrite(JNIEnv* env, jobject, jlong handle, jbyteArray data) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (!port || !data) return -1;
+    const jsize len = env->GetArrayLength(data);
+    jbyte* buf = env->GetByteArrayElements(data, nullptr);
+    if (!buf) return -1;
+    const qint64 n = port->write(reinterpret_cast<const char*>(buf), static_cast<qint64>(len));
+    env->ReleaseByteArrayElements(data, buf, JNI_ABORT);
+    return static_cast<jint>(n);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeWriteUtf8(JNIEnv* env, jobject, jlong handle, jstring text) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (!port || !text) return -1;
+    const char* t = env->GetStringUTFChars(text, nullptr);
+    if (!t) return -1;
+    const qint64 n = port->write(t, static_cast<qint64>(strlen(t)));
+    env->ReleaseStringUTFChars(text, t);
+    return static_cast<jint>(n);
+}
+
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QSerialPort_nativeReadAll(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (!port) return nullptr;
+    const QByteArray data = port->readAll();
+    jbyteArray out = env->NewByteArray(static_cast<jsize>(data.size()));
+    if (!out) return nullptr;
+    env->SetByteArrayRegion(out, 0, static_cast<jsize>(data.size()), reinterpret_cast<const jbyte*>(data.constData()));
+    return out;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSerialPort_nativeReadLine(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (!port) return nullptr;
+    const QByteArray data = port->readLine();
+    if (data.isEmpty()) return nullptr;
+    return env->NewStringUTF(data.constData());
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeBytesAvailable(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    return port ? static_cast<jint>(port->bytesAvailable()) : 0;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeWaitForReadyRead(JNIEnv* env, jobject, jlong handle, jint timeoutMs) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    return (port && port->waitForReadyRead(timeoutMs)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeFlush(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    return (port && port->flush()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeClear(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (port) port->clear();
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSerialPort_nativeErrorString(JNIEnv* env, jobject, jlong handle) {
+    QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (!port) return env->NewStringUTF("");
+    return env->NewStringUTF(port->errorString().toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeConnectReadyRead(JNIEnv* env, jobject, jlong) { (void)env; }
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeConnectBytesWritten(JNIEnv* env, jobject, jlong) { (void)env; }
