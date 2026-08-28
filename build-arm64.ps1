@@ -49,6 +49,10 @@ if ($LASTEXITCODE -ne 0) { throw "javac failed" }
 
 # ---- 3) Compile native bridge (cl.exe, ARM64) ----
 Write-Host "==> [3/5] Compiling native bridge (jqt.dll, ARM64)"
+if (-not (Test-Path (Join-Path $QtRoot "includeQtSerialPortQSerialPort"))) {
+    Write-Host "WARN: QtSerialPort headers missing at $(Join-Path $QtRoot 'includeQtSerialPort') - listing include:"
+    Get-ChildItem (Join-Path $QtRoot "include") -ErrorAction SilentlyContinue | Select-Object -First 15 -ExpandProperty Name | Out-Host
+}
 $clArgs = @(
     "/nologo", "/std:c++17", "/O2", "/LD", "/EHsc", "/MD", "/W3", "/Zc:__cplusplus", "/permissive-",
     "/I", (Join-Path $JDK "include"),
