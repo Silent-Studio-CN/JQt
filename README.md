@@ -61,7 +61,32 @@ java -Djava.library.path=. -cp "jqt-0.7.4-Universal-Kit.jar;.." Hello
 > **Note**: the native lib (jqt.dll / libjqt.so / libjqt.dylib) depends on the Qt6 runtime DLLs
 > shipped inside the zip; add the `lib` dir to the DLL search path (PATH / LD_LIBRARY_PATH / DYLD_LIBRARY_PATH).
 
-### 2. Write code
+### 2. Maven (JitPack) — zero-registration dependency
+
+No account, no signing — JitPack builds straight from GitHub:
+
+```gradle
+// settings.gradle (Gradle 8+)
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+```gradle
+// build.gradle
+dependencies {
+    implementation 'com.github.Silent-Studio-CN:JQt:0.7.4-Universal-Kit'
+}
+```
+
+The jar is the pure-Java API (89 classes); the native lib and Qt runtime come
+from the release zip below.
+
+### 3. Write code
 
 See [docs/getting-started.md](docs/getting-started.md) and the [JQtGallery](Community/JQtGallery/) demo app.
 
