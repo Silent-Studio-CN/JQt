@@ -123,6 +123,15 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QFileDialog>
 #include <QColorDialog>
 #include <QFontDialog>
+#include <QPrinter>
+#include <QPageSize>
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
+#include <QtSql/QSqlError>
+#include <QtSql/QSqlRecord>
+#include <QtSql/QSqlDriver>
+#include <QtSql/QSqlDriverPlugin>
+#include <QPluginLoader>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
@@ -238,6 +247,9 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QWidget.h"
 #include "generated/org_jqt_QMainWindow.h"
 #include "generated/org_jqt_QColor.h"
+#include "generated/org_jqt_QPrinter.h"
+#include "generated/org_jqt_QSqlDatabase.h"
+#include "generated/org_jqt_QSqlQuery.h"
 #include "generated/org_jqt_QAction.h"
 #include "generated/org_jqt_QDialog.h"
 #include "generated/org_jqt_QMenuBar.h"
@@ -6192,4 +6204,298 @@ JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativePaletteText(JNIEnv* env, 
 JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativePalettePlaceholderText(JNIEnv* env, jclass) {
     (void)env;
     return static_cast<jint>(0xFF000000 | QApplication::palette().color(QPalette::PlaceholderText).rgb());
+}
+
+// ============================================================================
+// v0.7.2 工业模块：QPrinter（QtPrintSupport）+ QSql（Qt6Sql）
+// ============================================================================
+
+// ---- QPrinter（非 QObject：独立句柄表）----
+static std::mutex g_printerMutex;
+static std::unordered_map<jlong, QPrinter*> g_printers;
+static jlong g_nextPrinterId = 0x6000;
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QPrinter_nativeCreate(JNIEnv* env, jobject) {
+    if (requireApp(env) == nullptr) return 0;
+    QPrinter* p = new QPrinter();
+    std::lock_guard<std::mutex> lock(g_printerMutex);
+    const jlong id = g_nextPrinterId++;
+    g_printers[id] = p;
+    return id;
+}
+
+static QPrinter* jqtPrinter(JNIEnv* env, jlong handle) {
+    std::lock_guard<std::mutex> lock(g_printerMutex);
+    auto it = g_printers.find(handle);
+    return it == g_printers.end() ? nullptr : it->second;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPrinter_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    QPrinter* p = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_printerMutex);
+        auto it = g_printers.find(handle);
+        if (it != g_printers.end()) { p = it->second; g_printers.erase(it); }
+    }
+    delete p;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPrinter_nativeSetOutputFormat(JNIEnv* env, jobject, jlong handle, jint format) {
+    QPrinter* p = jqtPrinter(env, handle);
+    if (p) p->setOutputFormat(format == 1 ? QPrinter::PdfFormat : QPrinter::NativeFormat);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPrinter_nativeSetOutputFileName(JNIEnv* env, jobject, jlong handle, jstring path) {
+    QPrinter* p = jqtPrinter(env, handle);
+    if (!p) return;
+    const char* t = path ? env->GetStringUTFChars(path, nullptr) : nullptr;
+    p->setOutputFileName(t ? QString::fromUtf8(t) : QString());
+    if (t) env->ReleaseStringUTFChars(path, t);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPrinter_nativeSetResolution(JNIEnv* env, jobject, jlong handle, jint dpi) {
+    QPrinter* p = jqtPrinter(env, handle);
+    if (p && dpi > 0) p->setResolution(dpi);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPrinter_nativeSetPageSize(JNIEnv* env, jobject, jlong handle, jint size) {
+    QPrinter* p = jqtPrinter(env, handle);
+    if (!p) return;
+    QPageSize::PageSizeId id = QPageSize::A4;
+    if (size == 1) id = QPageSize::A3;
+    else if (size == 2) id = QPageSize::A5;
+    else if (size == 3) id = QPageSize::Letter;
+    else if (size == 4) id = QPageSize::Legal;
+    p->setPageSize(QPageSize(id));
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPrinter_nativeNewPage(JNIEnv* env, jobject, jlong handle) {
+    QPrinter* p = jqtPrinter(env, handle);
+    return (p && p->newPage()) ? JNI_TRUE : JNI_FALSE;
+}
+
+// QPlainTextEdit::print
+JNIEXPORT jboolean JNICALL Java_org_jqt_QTextEdit_nativePrint(JNIEnv* env, jobject, jlong handle, jlong printerHandle) {
+    QPlainTextEdit* w = static_cast<QPlainTextEdit*>(requireHandle(env, handle));
+    QPrinter* p = jqtPrinter(env, printerHandle);
+    if (!w || !p) return JNI_FALSE;
+    w->print(p);
+    return JNI_TRUE;
+}
+
+// QWidget::render → PDF
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativePrintToPdf(JNIEnv* env, jobject, jlong handle, jstring path) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (!w) return JNI_FALSE;
+    const char* t = path ? env->GetStringUTFChars(path, nullptr) : nullptr;
+    if (!t) return JNI_FALSE;
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOutputFormat(QPrinter::PdfFormat);
+    printer.setOutputFileName(QString::fromUtf8(t));
+    env->ReleaseStringUTFChars(path, t);
+    if (w->width() > 0 && w->height() > 0) {
+        // Qt 6.11 无 DevicePixel 单位：控件像素按 1pt = 1px 映射（PDF 页面尺寸=控件尺寸）
+        printer.setPageSize(QPageSize(QSizeF(w->width(), w->height()), QPageSize::Point));
+    }
+    w->render(&printer);
+    return JNI_TRUE;
+}
+
+// ---- QSqlDatabase（QSqlDatabase 为值类：独立句柄表存值）----
+static std::mutex g_sqlMutex;
+static std::unordered_map<jlong, QSqlDatabase> g_sqlDbs;
+static std::unordered_map<jlong, QSqlQuery*> g_sqlQueries;
+static jlong g_nextSqlId = 0x7000;
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeAddDatabase(JNIEnv* env, jclass, jstring driver, jstring connName) {
+    if (requireApp(env) == nullptr) return 0;
+    const char* d = driver ? env->GetStringUTFChars(driver, nullptr) : nullptr;
+    const char* c = connName ? env->GetStringUTFChars(connName, nullptr) : nullptr;
+    const QString drv = d ? QString::fromUtf8(d) : QString();
+    const QString name = c ? QString::fromUtf8(c) : QString();
+    if (d) env->ReleaseStringUTFChars(driver, d);
+    if (c) env->ReleaseStringUTFChars(connName, c);
+    if (drv.isEmpty()) return 0;
+    // 驱动插件加载 workaround：QFactoryLoader 在 Windows 上不搜索 PATH（libstdc++ 等依赖缺失时
+    // 加载失败）。先用 QPluginLoader 按 Qt 官方插件路径预加载目标驱动，再重试 addDatabase。
+    // 驱动插件加载 workaround：QFactoryLoader 在 Windows 上不搜索 PATH（libstdc++ 等依赖缺失时
+    // 加载失败）。先用 QPluginLoader 按 Qt 官方插件路径预加载目标驱动，再重试 addDatabase。
+    // 驱动插件加载 workaround：QFactoryLoader 在 Windows 上不搜索 PATH，依赖（libstdc++ 等）
+    // 缺失时插件加载失败。QPluginLoader 预加载 + registerSqlDriver 手动注册驱动（Qt 公开 API）。
+    QSqlDatabase db = QSqlDatabase::addDatabase(drv, name);
+    if (!db.isValid()) {
+        const QString lower = drv.toLower();
+        QString pluginPath;
+        for (const QString& base : QCoreApplication::libraryPaths()) {
+            const QString cand = base + QStringLiteral("/sqldrivers/q") + lower + QStringLiteral(".dll");
+            if (QFile::exists(cand)) { pluginPath = cand; break; }
+        }
+        if (!pluginPath.isEmpty()) {
+            QPluginLoader pl(pluginPath);
+            if (pl.load()) {
+                QObject* inst = pl.instance();
+                QSqlDriverPlugin* plugin = inst ? qobject_cast<QSqlDriverPlugin*>(inst) : nullptr;
+                if (plugin) {
+                    // 插件 create 的 key 带 Q 前缀（如 "QSQLITE"）
+                    const QString pluginKey = QStringLiteral("Q") + drv.toUpper();
+                    QSqlDriver* driver = plugin->create(pluginKey);
+                    if (driver) {
+                        struct JQtDriverCreator : public QSqlDriverCreatorBase {
+                            QSqlDriver* d;
+                            explicit JQtDriverCreator(QSqlDriver* drv) : d(drv) {}
+                            QSqlDriver* createObject() const override { return d; }
+                        };
+                        QSqlDatabase::registerSqlDriver(drv, new JQtDriverCreator(driver));
+                        db = QSqlDatabase::addDatabase(drv, name);
+                    }
+                }
+            }
+        }
+        if (!db.isValid()) {
+            fprintf(stderr, "[JQt-sql] addDatabase(%s) failed (plugin path: %s)\n",
+                    drv.toUtf8().constData(), pluginPath.toUtf8().constData());
+            return 0;
+        }
+    }
+
+    std::lock_guard<std::mutex> lock(g_sqlMutex);
+    const jlong id = g_nextSqlId++;
+    g_sqlDbs[id] = db;
+    return id;
+}
+
+static QSqlDatabase* jqtSqlDb(JNIEnv* env, jlong handle) {
+    std::lock_guard<std::mutex> lock(g_sqlMutex);
+    auto it = g_sqlDbs.find(handle);
+    return it == g_sqlDbs.end() ? nullptr : &it->second;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeSetDatabaseName(JNIEnv* env, jobject, jlong handle, jstring name) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return;
+    const char* t = name ? env->GetStringUTFChars(name, nullptr) : nullptr;
+    db->setDatabaseName(t ? QString::fromUtf8(t) : QString());
+    if (t) env->ReleaseStringUTFChars(name, t);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeSetUserName(JNIEnv* env, jobject, jlong handle, jstring user) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return;
+    const char* t = user ? env->GetStringUTFChars(user, nullptr) : nullptr;
+    db->setUserName(t ? QString::fromUtf8(t) : QString());
+    if (t) env->ReleaseStringUTFChars(user, t);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeSetPassword(JNIEnv* env, jobject, jlong handle, jstring password) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return;
+    const char* t = password ? env->GetStringUTFChars(password, nullptr) : nullptr;
+    db->setPassword(t ? QString::fromUtf8(t) : QString());
+    if (t) env->ReleaseStringUTFChars(password, t);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeSetHostName(JNIEnv* env, jobject, jlong handle, jstring host) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return;
+    const char* t = host ? env->GetStringUTFChars(host, nullptr) : nullptr;
+    db->setHostName(t ? QString::fromUtf8(t) : QString());
+    if (t) env->ReleaseStringUTFChars(host, t);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeSetPort(JNIEnv* env, jobject, jlong handle, jint port) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (db && port > 0) db->setPort(port);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlDatabase_nativeOpen(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    return (db && db->open()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeClose(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (db) db->close();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlDatabase_nativeIsOpen(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    return (db && db->isOpen()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeExec(JNIEnv* env, jobject, jlong handle, jstring sql) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return 0;
+    const char* t = sql ? env->GetStringUTFChars(sql, nullptr) : nullptr;
+    if (!t) return 0;
+    QSqlQuery* q = new QSqlQuery(QString::fromUtf8(t), *db);
+    env->ReleaseStringUTFChars(sql, t);
+    std::lock_guard<std::mutex> lock(g_sqlMutex);
+    const jlong id = g_nextSqlId++;
+    g_sqlQueries[id] = q;
+    return id;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlDatabase_nativeLastError(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return env->NewStringUTF("");
+    const QString err = db->lastError().text();
+    return env->NewStringUTF(err.toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlDatabase_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    std::lock_guard<std::mutex> lock(g_sqlMutex);
+    g_sqlDbs.erase(handle);
+}
+
+// ---- QSqlQuery ----
+
+static QSqlQuery* jqtSqlQuery(JNIEnv* env, jlong handle) {
+    std::lock_guard<std::mutex> lock(g_sqlMutex);
+    auto it = g_sqlQueries.find(handle);
+    return it == g_sqlQueries.end() ? nullptr : it->second;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlQuery_nativeNext(JNIEnv* env, jobject, jlong handle) {
+    QSqlQuery* q = jqtSqlQuery(env, handle);
+    return (q && q->next()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSqlQuery_nativeValueCount(JNIEnv* env, jobject, jlong handle) {
+    QSqlQuery* q = jqtSqlQuery(env, handle);
+    return q ? static_cast<jint>(q->record().count()) : 0;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlQuery_nativeValue(JNIEnv* env, jobject, jlong handle, jint index) {
+    QSqlQuery* q = jqtSqlQuery(env, handle);
+    if (!q) return nullptr;
+    const QVariant v = q->value(index);
+    if (v.isNull()) return nullptr;
+    return env->NewStringUTF(v.toString().toUtf8().constData());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlQuery_nativeIsSelect(JNIEnv* env, jobject, jlong handle) {
+    QSqlQuery* q = jqtSqlQuery(env, handle);
+    return (q && q->isSelect()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSqlQuery_nativeNumRowsAffected(JNIEnv* env, jobject, jlong handle) {
+    QSqlQuery* q = jqtSqlQuery(env, handle);
+    return q ? static_cast<jint>(q->numRowsAffected()) : -1;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlQuery_nativeLastError(JNIEnv* env, jobject, jlong handle) {
+    QSqlQuery* q = jqtSqlQuery(env, handle);
+    if (!q) return env->NewStringUTF("");
+    const QString err = q->lastError().text();
+    return env->NewStringUTF(err.toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlQuery_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    QSqlQuery* q = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_sqlMutex);
+        auto it = g_sqlQueries.find(handle);
+        if (it != g_sqlQueries.end()) { q = it->second; g_sqlQueries.erase(it); }
+    }
+    delete q;
 }

@@ -48,10 +48,12 @@ $gppArgs = @(
     "-I", (Join-Path $Kit "include\QtWidgets"),
     "-I", (Join-Path $Kit "include\QtGui"),
     "-I", (Join-Path $Kit "include\QtCore"),
+    "-I", (Join-Path $Kit "include\QtPrintSupport"),
+    "-I", (Join-Path $Kit "include\QtSql"),
     "-I", $NativeDir,
     (Join-Path $NativeDir "jqt_bridge.cpp"),
     "-L", (Join-Path $Kit "lib"),
-    "-lQt6Widgets", "-lQt6Gui", "-lQt6Core", "-lole32", "-luuid", "-loleaut32",
+    "-lQt6Widgets", "-lQt6Gui", "-lQt6Core", "-lQt6PrintSupport", "-lQt6Sql", "-lole32", "-luuid", "-loleaut32",
     "-static-libgcc", "-static-libstdc++"
 )
 & "$Mingw\bin\g++.exe" @gppArgs
@@ -73,6 +75,10 @@ Write-Host "==> [4/4] Deploying QPA platform plugin (qwindows)"
 $PlatformsDir = Join-Path $LibDir "plugins\platforms"
 New-Item -ItemType Directory -Force -Path $PlatformsDir | Out-Null
 Copy-Item (Join-Path $Kit "plugins\platforms\qwindows.dll") $PlatformsDir
+# v0.7.2: 部署 SQL 驱动插件（SQLite 等）
+$SqlDriversDir = Join-Path $LibDir "plugins\sqldrivers"
+New-Item -ItemType Directory -Force -Path $SqlDriversDir | Out-Null
+Get-ChildItem (Join-Path $Kit "plugins\sqldrivers") -Filter "qsqlite.dll" -ErrorAction SilentlyContinue | Copy-Item -Destination $SqlDriversDir
 $qtConf = @"
 [Paths]
 Plugins = plugins

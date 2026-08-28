@@ -579,6 +579,29 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 ---
 
+## 新增（v0.7.2-Universal-Kit）· New in v0.7.2-Universal-Kit
+
+> 工业模块：QPrinter（打印/PDF）+ QSql（数据库）。
+
+**打印 · Printing**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QPrinter | `setOutputFormat(NATIVE/PDF)` `setOutputFileName` `setResolution` `setPageSize(A4/A3/A5/Letter/Legal)` `newPage` |
+| QTextEdit+ | `print(QPrinter)` `printToPdf(path)` |
+| QWidget+ | `printToPdf(path)`（render 导出） |
+
+**数据库 · Database**
+
+| 类 Class | 方法 Methods |
+|----------|--------------|
+| QSqlDatabase | `addDatabase(driver[, connName])` `setDatabaseName` `setUserName` `setPassword` `setHostName` `setPort` `open` `close` `isOpen` `exec` `lastError` |
+| QSqlQuery | `next` `value` `valueCount` `isSelect` `numRowsAffected` `lastError` |
+
+**说明**：驱动名 SQLITE/PSQL/MYSQL；Windows 已内置插件预加载 workaround（qsqlite.dll 开箱即用）；发布包含 plugins/sqldrivers。
+
+---
+
 ## 新增（v0.7.1-Universal-Kit）· New in v0.7.1-Universal-Kit
 
 > L1 收尾：149 → 190/205（92.7%）；剩余 15 项 ⛔ 阻塞归档（model/validator/pixmap 对象化、Qt 6 无此 API）。
