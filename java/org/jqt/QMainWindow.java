@@ -189,5 +189,50 @@ public class QMainWindow extends QWidget {
             h.accept(x, y);
         }
     }
+    // ---- Exclusive Kit（v0.6.1：Windows 独家能力，Qt 官方未封装）----
+
+    /**
+     * 设置原生窗口边框颜色（0xAARRGGBB）。
+     * 依赖 Windows 11 22H2+ 的 DWM 属性；旧系统静默忽略。
+     */
+    public void setNativeBorderColor(int argb) {
+        nativeSetDwmAttribute(nativeHandle, 1, argb);
+    }
+
+    /** 设置原生标题栏颜色（0xAARRGGBB；Win11 22H2+，旧系统忽略）。 */
+    public void setNativeCaptionColor(int argb) {
+        nativeSetDwmAttribute(nativeHandle, 2, argb);
+    }
+
+    /** 设置原生标题栏文字颜色（0xAARRGGBB；Win11 22H2+，旧系统忽略）。 */
+    public void setNativeCaptionTextColor(int argb) {
+        nativeSetDwmAttribute(nativeHandle, 3, argb);
+    }
+
+    /** 深色标题栏（Win10 1809+ 支持）。 */
+    public void setNativeDarkTitleBar(boolean dark) {
+        nativeSetDwmAttribute(nativeHandle, 4, dark ? 1 : 0);
+    }
+
+    /** Mica 背景材质（Win11 22H2+；开启后窗口背景跟随系统 Mica 质感）。 */
+    public void setMicaBackground(boolean on) {
+        nativeSetDwmAttribute(nativeHandle, 5, on ? 1 : 0);
+    }
+
+    /** 任务栏图标进度（value/max，如 30/100；Win10+；max ≤ 0 或 value < 0 清除）。 */
+    public void setTaskbarProgress(int value, int max) {
+        nativeTaskbarProgress(nativeHandle, value, max);
+    }
+
+    /** 清除任务栏进度。 */
+    public void clearTaskbarProgress() {
+        nativeTaskbarProgress(nativeHandle, -1, 0);
+    }
+
+    private static native void nativeSetDwmAttribute(long handle, int kind, int argb);
+    private static native void nativeTaskbarProgress(long handle, int value, int max);
+
+    // ---- End Exclusive Kit ----
+
     // L1：toolbar 相关信号由 QToolBar 提供（JQtWindowShell 非 QMainWindow 类型）
 }
