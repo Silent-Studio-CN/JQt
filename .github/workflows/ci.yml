@@ -81,6 +81,8 @@ jobs:
           sudo cmake --install build
 
       - name: Build libjqt.so (Qt 6.8.3)
+        run: |
+          chmod +x build-linux.sh
           QT_BASE=/opt/Qt683/6.8.3/gcc_64 ./build-linux.sh
           mv lib/libjqt.so lib/libjqt-6.8.3.so
 
