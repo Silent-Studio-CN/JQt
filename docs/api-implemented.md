@@ -628,7 +628,7 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 ## 新增（v0.7.1-Universal-Kit）· New in v0.7.1-Universal-Kit
 
-> L1 收尾：149 → 190/205（92.7%）；剩余 15 项 ⛔ 阻塞归档（model/validator/pixmap 对象化、Qt 6 无此 API）。
+> L1 收尾：149 → 191/205（93.2%）；剩余 14 项 ⛔ 阻塞归档（model/validator/pixmap 对象化依赖、Qt 6 无此 API；QPlainTextEdit print 已由 v0.7.2 printToPdf 解锁）。
 
 **新类 · New classes**
 
@@ -658,7 +658,8 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 | QColor | 值类：`value/hue/saturation(#RRGGBB)` |
 | QApplication | `paletteText()` `palettePlaceholderText()` |
 
-**⛔ 阻塞归档 · Blocked (documented)**：QComboBox model/validator、QLineEdit validator、QLabel movie/picture/pixmap、QIcon pixmap、QCursor mask/pixmap、QFont Stretch、QUrl clear、QWidget mask、QPlainTextEdit print、QSpinBox textChanged（Qt 6 无）、QBoxLayout stretch（Qt 6 无）
+**⛔ 阻塞归档 · Blocked (documented)**：QComboBox model/validator、QLineEdit validator、QLabel movie/picture/pixmap、QIcon pixmap、QCursor mask/pixmap、QFont Stretch、QUrl clear、QWidget mask、QSpinBox textChanged（Qt 6 无）、QBoxLayout stretch（Qt 6 无）
+> QPlainTextEdit print 已从阻塞列表移除：v0.7.2 QTextEdit.print(QPrinter) / printToPdf 实现即解锁。
 
 ---
 
