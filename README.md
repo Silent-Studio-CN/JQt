@@ -140,7 +140,7 @@ codename only changes per major feature line.
 | Channel | Version | Coordinate |
 |---------|---------|-----------|
 | GitHub Releases | `v0.7.4-Universal-Kit` | release assets |
-| Maven Central | `0.7.4` | `io.github.silent-xiaomiao:jqt:0.7.4` |
+| Maven Central | `0.7.4` (or `0.7.4-Universal-Kit`, identical) | `io.github.silent-xiaomiao:jqt:0.7.4` |
 | JitPack | `0.7.4-Universal-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.4-Universal-Kit` |
 
 Latest: [v0.7.4-Universal-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v0.7.4-Universal-Kit)
