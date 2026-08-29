@@ -61,3 +61,6 @@ run.cmd
 
 tools/*.exe
 tools/*.log
+
+# Gradle 构建产物
+build/
