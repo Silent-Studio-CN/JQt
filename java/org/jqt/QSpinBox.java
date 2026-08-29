@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 public class QSpinBox extends QWidget {
 
     private final List<Consumer<Integer>> onValueChangedHandlers = new ArrayList<>();
+    private final List<Consumer<String>> onTextChangedHandlers = new ArrayList<>();
 
     public QSpinBox() {
         nativeHandle = nativeCreate();
@@ -53,6 +54,19 @@ public class QSpinBox extends QWidget {
     void nativeHandleValueChanged(int value) {
         for (Consumer<Integer> h : onValueChangedHandlers) {
             h.accept(value);
+        }
+    }
+
+    /** 文本变化回调（参数为当前文本，含前后缀）。 */
+    public QSpinBox onTextChanged(Consumer<String> handler) {
+        onTextChangedHandlers.add(handler);
+        return this;
+    }
+
+    /** 由 C++ 侧回调（JNI）。 */
+    void nativeHandleTextChanged(String text) {
+        for (Consumer<String> h : onTextChangedHandlers) {
+            h.accept(text);
         }
     }
 

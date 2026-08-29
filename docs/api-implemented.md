@@ -544,7 +544,7 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 | 类 Class | 方法 Methods |
 |----------|--------------|
-| QSpinBox | `setRange` `value` `setValue` `onValueChanged` |
+| QSpinBox | `setRange` `value` `setValue` `onValueChanged` `onTextChanged` |
 | QDial | `setRange` `value` `setValue` `onValueChanged` |
 | QRadioButton | `setText` `isChecked` `setChecked` `onToggled` |
 | QDateTimeEdit | `setDisplayFormat` `setDateTime` `text` `onTextChanged` |
@@ -628,7 +628,7 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 
 ## 新增（v0.7.1-Universal-Kit）· New in v0.7.1-Universal-Kit
 
-> L1 收尾：149 → 191/205（93.2%）；剩余 14 项 ⛔ 阻塞归档（model/validator/pixmap 对象化依赖、Qt 6 无此 API；QPlainTextEdit print 已由 v0.7.2 printToPdf 解锁）。
+> L1 收尾：149 → 192/205（93.7%）；剩余 13 项 ⛔ 阻塞归档（model/validator/pixmap 对象化依赖、Qt 6 无此 API；QPlainTextEdit print 由 v0.7.2 printToPdf 解锁，QSpinBox textChanged 由 v0.7.4 绑定解锁——Qt 6 文档核实存在）。
 
 **新类 · New classes**
 
@@ -658,8 +658,10 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 | QColor | 值类：`value/hue/saturation(#RRGGBB)` |
 | QApplication | `paletteText()` `palettePlaceholderText()` |
 
-**⛔ 阻塞归档 · Blocked (documented)**：QComboBox model/validator、QLineEdit validator、QLabel movie/picture/pixmap、QIcon pixmap、QCursor mask/pixmap、QFont Stretch、QUrl clear、QWidget mask、QSpinBox textChanged（Qt 6 无）、QBoxLayout stretch（Qt 6 无）
-> QPlainTextEdit print 已从阻塞列表移除：v0.7.2 QTextEdit.print(QPrinter) / printToPdf 实现即解锁。
+**⛔ 阻塞归档 · Blocked (documented)**（已对照 doc.qt.io/qt-6 重新核实）：
+- **对象化依赖**（Qt 6 API 存在，需 QPixmap/QIcon/QValidator 等对象体系，v0.8.0 对象值类型覆盖）：QComboBox model/validator、QLineEdit validator、QLabel movie/picture/pixmap、QIcon pixmap、QCursor mask/pixmap、QFont Stretch、QWidget mask
+- **Qt 6 无此 API**：QUrl clear、QBoxLayout stretch(int) getter（注：setStretch 存在，可做）
+> 已解锁：QPlainTextEdit print（v0.7.2 printToPdf）、QSpinBox textChanged（v0.7.4 绑定，Qt 6 确认存在）。
 
 ---
 

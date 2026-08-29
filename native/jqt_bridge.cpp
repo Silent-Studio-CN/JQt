@@ -3618,6 +3618,16 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSpinBox_nativeCreate(JNIEnv* env, jobject 
             JQT_CALL_VOID(e, gRef, mid, static_cast<jint>(value));
         }
     });
+    QObject::connect(spin, &QSpinBox::textChanged, [gRef](const QString& text) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleTextChanged", "(Ljava/lang/String;)V");
+        if (mid != nullptr) {
+            jstring js = e->NewStringUTF(text.toUtf8().constData());
+            JQT_CALL_VOID(e, gRef, mid, js);
+            e->DeleteLocalRef(js);
+        }
+    });
     return registerHandle(spin, /*javaOwned=*/true);
 }
 
