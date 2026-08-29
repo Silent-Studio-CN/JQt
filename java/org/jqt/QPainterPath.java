@@ -132,6 +132,19 @@ public class QPainterPath {
         maxX = Math.max(maxX, x); maxY = Math.max(maxY, y);
     }
 
+    /** 扁平段数据（每 7 个：type,x1,y1,x2,y2,x3,y3；供 native 重建路径）。 */
+    double[] flattenSegments() {
+        double[] out = new double[segments.size() * 7];
+        int i = 0;
+        for (Segment s : segments) {
+            out[i++] = s.type;
+            out[i++] = s.x1; out[i++] = s.y1;
+            out[i++] = s.x2; out[i++] = s.y2;
+            out[i++] = s.x3; out[i++] = s.y3;
+        }
+        return out;
+    }
+
     @Override
     public String toString() { return "QPainterPath(" + segments.size() + " elements)"; }
 }
