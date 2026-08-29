@@ -266,6 +266,7 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QSerialPort.h"
 #include "generated/org_jqt_QPixmap.h"
 #include "generated/org_jqt_QImage.h"
+#include "generated/org_jqt_QFont.h"
 #include "generated/org_jqt_QSqlDatabase.h"
 #include "generated/org_jqt_QSqlQuery.h"
 #include "generated/org_jqt_QAction.h"
@@ -6835,6 +6836,95 @@ JNIEXPORT void JNICALL Java_org_jqt_QImage_nativeGetArgb(JNIEnv* env, jclass, jl
     memcpy(px, img.bits(), static_cast<size_t>(w) * hh * 4);
     env->ReleaseIntArrayElements(argb, px, 0);
 }
+
+// ----------------------------------------------------------------------------
+// QFont（非 QObject：句柄 = 指针本身）
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QFont_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QFont());
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QFont_nativeCreateFamily(JNIEnv* env, jclass, jstring family) {
+    if (requireApp(env) == nullptr) return 0;
+    const char* f = env->GetStringUTFChars(family, nullptr);
+    QFont* font = new QFont(QString::fromUtf8(f));
+    env->ReleaseStringUTFChars(family, f);
+    return reinterpret_cast<jlong>(font);
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QFont_nativeCreateFamilySize(JNIEnv* env, jclass, jstring family, jint size) {
+    if (requireApp(env) == nullptr) return 0;
+    const char* f = env->GetStringUTFChars(family, nullptr);
+    QFont* font = new QFont(QString::fromUtf8(f), size);
+    env->ReleaseStringUTFChars(family, f);
+    return reinterpret_cast<jlong>(font);
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QFont_nativeCreateFull(JNIEnv* env, jclass, jstring family, jint size, jint weight, jboolean italic) {
+    if (requireApp(env) == nullptr) return 0;
+    const char* f = env->GetStringUTFChars(family, nullptr);
+    QFont* font = new QFont(QString::fromUtf8(f), size, weight, italic);
+    env->ReleaseStringUTFChars(family, f);
+    return reinterpret_cast<jlong>(font);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeDispose(JNIEnv*, jclass, jlong h) {
+    delete reinterpret_cast<QFont*>(h);
+}
+JNIEXPORT jstring JNICALL Java_org_jqt_QFont_nativeFamily(JNIEnv* env, jclass, jlong h) {
+    return env->NewStringUTF(reinterpret_cast<QFont*>(h)->family().toUtf8().constData());
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeSetFamily(JNIEnv* env, jclass, jlong h, jstring family) {
+    const char* f = env->GetStringUTFChars(family, nullptr);
+    reinterpret_cast<QFont*>(h)->setFamily(QString::fromUtf8(f));
+    env->ReleaseStringUTFChars(family, f);
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QFont_nativePointSize(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QFont*>(h)->pointSize();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeSetPointSize(JNIEnv*, jclass, jlong h, jint size) {
+    reinterpret_cast<QFont*>(h)->setPointSize(size);
+}
+JNIEXPORT jdouble JNICALL Java_org_jqt_QFont_nativePointSizeF(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QFont*>(h)->pointSizeF();
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QFont_nativePixelSize(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QFont*>(h)->pixelSize();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeSetPixelSize(JNIEnv*, jclass, jlong h, jint size) {
+    reinterpret_cast<QFont*>(h)->setPixelSize(size);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFont_nativeBold(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QFont*>(h)->bold();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeSetBold(JNIEnv*, jclass, jlong h, jboolean b) {
+    reinterpret_cast<QFont*>(h)->setBold(b);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFont_nativeItalic(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QFont*>(h)->italic();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeSetItalic(JNIEnv*, jclass, jlong h, jboolean b) {
+    reinterpret_cast<QFont*>(h)->setItalic(b);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFont_nativeUnderline(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QFont*>(h)->underline();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeSetUnderline(JNIEnv*, jclass, jlong h, jboolean b) {
+    reinterpret_cast<QFont*>(h)->setUnderline(b);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFont_nativeStrikeOut(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QFont*>(h)->strikeOut();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeSetStrikeOut(JNIEnv*, jclass, jlong h, jboolean b) {
+    reinterpret_cast<QFont*>(h)->setStrikeOut(b);
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QFont_nativeWeight(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QFont*>(h)->weight();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QFont_nativeSetWeight(JNIEnv*, jclass, jlong h, jint w) {
+    reinterpret_cast<QFont*>(h)->setWeight(QFont::Weight(w));
+}
+JNIEXPORT jstring JNICALL Java_org_jqt_QFont_nativeToString(JNIEnv* env, jclass, jlong h) {
+    return env->NewStringUTF(reinterpret_cast<QFont*>(h)->toString().toUtf8().constData());
+}
+
 
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeDispose(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));

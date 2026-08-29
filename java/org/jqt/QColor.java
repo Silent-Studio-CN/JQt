@@ -19,7 +19,7 @@ public class QColor {
 
     /** 色彩空间（Qt ColorSpec）。 */
     public enum Spec { Rgb(0), Hsv(1), Cmyk(2), Hsl(3), Invalid(4);
-        final int value;
+        public final int value;
         Spec(int v) { value = v; }
     }
 
@@ -104,7 +104,7 @@ public class QColor {
     public String name() { return name(NameFormat.HexRgb); }
     /** 命名格式。 */
     public enum NameFormat { HexRgb(0), HexArgb(1);
-        final int value;
+        public final int value;
         NameFormat(int v) { value = v; }
     }
     /** #RRGGBB 或 #AARRGGBB。 */

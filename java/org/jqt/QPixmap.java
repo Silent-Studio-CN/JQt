@@ -24,7 +24,7 @@ public class QPixmap {
     /** 缩放宽高比模式（Qt AspectRatioMode + TransformMode 简化）。 */
     public enum AspectRatioMode {
         IgnoreAspectRatio(0), KeepAspectRatio(1), KeepAspectRatioByExpanding(2);
-        final int value;
+        public final int value;
         AspectRatioMode(int v) { value = v; }
     }
 

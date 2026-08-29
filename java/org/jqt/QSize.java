@@ -20,7 +20,7 @@ public class QSize {
         KeepAspectRatio(1),
         /** 保持比例，可能大于给定尺寸。 */
         KeepAspectRatioByExpanding(2);
-        final int value;
+        public final int value;
         AspectRatioMode(int v) { value = v; }
     }
 
