@@ -47,6 +47,12 @@ Community/**/*.exe
 chat/
 tools/chat_bridge.py
 
+# 本地发布工具链 + GPG 签名密钥（私钥绝不上库！）
+.signing/
+.gradle89/
+.jdk17/
+.gradle/
+
 # 本地保留不入库（早期素材 / 本地快捷方式）
 114514.md
 docs/qt-ref/
