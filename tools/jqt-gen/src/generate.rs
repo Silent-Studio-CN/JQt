@@ -115,16 +115,16 @@ pub fn gen_native_functions(cls: &QtClass, cpp_class: &str) -> String {
         }
         let is_void = m.return_type.trim().is_empty() || m.return_type.trim().trim_start_matches("const ") == "void";
         let call_body = if m.return_type.contains("QString") && !is_void {
-            format!("    QString __jqt_ret = w->{}({});\n    return env->NewStringUTF(__jqt_ret.toUtf8().constData());",
+            format!("    QString __jqt_ret = wgt->{}({});\n    return env->NewStringUTF(__jqt_ret.toUtf8().constData());",
                 m.name, call_args.trim_start_matches(", "))
         } else if is_void {
-            format!("    w->{}({});", m.name, call_args.trim_start_matches(", "))
+            format!("    wgt->{}({});", m.name, call_args.trim_start_matches(", "))
         } else {
-            format!("    return w->{}({});", m.name, call_args.trim_start_matches(", "))
+            format!("    return wgt->{}({});", m.name, call_args.trim_start_matches(", "))
         };
         let body = format!("{}{}{}", pre_conv, call_body, post_conv);
         out.push_str(&format!(
-            "\nJNIEXPORT {} JNICALL Java_org_jqt_{}_native{}({}) {{\n    {}* w = static_cast<{}*>(requireHandle(env, handle));\n    if (w == nullptr) {{ {} }}\n{}\n}}\n",
+            "\nJNIEXPORT {} JNICALL Java_org_jqt_{}_native{}({}) {{\n    {}* wgt = static_cast<{}*>(requireHandle(env, handle));\n    if (wgt == nullptr) {{ {} }}\n{}\n}}\n",
             nret, cls.name, cap, jparams, cpp_class, cpp_class,
             if is_void { "return;" } else { "return 0;" },
             body
@@ -200,6 +200,6 @@ mod tests {
         cls.methods.push(m("setVisible", vec![("visible", "bool")], "void"));
         let native = gen_native_functions(&cls, "QWidget");
         assert!(native.contains("Java_org_jqt_QWidget_nativeSetVisible"));
-        assert!(native.contains("w->setVisible(visible)"));
+        assert!(native.contains("wgt->setVisible(visible)"));
     }
 }

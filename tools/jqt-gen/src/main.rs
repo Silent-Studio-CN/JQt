@@ -221,15 +221,26 @@ mod compile_tests {
         cls.methods.push(m("minimumWidth", vec![], "int"));
         cls.methods.push(m("setGeometry", vec![("x", "int"), ("y", "int"), ("w", "int"), ("h", "int")], "void"));
         let native = crate::generate::gen_native_functions(&cls, "QWidget");
+        // 桩类验证（不 include Qt 头——低内存环境可用，验证 JNI 结构/类型转换/调用语法）
         let cpp = format!(
-            "#include <QWidget>\n#include <jni.h>\nstatic void* requireHandle(JNIEnv*, jlong) {{ return nullptr; }}\n{}\n",
+            "#include <jni.h>\n#include <cstring>\n\
+             struct QByteArray {{ const char* constData() const {{ return \"\"; }} }};\n\
+             struct QString {{\n    static QString fromUtf8(const char*) {{ return QString(); }}\n\
+             \x20   QByteArray toUtf8() const {{ return QByteArray(); }}\n}};\n\
+             class QWidget {{\npublic:\n\
+             \x20   void setVisible(bool) {{}}\n\
+             \x20   QString windowTitle() {{ return QString(); }}\n\
+             \x20   void setToolTip(const QString&) {{}}\n\
+             \x20   int minimumWidth() {{ return 0; }}\n\
+             \x20   void setGeometry(int, int, int, int) {{}}\n}};\n\
+             static void* requireHandle(JNIEnv*, jlong) {{ return nullptr; }}\n{}\n",
             native
         );
         std::fs::create_dir_all("target/gencheck").expect("mkdir");
         std::fs::write("target/gencheck/GenCheck.cpp", &cpp).expect("write cpp");
 
         // 本机 Qt/MinGW/JDK 路径（可被环境变量覆盖）
-        let qt_root = std::env::var("QT_ROOT").unwrap_or_else(|_| "D:\\Qt\\6.11.2\\mingw_64".to_string());
+        let _qt_root = std::env::var("QT_ROOT").unwrap_or_else(|_| "D:\\Qt\\6.11.2\\mingw_64".to_string());
         let jdk = std::env::var("JDK_HOME").unwrap_or_else(|_| "C:\\Program Files\\Java\\latest\\jdk-26".to_string());
         let gxx = std::env::var("GXX").unwrap_or_else(|_| "D:\\Qt\\Tools\\mingw1310_64\\bin\\g++.exe".to_string());
         if !std::path::Path::new(&gxx).exists() {
@@ -241,12 +252,16 @@ mod compile_tests {
             .arg(format!("-I{}", jdk))
             .arg(format!("-I{}\\include", jdk))
             .arg(format!("-I{}\\include\\win32", jdk))
-            .arg(format!("-I{}", qt_root))
-            .arg(format!("-I{}\\include", qt_root))
-            .arg(format!("-I{}\\include\\QtWidgets", qt_root))
-            .arg(format!("-I{}\\include\\QtGui", qt_root))
-            .arg(format!("-I{}\\include\\QtCore", qt_root))
             .arg("target/gencheck/GenCheck.cpp");
+        // MinGW DLL 依赖需要 PATH
+        #[cfg(target_os = "windows")]
+        {
+            let mingw = std::path::Path::new(&gxx).parent().and_then(|p| p.to_str()).unwrap_or("");
+            let qt_bin = std::path::Path::new(&_qt_root).parent().map(|p| p.join("bin")).and_then(|p| p.to_str().map(String::from));
+            let mut path = format!("{};{}", mingw, std::env::var("PATH").unwrap_or_default());
+            if let Some(qb) = qt_bin { path = format!("{};{}", qb, path); }
+            cmd.env("PATH", path);
+        }
         let out = cmd.output().expect("run g++");
         let stderr = String::from_utf8_lossy(&out.stderr).to_string();
         if !out.status.success() {
