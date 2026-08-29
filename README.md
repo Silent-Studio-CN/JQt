@@ -159,7 +159,7 @@ Latest: [v0.7.4-Universal-Kit](https://github.com/Silent-Studio-CN/JQt/releases/
 | `jqt-0.7.4-Universal-Kit.jar` | all (Java API) |
 | `jqt-0.7.4-Universal-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 bare libs (both Qt versions) |
-| `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
+| `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
 | `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux (both versions) |
 | `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS (both versions) |
 
