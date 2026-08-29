@@ -176,6 +176,7 @@ CI builds all 4 platforms (Windows x64/ARM64, Linux, macOS) × 2 Qt versions on 
 | [docs/api-implemented.md](docs/api-implemented.md) | Full implemented-API list (bilingual) |
 | [docs/api-tiering.md](docs/api-tiering.md) | L1/L2/L3 tiering design |
 | [docs/behavior.md](docs/behavior.md) | Behavior contract (display rules, theming, DPI) |
+| [docs/releases/](docs/releases/) | Per-version release notes (v0.1.0 → v0.7.4, all 14 releases) |
 | [CHANGELOG.md](CHANGELOG.md) | Changelog |
 
 ---
