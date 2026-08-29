@@ -89,7 +89,8 @@ public class QPixmap {
         return new QPixmap(nativeScaled(nativeHandle, w, h, mode.value));
     }
     private static native long nativeScaled(long handle, int w, int h, int mode);
-    private QPixmap(long borrowed) {
+    /** 借用手柄（grab 等跨类使用，同包可见）。 */
+    QPixmap(long borrowed) {
         nativeHandle = borrowed;
         cleanable = CLEANER.register(this, new Disposer(borrowed));
     }

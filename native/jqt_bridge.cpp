@@ -986,6 +986,161 @@ JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSchedule(JNIEnv* env, job
 // ----------------------------------------------------------------------------
 
 // Java 对象不可达时（或显式 dispose()）：若对象仍归 Java 管理则排队到 GUI 线程删除
+
+// ----------------------------------------------------------------------------
+// QWidget 值对象批（手写精修：几何/抓取/光标/字体/调色板/坐标映射）
+// ----------------------------------------------------------------------------
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle, jint x, jint y, jint w, jint h) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt != nullptr) wgt->setGeometry(x, y, w, h);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QWidget_nativeGrab(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QPixmap(wgt->grab()));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QWidget_nativeGrabRect(JNIEnv* env, jobject /*thiz*/, jlong handle, jint x, jint y, jint w, jint h) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QPixmap(wgt->grab(QRect(x, y, w, h))));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeGrabMouse(JNIEnv* env, jobject /*thiz*/, jlong handle, jint cursorShape) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return;
+    if (cursorShape > 0) wgt->grabMouse(static_cast<Qt::CursorShape>(cursorShape));
+    else wgt->grabMouse();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeReleaseMouse(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt != nullptr) wgt->releaseMouse();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QWidget_nativeGrabShortcut(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring sequence, jint context) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return 0;
+    const char* utf = env->GetStringUTFChars(sequence, nullptr);
+    int id = wgt->grabShortcut(QKeySequence(QString::fromUtf8(utf)), static_cast<Qt::ShortcutContext>(context));
+    env->ReleaseStringUTFChars(sequence, utf);
+    return id;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeReleaseShortcut(JNIEnv* env, jobject /*thiz*/, jlong handle, jint id) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt != nullptr) wgt->releaseShortcut(id);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMaskRect(JNIEnv* env, jobject /*thiz*/, jlong handle, jint x, jint y, jint w, jint h) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt != nullptr) wgt->setMask(QRect(x, y, w, h));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeClearMask(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt != nullptr) wgt->clearMask();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetCursorShape(JNIEnv* env, jobject /*thiz*/, jlong handle, jint shape) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt != nullptr) wgt->setCursor(static_cast<Qt::CursorShape>(shape));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFontQFont(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring family, jint pointSize, jint weight, jboolean italic) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return;
+    const char* utf = env->GetStringUTFChars(family, nullptr);
+    wgt->setFont(QFont(QString::fromUtf8(utf), pointSize, static_cast<QFont::Weight>(weight), italic));
+    env->ReleaseStringUTFChars(family, utf);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetPalette(JNIEnv* env, jobject /*thiz*/, jlong handle,
+    jint window, jint windowText, jint base, jint text, jint button, jint buttonText, jint highlight, jint highlightedText) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return;
+    QPalette pal;
+    pal.setColor(QPalette::Window, QColor::fromRgba((QRgb)window));
+    pal.setColor(QPalette::WindowText, QColor::fromRgba((QRgb)windowText));
+    pal.setColor(QPalette::Base, QColor::fromRgba((QRgb)base));
+    pal.setColor(QPalette::Text, QColor::fromRgba((QRgb)text));
+    pal.setColor(QPalette::Button, QColor::fromRgba((QRgb)button));
+    pal.setColor(QPalette::ButtonText, QColor::fromRgba((QRgb)buttonText));
+    pal.setColor(QPalette::Highlight, QColor::fromRgba((QRgb)highlight));
+    pal.setColor(QPalette::HighlightedText, QColor::fromRgba((QRgb)highlightedText));
+    wgt->setPalette(pal);
+}
+
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QWidget_nativeSaveGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return env->NewByteArray(0);
+    QByteArray ba = wgt->saveGeometry();
+    jbyteArray out = env->NewByteArray(ba.size());
+    env->SetByteArrayRegion(out, 0, ba.size(), reinterpret_cast<const jbyte*>(ba.constData()));
+    return out;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeRestoreGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle, jbyteArray data) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return false;
+    jsize n = env->GetArrayLength(data);
+    jbyte* buf = env->GetByteArrayElements(data, nullptr);
+    bool ok = wgt->restoreGeometry(QByteArray(reinterpret_cast<const char*>(buf), n));
+    env->ReleaseByteArrayElements(data, buf, JNI_ABORT);
+    return ok;
+}
+
+static jintArray jqtPackPoint(JNIEnv* env, const QPoint& p) {
+    jintArray out = env->NewIntArray(2);
+    jint vals[2] = { p.x(), p.y() };
+    env->SetIntArrayRegion(out, 0, 2, vals);
+    return out;
+}
+
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWidget_nativeMapToGlobal(JNIEnv* env, jobject /*thiz*/, jlong handle, jint x, jint y) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return jqtPackPoint(env, QPoint());
+    return jqtPackPoint(env, wgt->mapToGlobal(QPoint(x, y)));
+}
+
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWidget_nativeMapFromGlobal(JNIEnv* env, jobject /*thiz*/, jlong handle, jint x, jint y) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) return jqtPackPoint(env, QPoint());
+    return jqtPackPoint(env, wgt->mapFromGlobal(QPoint(x, y)));
+}
+
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWidget_nativeMapTo(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong otherHandle, jint x, jint y) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    QWidget* other = otherHandle != 0 ? static_cast<QWidget*>(requireHandle(env, otherHandle)) : nullptr;
+    if (wgt == nullptr || other == nullptr) return jqtPackPoint(env, QPoint());
+    return jqtPackPoint(env, wgt->mapTo(other, QPoint(x, y)));
+}
+
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWidget_nativeMapFrom(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong otherHandle, jint x, jint y) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    QWidget* other = otherHandle != 0 ? static_cast<QWidget*>(requireHandle(env, otherHandle)) : nullptr;
+    if (wgt == nullptr || other == nullptr) return jqtPackPoint(env, QPoint());
+    return jqtPackPoint(env, wgt->mapFrom(other, QPoint(x, y)));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetContentsMargins(JNIEnv* env, jobject /*thiz*/, jlong handle, jint left, jint top, jint right, jint bottom) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    if (wgt != nullptr) wgt->setContentsMargins(left, top, right, bottom);
+}
+
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWidget_nativeContentsMargins(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
+    jintArray out = env->NewIntArray(4);
+    jint vals[4] = { 0, 0, 0, 0 };
+    if (wgt != nullptr) {
+        QMargins m = wgt->contentsMargins();
+        vals[0] = m.left(); vals[1] = m.top(); vals[2] = m.right(); vals[3] = m.bottom();
+    }
+    env->SetIntArrayRegion(out, 0, 4, vals);
+    return out;
+}
+
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDispose(JNIEnv* /*env*/, jclass /*cls*/, jlong handle) {
     QObject* obj = nullptr;
     {

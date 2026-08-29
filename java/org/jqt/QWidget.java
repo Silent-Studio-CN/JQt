@@ -532,6 +532,149 @@ public abstract class QWidget {
     /** 释放键盘独占（QWidget::releaseKeyboard）。 */
     public void releaseKeyboard() { nativeReleaseKeyboard(nativeHandle); }
     private native void nativeReleaseKeyboard(long handle);
+
+    // ---- 值对象批（手写精修：几何/抓取/光标/字体/调色板/坐标映射） ----
+
+    /** 设置几何（位置+尺寸）。 */
+    public void setGeometry(int x, int y, int w, int h) { nativeSetGeometry(nativeHandle, x, y, w, h); }
+    private native void nativeSetGeometry(long handle, int x, int y, int w, int h);
+
+    /** 设置几何。 */
+    public void setGeometry(QRect rect) {
+        if (rect != null) setGeometry(rect.x(), rect.y(), rect.width(), rect.height());
+    }
+
+    /** 抓取控件渲染为像素图。 */
+    public QPixmap grab() {
+        long h = nativeGrab(nativeHandle);
+        return h != 0 ? new QPixmap(h) : new QPixmap();
+    }
+    private native long nativeGrab(long handle);
+
+    /** 抓取指定区域渲染为像素图。 */
+    public QPixmap grab(QRect rect) {
+        if (rect == null) return grab();
+        long h = nativeGrabRect(nativeHandle, rect.x(), rect.y(), rect.width(), rect.height());
+        return h != 0 ? new QPixmap(h) : new QPixmap();
+    }
+    private native long nativeGrabRect(long handle, int x, int y, int w, int h);
+
+    /** 独占鼠标（全部事件发送到本控件）。 */
+    public void grabMouse() { nativeGrabMouse(nativeHandle, 0); }
+    private native void nativeGrabMouse(long handle, int cursorShape);
+
+    /** 独占鼠标并设置光标形状。 */
+    public void grabMouse(QCursor cursor) {
+        if (cursor != null) nativeGrabMouse(nativeHandle, cursor.shape().value);
+    }
+
+    /** 释放鼠标独占。 */
+    public void releaseMouse() { nativeReleaseMouse(nativeHandle); }
+    private native void nativeReleaseMouse(long handle);
+
+    /** 抓取快捷键，返回 id（context：0=WindowShortcut 1=WidgetShortcut 2=ApplicationShortcut）。 */
+    public int grabShortcut(QKeySequence sequence, int context) {
+        if (sequence == null) return 0;
+        return nativeGrabShortcut(nativeHandle, sequence.toString(), context);
+    }
+    private native int nativeGrabShortcut(long handle, String sequence, int context);
+
+    /** 释放快捷键。 */
+    public void releaseShortcut(int id) { nativeReleaseShortcut(nativeHandle, id); }
+    private native void nativeReleaseShortcut(long handle, int id);
+
+    /** 设置裁剪区域。 */
+    public void setMask(QRegion region) {
+        if (region == null || region.isEmpty()) { clearMask(); return; }
+        nativeSetMaskRect(nativeHandle, region.boundingRect().x(), region.boundingRect().y(),
+                          region.boundingRect().width(), region.boundingRect().height());
+    }
+    private native void nativeSetMaskRect(long handle, int x, int y, int w, int h);
+
+    /** 清除裁剪区域。 */
+    public void clearMask() { nativeClearMask(nativeHandle); }
+    private native void nativeClearMask(long handle);
+
+    /** 设置光标（值对象重载）。 */
+    public void setCursor(QCursor cursor) {
+        if (cursor == null) return;
+        nativeSetCursorShape(nativeHandle, cursor.shape().value);
+    }
+    private native void nativeSetCursorShape(long handle, int shape);
+
+    /** 设置字体（值对象重载）。 */
+    public void setFont(QFont font) {
+        if (font == null) return;
+        nativeSetFontQFont(nativeHandle, font.family(), font.pointSize(), font.weight(), font.italic());
+    }
+    private native void nativeSetFontQFont(long handle, String family, int pointSize, int weight, boolean italic);
+
+    /** 设置调色板（8 个角色色：Window/WindowText/Base/Text/Button/ButtonText/Highlight/HighlightedText）。 */
+    public void setPalette(QPalette palette) {
+        if (palette == null) return;
+        nativeSetPalette(nativeHandle,
+            palette.color(QPalette.ColorRole.Window).rgba(),
+            palette.color(QPalette.ColorRole.WindowText).rgba(),
+            palette.color(QPalette.ColorRole.Base).rgba(),
+            palette.color(QPalette.ColorRole.Text).rgba(),
+            palette.color(QPalette.ColorRole.Button).rgba(),
+            palette.color(QPalette.ColorRole.ButtonText).rgba(),
+            palette.color(QPalette.ColorRole.Highlight).rgba(),
+            palette.color(QPalette.ColorRole.HighlightedText).rgba());
+    }
+    private native void nativeSetPalette(long handle, int window, int windowText, int base, int text,
+                                         int button, int buttonText, int highlight, int highlightedText);
+
+    /** 保存几何（QByteArray，配合 restoreGeometry）。 */
+    public QByteArray saveGeometry() { return new QByteArray(nativeSaveGeometry(nativeHandle)); }
+    private native byte[] nativeSaveGeometry(long handle);
+
+    /** 恢复几何。 */
+    public boolean restoreGeometry(QByteArray geometry) {
+        if (geometry == null) return false;
+        return nativeRestoreGeometry(nativeHandle, geometry.data());
+    }
+    private native boolean nativeRestoreGeometry(long handle, byte[] data);
+
+    /** 坐标映射到全局。 */
+    public QPoint mapToGlobal(QPoint p) {
+        int[] r = nativeMapToGlobal(nativeHandle, p.x(), p.y());
+        return new QPoint(r[0], r[1]);
+    }
+    private native int[] nativeMapToGlobal(long handle, int x, int y);
+
+    /** 全局坐标映射到本控件。 */
+    public QPoint mapFromGlobal(QPoint p) {
+        int[] r = nativeMapFromGlobal(nativeHandle, p.x(), p.y());
+        return new QPoint(r[0], r[1]);
+    }
+    private native int[] nativeMapFromGlobal(long handle, int x, int y);
+
+    /** 坐标映射到另一控件。 */
+    public QPoint mapTo(QWidget other, QPoint p) {
+        int[] r = nativeMapTo(nativeHandle, other != null ? other.nativeHandle : 0, p.x(), p.y());
+        return new QPoint(r[0], r[1]);
+    }
+    private native int[] nativeMapTo(long handle, long otherHandle, int x, int y);
+
+    /** 另一控件坐标映射到本控件。 */
+    public QPoint mapFrom(QWidget other, QPoint p) {
+        int[] r = nativeMapFrom(nativeHandle, other != null ? other.nativeHandle : 0, p.x(), p.y());
+        return new QPoint(r[0], r[1]);
+    }
+    private native int[] nativeMapFrom(long handle, long otherHandle, int x, int y);
+
+    /** 设置内容边距。 */
+    public void setContentsMargins(int left, int top, int right, int bottom) {
+        nativeSetContentsMargins(nativeHandle, left, top, right, bottom);
+    }
+    private native void nativeSetContentsMargins(long handle, int left, int top, int right, int bottom);
+
+    /** 设置内容边距。 */
+    public void setContentsMargins(QMargins margins) {
+        if (margins != null) setContentsMargins(margins.left(), margins.top(), margins.right(), margins.bottom());
+    }
+
 }
 
 
