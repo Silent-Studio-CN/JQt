@@ -133,6 +133,16 @@ app.setTheme("themes/fluent.qss.tpl", myTheme.vars(), true);        // custom
 
 ## Releases
 
+**Versioning**: the number is the version (`0.7.4`); anything after it is a *release codename*
+(`-Universal-Kit` = the same full API on all 3 platforms). Same code, same artifacts —
+codename only changes per major feature line.
+
+| Channel | Version | Coordinate |
+|---------|---------|-----------|
+| GitHub Releases | `v0.7.4-Universal-Kit` | release assets |
+| Maven Central | `0.7.4` | `io.github.silent-xiaomiao:jqt:0.7.4` |
+| JitPack | `0.7.4-Universal-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.4-Universal-Kit` |
+
 Latest: [v0.7.4-Universal-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v0.7.4-Universal-Kit)
 
 | Asset | Platform |
