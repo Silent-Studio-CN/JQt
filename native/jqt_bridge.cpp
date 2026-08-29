@@ -103,6 +103,8 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QDateTimeEdit>
 #include <QDateTime>
 #include <QClipboard>
+#include <QPixmap>
+#include <QImage>
 #include <QSettings>
 #include <QGridLayout>
 #include <QFormLayout>
@@ -262,6 +264,8 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QPrinter.h"
 #include "generated/org_jqt_QOpenGLWidget.h"
 #include "generated/org_jqt_QSerialPort.h"
+#include "generated/org_jqt_QPixmap.h"
+#include "generated/org_jqt_QImage.h"
 #include "generated/org_jqt_QSqlDatabase.h"
 #include "generated/org_jqt_QSqlQuery.h"
 #include "generated/org_jqt_QAction.h"
@@ -6653,6 +6657,183 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeCreate(JNIEnv* env, jobje
         if (mid) e->CallVoidMethod(gRef, mid, static_cast<jint>(n));
     });
     return h;
+}
+
+// ----------------------------------------------------------------------------
+// QPixmap（非 QObject：句柄 = 指针本身，Cleaner 唯一释放路径）
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QPixmap_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QPixmap());
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QPixmap_nativeCreateWH(JNIEnv* env, jclass, jint w, jint h) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QPixmap(w, h));
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QPixmap_nativeCreateFromFile(JNIEnv* env, jclass, jstring file) {
+    if (requireApp(env) == nullptr) return 0;
+    const char* f = env->GetStringUTFChars(file, nullptr);
+    QPixmap* p = new QPixmap(QString::fromUtf8(f));
+    env->ReleaseStringUTFChars(file, f);
+    return reinterpret_cast<jlong>(p);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QPixmap_nativeDispose(JNIEnv*, jclass, jlong h) {
+    delete reinterpret_cast<QPixmap*>(h);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPixmap_nativeIsNull(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QPixmap*>(h)->isNull();
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QPixmap_nativeWidth(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QPixmap*>(h)->width();
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QPixmap_nativeHeight(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QPixmap*>(h)->height();
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QPixmap_nativeDepth(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QPixmap*>(h)->depth();
+}
+JNIEXPORT void JNICALL Java_org_jqt_QPixmap_nativeFill(JNIEnv*, jclass, jlong h, jint argb) {
+    reinterpret_cast<QPixmap*>(h)->fill(QRgb(argb));
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPixmap_nativeLoad(JNIEnv* env, jclass, jlong h, jstring file) {
+    const char* f = env->GetStringUTFChars(file, nullptr);
+    bool ok = reinterpret_cast<QPixmap*>(h)->load(QString::fromUtf8(f));
+    env->ReleaseStringUTFChars(file, f);
+    return ok;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPixmap_nativeLoadFromData(JNIEnv* env, jclass, jlong h, jbyteArray data) {
+    jsize n = env->GetArrayLength(data);
+    jbyte* buf = env->GetByteArrayElements(data, nullptr);
+    bool ok = reinterpret_cast<QPixmap*>(h)->loadFromData(reinterpret_cast<const uchar*>(buf), n);
+    env->ReleaseByteArrayElements(data, buf, JNI_ABORT);
+    return ok;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPixmap_nativeSave(JNIEnv* env, jclass, jlong h, jstring file, jstring format, jint quality) {
+    const char* f = env->GetStringUTFChars(file, nullptr);
+    const char* fmt = format ? env->GetStringUTFChars(format, nullptr) : nullptr;
+    bool ok = reinterpret_cast<QPixmap*>(h)->save(QString::fromUtf8(f), fmt ? fmt : nullptr, quality);
+    env->ReleaseStringUTFChars(file, f);
+    if (fmt) env->ReleaseStringUTFChars(format, fmt);
+    return ok;
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QPixmap_nativeScaled(JNIEnv* env, jclass, jlong h, jint w, jint hh, jint mode) {
+    if (requireApp(env) == nullptr) return 0;
+    QPixmap* out = new QPixmap(reinterpret_cast<QPixmap*>(h)->scaled(
+        QSize(w, hh), static_cast<Qt::AspectRatioMode>(mode)));
+    return reinterpret_cast<jlong>(out);
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QPixmap_nativeToImage(JNIEnv* env, jclass, jlong h) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QImage(reinterpret_cast<QPixmap*>(h)->toImage()));
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QPixmap_nativeFromImage(JNIEnv* env, jclass, jlong imgH) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QPixmap(QPixmap::fromImage(*reinterpret_cast<QImage*>(imgH))));
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QPixmap_nativeCreateFromArgb(JNIEnv* env, jclass, jintArray argb, jint w, jint h) {
+    if (requireApp(env) == nullptr) return 0;
+    jint* px = env->GetIntArrayElements(argb, nullptr);
+    QImage img(w, h, QImage::Format_ARGB32);
+    memcpy(img.bits(), px, static_cast<size_t>(w) * h * 4);
+    env->ReleaseIntArrayElements(argb, px, JNI_ABORT);
+    QPixmap* p = new QPixmap(QPixmap::fromImage(img));
+    return reinterpret_cast<jlong>(p);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QPixmap_nativeGetArgb(JNIEnv* env, jclass, jlong h, jintArray argb, jint w, jint hh) {
+    QImage img = reinterpret_cast<QPixmap*>(h)->toImage().convertToFormat(QImage::Format_ARGB32);
+    jint* px = env->GetIntArrayElements(argb, nullptr);
+    memcpy(px, img.bits(), static_cast<size_t>(w) * hh * 4);
+    env->ReleaseIntArrayElements(argb, px, 0);
+}
+
+// ----------------------------------------------------------------------------
+// QImage（非 QObject：句柄 = 指针本身）
+// ----------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QImage_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QImage());
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QImage_nativeCreateWHF(JNIEnv* env, jclass, jint w, jint h, jint fmt) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QImage(w, h, static_cast<QImage::Format>(fmt)));
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QImage_nativeCreateFromFile(JNIEnv* env, jclass, jstring file) {
+    if (requireApp(env) == nullptr) return 0;
+    const char* f = env->GetStringUTFChars(file, nullptr);
+    QImage* img = new QImage(QString::fromUtf8(f));
+    env->ReleaseStringUTFChars(file, f);
+    return reinterpret_cast<jlong>(img);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QImage_nativeDispose(JNIEnv*, jclass, jlong h) {
+    delete reinterpret_cast<QImage*>(h);
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QImage_nativeIsNull(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QImage*>(h)->isNull();
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QImage_nativeWidth(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QImage*>(h)->width();
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QImage_nativeHeight(JNIEnv*, jclass, jlong h) {
+    return reinterpret_cast<QImage*>(h)->height();
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QImage_nativeFormat(JNIEnv*, jclass, jlong h) {
+    return static_cast<jint>(reinterpret_cast<QImage*>(h)->format());
+}
+JNIEXPORT void JNICALL Java_org_jqt_QImage_nativeFill(JNIEnv*, jclass, jlong h, jint argb) {
+    reinterpret_cast<QImage*>(h)->fill(QRgb(argb));
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QImage_nativeLoad(JNIEnv* env, jclass, jlong h, jstring file) {
+    const char* f = env->GetStringUTFChars(file, nullptr);
+    bool ok = reinterpret_cast<QImage*>(h)->load(QString::fromUtf8(f));
+    env->ReleaseStringUTFChars(file, f);
+    return ok;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QImage_nativeLoadFromData(JNIEnv* env, jclass, jlong h, jbyteArray data) {
+    jsize n = env->GetArrayLength(data);
+    jbyte* buf = env->GetByteArrayElements(data, nullptr);
+    bool ok = reinterpret_cast<QImage*>(h)->loadFromData(reinterpret_cast<const uchar*>(buf), n);
+    env->ReleaseByteArrayElements(data, buf, JNI_ABORT);
+    return ok;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QImage_nativeSave(JNIEnv* env, jclass, jlong h, jstring file, jstring format, jint quality) {
+    const char* f = env->GetStringUTFChars(file, nullptr);
+    const char* fmt = format ? env->GetStringUTFChars(format, nullptr) : nullptr;
+    bool ok = reinterpret_cast<QImage*>(h)->save(QString::fromUtf8(f), fmt ? fmt : nullptr, quality);
+    env->ReleaseStringUTFChars(file, f);
+    if (fmt) env->ReleaseStringUTFChars(format, fmt);
+    return ok;
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QImage_nativePixel(JNIEnv*, jclass, jlong h, jint x, jint y) {
+    return static_cast<jint>(reinterpret_cast<QImage*>(h)->pixel(x, y));
+}
+JNIEXPORT void JNICALL Java_org_jqt_QImage_nativeSetPixel(JNIEnv*, jclass, jlong h, jint x, jint y, jint rgb) {
+    reinterpret_cast<QImage*>(h)->setPixel(x, y, QRgb(rgb));
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QImage_nativePixelArgb(JNIEnv*, jclass, jlong h, jint x, jint y) {
+    return static_cast<jint>(QColor(reinterpret_cast<QImage*>(h)->pixelColor(x, y)).rgba());
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QImage_nativeConvertToFormat(JNIEnv* env, jclass, jlong h, jint fmt) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QImage(reinterpret_cast<QImage*>(h)->convertToFormat(static_cast<QImage::Format>(fmt))));
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QImage_nativeScaled(JNIEnv* env, jclass, jlong h, jint w, jint hh, jint mode) {
+    if (requireApp(env) == nullptr) return 0;
+    return reinterpret_cast<jlong>(new QImage(reinterpret_cast<QImage*>(h)->scaled(
+        QSize(w, hh), static_cast<Qt::AspectRatioMode>(mode))));
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QImage_nativeCreateFromArgb(JNIEnv* env, jclass, jintArray argb, jint w, jint h) {
+    if (requireApp(env) == nullptr) return 0;
+    jint* px = env->GetIntArrayElements(argb, nullptr);
+    QImage* img = new QImage(w, h, QImage::Format_ARGB32);
+    memcpy(img->bits(), px, static_cast<size_t>(w) * h * 4);
+    env->ReleaseIntArrayElements(argb, px, JNI_ABORT);
+    return reinterpret_cast<jlong>(img);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QImage_nativeGetArgb(JNIEnv* env, jclass, jlong h, jintArray argb, jint w, jint hh) {
+    QImage img = reinterpret_cast<QImage*>(h)->convertToFormat(QImage::Format_ARGB32);
+    jint* px = env->GetIntArrayElements(argb, nullptr);
+    memcpy(px, img.bits(), static_cast<size_t>(w) * hh * 4);
+    env->ReleaseIntArrayElements(argb, px, 0);
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeDispose(JNIEnv* env, jobject, jlong handle) {
