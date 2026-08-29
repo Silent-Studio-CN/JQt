@@ -208,6 +208,14 @@
 | qwizard | ⬜ 未规划 |  |
 | qwizardpage | ⬜ 未规划 |  |
 
+
+
+## 值对象完成状态（2026-08-29）
+
+- **Qt 值对象 66 个全部完成**：手写 12 组（20 类，含 BufferedImage/URI/java.time/awt 生态桥）+ 机器化批量 44 类（A 组数学 5 / B 组包装 13 / C 组 QJson 3 / D 组画刷变换 9 / E 组图标文本 14）
+- 纯 Java 实现占多数（数学/包装/JSON/格式类零 JNI）；QPixmap/QImage/QFont 为 native（Cleaner 管理）
+- 全部经断言冒烟验证（A 组 17 / B 组 27 / C 组 12 / D 组 18 / E 组 13）
+
 ## 手写类清单（32 个，已确认）
 
 **基类族（10）**：QWidget、QAbstractItemView、QAbstractScrollArea、QAbstractSlider、QAbstractSpinBox、QAbstractButton、QLayout、QGraphicsItem、QStyleOption
