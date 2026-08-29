@@ -91,6 +91,49 @@ fn build_method(name: &str, args: &str) -> Option<QtMethod> {
     })
 }
 
+
+/// 从主页面 HTML 提取 方法名 → 返回类型 映射
+/// 主页面签名形如："virtual void setVisible (bool visible)" → { setVisible: "void" }
+pub fn parse_main_return_types(html: &str) -> std::collections::HashMap<String, String> {
+    let mut out = std::collections::HashMap::new();
+    let text = strip_tags(html);
+    let b = text.as_bytes();
+    let mut i = 0usize;
+    while i < b.len() {
+        if b[i] == b'(' {
+            let mut j = i;
+            while j > 0 && (b[j - 1].is_ascii_alphanumeric() || b[j - 1] == b'_' || b[j - 1] == b':') {
+                j -= 1;
+            }
+            let raw = &text[j..i];
+            let name = raw.rsplit("::").next().unwrap_or(raw).trim();
+            if !name.is_empty() && name.chars().next().map(|c| c.is_ascii_alphabetic()).unwrap_or(false) {
+                let mut k = j;
+                while k > 0 && (b[k - 1] as char).is_whitespace() { k -= 1; }
+                let mut end = k;
+                while end > 0 && (b[end - 1].is_ascii_alphanumeric() || b[end - 1] == b'_' || b[end - 1] == b'*' || b[end - 1] == b'&') {
+                    end -= 1;
+                }
+                let token = text[end..k].trim();
+                let is_modifier = matches!(token, "virtual" | "static" | "const" | "inline" | "override" | "Q_DECL_OVERRIDE" | "signal" | "slot");
+                if !is_modifier && !token.is_empty() && token != name {
+                    let mut rt = token.to_string();
+                    let mut k2 = end;
+                    while k2 > 0 && (b[k2 - 1] as char).is_whitespace() { k2 -= 1; }
+                    let mut e2 = k2;
+                    while e2 > 0 && (b[e2 - 1].is_ascii_alphanumeric() || b[e2 - 1] == b'_') { e2 -= 1; }
+                    let prev = text[e2..k2].trim();
+                    if matches!(prev, "virtual" | "static" | "inline" | "signal" | "slot") {
+                        rt = format!("{} {}", prev, rt);
+                    }
+                    out.insert(name.to_string(), rt);
+                }
+            }
+        }
+        i += 1;
+    }
+    out
+}
 /// 从页面标题提取规范类名："List of All Members for QWidget | Qt Widgets" → "QWidget"
 fn extract_class_name(html: &str) -> Option<String> {
     let marker = "List of All Members for ";

@@ -43,8 +43,19 @@ fn cmd_fetch(args: &[String]) {
         let url = format!("https://doc.qt.io/qt-6/{}-members.html", lower);
         match fetch_url(&url) {
             Ok(html) => {
-                let cls = parse::parse_members_html(&html, c);
-                println!("{}: {} methods", c, cls.methods.len());
+                let mut cls = parse::parse_members_html(&html, c);
+                let main_url = format!("https://doc.qt.io/qt-6/{}.html", lower);
+                if let Ok(main_html) = fetch_url(&main_url) {
+                    let rts = parse::parse_main_return_types(&main_html);
+                    for m in &mut cls.methods {
+                        if m.return_type.is_empty() {
+                            if let Some(rt) = rts.get(&m.name) {
+                                m.return_type = rt.clone();
+                            }
+                        }
+                    }
+                }
+                println!("{}: {} methods", cls.name, cls.methods.len());
                 out.push(cls);
             }
             Err(e) => {
