@@ -67,14 +67,14 @@ pub fn gen_java_methods(cls: &QtClass) -> String {
             params.push(format!("{} {}", jt, nm));
             args.push(nm);
         }
-        let native_call = format!("native{}(handle{})", cap,
+        let native_call = format!("native{}(nativeHandle{})", cap,
             args.iter().map(|a| format!(", {}", a)).collect::<String>());
         let body = if rt == "void" {
             format!("        {};", native_call)
         } else {
             format!("        return {};", native_call)
         };
-        let mut nparams = String::from("long handle");
+        let mut nparams = String::from("long nativeHandle");
         for (i, p) in m.params.iter().enumerate() {
             let jt = jni_type(&p.ty).unwrap();
             let nm = if p.name.is_empty() { format!("arg{}", i) } else { p.name.clone() };
@@ -127,6 +127,17 @@ pub fn gen_native_functions(cls: &QtClass, cpp_class: &str) -> String {
     out
 }
 
+
+/// 生成单个方法的 Java 骨架（金标准审计用）
+pub fn gen_java_methods_for(cls: &QtClass, method_name: &str) -> String {
+    let filtered = QtClass {
+        name: cls.name.clone(),
+        methods: cls.methods.iter().filter(|m| m.name == method_name).cloned().collect(),
+        properties: Vec::new(),
+        enums: Vec::new(),
+    };
+    gen_java_methods(&filtered)
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -173,8 +184,8 @@ mod tests {
         cls.methods.push(m("setVisible", vec![("visible", "bool")], "void"));
         let java = gen_java_methods(&cls);
         assert!(java.contains("public void setVisible(boolean visible)"));
-        assert!(java.contains("nativeSetVisible(handle, visible)"));
-        assert!(java.contains("private static native void nativeSetVisible(long handle, jboolean visible);"));
+        assert!(java.contains("nativeSetVisible(nativeHandle, visible)"));
+        assert!(java.contains("private static native void nativeSetVisible(long nativeHandle, jboolean visible);"));
     }
 
     #[test]
