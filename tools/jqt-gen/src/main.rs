@@ -57,8 +57,75 @@ fn cmd_fetch(args: &[String]) {
     }
 }
 
-fn cmd_plan(_args: &[String]) {
-    println!("plan 尚未实现（下一步：对比 JQt 现有实现输出缺口）");
+/// plan: 读 qt-classes.json（Qt 元信息）→ 扫描 JQt java 实现 → 输出缺口清单
+fn cmd_plan(args: &[String]) {
+    let data = match std::fs::read_to_string("qt-classes.json") {
+        Ok(d) => d,
+        Err(_) => { eprintln!("缺少 qt-classes.json —— 先运行: jqt-gen fetch <classes>"); return; }
+    };
+    let classes: Vec<model::QtClass> = match serde_json::from_str(&data) {
+        Ok(c) => c,
+        Err(e) => { eprintln!("qt-classes.json 解析失败: {}", e); return; }
+    };
+
+    // 扫描 JQt 现有实现
+    let jqt_dir = std::env::var("JQT_JAVA_DIR").unwrap_or_else(|_| "D:\\SilentStudio\\JQt - Dev\\java\\org\\jqt".to_string());
+    let mut implemented: std::collections::HashMap<String, std::collections::HashSet<String>> = std::collections::HashMap::new();
+    if let Ok(entries) = std::fs::read_dir(&jqt_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map(|e| e == "java").unwrap_or(false) {
+                if let Ok(content) = std::fs::read_to_string(&path) {
+                    let class = path.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+                    let mut names = std::collections::HashSet::new();
+                    for line in content.lines() {
+                        let t = line.trim();
+                        // public 方法名提取
+                        if t.starts_with("public") && t.contains('(') {
+                            if let Some(open) = t.find('(') {
+                                let head = &t[..open];
+                                let name = head.split_whitespace().next_back().unwrap_or("").trim_end_matches(')').trim();
+                                if name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') && !name.is_empty() {
+                                    names.insert(name.to_string());
+                                }
+                            }
+                        }
+                    }
+                    implemented.insert(class.to_lowercase(), names);
+                }
+            }
+        }
+    }
+
+    // 对比：输出每类的缺口（值对象参数方法优先标记）
+    let mut plan: Vec<serde_json::Value> = Vec::new();
+    for cls in &classes {
+        let lower = cls.name.to_lowercase();
+        let impls = implemented.get(&lower).cloned().unwrap_or_default();
+        let mut missing: Vec<&model::QtMethod> = Vec::new();
+        for m in &cls.methods {
+            if !impls.contains(&m.name) {
+                missing.push(m);
+            }
+        }
+        plan.push(serde_json::json!({
+            "class": cls.name,
+            "qt_methods": cls.methods.len(),
+            "jqt_implemented": impls.len(),
+            "missing": missing.iter().map(|m| serde_json::json!({
+                "name": m.name,
+                "params": m.params.iter().map(|p| p.ty.clone()).collect::<Vec<_>>(),
+            })).collect::<Vec<_>>(),
+        }));
+    }
+    let json = serde_json::to_string_pretty(&plan).unwrap_or_default();
+    std::fs::write("qt-plan.json", json).expect("写入 qt-plan.json");
+    for p in &plan {
+        let cls = p["class"].as_str().unwrap_or("");
+        let missing = p["missing"].as_array().map(|a| a.len()).unwrap_or(0);
+        println!("{}: 缺口 {} 方法", cls, missing);
+    }
+    println!("已写入 qt-plan.json");
 }
 
 fn fetch_url(url: &str) -> Result<String, String> {
