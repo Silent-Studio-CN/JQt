@@ -76,11 +76,11 @@ pub fn gen_java_methods(cls: &QtClass) -> String {
         };
         let mut nparams = String::from("long nativeHandle");
         for (i, p) in m.params.iter().enumerate() {
-            let jt = jni_type(&p.ty).unwrap();
+            let jt = java_type(&p.ty).unwrap();
             let nm = if p.name.is_empty() { format!("arg{}", i) } else { p.name.clone() };
             nparams.push_str(&format!(", {} {}", jt, nm));
         }
-        let nret = jni_type(&m.return_type).unwrap_or("void");
+        let nret = java_type(if m.return_type.is_empty() { "void" } else { &m.return_type }).unwrap_or("void");
 
         out.push_str(&format!(
             "\n    /** {}（Qt {}）。 */\n    public {} {}({}) {{\n{}\n    }}\n    private static native {} native{}({});\n",
@@ -185,7 +185,7 @@ mod tests {
         let java = gen_java_methods(&cls);
         assert!(java.contains("public void setVisible(boolean visible)"));
         assert!(java.contains("nativeSetVisible(nativeHandle, visible)"));
-        assert!(java.contains("private static native void nativeSetVisible(long nativeHandle, jboolean visible);"));
+        assert!(java.contains("private static native void nativeSetVisible(long nativeHandle, boolean visible);"));
     }
 
     #[test]
