@@ -4270,6 +4270,123 @@ JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeRotate(JNIEnv* env, jclass /*
 }
 
 // ----------------------------------------------------------------------------
+// QPainter 值对象批（手写精修：画刷/画笔/路径/图像/裁剪/变换）
+// ----------------------------------------------------------------------------
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeSetBrush(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jint argb, jint style) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    p->setBrush(QBrush(QColor::fromRgba(static_cast<QRgb>(argb)), static_cast<Qt::BrushStyle>(style)));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeSetPen(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jint argb, jdouble width, jint style) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    p->setPen(QPen(QColor::fromRgba(static_cast<QRgb>(argb)), width, static_cast<Qt::PenStyle>(style)));
+}
+
+static QPainterPath jqtBuildPath(JNIEnv* env, jdoubleArray segments) {
+    QPainterPath path;
+    if (segments == nullptr) return path;
+    jsize n = env->GetArrayLength(segments);
+    jdouble* data = env->GetDoubleArrayElements(segments, nullptr);
+    for (jsize i = 0; i + 6 < n; i += 7) {
+        int type = static_cast<int>(data[i]);
+        if (type == 1) path.moveTo(data[i + 1], data[i + 2]);
+        else if (type == 2) path.lineTo(data[i + 1], data[i + 2]);
+        else path.cubicTo(data[i + 1], data[i + 2], data[i + 3], data[i + 4], data[i + 5], data[i + 6]);
+    }
+    env->ReleaseDoubleArrayElements(segments, data, JNI_ABORT);
+    return path;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawPath(JNIEnv* env, jclass /*cls*/, jlong handle, jdoubleArray segments) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    p->drawPath(jqtBuildPath(env, segments));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawPixmap(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jlong pmHandle) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    QPixmap* pm = reinterpret_cast<QPixmap*>(pmHandle);
+    if (p == nullptr || pm == nullptr || pm->isNull()) return;
+    p->drawPixmap(QPointF(x, y), *pm);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawPixmapRect(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble tx, jdouble ty, jdouble tw, jdouble th, jlong pmHandle, jdouble sx, jdouble sy, jdouble sw, jdouble sh) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    QPixmap* pm = reinterpret_cast<QPixmap*>(pmHandle);
+    if (p == nullptr || pm == nullptr || pm->isNull()) return;
+    p->drawPixmap(QRectF(tx, ty, tw, th), *pm, QRectF(sx, sy, sw, sh));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawImage(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jlong imgHandle) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    QImage* img = reinterpret_cast<QImage*>(imgHandle);
+    if (p == nullptr || img == nullptr || img->isNull()) return;
+    p->drawImage(QPointF(x, y), *img);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawImageRect(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble tx, jdouble ty, jdouble tw, jdouble th, jlong imgHandle, jdouble sx, jdouble sy, jdouble sw, jdouble sh) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    QImage* img = reinterpret_cast<QImage*>(imgHandle);
+    if (p == nullptr || img == nullptr || img->isNull()) return;
+    p->drawImage(QRectF(tx, ty, tw, th), *img, QRectF(sx, sy, sw, sh));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawTiledPixmap(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble rx, jdouble ry, jdouble rw, jdouble rh, jlong pmHandle, jdouble ox, jdouble oy) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    QPixmap* pm = reinterpret_cast<QPixmap*>(pmHandle);
+    if (p == nullptr || pm == nullptr || pm->isNull()) return;
+    p->drawTiledPixmap(QRectF(rx, ry, rw, rh), *pm, QPointF(ox, oy));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawPicture(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jdouble w, jdouble h) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    // 简化占位：绘制边框提示播放区域
+    p->drawRect(QRectF(x, y, w, h));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeDrawGlyphRun(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble x, jdouble y) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    p->drawPoint(QPointF(x, y));  // 简化占位
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeFillPath(JNIEnv* env, jclass /*cls*/, jlong handle, jdoubleArray segments, jint argb, jint style) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    QPainterPath path = jqtBuildPath(env, segments);
+    p->fillPath(path, QBrush(QColor::fromRgba(static_cast<QRgb>(argb)), static_cast<Qt::BrushStyle>(style)));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeStrokePath(JNIEnv* env, jclass /*cls*/, jlong handle, jdoubleArray segments, jint argb, jdouble width, jint style) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    QPainterPath path = jqtBuildPath(env, segments);
+    p->strokePath(path, QPen(QColor::fromRgba(static_cast<QRgb>(argb)), width, static_cast<Qt::PenStyle>(style)));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeSetClipPath(JNIEnv* env, jclass /*cls*/, jlong handle, jdoubleArray segments) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    p->setClipPath(jqtBuildPath(env, segments));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeSetClipRect(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble x, jdouble y, jdouble w, jdouble h) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    p->setClipRect(QRectF(x, y, w, h));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPainter_nativeSetWorldTransform(JNIEnv* /*env*/, jclass /*cls*/, jlong handle, jdouble m11, jdouble m12, jdouble m13, jdouble m21, jdouble m22, jdouble m23, jdouble m31, jdouble m32, jdouble m33) {
+    QPainter* p = reinterpret_cast<QPainter*>(handle);
+    if (p == nullptr) return;
+    p->setWorldTransform(QTransform(m11, m12, m13, m21, m22, m23, m31, m32, m33));
+}
+
+
+// ----------------------------------------------------------------------------
 // JQtWidget L1 基础 API（v0.6.0 补全）
 // ----------------------------------------------------------------------------
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeClose(JNIEnv* env, jclass /*cls*/, jlong handle) {
