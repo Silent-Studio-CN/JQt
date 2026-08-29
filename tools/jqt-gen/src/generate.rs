@@ -98,30 +98,36 @@ pub fn gen_native_functions(cls: &QtClass, cpp_class: &str) -> String {
         let nret = jni_type(&m.return_type).unwrap_or("void");
         let mut jparams = String::from("JNIEnv* env, jobject /*thiz*/, jlong handle");
         let mut call_args = String::new();
+        let mut pre_conv = String::new();
+        let mut post_conv = String::new();
         for (i, p) in m.params.iter().enumerate() {
             let jt = jni_type(&p.ty).unwrap();
             let nm = if p.name.is_empty() { format!("arg{}", i) } else { p.name.clone() };
             jparams.push_str(&format!(", {} {}", jt, nm));
             if p.ty.contains("QString") {
-                call_args.push_str(&format!(", QString::fromUtf8({})", nm));
+                // jstring → const char*（GetStringUTFChars），调用后释放
+                pre_conv.push_str(&format!("    const char* {}_utf = env->GetStringUTFChars({}, nullptr);\n", nm, nm));
+                call_args.push_str(&format!(", QString::fromUtf8({}_utf)", nm));
+                post_conv.push_str(&format!("    env->ReleaseStringUTFChars({}, {}_utf);\n", nm, nm));
             } else {
                 call_args.push_str(&format!(", {}", nm));
             }
         }
         let is_void = m.return_type.trim().is_empty() || m.return_type.trim().trim_start_matches("const ") == "void";
         let call_body = if m.return_type.contains("QString") && !is_void {
-            format!("        QString __jqt_ret = w->{}({});\n        return env->NewStringUTF(__jqt_ret.toUtf8().constData());",
+            format!("    QString __jqt_ret = w->{}({});\n    return env->NewStringUTF(__jqt_ret.toUtf8().constData());",
                 m.name, call_args.trim_start_matches(", "))
         } else if is_void {
-            format!("        w->{}({});", m.name, call_args.trim_start_matches(", "))
+            format!("    w->{}({});", m.name, call_args.trim_start_matches(", "))
         } else {
-            format!("        return w->{}({});", m.name, call_args.trim_start_matches(", "))
+            format!("    return w->{}({});", m.name, call_args.trim_start_matches(", "))
         };
+        let body = format!("{}{}{}", pre_conv, call_body, post_conv);
         out.push_str(&format!(
             "\nJNIEXPORT {} JNICALL Java_org_jqt_{}_native{}({}) {{\n    {}* w = static_cast<{}*>(requireHandle(env, handle));\n    if (w == nullptr) {{ {} }}\n{}\n}}\n",
             nret, cls.name, cap, jparams, cpp_class, cpp_class,
             if is_void { "return;" } else { "return 0;" },
-            call_body
+            body
         ));
     }
     out

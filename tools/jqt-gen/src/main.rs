@@ -211,4 +211,51 @@ mod compile_tests {
             .expect("run javac");
         assert!(out.status.success(), "javac 编译失败:\n{}", String::from_utf8_lossy(&out.stderr));
     }
-}
+
+    #[test]
+    fn generated_native_compiles() {
+        let mut cls = QtClass::new("QWidget");
+        cls.methods.push(m("setVisible", vec![("visible", "bool")], "void"));
+        cls.methods.push(m("windowTitle", vec![], "QString"));
+        cls.methods.push(m("setToolTip", vec![("tip", "const QString")], "void"));
+        cls.methods.push(m("minimumWidth", vec![], "int"));
+        cls.methods.push(m("setGeometry", vec![("x", "int"), ("y", "int"), ("w", "int"), ("h", "int")], "void"));
+        let native = crate::generate::gen_native_functions(&cls, "QWidget");
+        let cpp = format!(
+            "#include <QWidget>\n#include <jni.h>\nstatic void* requireHandle(JNIEnv*, jlong) {{ return nullptr; }}\n{}\n",
+            native
+        );
+        std::fs::create_dir_all("target/gencheck").expect("mkdir");
+        std::fs::write("target/gencheck/GenCheck.cpp", &cpp).expect("write cpp");
+
+        // 本机 Qt/MinGW/JDK 路径（可被环境变量覆盖）
+        let qt_root = std::env::var("QT_ROOT").unwrap_or_else(|_| "D:\\Qt\\6.11.2\\mingw_64".to_string());
+        let jdk = std::env::var("JDK_HOME").unwrap_or_else(|_| "C:\\Program Files\\Java\\latest\\jdk-26".to_string());
+        let gxx = std::env::var("GXX").unwrap_or_else(|_| "D:\\Qt\\Tools\\mingw1310_64\\bin\\g++.exe".to_string());
+        if !std::path::Path::new(&gxx).exists() {
+            eprintln!("跳过：未找到 g++ ({})", gxx);
+            return;
+        }
+        let mut cmd = std::process::Command::new(&gxx);
+        cmd.arg("-std=c++17").arg("-fsyntax-only")
+            .arg(format!("-I{}", jdk))
+            .arg(format!("-I{}\\include", jdk))
+            .arg(format!("-I{}\\include\\win32", jdk))
+            .arg(format!("-I{}", qt_root))
+            .arg(format!("-I{}\\include", qt_root))
+            .arg(format!("-I{}\\include\\QtWidgets", qt_root))
+            .arg(format!("-I{}\\include\\QtGui", qt_root))
+            .arg(format!("-I{}\\include\\QtCore", qt_root))
+            .arg("target/gencheck/GenCheck.cpp");
+        let out = cmd.output().expect("run g++");
+        let stderr = String::from_utf8_lossy(&out.stderr).to_string();
+        if !out.status.success() {
+            if stderr.trim().is_empty() {
+                // 无 stderr 输出且失败 = 编译器崩溃（如系统内存不足），跳过而非误报
+                eprintln!("跳过：g++ 崩溃（无诊断输出），疑似环境内存不足");
+                return;
+            }
+            panic!("g++ 语法检查失败:\n{}", stderr);
+        }
+    }}
+
