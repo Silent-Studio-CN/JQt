@@ -37,12 +37,15 @@ fn all_direct(params: &[QtParam]) -> bool {
 fn is_generatable(cls: &QtClass, m: &QtMethod) -> bool {
     if m.name == cls.name { return false; }
     if m.name.ends_with("Event")
+        || m.name.ends_with("Changed")   // QObject/QWidget 信号命名惯例
         || m.name == "operator"
+        || m.name == "destroy"           // 危险：直接销毁对象
+        || m.name == "focusPreviousChild"  // protected
+        || m.name == "setEditFocus"         // 非 QWidget API（QGraphicsWidget）
         || m.name.starts_with('~')
         || m.params.iter().any(|p| p.ty.contains("..."))
     { return false; }
-    let rt = if m.return_type.is_empty() { "void" } else { m.return_type.as_str() };
-    all_direct(&m.params) && java_type(rt).is_some()
+    !m.return_type.is_empty() && all_direct(&m.params) && java_type(&m.return_type).is_some()
 }
 
 fn camel(name: &str) -> String {

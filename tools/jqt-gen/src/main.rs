@@ -83,34 +83,7 @@ fn cmd_plan(args: &[String]) {
         Err(e) => { eprintln!("qt-classes.json 解析失败: {}", e); return; }
     };
 
-    // 扫描 JQt 现有实现
-    let jqt_dir = std::env::var("JQT_JAVA_DIR").unwrap_or_else(|_| "D:\\SilentStudio\\JQt - Dev\\java\\org\\jqt".to_string());
-    let mut implemented: std::collections::HashMap<String, std::collections::HashSet<String>> = std::collections::HashMap::new();
-    if let Ok(entries) = std::fs::read_dir(&jqt_dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().map(|e| e == "java").unwrap_or(false) {
-                if let Ok(content) = std::fs::read_to_string(&path) {
-                    let class = path.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
-                    let mut names = std::collections::HashSet::new();
-                    for line in content.lines() {
-                        let t = line.trim();
-                        // public 方法名提取
-                        if t.starts_with("public") && t.contains('(') {
-                            if let Some(open) = t.find('(') {
-                                let head = &t[..open];
-                                let name = head.split_whitespace().next_back().unwrap_or("").trim_end_matches(')').trim();
-                                if name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') && !name.is_empty() {
-                                    names.insert(name.to_string());
-                                }
-                            }
-                        }
-                    }
-                    implemented.insert(class.to_lowercase(), names);
-                }
-            }
-        }
-    }
+    let implemented = scan_jqt_implemented();
 
     // 对比：输出每类的缺口（值对象参数方法优先标记）
     let mut plan: Vec<serde_json::Value> = Vec::new();
@@ -144,7 +117,38 @@ fn cmd_plan(args: &[String]) {
 }
 
 
-/// generate: 读 qt-classes.json → 生成 Java/native 直传型骨架
+/// 扫描 JQt 现有实现：类名(小写) → 已实现方法名集合
+fn scan_jqt_implemented() -> std::collections::HashMap<String, std::collections::HashSet<String>> {
+    let mut implemented: std::collections::HashMap<String, std::collections::HashSet<String>> = std::collections::HashMap::new();
+    let jqt_dir = std::env::var("JQT_JAVA_DIR").unwrap_or_else(|_| "D:\\SilentStudio\\JQt - Dev\\java\\org\\jqt".to_string());
+    if let Ok(entries) = std::fs::read_dir(&jqt_dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().map(|e| e == "java").unwrap_or(false) {
+                if let Ok(content) = std::fs::read_to_string(&path) {
+                    let class = path.file_stem().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+                    let mut names = std::collections::HashSet::new();
+                    for line in content.lines() {
+                        let t = line.trim();
+                        if t.starts_with("public") && t.contains('(') {
+                            if let Some(open) = t.find('(') {
+                                let head = &t[..open];
+                                let name = head.split_whitespace().next_back().unwrap_or("").trim_end_matches(')').trim();
+                                if name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') && !name.is_empty() {
+                                    names.insert(name.to_string());
+                                }
+                            }
+                        }
+                    }
+                    implemented.insert(class.to_lowercase(), names);
+                }
+            }
+        }
+    }
+    implemented
+}
+
+/// generate: 读 qt-classes.json → 生成 Java/native 直传型骨架（排除已有实现）
 fn cmd_generate(args: &[String]) {
     let data = match std::fs::read_to_string("qt-classes.json") {
         Ok(d) => d,
@@ -154,17 +158,26 @@ fn cmd_generate(args: &[String]) {
         Ok(c) => c,
         Err(e) => { eprintln!("解析失败: {}", e); return; }
     };
+    let implemented = scan_jqt_implemented();
     let target = args.get(2).map(|s| s.to_lowercase()).unwrap_or_default();
     for cls in &classes {
         if !target.is_empty() && cls.name.to_lowercase() != target { continue; }
-        let java = generate::gen_java_methods(cls);
-        let native = generate::gen_native_functions(cls, &cls.name);
+        let impls = implemented.get(&cls.name.to_lowercase()).cloned().unwrap_or_default();
+        // 过滤：只保留未实现的方法
+        let filtered = model::QtClass {
+            name: cls.name.clone(),
+            methods: cls.methods.iter().filter(|m| !impls.contains(&m.name)).cloned().collect(),
+            properties: Vec::new(),
+            enums: Vec::new(),
+        };
+        let java = generate::gen_java_methods(&filtered);
+        let native = generate::gen_native_functions(&filtered, &cls.name);
         let dir = "generated";
         std::fs::create_dir_all(dir).expect("创建 generated 目录");
         std::fs::write(format!("{}/{}.java.part", dir, cls.name), &java).expect("写 java part");
         std::fs::write(format!("{}/{}.native.part", dir, cls.name), &native).expect("写 native part");
         let gen_count = java.matches("public ").count();
-        println!("{}: 生成 Java 方法 {} 个 / native 函数 {} 个", cls.name, gen_count, native.matches("JNIEXPORT").count());
+        println!("{}: 缺口直传 {} 个 / 生成 Java 方法 {} 个 / native 函数 {} 个", cls.name, filtered.methods.len(), gen_count, native.matches("JNIEXPORT").count());
     }
     println!("生成完成 → generated/");
 }
