@@ -177,6 +177,7 @@ CI builds all 4 platforms (Windows x64/ARM64, Linux, macOS) × 2 Qt versions on 
 | [docs/api-tiering.md](docs/api-tiering.md) | L1/L2/L3 tiering design |
 | [docs/behavior.md](docs/behavior.md) | Behavior contract (display rules, theming, DPI) |
 | [docs/releases/](docs/releases/) | Per-version release notes (v0.1.0 → v0.7.4, all 14 releases) |
+| [docs/qt6-classes.md](docs/qt6-classes.md) | Qt6 class coverage roadmap (Widgets 191, hand-written vs generated) |
 | [CHANGELOG.md](CHANGELOG.md) | Changelog |
 
 ---
