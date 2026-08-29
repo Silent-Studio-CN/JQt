@@ -1,4 +1,4 @@
-# JQt 用户指南（v0.1.0-alpha）
+# JQt 用户指南（v0.7.4-Universal-Kit）
 
 <details>
 <summary>🌐 语言 / Language</summary>

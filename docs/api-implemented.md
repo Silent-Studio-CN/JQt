@@ -1,4 +1,4 @@
-# JQt 已实现 API 清单（v0.4.1-alpha）
+# JQt 已实现 API 清单（v0.7.4-Universal-Kit）
 
 <details>
 <summary>🌐 语言 / Language</summary>
@@ -12,7 +12,7 @@
 <a id="zh"></a>
 ## 中文版
 
-> 本清单从源码自动提取，与 v0.4.1-alpha 发布包一一对应。
+> 本清单从源码自动提取，与 v0.7.4-Universal-Kit 发布包一一对应。
 > 所有控件继承 `QWidget`，共享其基础方法（见 1.0）。
 
 ### 1.0 基类 QWidget（所有控件共享）
@@ -267,7 +267,7 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 <a id="en"></a>
 ## English Version
 
-> Extracted from the v0.4.1-alpha sources. All widgets extend `QWidget` (base methods in 1.0).
+> Extracted from the v0.7.4-Universal-Kit sources. All widgets extend `QWidget` (base methods in 1.0).
 
 ### 1.0 QWidget (base, shared by all widgets)
 
