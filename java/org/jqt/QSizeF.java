@@ -14,7 +14,7 @@ public class QSizeF {
 
     public enum AspectRatioMode {
         IgnoreAspectRatio(0), KeepAspectRatio(1), KeepAspectRatioByExpanding(2);
-        final int value;
+        public final int value;
         AspectRatioMode(int v) { value = v; }
     }
 

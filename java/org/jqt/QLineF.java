@@ -14,7 +14,7 @@ public class QLineF {
 
     public enum IntersectType {
         NoIntersection(0), BoundedIntersection(1), UnboundedIntersection(2);
-        final int value;
+        public final int value;
         IntersectType(int v) { value = v; }
     }
 

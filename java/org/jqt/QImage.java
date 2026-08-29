@@ -22,7 +22,7 @@ public class QImage {
     public enum Format {
         ARGB32(5), RGB32(4), RGB888(13), ARGB32_Premultiplied(6), RGB555(11), RGB666(12),
         Grayscale8(24), Indexed8(3), Format_Invalid(0);
-        final int value;
+        public final int value;
         Format(int v) { value = v; }
     }
 
