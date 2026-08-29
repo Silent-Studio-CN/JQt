@@ -74,3 +74,10 @@ pub struct ClassPlan {
     /// 排除的方法名
     pub exclude: Vec<String>,
 }
+
+/// JQt 现有实现（供 plan 对比）
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JqtExisting {
+    /// JQt 类名 → 已实现方法名集合
+    pub classes: std::collections::HashMap<String, Vec<String>>,
+}
