@@ -5,6 +5,7 @@
 //!   jqt-gen plan <class>               对比 JQt 现有实现 → 输出缺口计划
 
 mod generate;
+mod golden;
 mod model;
 mod parse;
 
