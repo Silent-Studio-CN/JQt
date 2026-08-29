@@ -61,9 +61,18 @@ java -Djava.library.path=. -cp "jqt-0.7.4-Universal-Kit.jar;.." Hello
 > **Note**: the native lib (jqt.dll / libjqt.so / libjqt.dylib) depends on the Qt6 runtime DLLs
 > shipped inside the zip; add the `lib` dir to the DLL search path (PATH / LD_LIBRARY_PATH / DYLD_LIBRARY_PATH).
 
-### 2. Maven (JitPack) — zero-registration dependency
+### 2. Maven — Maven Central or JitPack
 
-No account, no signing — JitPack builds straight from GitHub:
+**Maven Central** (official, mirrored in China via Aliyun/Tencent):
+
+```gradle
+// build.gradle
+dependencies {
+    implementation 'io.github.silent-xiaomiao:jqt:0.7.4'
+}
+```
+
+**JitPack** (zero-registration, builds straight from GitHub):
 
 ```gradle
 // settings.gradle (Gradle 8+)
