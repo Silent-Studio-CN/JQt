@@ -6,7 +6,9 @@ use std::collections::HashSet;
 /// 从 members 页 HTML 提取方法列表
 /// members 页签名形如："setWindowIcon(const QIcon &amp;)" 或 "void setIcon(const QIcon &icon)"
 pub fn parse_members_html(html: &str, class_name: &str) -> QtClass {
-    let mut cls = QtClass::new(class_name);
+    // 从页面标题提取规范类名（"List of All Members for QWidget | ..."），fallback 到参数
+    let canonical = extract_class_name(html).unwrap_or_else(|| class_name.to_string());
+    let mut cls = QtClass::new(&canonical);
     let text = strip_tags(html);
     let mut seen: HashSet<String> = HashSet::new();
 
@@ -87,6 +89,20 @@ fn build_method(name: &str, args: &str) -> Option<QtMethod> {
         is_signal: false,
         is_ctor: false,
     })
+}
+
+/// 从页面标题提取规范类名："List of All Members for QWidget | Qt Widgets" → "QWidget"
+fn extract_class_name(html: &str) -> Option<String> {
+    let marker = "List of All Members for ";
+    let i = html.find(marker)? + marker.len();
+    let rest = &html[i..];
+    let end = rest.find('|').unwrap_or(rest.len());
+    let name = rest[..end].trim();
+    if !name.is_empty() {
+        Some(name.to_string())
+    } else {
+        None
+    }
 }
 
 fn strip_tags(html: &str) -> String {

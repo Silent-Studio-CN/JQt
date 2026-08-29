@@ -1,0 +1,1278 @@
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeAcceptDrops(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->acceptDrops();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeAccessibleDescription(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->accessibleDescription();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeAccessibleIdentifier(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->accessibleIdentifier();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeAccessibleName(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->accessibleName();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeActions(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->actions();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeActivateWindow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->activateWindow();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeAddAction(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->addAction(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeAdjustSize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->adjustSize();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeAutoFillBackground(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->autoFillBackground();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeBackgroundRole(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->backgroundRole();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeBackingStore(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->backingStore();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeBaseSize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->baseSize();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeBindableObjectName(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->bindableObjectName();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeBlockSignals(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->blockSignals(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeChildAt(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->childAt(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeChildren(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->children();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeChildrenRect(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->childrenRect();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeChildrenRegion(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->childrenRegion();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeClearFocus(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->clearFocus();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeClearMask(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->clearMask();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeClose(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->close();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeColorCount(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->colorCount();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeContentsMargins(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->contentsMargins();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeContentsRect(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->contentsRect();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeContextMenuPolicy(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->contextMenuPolicy();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeCursor(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->cursor();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDeleteLater(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->deleteLater();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDepth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->depth();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDestroy(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0, jboolean arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->destroy(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDevicePixelRatio(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->devicePixelRatio();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDevicePixelRatioF(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->devicePixelRatioF();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDumpObjectInfo(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->dumpObjectInfo();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDumpObjectTree(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->dumpObjectTree();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeDynamicPropertyNames(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->dynamicPropertyNames();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeEffectiveWinId(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->effectiveWinId();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeEnsurePolished(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->ensurePolished();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFocusNextChild(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->focusNextChild();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFocusNextPrevChild(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->focusNextPrevChild(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFocusPolicy(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->focusPolicy();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFocusPreviousChild(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->focusPreviousChild();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFocusProxy(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->focusProxy();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFocusWidget(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->focusWidget();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFont(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->font();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFontInfo(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->fontInfo();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFontMetrics(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->fontMetrics();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeForegroundRole(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->foregroundRole();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFrameGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->frameGeometry();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeFrameSize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->frameSize();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->geometry();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeGetTime(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->getTime();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeGrabKeyboard(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->grabKeyboard();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeGrabMouse(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->grabMouse();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeGraphicsEffect(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->graphicsEffect();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeGraphicsProxyWidget(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->graphicsProxyWidget();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHasEditFocus(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->hasEditFocus();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHasFocus(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->hasFocus();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHasHeightForWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->hasHeightForWidth();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHasMouseTracking(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->hasMouseTracking();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHasTabletTracking(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->hasTabletTracking();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHeight(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->height();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHeightForWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->heightForWidth(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHeightMM(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->heightMM();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeHide(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->hide();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeInherits(JNIEnv* env, jobject /*thiz*/, jlong handle, jchar arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->inherits(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeInputMethodHints(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->inputMethodHints();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsActiveWindow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isActiveWindow();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isEnabled();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsFullScreen(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isFullScreen();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsHidden(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isHidden();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsMaximized(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isMaximized();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsMinimized(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isMinimized();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsModal(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isModal();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsQmlExposed(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isQmlExposed();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsQuickItemType(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isQuickItemType();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsVisible(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isVisible();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsWidgetType(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isWidgetType();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsWindow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isWindow();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsWindowModified(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isWindowModified();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeIsWindowType(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->isWindowType();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeKeyboardGrabber(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->keyboardGrabber();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeKillTimer(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->killTimer(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeLayout(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->layout();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeLayoutDirection(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->layoutDirection();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeLocale(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->locale();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeLogicalDpiX(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->logicalDpiX();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeLogicalDpiY(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->logicalDpiY();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeLower(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->lower();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMask(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->mask();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMaximumHeight(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->maximumHeight();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMaximumSize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->maximumSize();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMaximumWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->maximumWidth();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMetaObject(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->metaObject();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMinimumHeight(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->minimumHeight();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMinimumSize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->minimumSize();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMinimumSizeHint(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->minimumSizeHint();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMinimumWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->minimumWidth();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMouseGrabber(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->mouseGrabber();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeMove(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->move(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeNativeParentWidget(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->nativeParentWidget();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeNext(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->next();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeNextInFocusChain(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->nextInFocusChain();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeNormalGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->normalGeometry();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeObjectName(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->objectName();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeObjectNameChanged(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->objectNameChanged(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativePaintEngine(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->paintEngine();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativePaintingActive(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->paintingActive();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativePalette(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->palette();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeParent(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->parent();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeParentWidget(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->parentWidget();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativePhysicalDpiX(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->physicalDpiX();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativePhysicalDpiY(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->physicalDpiY();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativePos(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->pos();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativePreviousInFocusChain(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->previousInFocusChain();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeProperty(JNIEnv* env, jobject /*thiz*/, jlong handle, jchar arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->property(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeRaise(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->raise();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeReceivers(JNIEnv* env, jobject /*thiz*/, jlong handle, jchar arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->receivers(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeRect(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->rect();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeReleaseKeyboard(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->releaseKeyboard();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeReleaseMouse(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->releaseMouse();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeReleaseShortcut(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->releaseShortcut(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeRepaint(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->repaint();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeRepaint(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1, jint arg2, jint arg3) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->repaint(arg0, arg1, arg2, arg3);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeResize(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->resize(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSaveGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->saveGeometry();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeScreen(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->screen();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeScroll(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->scroll(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSender(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->sender();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSenderSignalIndex(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->senderSignalIndex();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAcceptDrops(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setAcceptDrops(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleDescription(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setAccessibleDescription(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleIdentifier(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setAccessibleIdentifier(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleName(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setAccessibleName(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAutoFillBackground(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setAutoFillBackground(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetBaseSize(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setBaseSize(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetContentsMargins(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1, jint arg2, jint arg3) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setContentsMargins(arg0, arg1, arg2, arg3);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetDisabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setDisabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetEditFocus(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setEditFocus(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFixedHeight(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setFixedHeight(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFixedSize(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setFixedSize(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFixedWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setFixedWidth(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFocus(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setFocus();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1, jint arg2, jint arg3) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setGeometry(arg0, arg1, arg2, arg3);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetHidden(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setHidden(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMaximumHeight(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setMaximumHeight(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMaximumSize(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setMaximumSize(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMaximumWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setMaximumWidth(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMinimumHeight(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setMinimumHeight(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMinimumSize(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setMinimumSize(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMinimumWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setMinimumWidth(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetMouseTracking(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setMouseTracking(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetObjectName(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setObjectName(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetShortcutAutoRepeat(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jboolean arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setShortcutAutoRepeat(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetShortcutEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jboolean arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setShortcutEnabled(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetSizeIncrement(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setSizeIncrement(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetStatusTip(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setStatusTip(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetStyleSheet(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setStyleSheet(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetTabletTracking(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setTabletTracking(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetToolTip(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setToolTip(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetToolTipDuration(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setToolTipDuration(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetUpdatesEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setUpdatesEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetVisible(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setVisible(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWhatsThis(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setWhatsThis(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowFilePath(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setWindowFilePath(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowModified(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setWindowModified(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowOpacity(JNIEnv* env, jobject /*thiz*/, jlong handle, jdouble arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setWindowOpacity(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowRole(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setWindowRole(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowTitle(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->setWindowTitle(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeShow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->show();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeShowFullScreen(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->showFullScreen();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeShowMaximized(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->showMaximized();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeShowMinimized(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->showMinimized();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeShowNormal(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->showNormal();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSignalsBlocked(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->signalsBlocked();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->size();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSizeHint(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->sizeHint();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSizeIncrement(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->sizeIncrement();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSizePolicy(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->sizePolicy();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeStatusTip(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->statusTip();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeStyle(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->style();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeStyleSheet(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->styleSheet();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->text();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeThread(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->thread();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeToolTip(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->toolTip();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeToolTipDuration(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->toolTipDuration();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeTr(JNIEnv* env, jobject /*thiz*/, jlong handle, jchar arg0, jchar arg1, jint arg2) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->tr(arg0, arg1, arg2);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeUnderMouse(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->underMouse();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeUnsetCursor(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->unsetCursor();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeUnsetLayoutDirection(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->unsetLayoutDirection();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeUnsetLocale(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->unsetLocale();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeUpdate(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->update();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeUpdate(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1, jint arg2, jint arg3) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->update(arg0, arg1, arg2, arg3);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeUpdateGeometry(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->updateGeometry();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeUpdatesEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->updatesEnabled();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeVisibleRegion(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->visibleRegion();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWhatsThis(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->whatsThis();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->width();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWidthMM(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->widthMM();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWinId(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->winId();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindow(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->window();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowFilePath(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowFilePath();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowFlags(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowFlags();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowHandle(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowHandle();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowIcon(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowIcon();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowModality(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowModality();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowOpacity(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowOpacity();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowRole(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowRole();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowState(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowState();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowTitle(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowTitle();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowTitleChanged(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowTitleChanged(QString::fromUtf8(arg0));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeWindowType(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->windowType();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeX(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->x();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeY(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+        w->y();
+}

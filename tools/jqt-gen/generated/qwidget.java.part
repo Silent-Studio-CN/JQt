@@ -1,0 +1,1278 @@
+
+    /** acceptDrops（Qt acceptDrops）。 */
+    public void acceptDrops() {
+        nativeAcceptDrops(handle);
+    }
+    private static native void nativeAcceptDrops(long handle);
+
+    /** accessibleDescription（Qt accessibleDescription）。 */
+    public void accessibleDescription() {
+        nativeAccessibleDescription(handle);
+    }
+    private static native void nativeAccessibleDescription(long handle);
+
+    /** accessibleIdentifier（Qt accessibleIdentifier）。 */
+    public void accessibleIdentifier() {
+        nativeAccessibleIdentifier(handle);
+    }
+    private static native void nativeAccessibleIdentifier(long handle);
+
+    /** accessibleName（Qt accessibleName）。 */
+    public void accessibleName() {
+        nativeAccessibleName(handle);
+    }
+    private static native void nativeAccessibleName(long handle);
+
+    /** actions（Qt actions）。 */
+    public void actions() {
+        nativeActions(handle);
+    }
+    private static native void nativeActions(long handle);
+
+    /** activateWindow（Qt activateWindow）。 */
+    public void activateWindow() {
+        nativeActivateWindow(handle);
+    }
+    private static native void nativeActivateWindow(long handle);
+
+    /** addAction（Qt addAction）。 */
+    public void addAction(String arg0) {
+        nativeAddAction(handle, arg0);
+    }
+    private static native void nativeAddAction(long handle, jstring arg0);
+
+    /** adjustSize（Qt adjustSize）。 */
+    public void adjustSize() {
+        nativeAdjustSize(handle);
+    }
+    private static native void nativeAdjustSize(long handle);
+
+    /** autoFillBackground（Qt autoFillBackground）。 */
+    public void autoFillBackground() {
+        nativeAutoFillBackground(handle);
+    }
+    private static native void nativeAutoFillBackground(long handle);
+
+    /** backgroundRole（Qt backgroundRole）。 */
+    public void backgroundRole() {
+        nativeBackgroundRole(handle);
+    }
+    private static native void nativeBackgroundRole(long handle);
+
+    /** backingStore（Qt backingStore）。 */
+    public void backingStore() {
+        nativeBackingStore(handle);
+    }
+    private static native void nativeBackingStore(long handle);
+
+    /** baseSize（Qt baseSize）。 */
+    public void baseSize() {
+        nativeBaseSize(handle);
+    }
+    private static native void nativeBaseSize(long handle);
+
+    /** bindableObjectName（Qt bindableObjectName）。 */
+    public void bindableObjectName() {
+        nativeBindableObjectName(handle);
+    }
+    private static native void nativeBindableObjectName(long handle);
+
+    /** blockSignals（Qt blockSignals）。 */
+    public void blockSignals(boolean arg0) {
+        nativeBlockSignals(handle, arg0);
+    }
+    private static native void nativeBlockSignals(long handle, jboolean arg0);
+
+    /** childAt（Qt childAt）。 */
+    public void childAt(int arg0, int arg1) {
+        nativeChildAt(handle, arg0, arg1);
+    }
+    private static native void nativeChildAt(long handle, jint arg0, jint arg1);
+
+    /** children（Qt children）。 */
+    public void children() {
+        nativeChildren(handle);
+    }
+    private static native void nativeChildren(long handle);
+
+    /** childrenRect（Qt childrenRect）。 */
+    public void childrenRect() {
+        nativeChildrenRect(handle);
+    }
+    private static native void nativeChildrenRect(long handle);
+
+    /** childrenRegion（Qt childrenRegion）。 */
+    public void childrenRegion() {
+        nativeChildrenRegion(handle);
+    }
+    private static native void nativeChildrenRegion(long handle);
+
+    /** clearFocus（Qt clearFocus）。 */
+    public void clearFocus() {
+        nativeClearFocus(handle);
+    }
+    private static native void nativeClearFocus(long handle);
+
+    /** clearMask（Qt clearMask）。 */
+    public void clearMask() {
+        nativeClearMask(handle);
+    }
+    private static native void nativeClearMask(long handle);
+
+    /** close（Qt close）。 */
+    public void close() {
+        nativeClose(handle);
+    }
+    private static native void nativeClose(long handle);
+
+    /** colorCount（Qt colorCount）。 */
+    public void colorCount() {
+        nativeColorCount(handle);
+    }
+    private static native void nativeColorCount(long handle);
+
+    /** contentsMargins（Qt contentsMargins）。 */
+    public void contentsMargins() {
+        nativeContentsMargins(handle);
+    }
+    private static native void nativeContentsMargins(long handle);
+
+    /** contentsRect（Qt contentsRect）。 */
+    public void contentsRect() {
+        nativeContentsRect(handle);
+    }
+    private static native void nativeContentsRect(long handle);
+
+    /** contextMenuPolicy（Qt contextMenuPolicy）。 */
+    public void contextMenuPolicy() {
+        nativeContextMenuPolicy(handle);
+    }
+    private static native void nativeContextMenuPolicy(long handle);
+
+    /** cursor（Qt cursor）。 */
+    public void cursor() {
+        nativeCursor(handle);
+    }
+    private static native void nativeCursor(long handle);
+
+    /** deleteLater（Qt deleteLater）。 */
+    public void deleteLater() {
+        nativeDeleteLater(handle);
+    }
+    private static native void nativeDeleteLater(long handle);
+
+    /** depth（Qt depth）。 */
+    public void depth() {
+        nativeDepth(handle);
+    }
+    private static native void nativeDepth(long handle);
+
+    /** destroy（Qt destroy）。 */
+    public void destroy(boolean arg0, boolean arg1) {
+        nativeDestroy(handle, arg0, arg1);
+    }
+    private static native void nativeDestroy(long handle, jboolean arg0, jboolean arg1);
+
+    /** devicePixelRatio（Qt devicePixelRatio）。 */
+    public void devicePixelRatio() {
+        nativeDevicePixelRatio(handle);
+    }
+    private static native void nativeDevicePixelRatio(long handle);
+
+    /** devicePixelRatioF（Qt devicePixelRatioF）。 */
+    public void devicePixelRatioF() {
+        nativeDevicePixelRatioF(handle);
+    }
+    private static native void nativeDevicePixelRatioF(long handle);
+
+    /** dumpObjectInfo（Qt dumpObjectInfo）。 */
+    public void dumpObjectInfo() {
+        nativeDumpObjectInfo(handle);
+    }
+    private static native void nativeDumpObjectInfo(long handle);
+
+    /** dumpObjectTree（Qt dumpObjectTree）。 */
+    public void dumpObjectTree() {
+        nativeDumpObjectTree(handle);
+    }
+    private static native void nativeDumpObjectTree(long handle);
+
+    /** dynamicPropertyNames（Qt dynamicPropertyNames）。 */
+    public void dynamicPropertyNames() {
+        nativeDynamicPropertyNames(handle);
+    }
+    private static native void nativeDynamicPropertyNames(long handle);
+
+    /** effectiveWinId（Qt effectiveWinId）。 */
+    public void effectiveWinId() {
+        nativeEffectiveWinId(handle);
+    }
+    private static native void nativeEffectiveWinId(long handle);
+
+    /** ensurePolished（Qt ensurePolished）。 */
+    public void ensurePolished() {
+        nativeEnsurePolished(handle);
+    }
+    private static native void nativeEnsurePolished(long handle);
+
+    /** focusNextChild（Qt focusNextChild）。 */
+    public void focusNextChild() {
+        nativeFocusNextChild(handle);
+    }
+    private static native void nativeFocusNextChild(long handle);
+
+    /** focusNextPrevChild（Qt focusNextPrevChild）。 */
+    public void focusNextPrevChild(boolean arg0) {
+        nativeFocusNextPrevChild(handle, arg0);
+    }
+    private static native void nativeFocusNextPrevChild(long handle, jboolean arg0);
+
+    /** focusPolicy（Qt focusPolicy）。 */
+    public void focusPolicy() {
+        nativeFocusPolicy(handle);
+    }
+    private static native void nativeFocusPolicy(long handle);
+
+    /** focusPreviousChild（Qt focusPreviousChild）。 */
+    public void focusPreviousChild() {
+        nativeFocusPreviousChild(handle);
+    }
+    private static native void nativeFocusPreviousChild(long handle);
+
+    /** focusProxy（Qt focusProxy）。 */
+    public void focusProxy() {
+        nativeFocusProxy(handle);
+    }
+    private static native void nativeFocusProxy(long handle);
+
+    /** focusWidget（Qt focusWidget）。 */
+    public void focusWidget() {
+        nativeFocusWidget(handle);
+    }
+    private static native void nativeFocusWidget(long handle);
+
+    /** font（Qt font）。 */
+    public void font() {
+        nativeFont(handle);
+    }
+    private static native void nativeFont(long handle);
+
+    /** fontInfo（Qt fontInfo）。 */
+    public void fontInfo() {
+        nativeFontInfo(handle);
+    }
+    private static native void nativeFontInfo(long handle);
+
+    /** fontMetrics（Qt fontMetrics）。 */
+    public void fontMetrics() {
+        nativeFontMetrics(handle);
+    }
+    private static native void nativeFontMetrics(long handle);
+
+    /** foregroundRole（Qt foregroundRole）。 */
+    public void foregroundRole() {
+        nativeForegroundRole(handle);
+    }
+    private static native void nativeForegroundRole(long handle);
+
+    /** frameGeometry（Qt frameGeometry）。 */
+    public void frameGeometry() {
+        nativeFrameGeometry(handle);
+    }
+    private static native void nativeFrameGeometry(long handle);
+
+    /** frameSize（Qt frameSize）。 */
+    public void frameSize() {
+        nativeFrameSize(handle);
+    }
+    private static native void nativeFrameSize(long handle);
+
+    /** geometry（Qt geometry）。 */
+    public void geometry() {
+        nativeGeometry(handle);
+    }
+    private static native void nativeGeometry(long handle);
+
+    /** getTime（Qt getTime）。 */
+    public void getTime() {
+        nativeGetTime(handle);
+    }
+    private static native void nativeGetTime(long handle);
+
+    /** grabKeyboard（Qt grabKeyboard）。 */
+    public void grabKeyboard() {
+        nativeGrabKeyboard(handle);
+    }
+    private static native void nativeGrabKeyboard(long handle);
+
+    /** grabMouse（Qt grabMouse）。 */
+    public void grabMouse() {
+        nativeGrabMouse(handle);
+    }
+    private static native void nativeGrabMouse(long handle);
+
+    /** graphicsEffect（Qt graphicsEffect）。 */
+    public void graphicsEffect() {
+        nativeGraphicsEffect(handle);
+    }
+    private static native void nativeGraphicsEffect(long handle);
+
+    /** graphicsProxyWidget（Qt graphicsProxyWidget）。 */
+    public void graphicsProxyWidget() {
+        nativeGraphicsProxyWidget(handle);
+    }
+    private static native void nativeGraphicsProxyWidget(long handle);
+
+    /** hasEditFocus（Qt hasEditFocus）。 */
+    public void hasEditFocus() {
+        nativeHasEditFocus(handle);
+    }
+    private static native void nativeHasEditFocus(long handle);
+
+    /** hasFocus（Qt hasFocus）。 */
+    public void hasFocus() {
+        nativeHasFocus(handle);
+    }
+    private static native void nativeHasFocus(long handle);
+
+    /** hasHeightForWidth（Qt hasHeightForWidth）。 */
+    public void hasHeightForWidth() {
+        nativeHasHeightForWidth(handle);
+    }
+    private static native void nativeHasHeightForWidth(long handle);
+
+    /** hasMouseTracking（Qt hasMouseTracking）。 */
+    public void hasMouseTracking() {
+        nativeHasMouseTracking(handle);
+    }
+    private static native void nativeHasMouseTracking(long handle);
+
+    /** hasTabletTracking（Qt hasTabletTracking）。 */
+    public void hasTabletTracking() {
+        nativeHasTabletTracking(handle);
+    }
+    private static native void nativeHasTabletTracking(long handle);
+
+    /** height（Qt height）。 */
+    public void height() {
+        nativeHeight(handle);
+    }
+    private static native void nativeHeight(long handle);
+
+    /** heightForWidth（Qt heightForWidth）。 */
+    public void heightForWidth(int arg0) {
+        nativeHeightForWidth(handle, arg0);
+    }
+    private static native void nativeHeightForWidth(long handle, jint arg0);
+
+    /** heightMM（Qt heightMM）。 */
+    public void heightMM() {
+        nativeHeightMM(handle);
+    }
+    private static native void nativeHeightMM(long handle);
+
+    /** hide（Qt hide）。 */
+    public void hide() {
+        nativeHide(handle);
+    }
+    private static native void nativeHide(long handle);
+
+    /** inherits（Qt inherits）。 */
+    public void inherits(char arg0) {
+        nativeInherits(handle, arg0);
+    }
+    private static native void nativeInherits(long handle, jchar arg0);
+
+    /** inputMethodHints（Qt inputMethodHints）。 */
+    public void inputMethodHints() {
+        nativeInputMethodHints(handle);
+    }
+    private static native void nativeInputMethodHints(long handle);
+
+    /** isActiveWindow（Qt isActiveWindow）。 */
+    public void isActiveWindow() {
+        nativeIsActiveWindow(handle);
+    }
+    private static native void nativeIsActiveWindow(long handle);
+
+    /** isEnabled（Qt isEnabled）。 */
+    public void isEnabled() {
+        nativeIsEnabled(handle);
+    }
+    private static native void nativeIsEnabled(long handle);
+
+    /** isFullScreen（Qt isFullScreen）。 */
+    public void isFullScreen() {
+        nativeIsFullScreen(handle);
+    }
+    private static native void nativeIsFullScreen(long handle);
+
+    /** isHidden（Qt isHidden）。 */
+    public void isHidden() {
+        nativeIsHidden(handle);
+    }
+    private static native void nativeIsHidden(long handle);
+
+    /** isMaximized（Qt isMaximized）。 */
+    public void isMaximized() {
+        nativeIsMaximized(handle);
+    }
+    private static native void nativeIsMaximized(long handle);
+
+    /** isMinimized（Qt isMinimized）。 */
+    public void isMinimized() {
+        nativeIsMinimized(handle);
+    }
+    private static native void nativeIsMinimized(long handle);
+
+    /** isModal（Qt isModal）。 */
+    public void isModal() {
+        nativeIsModal(handle);
+    }
+    private static native void nativeIsModal(long handle);
+
+    /** isQmlExposed（Qt isQmlExposed）。 */
+    public void isQmlExposed() {
+        nativeIsQmlExposed(handle);
+    }
+    private static native void nativeIsQmlExposed(long handle);
+
+    /** isQuickItemType（Qt isQuickItemType）。 */
+    public void isQuickItemType() {
+        nativeIsQuickItemType(handle);
+    }
+    private static native void nativeIsQuickItemType(long handle);
+
+    /** isVisible（Qt isVisible）。 */
+    public void isVisible() {
+        nativeIsVisible(handle);
+    }
+    private static native void nativeIsVisible(long handle);
+
+    /** isWidgetType（Qt isWidgetType）。 */
+    public void isWidgetType() {
+        nativeIsWidgetType(handle);
+    }
+    private static native void nativeIsWidgetType(long handle);
+
+    /** isWindow（Qt isWindow）。 */
+    public void isWindow() {
+        nativeIsWindow(handle);
+    }
+    private static native void nativeIsWindow(long handle);
+
+    /** isWindowModified（Qt isWindowModified）。 */
+    public void isWindowModified() {
+        nativeIsWindowModified(handle);
+    }
+    private static native void nativeIsWindowModified(long handle);
+
+    /** isWindowType（Qt isWindowType）。 */
+    public void isWindowType() {
+        nativeIsWindowType(handle);
+    }
+    private static native void nativeIsWindowType(long handle);
+
+    /** keyboardGrabber（Qt keyboardGrabber）。 */
+    public void keyboardGrabber() {
+        nativeKeyboardGrabber(handle);
+    }
+    private static native void nativeKeyboardGrabber(long handle);
+
+    /** killTimer（Qt killTimer）。 */
+    public void killTimer(int arg0) {
+        nativeKillTimer(handle, arg0);
+    }
+    private static native void nativeKillTimer(long handle, jint arg0);
+
+    /** layout（Qt layout）。 */
+    public void layout() {
+        nativeLayout(handle);
+    }
+    private static native void nativeLayout(long handle);
+
+    /** layoutDirection（Qt layoutDirection）。 */
+    public void layoutDirection() {
+        nativeLayoutDirection(handle);
+    }
+    private static native void nativeLayoutDirection(long handle);
+
+    /** locale（Qt locale）。 */
+    public void locale() {
+        nativeLocale(handle);
+    }
+    private static native void nativeLocale(long handle);
+
+    /** logicalDpiX（Qt logicalDpiX）。 */
+    public void logicalDpiX() {
+        nativeLogicalDpiX(handle);
+    }
+    private static native void nativeLogicalDpiX(long handle);
+
+    /** logicalDpiY（Qt logicalDpiY）。 */
+    public void logicalDpiY() {
+        nativeLogicalDpiY(handle);
+    }
+    private static native void nativeLogicalDpiY(long handle);
+
+    /** lower（Qt lower）。 */
+    public void lower() {
+        nativeLower(handle);
+    }
+    private static native void nativeLower(long handle);
+
+    /** mask（Qt mask）。 */
+    public void mask() {
+        nativeMask(handle);
+    }
+    private static native void nativeMask(long handle);
+
+    /** maximumHeight（Qt maximumHeight）。 */
+    public void maximumHeight() {
+        nativeMaximumHeight(handle);
+    }
+    private static native void nativeMaximumHeight(long handle);
+
+    /** maximumSize（Qt maximumSize）。 */
+    public void maximumSize() {
+        nativeMaximumSize(handle);
+    }
+    private static native void nativeMaximumSize(long handle);
+
+    /** maximumWidth（Qt maximumWidth）。 */
+    public void maximumWidth() {
+        nativeMaximumWidth(handle);
+    }
+    private static native void nativeMaximumWidth(long handle);
+
+    /** metaObject（Qt metaObject）。 */
+    public void metaObject() {
+        nativeMetaObject(handle);
+    }
+    private static native void nativeMetaObject(long handle);
+
+    /** minimumHeight（Qt minimumHeight）。 */
+    public void minimumHeight() {
+        nativeMinimumHeight(handle);
+    }
+    private static native void nativeMinimumHeight(long handle);
+
+    /** minimumSize（Qt minimumSize）。 */
+    public void minimumSize() {
+        nativeMinimumSize(handle);
+    }
+    private static native void nativeMinimumSize(long handle);
+
+    /** minimumSizeHint（Qt minimumSizeHint）。 */
+    public void minimumSizeHint() {
+        nativeMinimumSizeHint(handle);
+    }
+    private static native void nativeMinimumSizeHint(long handle);
+
+    /** minimumWidth（Qt minimumWidth）。 */
+    public void minimumWidth() {
+        nativeMinimumWidth(handle);
+    }
+    private static native void nativeMinimumWidth(long handle);
+
+    /** mouseGrabber（Qt mouseGrabber）。 */
+    public void mouseGrabber() {
+        nativeMouseGrabber(handle);
+    }
+    private static native void nativeMouseGrabber(long handle);
+
+    /** move（Qt move）。 */
+    public void move(int arg0, int arg1) {
+        nativeMove(handle, arg0, arg1);
+    }
+    private static native void nativeMove(long handle, jint arg0, jint arg1);
+
+    /** nativeParentWidget（Qt nativeParentWidget）。 */
+    public void nativeParentWidget() {
+        nativeNativeParentWidget(handle);
+    }
+    private static native void nativeNativeParentWidget(long handle);
+
+    /** next（Qt next）。 */
+    public void next() {
+        nativeNext(handle);
+    }
+    private static native void nativeNext(long handle);
+
+    /** nextInFocusChain（Qt nextInFocusChain）。 */
+    public void nextInFocusChain() {
+        nativeNextInFocusChain(handle);
+    }
+    private static native void nativeNextInFocusChain(long handle);
+
+    /** normalGeometry（Qt normalGeometry）。 */
+    public void normalGeometry() {
+        nativeNormalGeometry(handle);
+    }
+    private static native void nativeNormalGeometry(long handle);
+
+    /** objectName（Qt objectName）。 */
+    public void objectName() {
+        nativeObjectName(handle);
+    }
+    private static native void nativeObjectName(long handle);
+
+    /** objectNameChanged（Qt objectNameChanged）。 */
+    public void objectNameChanged(String arg0) {
+        nativeObjectNameChanged(handle, arg0);
+    }
+    private static native void nativeObjectNameChanged(long handle, jstring arg0);
+
+    /** paintEngine（Qt paintEngine）。 */
+    public void paintEngine() {
+        nativePaintEngine(handle);
+    }
+    private static native void nativePaintEngine(long handle);
+
+    /** paintingActive（Qt paintingActive）。 */
+    public void paintingActive() {
+        nativePaintingActive(handle);
+    }
+    private static native void nativePaintingActive(long handle);
+
+    /** palette（Qt palette）。 */
+    public void palette() {
+        nativePalette(handle);
+    }
+    private static native void nativePalette(long handle);
+
+    /** parent（Qt parent）。 */
+    public void parent() {
+        nativeParent(handle);
+    }
+    private static native void nativeParent(long handle);
+
+    /** parentWidget（Qt parentWidget）。 */
+    public void parentWidget() {
+        nativeParentWidget(handle);
+    }
+    private static native void nativeParentWidget(long handle);
+
+    /** physicalDpiX（Qt physicalDpiX）。 */
+    public void physicalDpiX() {
+        nativePhysicalDpiX(handle);
+    }
+    private static native void nativePhysicalDpiX(long handle);
+
+    /** physicalDpiY（Qt physicalDpiY）。 */
+    public void physicalDpiY() {
+        nativePhysicalDpiY(handle);
+    }
+    private static native void nativePhysicalDpiY(long handle);
+
+    /** pos（Qt pos）。 */
+    public void pos() {
+        nativePos(handle);
+    }
+    private static native void nativePos(long handle);
+
+    /** previousInFocusChain（Qt previousInFocusChain）。 */
+    public void previousInFocusChain() {
+        nativePreviousInFocusChain(handle);
+    }
+    private static native void nativePreviousInFocusChain(long handle);
+
+    /** property（Qt property）。 */
+    public void property(char arg0) {
+        nativeProperty(handle, arg0);
+    }
+    private static native void nativeProperty(long handle, jchar arg0);
+
+    /** raise（Qt raise）。 */
+    public void raise() {
+        nativeRaise(handle);
+    }
+    private static native void nativeRaise(long handle);
+
+    /** receivers（Qt receivers）。 */
+    public void receivers(char arg0) {
+        nativeReceivers(handle, arg0);
+    }
+    private static native void nativeReceivers(long handle, jchar arg0);
+
+    /** rect（Qt rect）。 */
+    public void rect() {
+        nativeRect(handle);
+    }
+    private static native void nativeRect(long handle);
+
+    /** releaseKeyboard（Qt releaseKeyboard）。 */
+    public void releaseKeyboard() {
+        nativeReleaseKeyboard(handle);
+    }
+    private static native void nativeReleaseKeyboard(long handle);
+
+    /** releaseMouse（Qt releaseMouse）。 */
+    public void releaseMouse() {
+        nativeReleaseMouse(handle);
+    }
+    private static native void nativeReleaseMouse(long handle);
+
+    /** releaseShortcut（Qt releaseShortcut）。 */
+    public void releaseShortcut(int arg0) {
+        nativeReleaseShortcut(handle, arg0);
+    }
+    private static native void nativeReleaseShortcut(long handle, jint arg0);
+
+    /** repaint（Qt repaint）。 */
+    public void repaint() {
+        nativeRepaint(handle);
+    }
+    private static native void nativeRepaint(long handle);
+
+    /** repaint（Qt repaint）。 */
+    public void repaint(int arg0, int arg1, int arg2, int arg3) {
+        nativeRepaint(handle, arg0, arg1, arg2, arg3);
+    }
+    private static native void nativeRepaint(long handle, jint arg0, jint arg1, jint arg2, jint arg3);
+
+    /** resize（Qt resize）。 */
+    public void resize(int arg0, int arg1) {
+        nativeResize(handle, arg0, arg1);
+    }
+    private static native void nativeResize(long handle, jint arg0, jint arg1);
+
+    /** saveGeometry（Qt saveGeometry）。 */
+    public void saveGeometry() {
+        nativeSaveGeometry(handle);
+    }
+    private static native void nativeSaveGeometry(long handle);
+
+    /** screen（Qt screen）。 */
+    public void screen() {
+        nativeScreen(handle);
+    }
+    private static native void nativeScreen(long handle);
+
+    /** scroll（Qt scroll）。 */
+    public void scroll(int arg0, int arg1) {
+        nativeScroll(handle, arg0, arg1);
+    }
+    private static native void nativeScroll(long handle, jint arg0, jint arg1);
+
+    /** sender（Qt sender）。 */
+    public void sender() {
+        nativeSender(handle);
+    }
+    private static native void nativeSender(long handle);
+
+    /** senderSignalIndex（Qt senderSignalIndex）。 */
+    public void senderSignalIndex() {
+        nativeSenderSignalIndex(handle);
+    }
+    private static native void nativeSenderSignalIndex(long handle);
+
+    /** setAcceptDrops（Qt setAcceptDrops）。 */
+    public void setAcceptDrops(boolean arg0) {
+        nativeSetAcceptDrops(handle, arg0);
+    }
+    private static native void nativeSetAcceptDrops(long handle, jboolean arg0);
+
+    /** setAccessibleDescription（Qt setAccessibleDescription）。 */
+    public void setAccessibleDescription(String arg0) {
+        nativeSetAccessibleDescription(handle, arg0);
+    }
+    private static native void nativeSetAccessibleDescription(long handle, jstring arg0);
+
+    /** setAccessibleIdentifier（Qt setAccessibleIdentifier）。 */
+    public void setAccessibleIdentifier(String arg0) {
+        nativeSetAccessibleIdentifier(handle, arg0);
+    }
+    private static native void nativeSetAccessibleIdentifier(long handle, jstring arg0);
+
+    /** setAccessibleName（Qt setAccessibleName）。 */
+    public void setAccessibleName(String arg0) {
+        nativeSetAccessibleName(handle, arg0);
+    }
+    private static native void nativeSetAccessibleName(long handle, jstring arg0);
+
+    /** setAutoFillBackground（Qt setAutoFillBackground）。 */
+    public void setAutoFillBackground(boolean arg0) {
+        nativeSetAutoFillBackground(handle, arg0);
+    }
+    private static native void nativeSetAutoFillBackground(long handle, jboolean arg0);
+
+    /** setBaseSize（Qt setBaseSize）。 */
+    public void setBaseSize(int arg0, int arg1) {
+        nativeSetBaseSize(handle, arg0, arg1);
+    }
+    private static native void nativeSetBaseSize(long handle, jint arg0, jint arg1);
+
+    /** setContentsMargins（Qt setContentsMargins）。 */
+    public void setContentsMargins(int arg0, int arg1, int arg2, int arg3) {
+        nativeSetContentsMargins(handle, arg0, arg1, arg2, arg3);
+    }
+    private static native void nativeSetContentsMargins(long handle, jint arg0, jint arg1, jint arg2, jint arg3);
+
+    /** setDisabled（Qt setDisabled）。 */
+    public void setDisabled(boolean arg0) {
+        nativeSetDisabled(handle, arg0);
+    }
+    private static native void nativeSetDisabled(long handle, jboolean arg0);
+
+    /** setEditFocus（Qt setEditFocus）。 */
+    public void setEditFocus(boolean arg0) {
+        nativeSetEditFocus(handle, arg0);
+    }
+    private static native void nativeSetEditFocus(long handle, jboolean arg0);
+
+    /** setEnabled（Qt setEnabled）。 */
+    public void setEnabled(boolean arg0) {
+        nativeSetEnabled(handle, arg0);
+    }
+    private static native void nativeSetEnabled(long handle, jboolean arg0);
+
+    /** setFixedHeight（Qt setFixedHeight）。 */
+    public void setFixedHeight(int arg0) {
+        nativeSetFixedHeight(handle, arg0);
+    }
+    private static native void nativeSetFixedHeight(long handle, jint arg0);
+
+    /** setFixedSize（Qt setFixedSize）。 */
+    public void setFixedSize(int arg0, int arg1) {
+        nativeSetFixedSize(handle, arg0, arg1);
+    }
+    private static native void nativeSetFixedSize(long handle, jint arg0, jint arg1);
+
+    /** setFixedWidth（Qt setFixedWidth）。 */
+    public void setFixedWidth(int arg0) {
+        nativeSetFixedWidth(handle, arg0);
+    }
+    private static native void nativeSetFixedWidth(long handle, jint arg0);
+
+    /** setFocus（Qt setFocus）。 */
+    public void setFocus() {
+        nativeSetFocus(handle);
+    }
+    private static native void nativeSetFocus(long handle);
+
+    /** setGeometry（Qt setGeometry）。 */
+    public void setGeometry(int arg0, int arg1, int arg2, int arg3) {
+        nativeSetGeometry(handle, arg0, arg1, arg2, arg3);
+    }
+    private static native void nativeSetGeometry(long handle, jint arg0, jint arg1, jint arg2, jint arg3);
+
+    /** setHidden（Qt setHidden）。 */
+    public void setHidden(boolean arg0) {
+        nativeSetHidden(handle, arg0);
+    }
+    private static native void nativeSetHidden(long handle, jboolean arg0);
+
+    /** setMaximumHeight（Qt setMaximumHeight）。 */
+    public void setMaximumHeight(int arg0) {
+        nativeSetMaximumHeight(handle, arg0);
+    }
+    private static native void nativeSetMaximumHeight(long handle, jint arg0);
+
+    /** setMaximumSize（Qt setMaximumSize）。 */
+    public void setMaximumSize(int arg0, int arg1) {
+        nativeSetMaximumSize(handle, arg0, arg1);
+    }
+    private static native void nativeSetMaximumSize(long handle, jint arg0, jint arg1);
+
+    /** setMaximumWidth（Qt setMaximumWidth）。 */
+    public void setMaximumWidth(int arg0) {
+        nativeSetMaximumWidth(handle, arg0);
+    }
+    private static native void nativeSetMaximumWidth(long handle, jint arg0);
+
+    /** setMinimumHeight（Qt setMinimumHeight）。 */
+    public void setMinimumHeight(int arg0) {
+        nativeSetMinimumHeight(handle, arg0);
+    }
+    private static native void nativeSetMinimumHeight(long handle, jint arg0);
+
+    /** setMinimumSize（Qt setMinimumSize）。 */
+    public void setMinimumSize(int arg0, int arg1) {
+        nativeSetMinimumSize(handle, arg0, arg1);
+    }
+    private static native void nativeSetMinimumSize(long handle, jint arg0, jint arg1);
+
+    /** setMinimumWidth（Qt setMinimumWidth）。 */
+    public void setMinimumWidth(int arg0) {
+        nativeSetMinimumWidth(handle, arg0);
+    }
+    private static native void nativeSetMinimumWidth(long handle, jint arg0);
+
+    /** setMouseTracking（Qt setMouseTracking）。 */
+    public void setMouseTracking(boolean arg0) {
+        nativeSetMouseTracking(handle, arg0);
+    }
+    private static native void nativeSetMouseTracking(long handle, jboolean arg0);
+
+    /** setObjectName（Qt setObjectName）。 */
+    public void setObjectName(String arg0) {
+        nativeSetObjectName(handle, arg0);
+    }
+    private static native void nativeSetObjectName(long handle, jstring arg0);
+
+    /** setShortcutAutoRepeat（Qt setShortcutAutoRepeat）。 */
+    public void setShortcutAutoRepeat(int arg0, boolean arg1) {
+        nativeSetShortcutAutoRepeat(handle, arg0, arg1);
+    }
+    private static native void nativeSetShortcutAutoRepeat(long handle, jint arg0, jboolean arg1);
+
+    /** setShortcutEnabled（Qt setShortcutEnabled）。 */
+    public void setShortcutEnabled(int arg0, boolean arg1) {
+        nativeSetShortcutEnabled(handle, arg0, arg1);
+    }
+    private static native void nativeSetShortcutEnabled(long handle, jint arg0, jboolean arg1);
+
+    /** setSizeIncrement（Qt setSizeIncrement）。 */
+    public void setSizeIncrement(int arg0, int arg1) {
+        nativeSetSizeIncrement(handle, arg0, arg1);
+    }
+    private static native void nativeSetSizeIncrement(long handle, jint arg0, jint arg1);
+
+    /** setStatusTip（Qt setStatusTip）。 */
+    public void setStatusTip(String arg0) {
+        nativeSetStatusTip(handle, arg0);
+    }
+    private static native void nativeSetStatusTip(long handle, jstring arg0);
+
+    /** setStyleSheet（Qt setStyleSheet）。 */
+    public void setStyleSheet(String arg0) {
+        nativeSetStyleSheet(handle, arg0);
+    }
+    private static native void nativeSetStyleSheet(long handle, jstring arg0);
+
+    /** setTabletTracking（Qt setTabletTracking）。 */
+    public void setTabletTracking(boolean arg0) {
+        nativeSetTabletTracking(handle, arg0);
+    }
+    private static native void nativeSetTabletTracking(long handle, jboolean arg0);
+
+    /** setToolTip（Qt setToolTip）。 */
+    public void setToolTip(String arg0) {
+        nativeSetToolTip(handle, arg0);
+    }
+    private static native void nativeSetToolTip(long handle, jstring arg0);
+
+    /** setToolTipDuration（Qt setToolTipDuration）。 */
+    public void setToolTipDuration(int arg0) {
+        nativeSetToolTipDuration(handle, arg0);
+    }
+    private static native void nativeSetToolTipDuration(long handle, jint arg0);
+
+    /** setUpdatesEnabled（Qt setUpdatesEnabled）。 */
+    public void setUpdatesEnabled(boolean arg0) {
+        nativeSetUpdatesEnabled(handle, arg0);
+    }
+    private static native void nativeSetUpdatesEnabled(long handle, jboolean arg0);
+
+    /** setVisible（Qt setVisible）。 */
+    public void setVisible(boolean arg0) {
+        nativeSetVisible(handle, arg0);
+    }
+    private static native void nativeSetVisible(long handle, jboolean arg0);
+
+    /** setWhatsThis（Qt setWhatsThis）。 */
+    public void setWhatsThis(String arg0) {
+        nativeSetWhatsThis(handle, arg0);
+    }
+    private static native void nativeSetWhatsThis(long handle, jstring arg0);
+
+    /** setWindowFilePath（Qt setWindowFilePath）。 */
+    public void setWindowFilePath(String arg0) {
+        nativeSetWindowFilePath(handle, arg0);
+    }
+    private static native void nativeSetWindowFilePath(long handle, jstring arg0);
+
+    /** setWindowModified（Qt setWindowModified）。 */
+    public void setWindowModified(boolean arg0) {
+        nativeSetWindowModified(handle, arg0);
+    }
+    private static native void nativeSetWindowModified(long handle, jboolean arg0);
+
+    /** setWindowOpacity（Qt setWindowOpacity）。 */
+    public void setWindowOpacity(double arg0) {
+        nativeSetWindowOpacity(handle, arg0);
+    }
+    private static native void nativeSetWindowOpacity(long handle, jdouble arg0);
+
+    /** setWindowRole（Qt setWindowRole）。 */
+    public void setWindowRole(String arg0) {
+        nativeSetWindowRole(handle, arg0);
+    }
+    private static native void nativeSetWindowRole(long handle, jstring arg0);
+
+    /** setWindowTitle（Qt setWindowTitle）。 */
+    public void setWindowTitle(String arg0) {
+        nativeSetWindowTitle(handle, arg0);
+    }
+    private static native void nativeSetWindowTitle(long handle, jstring arg0);
+
+    /** show（Qt show）。 */
+    public void show() {
+        nativeShow(handle);
+    }
+    private static native void nativeShow(long handle);
+
+    /** showFullScreen（Qt showFullScreen）。 */
+    public void showFullScreen() {
+        nativeShowFullScreen(handle);
+    }
+    private static native void nativeShowFullScreen(long handle);
+
+    /** showMaximized（Qt showMaximized）。 */
+    public void showMaximized() {
+        nativeShowMaximized(handle);
+    }
+    private static native void nativeShowMaximized(long handle);
+
+    /** showMinimized（Qt showMinimized）。 */
+    public void showMinimized() {
+        nativeShowMinimized(handle);
+    }
+    private static native void nativeShowMinimized(long handle);
+
+    /** showNormal（Qt showNormal）。 */
+    public void showNormal() {
+        nativeShowNormal(handle);
+    }
+    private static native void nativeShowNormal(long handle);
+
+    /** signalsBlocked（Qt signalsBlocked）。 */
+    public void signalsBlocked() {
+        nativeSignalsBlocked(handle);
+    }
+    private static native void nativeSignalsBlocked(long handle);
+
+    /** size（Qt size）。 */
+    public void size() {
+        nativeSize(handle);
+    }
+    private static native void nativeSize(long handle);
+
+    /** sizeHint（Qt sizeHint）。 */
+    public void sizeHint() {
+        nativeSizeHint(handle);
+    }
+    private static native void nativeSizeHint(long handle);
+
+    /** sizeIncrement（Qt sizeIncrement）。 */
+    public void sizeIncrement() {
+        nativeSizeIncrement(handle);
+    }
+    private static native void nativeSizeIncrement(long handle);
+
+    /** sizePolicy（Qt sizePolicy）。 */
+    public void sizePolicy() {
+        nativeSizePolicy(handle);
+    }
+    private static native void nativeSizePolicy(long handle);
+
+    /** statusTip（Qt statusTip）。 */
+    public void statusTip() {
+        nativeStatusTip(handle);
+    }
+    private static native void nativeStatusTip(long handle);
+
+    /** style（Qt style）。 */
+    public void style() {
+        nativeStyle(handle);
+    }
+    private static native void nativeStyle(long handle);
+
+    /** styleSheet（Qt styleSheet）。 */
+    public void styleSheet() {
+        nativeStyleSheet(handle);
+    }
+    private static native void nativeStyleSheet(long handle);
+
+    /** text（Qt text）。 */
+    public void text() {
+        nativeText(handle);
+    }
+    private static native void nativeText(long handle);
+
+    /** thread（Qt thread）。 */
+    public void thread() {
+        nativeThread(handle);
+    }
+    private static native void nativeThread(long handle);
+
+    /** toolTip（Qt toolTip）。 */
+    public void toolTip() {
+        nativeToolTip(handle);
+    }
+    private static native void nativeToolTip(long handle);
+
+    /** toolTipDuration（Qt toolTipDuration）。 */
+    public void toolTipDuration() {
+        nativeToolTipDuration(handle);
+    }
+    private static native void nativeToolTipDuration(long handle);
+
+    /** tr（Qt tr）。 */
+    public void tr(char arg0, char arg1, int arg2) {
+        nativeTr(handle, arg0, arg1, arg2);
+    }
+    private static native void nativeTr(long handle, jchar arg0, jchar arg1, jint arg2);
+
+    /** underMouse（Qt underMouse）。 */
+    public void underMouse() {
+        nativeUnderMouse(handle);
+    }
+    private static native void nativeUnderMouse(long handle);
+
+    /** unsetCursor（Qt unsetCursor）。 */
+    public void unsetCursor() {
+        nativeUnsetCursor(handle);
+    }
+    private static native void nativeUnsetCursor(long handle);
+
+    /** unsetLayoutDirection（Qt unsetLayoutDirection）。 */
+    public void unsetLayoutDirection() {
+        nativeUnsetLayoutDirection(handle);
+    }
+    private static native void nativeUnsetLayoutDirection(long handle);
+
+    /** unsetLocale（Qt unsetLocale）。 */
+    public void unsetLocale() {
+        nativeUnsetLocale(handle);
+    }
+    private static native void nativeUnsetLocale(long handle);
+
+    /** update（Qt update）。 */
+    public void update() {
+        nativeUpdate(handle);
+    }
+    private static native void nativeUpdate(long handle);
+
+    /** update（Qt update）。 */
+    public void update(int arg0, int arg1, int arg2, int arg3) {
+        nativeUpdate(handle, arg0, arg1, arg2, arg3);
+    }
+    private static native void nativeUpdate(long handle, jint arg0, jint arg1, jint arg2, jint arg3);
+
+    /** updateGeometry（Qt updateGeometry）。 */
+    public void updateGeometry() {
+        nativeUpdateGeometry(handle);
+    }
+    private static native void nativeUpdateGeometry(long handle);
+
+    /** updatesEnabled（Qt updatesEnabled）。 */
+    public void updatesEnabled() {
+        nativeUpdatesEnabled(handle);
+    }
+    private static native void nativeUpdatesEnabled(long handle);
+
+    /** visibleRegion（Qt visibleRegion）。 */
+    public void visibleRegion() {
+        nativeVisibleRegion(handle);
+    }
+    private static native void nativeVisibleRegion(long handle);
+
+    /** whatsThis（Qt whatsThis）。 */
+    public void whatsThis() {
+        nativeWhatsThis(handle);
+    }
+    private static native void nativeWhatsThis(long handle);
+
+    /** width（Qt width）。 */
+    public void width() {
+        nativeWidth(handle);
+    }
+    private static native void nativeWidth(long handle);
+
+    /** widthMM（Qt widthMM）。 */
+    public void widthMM() {
+        nativeWidthMM(handle);
+    }
+    private static native void nativeWidthMM(long handle);
+
+    /** winId（Qt winId）。 */
+    public void winId() {
+        nativeWinId(handle);
+    }
+    private static native void nativeWinId(long handle);
+
+    /** window（Qt window）。 */
+    public void window() {
+        nativeWindow(handle);
+    }
+    private static native void nativeWindow(long handle);
+
+    /** windowFilePath（Qt windowFilePath）。 */
+    public void windowFilePath() {
+        nativeWindowFilePath(handle);
+    }
+    private static native void nativeWindowFilePath(long handle);
+
+    /** windowFlags（Qt windowFlags）。 */
+    public void windowFlags() {
+        nativeWindowFlags(handle);
+    }
+    private static native void nativeWindowFlags(long handle);
+
+    /** windowHandle（Qt windowHandle）。 */
+    public void windowHandle() {
+        nativeWindowHandle(handle);
+    }
+    private static native void nativeWindowHandle(long handle);
+
+    /** windowIcon（Qt windowIcon）。 */
+    public void windowIcon() {
+        nativeWindowIcon(handle);
+    }
+    private static native void nativeWindowIcon(long handle);
+
+    /** windowModality（Qt windowModality）。 */
+    public void windowModality() {
+        nativeWindowModality(handle);
+    }
+    private static native void nativeWindowModality(long handle);
+
+    /** windowOpacity（Qt windowOpacity）。 */
+    public void windowOpacity() {
+        nativeWindowOpacity(handle);
+    }
+    private static native void nativeWindowOpacity(long handle);
+
+    /** windowRole（Qt windowRole）。 */
+    public void windowRole() {
+        nativeWindowRole(handle);
+    }
+    private static native void nativeWindowRole(long handle);
+
+    /** windowState（Qt windowState）。 */
+    public void windowState() {
+        nativeWindowState(handle);
+    }
+    private static native void nativeWindowState(long handle);
+
+    /** windowTitle（Qt windowTitle）。 */
+    public void windowTitle() {
+        nativeWindowTitle(handle);
+    }
+    private static native void nativeWindowTitle(long handle);
+
+    /** windowTitleChanged（Qt windowTitleChanged）。 */
+    public void windowTitleChanged(String arg0) {
+        nativeWindowTitleChanged(handle, arg0);
+    }
+    private static native void nativeWindowTitleChanged(long handle, jstring arg0);
+
+    /** windowType（Qt windowType）。 */
+    public void windowType() {
+        nativeWindowType(handle);
+    }
+    private static native void nativeWindowType(long handle);
+
+    /** x（Qt x）。 */
+    public void x() {
+        nativeX(handle);
+    }
+    private static native void nativeX(long handle);
+
+    /** y（Qt y）。 */
+    public void y() {
+        nativeY(handle);
+    }
+    private static native void nativeY(long handle);
