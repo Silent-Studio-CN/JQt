@@ -6,8 +6,9 @@ plugins {
     id 'maven-publish'
 }
 
-group = 'com.github.Silent-Studio-CN'
-version = new File("${rootDir}/VERSION").text.trim()
+// JitPack injects -Pgroup/-Pversion (build per commit/tag); local default = Central Portal coordinate.
+group = providers.gradleProperty('group').getOrElse('io.github.silent-xiaomiao')
+version = providers.gradleProperty('version').getOrElse(new File("${rootDir}/VERSION").text.trim())
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -38,10 +39,34 @@ javadoc {
 publishing {
     publications {
         maven(MavenPublication) {
-            groupId = 'com.github.Silent-Studio-CN'
+            groupId = project.group
             artifactId = 'jqt'
             version = project.version
             from components.java   // includes jar + sourcesJar + javadocJar
+            pom {
+                name = 'JQt'
+                description = 'Qt for Java — native desktop UI via Qt 6 Widgets (Windows/Linux/macOS, x64+ARM64)'
+                url = 'https://github.com/Silent-Studio-CN/JQt'
+                licenses {
+                    license {
+                        name = 'JSL-1.0'
+                        url = 'https://github.com/Silent-Studio-CN/JQt/blob/main/LICENSE.md'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'Silent-xiaomiao'
+                        name = 'Silent-xiaomiao'
+                        url = 'https://github.com/Silent-xiaomiao'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/Silent-Studio-CN/JQt.git'
+                    developerConnection = 'scm:git:ssh://git@github.com:Silent-Studio-CN/JQt.git'
+                    url = 'https://github.com/Silent-Studio-CN/JQt'
+                }
+            }
         }
     }
 }
