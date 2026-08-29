@@ -6933,6 +6933,136 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeCreate(JNIEnv* env, jobje
 }
 
 // ----------------------------------------------------------------------------
+// 值对象批 3：QTextEdit / QListWidget / QTabWidget / QTreeWidget / QApplication / QWidget 图标
+// ----------------------------------------------------------------------------
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeSetTextColor(JNIEnv* env, jobject /*thiz*/, jlong handle, jint argb) {
+    QPlainTextEdit* w = static_cast<QPlainTextEdit*>(requireHandle(env, handle));
+    if (w != nullptr) {
+        QPalette pal = w->palette();
+        pal.setColor(QPalette::Text, QColor::fromRgba(static_cast<QRgb>(argb)));
+        w->setPalette(pal);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeSetTextBackgroundColor(JNIEnv* env, jobject /*thiz*/, jlong handle, jint argb) {
+    QPlainTextEdit* w = static_cast<QPlainTextEdit*>(requireHandle(env, handle));
+    if (w != nullptr) {
+        QPalette pal = w->palette();
+        pal.setColor(QPalette::Base, QColor::fromRgba(static_cast<QRgb>(argb)));
+        w->setPalette(pal);
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeSetTextMargins(JNIEnv* env, jobject /*thiz*/, jlong handle, jint left, jint top, jint right, jint bottom) {
+    QPlainTextEdit* w = static_cast<QPlainTextEdit*>(requireHandle(env, handle));
+    if (w != nullptr) w->setContentsMargins(left, top, right, bottom);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTextEdit_nativeCursorPositionAt(JNIEnv* env, jobject /*thiz*/, jlong handle, jint x, jint y) {
+    QPlainTextEdit* w = static_cast<QPlainTextEdit*>(requireHandle(env, handle));
+    if (w == nullptr) return -1;
+    return w->cursorForPosition(QPoint(x, y)).position();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeSetItemIcon(JNIEnv* env, jobject /*thiz*/, jlong handle, jint row, jlong pmHandle) {
+    QListWidget* w = static_cast<QListWidget*>(requireHandle(env, handle));
+    QPixmap* pm = reinterpret_cast<QPixmap*>(pmHandle);
+    if (w == nullptr || pm == nullptr || pm->isNull()) return;
+    QListWidgetItem* item = w->item(row);
+    if (item != nullptr) item->setIcon(QIcon(*pm));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTabWidget_nativeSetTabIcon(JNIEnv* env, jobject /*thiz*/, jlong handle, jint index, jlong pmHandle) {
+    QTabWidget* w = static_cast<QTabWidget*>(requireHandle(env, handle));
+    QPixmap* pm = reinterpret_cast<QPixmap*>(pmHandle);
+    if (w == nullptr || pm == nullptr || pm->isNull()) return;
+    w->setTabIcon(index, QIcon(*pm));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeSetHeaderLabels(JNIEnv* env, jobject /*thiz*/, jlong handle, jobjectArray labels) {
+    QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, handle));
+    if (w == nullptr || labels == nullptr) return;
+    QStringList list;
+    jsize n = env->GetArrayLength(labels);
+    for (jsize i = 0; i < n; i++) {
+        jstring s = static_cast<jstring>(env->GetObjectArrayElement(labels, i));
+        if (s != nullptr) {
+            const char* utf = env->GetStringUTFChars(s, nullptr);
+            list << QString::fromUtf8(utf);
+            env->ReleaseStringUTFChars(s, utf);
+            env->DeleteLocalRef(s);
+        }
+    }
+    w->setHeaderLabels(list);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSetOverrideCursor(JNIEnv* env, jclass /*cls*/, jint shape) {
+    QApplication* app = requireApp(env);
+    if (app == nullptr) return;
+    QApplication::setOverrideCursor(static_cast<Qt::CursorShape>(shape));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeChangeOverrideCursor(JNIEnv* env, jclass /*cls*/, jint shape) {
+    QApplication* app = requireApp(env);
+    if (app == nullptr) return;
+    QApplication::changeOverrideCursor(static_cast<Qt::CursorShape>(shape));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeRestoreOverrideCursor(JNIEnv* env, jclass /*cls*/) {
+    QApplication* app = requireApp(env);
+    if (app == nullptr) return;
+    QApplication::restoreOverrideCursor();
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeWidgetAt(JNIEnv* env, jclass /*cls*/, jint x, jint y) {
+    QApplication* app = requireApp(env);
+    if (app == nullptr) return 0;
+    QWidget* w = QApplication::widgetAt(x, y);
+    return w != nullptr ? reinterpret_cast<jlong>(w) : 0;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeTopLevelAt(JNIEnv* env, jclass /*cls*/, jint x, jint y) {
+    QApplication* app = requireApp(env);
+    if (app == nullptr) return 0;
+    QWidget* w = QApplication::topLevelAt(QPoint(x, y));
+    return w != nullptr ? reinterpret_cast<jlong>(w) : 0;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeScreenAt(JNIEnv* env, jclass /*cls*/, jint x, jint y) {
+    QApplication* app = requireApp(env);
+    if (app == nullptr) return 0;
+    QScreen* s = QApplication::screenAt(QPoint(x, y));
+    return s != nullptr ? reinterpret_cast<jlong>(s) : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowIconPixmap(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong pmHandle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    QPixmap* pm = reinterpret_cast<QPixmap*>(pmHandle);
+    if (w == nullptr || pm == nullptr || pm->isNull()) return;
+    w->setWindowIcon(QIcon(*pm));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeConnectWindowIconChanged(JNIEnv* env, jobject thiz, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(w, &QWidget::windowIconChanged, [gRef](const QIcon& icon) {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleWindowIconChanged", "(J)V");
+        if (mid != nullptr) {
+            QPixmap pm = icon.pixmap(32, 32);
+            jlong pmHandle = 0;
+            if (!pm.isNull()) {
+                pmHandle = reinterpret_cast<jlong>(new QPixmap(pm));
+            }
+            JQT_CALL_VOID(e, gRef, mid, pmHandle);
+        }
+    });
+}
+
+
+// ----------------------------------------------------------------------------
 // QPixmap（非 QObject：句柄 = 指针本身，Cleaner 唯一释放路径）
 // ----------------------------------------------------------------------------
 JNIEXPORT jlong JNICALL Java_org_jqt_QPixmap_nativeCreate(JNIEnv* env, jclass) {

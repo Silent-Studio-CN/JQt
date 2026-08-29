@@ -192,4 +192,15 @@ public class QTreeWidget extends QWidget {
     void nativeHandleItemSelectionChanged() {
         for (Runnable h : onItemSelectionChangedHandlers) h.run();
     }
+
+    // ---- 值对象批：表头 ----
+
+    /** 设置列标题（QStringList）。 */
+    public void setHeaderLabels(QStringList labels) {
+        if (labels == null) return;
+        String[] arr = new String[labels.size()];
+        for (int i = 0; i < labels.size(); i++) arr[i] = labels.get(i);
+        nativeSetHeaderLabels(nativeHandle, arr);
+    }
+    private native void nativeSetHeaderLabels(long handle, String[] labels);
 }

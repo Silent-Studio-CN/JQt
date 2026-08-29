@@ -168,5 +168,37 @@ public class QTextEdit extends QWidget {
     }
     void nativeHandleCursorPositionChanged(int pos) {
         for (Consumer<Integer> h : onCursorPositionChangedHandlers) h.accept(pos);
+    
     }
+    // ---- 值对象批：颜色/边距/光标位置 ----
+
+    /** 设置文本颜色。 */
+    public void setTextColor(QColor color) {
+        if (color != null) nativeSetTextColor(nativeHandle, color.rgba());
+    }
+    private native void nativeSetTextColor(long handle, int argb);
+
+    /** 设置文本背景色。 */
+    public void setTextBackgroundColor(QColor color) {
+        if (color != null) nativeSetTextBackgroundColor(nativeHandle, color.rgba());
+    }
+    private native void nativeSetTextBackgroundColor(long handle, int argb);
+
+    /** 设置文本边距。 */
+    public void setTextMargins(int left, int top, int right, int bottom) {
+        nativeSetTextMargins(nativeHandle, left, top, right, bottom);
+    }
+    private native void nativeSetTextMargins(long handle, int left, int top, int right, int bottom);
+
+    /** 设置文本边距。 */
+    public void setTextMargins(QMargins margins) {
+        if (margins != null) setTextMargins(margins.left(), margins.top(), margins.right(), margins.bottom());
+    }
+
+    /** 视口坐标处的字符位置（Qt cursorPositionAt）。 */
+    public int cursorPositionAt(QPoint pos) {
+        if (pos == null) return -1;
+        return nativeCursorPositionAt(nativeHandle, pos.x(), pos.y());
+    }
+    private native int nativeCursorPositionAt(long handle, int x, int y);
 }

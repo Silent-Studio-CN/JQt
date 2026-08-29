@@ -225,5 +225,15 @@ public class QListWidget extends QWidget {
 
     void nativeHandleItemEntered(int row) {
         for (Consumer<Integer> h : onItemEnteredHandlers) h.accept(row);
+    
     }
+    // ---- 值对象批：图标 ----
+
+    /** 设置行的图标。 */
+    public void setItemIcon(int row, QIcon icon) {
+        if (icon == null || icon.isNull()) return;
+        long pm = icon.pixmap().nativeHandle();
+        if (pm != 0) nativeSetItemIcon(nativeHandle, row, pm);
+    }
+    private native void nativeSetItemIcon(long handle, int row, long pixmapHandle);
 }

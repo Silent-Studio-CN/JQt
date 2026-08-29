@@ -675,7 +675,33 @@ public abstract class QWidget {
         if (margins != null) setContentsMargins(margins.left(), margins.top(), margins.right(), margins.bottom());
     }
 
+
+
+    // ---- 值对象批：窗口图标（QIcon） ----
+
+    /** 设置窗口图标（值对象版）。 */
+    public void setWindowIcon(QIcon icon) {
+        if (icon == null || icon.isNull()) return;
+        long pm = icon.pixmap().nativeHandle();
+        if (pm != 0) nativeSetWindowIconPixmap(nativeHandle, pm);
+    }
+    private native void nativeSetWindowIconPixmap(long handle, long pixmapHandle);
+
+    /** 窗口图标变化回调（windowIconChanged 信号，参数为 QIcon）。 */
+    public QWidget onWindowIconChanged(java.util.function.Consumer<QIcon> handler) {
+        windowIconChangedHandlers.add(handler);
+        if (!windowIconChangedConnected) {
+            windowIconChangedConnected = true;
+            nativeConnectWindowIconChanged(nativeHandle);
+        }
+        return this;
+    }
+    private final java.util.List<java.util.function.Consumer<QIcon>> windowIconChangedHandlers = new java.util.ArrayList<>();
+    private boolean windowIconChangedConnected;
+    private native void nativeConnectWindowIconChanged(long handle);
+
+    void nativeHandleWindowIconChanged(long pixmapHandle) {
+        QIcon icon = pixmapHandle != 0 ? new QIcon(new QPixmap(pixmapHandle)) : new QIcon();
+        for (java.util.function.Consumer<QIcon> h : windowIconChangedHandlers) h.accept(icon);
+    }
 }
-
-
-

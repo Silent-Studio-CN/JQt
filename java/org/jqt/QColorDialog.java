@@ -20,6 +20,12 @@ public class QColorDialog {
     }
     static native int nativeGetColor(long winHandle, String title, int argb);
 
+    /** 颜色选择框（值对象版），返回 QColor；用户取消返回无效 QColor。阻塞调用。 */
+    public static QColor getColorQ(QMainWindow parent, String title, QColor initial) {
+        int argb = nativeGetColor(parent.nativeHandle(), title, initial != null ? initial.rgba() : 0xFFFFFFFF);
+        return argb >= 0 ? new QColor(argb) : new QColor();
+    }
+
     // ---- L1 补全（v0.8.0）：非阻塞 open() + colorSelected 信号 ----
 
     private static final java.util.List<java.util.function.Consumer<Integer>> colorSelectedHandlers = new java.util.ArrayList<>();
