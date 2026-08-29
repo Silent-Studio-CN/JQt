@@ -50,11 +50,14 @@ pub struct QtClass {
     pub methods: Vec<QtMethod>,
     pub properties: Vec<QtProperty>,
     pub enums: Vec<QtEnum>,
+    /// 主文档页 Signals 段声明的信号名（生成时必须排除——信号不能直调）
+    #[serde(default)]
+    pub signal_names: Vec<String>,
 }
 
 impl QtClass {
     pub fn new(name: &str) -> Self {
-        Self { name: name.to_string(), methods: Vec::new(), properties: Vec::new(), enums: Vec::new() }
+        Self { name: name.to_string(), methods: Vec::new(), properties: Vec::new(), enums: Vec::new(), signal_names: Vec::new() }
     }
 
     /// 按方法名查方法（含重载）

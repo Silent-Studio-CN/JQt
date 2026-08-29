@@ -65,4 +65,54 @@ public class QSplitter extends QWidget {
     /** 子控件数量。 */
     public int count() { return nativeCount(nativeHandle); }
     private static native int nativeCount(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** childrenCollapsible（Qt childrenCollapsible）。 */
+    public boolean childrenCollapsible() {
+        return nativeChildrenCollapsible(nativeHandle);
+    }
+    private static native boolean nativeChildrenCollapsible(long nativeHandle);
+
+    /** handleWidth（Qt handleWidth）。 */
+    public int handleWidth() {
+        return nativeHandleWidth(nativeHandle);
+    }
+    private static native int nativeHandleWidth(long nativeHandle);
+
+    /** opaqueResize（Qt opaqueResize）。 */
+    public boolean opaqueResize() {
+        return nativeOpaqueResize(nativeHandle);
+    }
+    private static native boolean nativeOpaqueResize(long nativeHandle);
+
+    /** refresh（Qt refresh）。 */
+    public void refresh() {
+        nativeRefresh(nativeHandle);
+    }
+    private static native void nativeRefresh(long nativeHandle);
+
+    /** setChildrenCollapsible（Qt setChildrenCollapsible）。 */
+    public void setChildrenCollapsible(boolean arg0) {
+        nativeSetChildrenCollapsible(nativeHandle, arg0);
+    }
+    private static native void nativeSetChildrenCollapsible(long nativeHandle, boolean arg0);
+
+    /** setCollapsible（Qt setCollapsible）。 */
+    public void setCollapsible(int arg0, boolean arg1) {
+        nativeSetCollapsible(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetCollapsible(long nativeHandle, int arg0, boolean arg1);
+
+    /** setOpaqueResize（Qt setOpaqueResize）。 */
+    public void setOpaqueResize(boolean arg0) {
+        nativeSetOpaqueResize(nativeHandle, arg0);
+    }
+    private static native void nativeSetOpaqueResize(long nativeHandle, boolean arg0);
+
+    /** setStretchFactor（Qt setStretchFactor）。 */
+    public void setStretchFactor(int arg0, int arg1) {
+        nativeSetStretchFactor(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetStretchFactor(long nativeHandle, int arg0, int arg1);
+
 }

@@ -95,4 +95,54 @@ public class QMenu extends QWidget {
     /** 模态弹出菜单（在锚点控件下方），返回选中项 actionId（取消返回 -1）。 */
     public int exec(QWidget anchor) { return nativeExecAnchor(nativeHandle, anchor.nativeHandle); }
     private static native int nativeExecAnchor(long handle, long anchorHandle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** isEmpty（Qt isEmpty）。 */
+    public boolean isEmpty() {
+        return nativeIsEmpty(nativeHandle);
+    }
+    private static native boolean nativeIsEmpty(long nativeHandle);
+
+    /** isTearOffMenuVisible（Qt isTearOffMenuVisible）。 */
+    public boolean isTearOffMenuVisible() {
+        return nativeIsTearOffMenuVisible(nativeHandle);
+    }
+    private static native boolean nativeIsTearOffMenuVisible(long nativeHandle);
+
+    /** separatorsCollapsible（Qt separatorsCollapsible）。 */
+    public boolean separatorsCollapsible() {
+        return nativeSeparatorsCollapsible(nativeHandle);
+    }
+    private static native boolean nativeSeparatorsCollapsible(long nativeHandle);
+
+    /** setSeparatorsCollapsible（Qt setSeparatorsCollapsible）。 */
+    public void setSeparatorsCollapsible(boolean arg0) {
+        nativeSetSeparatorsCollapsible(nativeHandle, arg0);
+    }
+    private static native void nativeSetSeparatorsCollapsible(long nativeHandle, boolean arg0);
+
+    /** setTearOffEnabled（Qt setTearOffEnabled）。 */
+    public void setTearOffEnabled(boolean arg0) {
+        nativeSetTearOffEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetTearOffEnabled(long nativeHandle, boolean arg0);
+
+    /** setToolTipsVisible（Qt setToolTipsVisible）。 */
+    public void setToolTipsVisible(boolean arg0) {
+        nativeSetToolTipsVisible(nativeHandle, arg0);
+    }
+    private static native void nativeSetToolTipsVisible(long nativeHandle, boolean arg0);
+
+    /** showTearOffMenu（Qt showTearOffMenu）。 */
+    public void showTearOffMenu() {
+        nativeShowTearOffMenu(nativeHandle);
+    }
+    private static native void nativeShowTearOffMenu(long nativeHandle);
+
+    /** toolTipsVisible（Qt toolTipsVisible）。 */
+    public boolean toolTipsVisible() {
+        return nativeToolTipsVisible(nativeHandle);
+    }
+    private static native boolean nativeToolTipsVisible(long nativeHandle);
+
 }

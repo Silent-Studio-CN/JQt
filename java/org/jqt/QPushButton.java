@@ -154,4 +154,48 @@ public class QPushButton extends QWidget {
     /** 是否关联了菜单。 */
     public boolean menu() { return nativeHasMenu(nativeHandle); }
     private static native boolean nativeHasMenu(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** autoDefault（Qt autoDefault）。 */
+    public boolean autoDefault() {
+        return nativeAutoDefault(nativeHandle);
+    }
+    private static native boolean nativeAutoDefault(long nativeHandle);
+
+    /** isDefault（Qt isDefault）。 */
+    public boolean isDefault() {
+        return nativeIsDefault(nativeHandle);
+    }
+    private static native boolean nativeIsDefault(long nativeHandle);
+
+    /** isFlat（Qt isFlat）。 */
+    public boolean isFlat() {
+        return nativeIsFlat(nativeHandle);
+    }
+    private static native boolean nativeIsFlat(long nativeHandle);
+
+    /** setAutoDefault（Qt setAutoDefault）。 */
+    public void setAutoDefault(boolean arg0) {
+        nativeSetAutoDefault(nativeHandle, arg0);
+    }
+    private static native void nativeSetAutoDefault(long nativeHandle, boolean arg0);
+
+    /** setDefault（Qt setDefault）。 */
+    public void setDefault(boolean arg0) {
+        nativeSetDefault(nativeHandle, arg0);
+    }
+    private static native void nativeSetDefault(long nativeHandle, boolean arg0);
+
+    /** setFlat（Qt setFlat）。 */
+    public void setFlat(boolean arg0) {
+        nativeSetFlat(nativeHandle, arg0);
+    }
+    private static native void nativeSetFlat(long nativeHandle, boolean arg0);
+
+    /** showMenu（Qt showMenu）。 */
+    public void showMenu() {
+        nativeShowMenu(nativeHandle);
+    }
+    private static native void nativeShowMenu(long nativeHandle);
+
 }

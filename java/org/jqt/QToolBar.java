@@ -94,4 +94,36 @@ public class QToolBar extends QWidget {
     void nativeHandleToolButtonStyleChanged(int style) {
         for (Consumer<Integer> h : onToolButtonStyleChangedHandlers) h.accept(style);
     }
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** isFloatable（Qt isFloatable）。 */
+    public boolean isFloatable() {
+        return nativeIsFloatable(nativeHandle);
+    }
+    private static native boolean nativeIsFloatable(long nativeHandle);
+
+    /** isFloating（Qt isFloating）。 */
+    public boolean isFloating() {
+        return nativeIsFloating(nativeHandle);
+    }
+    private static native boolean nativeIsFloating(long nativeHandle);
+
+    /** isMovable（Qt isMovable）。 */
+    public boolean isMovable() {
+        return nativeIsMovable(nativeHandle);
+    }
+    private static native boolean nativeIsMovable(long nativeHandle);
+
+    /** setFloatable（Qt setFloatable）。 */
+    public void setFloatable(boolean arg0) {
+        nativeSetFloatable(nativeHandle, arg0);
+    }
+    private static native void nativeSetFloatable(long nativeHandle, boolean arg0);
+
+    /** setMovable（Qt setMovable）。 */
+    public void setMovable(boolean arg0) {
+        nativeSetMovable(nativeHandle, arg0);
+    }
+    private static native void nativeSetMovable(long nativeHandle, boolean arg0);
+
 }

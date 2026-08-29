@@ -41,8 +41,19 @@ fn is_generatable(cls: &QtClass, m: &QtMethod) -> bool {
         || m.name == "operator"
         || m.name == "destroy"           // 危险：直接销毁对象
         || m.name == "focusPreviousChild"  // protected
+        || m.name == "focusNextPrevChild"   // protected virtual
+        || m.name == "checkStateSet"        // QAbstractButton 家族 protected slot
+        || m.name == "nextCheckState"       // QAbstractButton 家族 protected slot
+        || m.name == "widgetAdded"          // QStackedWidget protected slot
+        || m.name == "hideOrShow"           // QStatusBar protected
+        || m.name == "reformat"             // QStatusBar protected
+        || m.name == "columnCount"          // QMenu protected
+        || m.name == "setAsDockMenu"        // macOS only（Windows 头无此成员）
+        || m.name == "closestLegalPosition" // QSplitter protected
+        || m.name == "setRubberBand"        // QSplitter protected
         || m.name == "setEditFocus"         // 非 QWidget API（QGraphicsWidget）
         || m.name.starts_with('~')
+        || cls.signal_names.iter().any(|s| s == &m.name)   // 信号不能直调
         || m.params.iter().any(|p| p.ty.contains("..."))
     { return false; }
     !m.return_type.is_empty() && all_direct(&m.params) && java_type(&m.return_type).is_some()
@@ -144,6 +155,7 @@ pub fn gen_java_methods_for(cls: &QtClass, method_name: &str) -> String {
         methods: cls.methods.iter().filter(|m| m.name == method_name).cloned().collect(),
         properties: Vec::new(),
         enums: Vec::new(),
+        signal_names: cls.signal_names.clone(),
     };
     gen_java_methods(&filtered)
 }

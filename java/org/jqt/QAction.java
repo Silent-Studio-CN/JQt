@@ -112,4 +112,120 @@ public class QAction {
     private native void nativeSetMenu(long handle, long menuHandle);
     private native void nativeConnectTriggered(long handle);
     private native void nativeConnectToggled(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** autoRepeat（Qt autoRepeat）。 */
+    public boolean autoRepeat() {
+        return nativeAutoRepeat(nativeHandle);
+    }
+    private static native boolean nativeAutoRepeat(long nativeHandle);
+
+    /** hover（Qt hover）。 */
+    public void hover() {
+        nativeHover(nativeHandle);
+    }
+    private static native void nativeHover(long nativeHandle);
+
+    /** iconText（Qt iconText）。 */
+    public String iconText() {
+        return nativeIconText(nativeHandle);
+    }
+    private static native String nativeIconText(long nativeHandle);
+
+    /** isCheckable（Qt isCheckable）。 */
+    public boolean isCheckable() {
+        return nativeIsCheckable(nativeHandle);
+    }
+    private static native boolean nativeIsCheckable(long nativeHandle);
+
+    /** isEnabled（Qt isEnabled）。 */
+    public boolean isEnabled() {
+        return nativeIsEnabled(nativeHandle);
+    }
+    private static native boolean nativeIsEnabled(long nativeHandle);
+
+    /** isIconVisibleInMenu（Qt isIconVisibleInMenu）。 */
+    public boolean isIconVisibleInMenu() {
+        return nativeIsIconVisibleInMenu(nativeHandle);
+    }
+    private static native boolean nativeIsIconVisibleInMenu(long nativeHandle);
+
+    /** isShortcutVisibleInContextMenu（Qt isShortcutVisibleInContextMenu）。 */
+    public boolean isShortcutVisibleInContextMenu() {
+        return nativeIsShortcutVisibleInContextMenu(nativeHandle);
+    }
+    private static native boolean nativeIsShortcutVisibleInContextMenu(long nativeHandle);
+
+    /** isVisible（Qt isVisible）。 */
+    public boolean isVisible() {
+        return nativeIsVisible(nativeHandle);
+    }
+    private static native boolean nativeIsVisible(long nativeHandle);
+
+    /** resetEnabled（Qt resetEnabled）。 */
+    public void resetEnabled() {
+        nativeResetEnabled(nativeHandle);
+    }
+    private static native void nativeResetEnabled(long nativeHandle);
+
+    /** setAutoRepeat（Qt setAutoRepeat）。 */
+    public void setAutoRepeat(boolean arg0) {
+        nativeSetAutoRepeat(nativeHandle, arg0);
+    }
+    private static native void nativeSetAutoRepeat(long nativeHandle, boolean arg0);
+
+    /** setDisabled（Qt setDisabled）。 */
+    public void setDisabled(boolean arg0) {
+        nativeSetDisabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetDisabled(long nativeHandle, boolean arg0);
+
+    /** setEnabled（Qt setEnabled）。 */
+    public void setEnabled(boolean arg0) {
+        nativeSetEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetEnabled(long nativeHandle, boolean arg0);
+
+    /** setIconVisibleInMenu（Qt setIconVisibleInMenu）。 */
+    public void setIconVisibleInMenu(boolean arg0) {
+        nativeSetIconVisibleInMenu(nativeHandle, arg0);
+    }
+    private static native void nativeSetIconVisibleInMenu(long nativeHandle, boolean arg0);
+
+    /** setSeparator（Qt setSeparator）。 */
+    public void setSeparator(boolean arg0) {
+        nativeSetSeparator(nativeHandle, arg0);
+    }
+    private static native void nativeSetSeparator(long nativeHandle, boolean arg0);
+
+    /** setShortcutVisibleInContextMenu（Qt setShortcutVisibleInContextMenu）。 */
+    public void setShortcutVisibleInContextMenu(boolean arg0) {
+        nativeSetShortcutVisibleInContextMenu(nativeHandle, arg0);
+    }
+    private static native void nativeSetShortcutVisibleInContextMenu(long nativeHandle, boolean arg0);
+
+    /** setVisible（Qt setVisible）。 */
+    public void setVisible(boolean arg0) {
+        nativeSetVisible(nativeHandle, arg0);
+    }
+    private static native void nativeSetVisible(long nativeHandle, boolean arg0);
+
+    /** setWhatsThis（Qt setWhatsThis）。 */
+    public void setWhatsThis(String arg0) {
+        nativeSetWhatsThis(nativeHandle, arg0);
+    }
+    private static native void nativeSetWhatsThis(long nativeHandle, String arg0);
+
+    /** statusTip（Qt statusTip）。 */
+    public String statusTip() {
+        return nativeStatusTip(nativeHandle);
+    }
+    private static native String nativeStatusTip(long nativeHandle);
+
+    /** whatsThis（Qt whatsThis）。 */
+    public String whatsThis() {
+        return nativeWhatsThis(nativeHandle);
+    }
+    private static native String nativeWhatsThis(long nativeHandle);
+
 }

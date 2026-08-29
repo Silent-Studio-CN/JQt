@@ -218,4 +218,108 @@ public class QLineEdit extends QWidget {
     void nativeHandleCursorPositionChanged(int pos) {
         for (Consumer<Integer> h : onCursorPositionChangedHandlers) h.accept(pos);
     }
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** cursorForward（Qt cursorForward）。 */
+    public void cursorForward(boolean arg0, int arg1) {
+        nativeCursorForward(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeCursorForward(long nativeHandle, boolean arg0, int arg1);
+
+    /** cursorWordForward（Qt cursorWordForward）。 */
+    public void cursorWordForward(boolean arg0) {
+        nativeCursorWordForward(nativeHandle, arg0);
+    }
+    private static native void nativeCursorWordForward(long nativeHandle, boolean arg0);
+
+    /** del（Qt del）。 */
+    public void del() {
+        nativeDel(nativeHandle);
+    }
+    private static native void nativeDel(long nativeHandle);
+
+    /** dragEnabled（Qt dragEnabled）。 */
+    public boolean dragEnabled() {
+        return nativeDragEnabled(nativeHandle);
+    }
+    private static native boolean nativeDragEnabled(long nativeHandle);
+
+    /** hasFrame（Qt hasFrame）。 */
+    public boolean hasFrame() {
+        return nativeHasFrame(nativeHandle);
+    }
+    private static native boolean nativeHasFrame(long nativeHandle);
+
+    /** home（Qt home）。 */
+    public void home(boolean arg0) {
+        nativeHome(nativeHandle, arg0);
+    }
+    private static native void nativeHome(long nativeHandle, boolean arg0);
+
+    /** isClearButtonEnabled（Qt isClearButtonEnabled）。 */
+    public boolean isClearButtonEnabled() {
+        return nativeIsClearButtonEnabled(nativeHandle);
+    }
+    private static native boolean nativeIsClearButtonEnabled(long nativeHandle);
+
+    /** isModified（Qt isModified）。 */
+    public boolean isModified() {
+        return nativeIsModified(nativeHandle);
+    }
+    private static native boolean nativeIsModified(long nativeHandle);
+
+    /** isRedoAvailable（Qt isRedoAvailable）。 */
+    public boolean isRedoAvailable() {
+        return nativeIsRedoAvailable(nativeHandle);
+    }
+    private static native boolean nativeIsRedoAvailable(long nativeHandle);
+
+    /** isUndoAvailable（Qt isUndoAvailable）。 */
+    public boolean isUndoAvailable() {
+        return nativeIsUndoAvailable(nativeHandle);
+    }
+    private static native boolean nativeIsUndoAvailable(long nativeHandle);
+
+    /** selectionStart（Qt selectionStart）。 */
+    public int selectionStart() {
+        return nativeSelectionStart(nativeHandle);
+    }
+    private static native int nativeSelectionStart(long nativeHandle);
+
+    /** setClearButtonEnabled（Qt setClearButtonEnabled）。 */
+    public void setClearButtonEnabled(boolean arg0) {
+        nativeSetClearButtonEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetClearButtonEnabled(long nativeHandle, boolean arg0);
+
+    /** setDragEnabled（Qt setDragEnabled）。 */
+    public void setDragEnabled(boolean arg0) {
+        nativeSetDragEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetDragEnabled(long nativeHandle, boolean arg0);
+
+    /** setFrame（Qt setFrame）。 */
+    public void setFrame(boolean arg0) {
+        nativeSetFrame(nativeHandle, arg0);
+    }
+    private static native void nativeSetFrame(long nativeHandle, boolean arg0);
+
+    /** setInputMask（Qt setInputMask）。 */
+    public void setInputMask(String arg0) {
+        nativeSetInputMask(nativeHandle, arg0);
+    }
+    private static native void nativeSetInputMask(long nativeHandle, String arg0);
+
+    /** setModified（Qt setModified）。 */
+    public void setModified(boolean arg0) {
+        nativeSetModified(nativeHandle, arg0);
+    }
+    private static native void nativeSetModified(long nativeHandle, boolean arg0);
+
+    /** setSelection（Qt setSelection）。 */
+    public void setSelection(int arg0, int arg1) {
+        nativeSetSelection(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetSelection(long nativeHandle, int arg0, int arg1);
+
 }

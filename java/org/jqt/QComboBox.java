@@ -161,4 +161,120 @@ public class QComboBox extends QWidget {
     void nativeHandleHighlighted(int index) {
         for (Consumer<Integer> h : onHighlightedHandlers) h.accept(index);
     }
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** clearEditText（Qt clearEditText）。 */
+    public void clearEditText() {
+        nativeClearEditText(nativeHandle);
+    }
+    private static native void nativeClearEditText(long nativeHandle);
+
+    /** duplicatesEnabled（Qt duplicatesEnabled）。 */
+    public boolean duplicatesEnabled() {
+        return nativeDuplicatesEnabled(nativeHandle);
+    }
+    private static native boolean nativeDuplicatesEnabled(long nativeHandle);
+
+    /** hasFrame（Qt hasFrame）。 */
+    public boolean hasFrame() {
+        return nativeHasFrame(nativeHandle);
+    }
+    private static native boolean nativeHasFrame(long nativeHandle);
+
+    /** insertSeparator（Qt insertSeparator）。 */
+    public void insertSeparator(int arg0) {
+        nativeInsertSeparator(nativeHandle, arg0);
+    }
+    private static native void nativeInsertSeparator(long nativeHandle, int arg0);
+
+    /** maxCount（Qt maxCount）。 */
+    public int maxCount() {
+        return nativeMaxCount(nativeHandle);
+    }
+    private static native int nativeMaxCount(long nativeHandle);
+
+    /** maxVisibleItems（Qt maxVisibleItems）。 */
+    public int maxVisibleItems() {
+        return nativeMaxVisibleItems(nativeHandle);
+    }
+    private static native int nativeMaxVisibleItems(long nativeHandle);
+
+    /** minimumContentsLength（Qt minimumContentsLength）。 */
+    public int minimumContentsLength() {
+        return nativeMinimumContentsLength(nativeHandle);
+    }
+    private static native int nativeMinimumContentsLength(long nativeHandle);
+
+    /** modelColumn（Qt modelColumn）。 */
+    public int modelColumn() {
+        return nativeModelColumn(nativeHandle);
+    }
+    private static native int nativeModelColumn(long nativeHandle);
+
+    /** removeItem（Qt removeItem）。 */
+    public void removeItem(int arg0) {
+        nativeRemoveItem(nativeHandle, arg0);
+    }
+    private static native void nativeRemoveItem(long nativeHandle, int arg0);
+
+    /** setCurrentText（Qt setCurrentText）。 */
+    public void setCurrentText(String arg0) {
+        nativeSetCurrentText(nativeHandle, arg0);
+    }
+    private static native void nativeSetCurrentText(long nativeHandle, String arg0);
+
+    /** setDuplicatesEnabled（Qt setDuplicatesEnabled）。 */
+    public void setDuplicatesEnabled(boolean arg0) {
+        nativeSetDuplicatesEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetDuplicatesEnabled(long nativeHandle, boolean arg0);
+
+    /** setEditText（Qt setEditText）。 */
+    public void setEditText(String arg0) {
+        nativeSetEditText(nativeHandle, arg0);
+    }
+    private static native void nativeSetEditText(long nativeHandle, String arg0);
+
+    /** setFrame（Qt setFrame）。 */
+    public void setFrame(boolean arg0) {
+        nativeSetFrame(nativeHandle, arg0);
+    }
+    private static native void nativeSetFrame(long nativeHandle, boolean arg0);
+
+    /** setItemText（Qt setItemText）。 */
+    public void setItemText(int arg0, String arg1) {
+        nativeSetItemText(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetItemText(long nativeHandle, int arg0, String arg1);
+
+    /** setMaxCount（Qt setMaxCount）。 */
+    public void setMaxCount(int arg0) {
+        nativeSetMaxCount(nativeHandle, arg0);
+    }
+    private static native void nativeSetMaxCount(long nativeHandle, int arg0);
+
+    /** setMaxVisibleItems（Qt setMaxVisibleItems）。 */
+    public void setMaxVisibleItems(int arg0) {
+        nativeSetMaxVisibleItems(nativeHandle, arg0);
+    }
+    private static native void nativeSetMaxVisibleItems(long nativeHandle, int arg0);
+
+    /** setMinimumContentsLength（Qt setMinimumContentsLength）。 */
+    public void setMinimumContentsLength(int arg0) {
+        nativeSetMinimumContentsLength(nativeHandle, arg0);
+    }
+    private static native void nativeSetMinimumContentsLength(long nativeHandle, int arg0);
+
+    /** setModelColumn（Qt setModelColumn）。 */
+    public void setModelColumn(int arg0) {
+        nativeSetModelColumn(nativeHandle, arg0);
+    }
+    private static native void nativeSetModelColumn(long nativeHandle, int arg0);
+
+    /** showPopup（Qt showPopup）。 */
+    public void showPopup() {
+        nativeShowPopup(nativeHandle);
+    }
+    private static native void nativeShowPopup(long nativeHandle);
+
 }

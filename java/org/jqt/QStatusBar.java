@@ -35,4 +35,12 @@ public class QStatusBar extends QWidget {
         return nativeCurrentMessage(nativeHandle);
     }
     private native String nativeCurrentMessage(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** isSizeGripEnabled（Qt isSizeGripEnabled）。 */
+    public boolean isSizeGripEnabled() {
+        return nativeIsSizeGripEnabled(nativeHandle);
+    }
+    private static native boolean nativeIsSizeGripEnabled(long nativeHandle);
+
 }

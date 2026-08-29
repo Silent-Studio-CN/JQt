@@ -305,4 +305,54 @@ public class QMainWindow extends QWidget {
     // ---- End Exclusive Kit ----
 
     // L1：toolbar 相关信号由 QToolBar 提供（JQtWindowShell 非 QMainWindow 类型）
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** documentMode（Qt documentMode）。 */
+    public boolean documentMode() {
+        return nativeDocumentMode(nativeHandle);
+    }
+    private static native boolean nativeDocumentMode(long nativeHandle);
+
+    /** isAnimated（Qt isAnimated）。 */
+    public boolean isAnimated() {
+        return nativeIsAnimated(nativeHandle);
+    }
+    private static native boolean nativeIsAnimated(long nativeHandle);
+
+    /** isDockNestingEnabled（Qt isDockNestingEnabled）。 */
+    public boolean isDockNestingEnabled() {
+        return nativeIsDockNestingEnabled(nativeHandle);
+    }
+    private static native boolean nativeIsDockNestingEnabled(long nativeHandle);
+
+    /** setAnimated（Qt setAnimated）。 */
+    public void setAnimated(boolean arg0) {
+        nativeSetAnimated(nativeHandle, arg0);
+    }
+    private static native void nativeSetAnimated(long nativeHandle, boolean arg0);
+
+    /** setDockNestingEnabled（Qt setDockNestingEnabled）。 */
+    public void setDockNestingEnabled(boolean arg0) {
+        nativeSetDockNestingEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetDockNestingEnabled(long nativeHandle, boolean arg0);
+
+    /** setDocumentMode（Qt setDocumentMode）。 */
+    public void setDocumentMode(boolean arg0) {
+        nativeSetDocumentMode(nativeHandle, arg0);
+    }
+    private static native void nativeSetDocumentMode(long nativeHandle, boolean arg0);
+
+    /** setUnifiedTitleAndToolBarOnMac（Qt setUnifiedTitleAndToolBarOnMac）。 */
+    public void setUnifiedTitleAndToolBarOnMac(boolean arg0) {
+        nativeSetUnifiedTitleAndToolBarOnMac(nativeHandle, arg0);
+    }
+    private static native void nativeSetUnifiedTitleAndToolBarOnMac(long nativeHandle, boolean arg0);
+
+    /** unifiedTitleAndToolBarOnMac（Qt unifiedTitleAndToolBarOnMac）。 */
+    public boolean unifiedTitleAndToolBarOnMac() {
+        return nativeUnifiedTitleAndToolBarOnMac(nativeHandle);
+    }
+    private static native boolean nativeUnifiedTitleAndToolBarOnMac(long nativeHandle);
+
 }

@@ -49,4 +49,72 @@ public class QProgressBar extends QWidget {
     /** 当前显示文本（默认 "50%" 形式；未设置格式时）。 */
     public String text() { return nativeText(nativeHandle); }
     private static native String nativeText(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** format（Qt format）。 */
+    public String format() {
+        return nativeFormat(nativeHandle);
+    }
+    private static native String nativeFormat(long nativeHandle);
+
+    /** invertedAppearance（Qt invertedAppearance）。 */
+    public boolean invertedAppearance() {
+        return nativeInvertedAppearance(nativeHandle);
+    }
+    private static native boolean nativeInvertedAppearance(long nativeHandle);
+
+    /** isTextVisible（Qt isTextVisible）。 */
+    public boolean isTextVisible() {
+        return nativeIsTextVisible(nativeHandle);
+    }
+    private static native boolean nativeIsTextVisible(long nativeHandle);
+
+    /** maximum（Qt maximum）。 */
+    public int maximum() {
+        return nativeMaximum(nativeHandle);
+    }
+    private static native int nativeMaximum(long nativeHandle);
+
+    /** minimum（Qt minimum）。 */
+    public int minimum() {
+        return nativeMinimum(nativeHandle);
+    }
+    private static native int nativeMinimum(long nativeHandle);
+
+    /** resetFormat（Qt resetFormat）。 */
+    public void resetFormat() {
+        nativeResetFormat(nativeHandle);
+    }
+    private static native void nativeResetFormat(long nativeHandle);
+
+    /** setFormat（Qt setFormat）。 */
+    public void setFormat(String arg0) {
+        nativeSetFormat(nativeHandle, arg0);
+    }
+    private static native void nativeSetFormat(long nativeHandle, String arg0);
+
+    /** setInvertedAppearance（Qt setInvertedAppearance）。 */
+    public void setInvertedAppearance(boolean arg0) {
+        nativeSetInvertedAppearance(nativeHandle, arg0);
+    }
+    private static native void nativeSetInvertedAppearance(long nativeHandle, boolean arg0);
+
+    /** setMaximum（Qt setMaximum）。 */
+    public void setMaximum(int arg0) {
+        nativeSetMaximum(nativeHandle, arg0);
+    }
+    private static native void nativeSetMaximum(long nativeHandle, int arg0);
+
+    /** setMinimum（Qt setMinimum）。 */
+    public void setMinimum(int arg0) {
+        nativeSetMinimum(nativeHandle, arg0);
+    }
+    private static native void nativeSetMinimum(long nativeHandle, int arg0);
+
+    /** setTextVisible（Qt setTextVisible）。 */
+    public void setTextVisible(boolean arg0) {
+        nativeSetTextVisible(nativeHandle, arg0);
+    }
+    private static native void nativeSetTextVisible(long nativeHandle, boolean arg0);
+
 }

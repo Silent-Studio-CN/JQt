@@ -55,6 +55,7 @@ fn cmd_fetch(args: &[String]) {
                             }
                         }
                     }
+                    cls.signal_names = parse::parse_signal_names(&main_html);
                 }
                 println!("{}: {} methods", cls.name, cls.methods.len());
                 out.push(cls);
@@ -130,6 +131,8 @@ fn scan_jqt_implemented() -> std::collections::HashMap<String, std::collections:
                     let mut names = std::collections::HashSet::new();
                     for line in content.lines() {
                         let t = line.trim();
+                        // 生成器批次块（标记后即类尾）：视为缺口，replace 合入时整体替换
+                        if t.contains("生成器批次") { break; }
                         if t.starts_with("public") && t.contains('(') {
                             if let Some(open) = t.find('(') {
                                 let head = &t[..open];
@@ -160,15 +163,18 @@ fn cmd_generate(args: &[String]) {
     };
     let implemented = scan_jqt_implemented();
     let target = args.get(2).map(|s| s.to_lowercase()).unwrap_or_default();
+    // --all：忽略 scan_jqt_implemented（重新生成已合入批次时使用）
+    let all = args.iter().any(|a| a == "--all");
     for cls in &classes {
         if !target.is_empty() && cls.name.to_lowercase() != target { continue; }
-        let impls = implemented.get(&cls.name.to_lowercase()).cloned().unwrap_or_default();
+        let impls: std::collections::HashSet<String> = if all { std::collections::HashSet::new() } else { implemented.get(&cls.name.to_lowercase()).cloned().unwrap_or_default() };
         // 过滤：只保留未实现的方法
         let filtered = model::QtClass {
             name: cls.name.clone(),
             methods: cls.methods.iter().filter(|m| !impls.contains(&m.name)).cloned().collect(),
             properties: Vec::new(),
             enums: Vec::new(),
+            signal_names: cls.signal_names.clone(),
         };
         let java = generate::gen_java_methods(&filtered);
         let native = generate::gen_native_functions(&filtered, &cls.name);

@@ -31,4 +31,42 @@ public class QGroupBox extends QWidget {
         return nativeTitle(nativeHandle);
     }
     private native String nativeTitle(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** isCheckable（Qt isCheckable）。 */
+    public boolean isCheckable() {
+        return nativeIsCheckable(nativeHandle);
+    }
+    private static native boolean nativeIsCheckable(long nativeHandle);
+
+    /** isChecked（Qt isChecked）。 */
+    public boolean isChecked() {
+        return nativeIsChecked(nativeHandle);
+    }
+    private static native boolean nativeIsChecked(long nativeHandle);
+
+    /** isFlat（Qt isFlat）。 */
+    public boolean isFlat() {
+        return nativeIsFlat(nativeHandle);
+    }
+    private static native boolean nativeIsFlat(long nativeHandle);
+
+    /** setAlignment（Qt setAlignment）。 */
+    public void setAlignment(int arg0) {
+        nativeSetAlignment(nativeHandle, arg0);
+    }
+    private static native void nativeSetAlignment(long nativeHandle, int arg0);
+
+    /** setCheckable（Qt setCheckable）。 */
+    public void setCheckable(boolean arg0) {
+        nativeSetCheckable(nativeHandle, arg0);
+    }
+    private static native void nativeSetCheckable(long nativeHandle, boolean arg0);
+
+    /** setFlat（Qt setFlat）。 */
+    public void setFlat(boolean arg0) {
+        nativeSetFlat(nativeHandle, arg0);
+    }
+    private static native void nativeSetFlat(long nativeHandle, boolean arg0);
+
 }
