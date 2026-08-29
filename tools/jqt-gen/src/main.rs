@@ -176,3 +176,39 @@ fn fetch_url(url: &str) -> Result<String, String> {
         .map_err(|e| e.to_string())?;
     resp.into_string().map_err(|e| e.to_string())
 }
+
+#[cfg(test)]
+mod compile_tests {
+    use crate::model::{QtClass, QtMethod, QtParam};
+    use crate::generate::gen_java_methods;
+
+    fn m(name: &str, params: Vec<(&str, &str)>, ret: &str) -> QtMethod {
+        QtMethod {
+            name: name.to_string(),
+            return_type: ret.to_string(),
+            params: params.into_iter().map(|(n, t)| QtParam { name: n.to_string(), ty: t.to_string() }).collect(),
+            is_static: false, is_signal: false, is_ctor: false,
+        }
+    }
+
+    #[test]
+    fn generated_java_compiles() {
+        let mut cls = QtClass::new("GenCheck");
+        cls.methods.push(m("setVisible", vec![("visible", "bool")], "void"));
+        cls.methods.push(m("windowTitle", vec![], "QString"));
+        cls.methods.push(m("setToolTip", vec![("tip", "const QString")], "void"));
+        cls.methods.push(m("minimumWidth", vec![], "int"));
+        cls.methods.push(m("setGeometry", vec![("x", "int"), ("y", "int"), ("w", "int"), ("h", "int")], "void"));
+        let java = gen_java_methods(&cls);
+        let src = format!("public class GenCheck {{\n    long nativeHandle;\n{}\n}}", java);
+        std::fs::create_dir_all("target/gencheck").expect("mkdir");
+        std::fs::write("target/gencheck/GenCheck.java", &src).expect("write java");
+        let javac = std::env::var("JAVAC").unwrap_or_else(|_| "javac".to_string());
+        let out = std::process::Command::new(javac)
+            .arg("-d").arg("target/gencheck")
+            .arg("target/gencheck/GenCheck.java")
+            .output()
+            .expect("run javac");
+        assert!(out.status.success(), "javac 编译失败:\n{}", String::from_utf8_lossy(&out.stderr));
+    }
+}
