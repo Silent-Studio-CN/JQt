@@ -113,4 +113,60 @@ public class QLabel extends QWidget {
     void nativeHandleLinkHovered(String url) {
         for (Consumer<String> h : onLinkHoveredHandlers) h.accept(url);
     }
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** hasScaledContents（Qt hasScaledContents）。 */
+    public boolean hasScaledContents() {
+        return nativeHasScaledContents(nativeHandle);
+    }
+    private static native boolean nativeHasScaledContents(long nativeHandle);
+
+    /** heightForWidth（Qt heightForWidth）。 */
+    public int heightForWidth(int arg0) {
+        return nativeHeightForWidth(nativeHandle, arg0);
+    }
+    private static native int nativeHeightForWidth(long nativeHandle, int arg0);
+
+    /** openExternalLinks（Qt openExternalLinks）。 */
+    public boolean openExternalLinks() {
+        return nativeOpenExternalLinks(nativeHandle);
+    }
+    private static native boolean nativeOpenExternalLinks(long nativeHandle);
+
+    /** selectionStart（Qt selectionStart）。 */
+    public int selectionStart() {
+        return nativeSelectionStart(nativeHandle);
+    }
+    private static native int nativeSelectionStart(long nativeHandle);
+
+    /** setNum（Qt setNum）。 */
+    public void setNum(int arg0) {
+        nativeSetNum(nativeHandle, arg0);
+    }
+    private static native void nativeSetNum(long nativeHandle, int arg0);
+
+    /** setNum（Qt setNum）。 */
+    public void setNum(double arg0) {
+        nativeSetNum(nativeHandle, arg0);
+    }
+    private static native void nativeSetNum(long nativeHandle, double arg0);
+
+    /** setOpenExternalLinks（Qt setOpenExternalLinks）。 */
+    public void setOpenExternalLinks(boolean arg0) {
+        nativeSetOpenExternalLinks(nativeHandle, arg0);
+    }
+    private static native void nativeSetOpenExternalLinks(long nativeHandle, boolean arg0);
+
+    /** setScaledContents（Qt setScaledContents）。 */
+    public void setScaledContents(boolean arg0) {
+        nativeSetScaledContents(nativeHandle, arg0);
+    }
+    private static native void nativeSetScaledContents(long nativeHandle, boolean arg0);
+
+    /** setSelection（Qt setSelection）。 */
+    public void setSelection(int arg0, int arg1) {
+        nativeSetSelection(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetSelection(long nativeHandle, int arg0, int arg1);
+
 }

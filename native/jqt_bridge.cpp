@@ -70,6 +70,10 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QBoxLayout>
 #include <QCheckBox>
 #include <QFrame>
+#include <QMainWindow>
+#include <QPushButton>
+#include <QAction>
+#include <QStackedWidget>
 #include <QGraphicsOpacityEffect>
 #include <QGraphicsDropShadowEffect>
 #include <QPainter>
@@ -7881,5 +7885,799 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QWidget_nativeWindowRole(JNIEnv* env, job
     if (wgt == nullptr) { return 0; }
     QString __jqt_ret = wgt->windowRole();
     return env->NewStringUTF(__jqt_ret.toUtf8().constData());
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLabel_nativeHasScaledContents(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->hasScaledContents();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QLabel_nativeHeightForWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->heightForWidth(arg0);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLabel_nativeOpenExternalLinks(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->openExternalLinks();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QLabel_nativeSelectionStart(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->selectionStart();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeSetNum(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setNum(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeSetNum(JNIEnv* env, jobject /*thiz*/, jlong handle, jdouble arg0) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setNum(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeSetOpenExternalLinks(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setOpenExternalLinks(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeSetScaledContents(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setScaledContents(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeSetSelection(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setSelection(arg0, arg1);
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPushButton_nativeAutoDefault(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QPushButton* wgt = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->autoDefault();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPushButton_nativeIsDefault(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QPushButton* wgt = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isDefault();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPushButton_nativeIsFlat(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QPushButton* wgt = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isFlat();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPushButton_nativeSetAutoDefault(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QPushButton* wgt = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setAutoDefault(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPushButton_nativeSetDefault(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QPushButton* wgt = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setDefault(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPushButton_nativeSetFlat(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QPushButton* wgt = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setFlat(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QPushButton_nativeShowMenu(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QPushButton* wgt = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->showMenu();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeCursorForward(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0, jint arg1) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->cursorForward(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeCursorWordForward(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->cursorWordForward(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeDel(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->del();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLineEdit_nativeDragEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->dragEnabled();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLineEdit_nativeHasFrame(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->hasFrame();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeHome(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->home(arg0);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLineEdit_nativeIsClearButtonEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isClearButtonEnabled();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLineEdit_nativeIsModified(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isModified();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLineEdit_nativeIsRedoAvailable(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isRedoAvailable();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLineEdit_nativeIsUndoAvailable(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isUndoAvailable();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QLineEdit_nativeSelectionStart(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->selectionStart();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeSetClearButtonEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setClearButtonEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeSetDragEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setDragEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeSetFrame(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setFrame(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeSetInputMask(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    const char* arg0_utf = env->GetStringUTFChars(arg0, nullptr);
+    wgt->setInputMask(QString::fromUtf8(arg0_utf));    env->ReleaseStringUTFChars(arg0, arg0_utf);
+
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeSetModified(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setModified(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeSetSelection(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QLineEdit* wgt = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setSelection(arg0, arg1);
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeClearEditText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->clearEditText();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QComboBox_nativeDuplicatesEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->duplicatesEnabled();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QComboBox_nativeHasFrame(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->hasFrame();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeInsertSeparator(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->insertSeparator(arg0);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QComboBox_nativeMaxCount(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->maxCount();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QComboBox_nativeMaxVisibleItems(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->maxVisibleItems();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QComboBox_nativeMinimumContentsLength(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->minimumContentsLength();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QComboBox_nativeModelColumn(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->modelColumn();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeRemoveItem(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->removeItem(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetCurrentText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    const char* arg0_utf = env->GetStringUTFChars(arg0, nullptr);
+    wgt->setCurrentText(QString::fromUtf8(arg0_utf));    env->ReleaseStringUTFChars(arg0, arg0_utf);
+
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetDuplicatesEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setDuplicatesEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetEditText(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    const char* arg0_utf = env->GetStringUTFChars(arg0, nullptr);
+    wgt->setEditText(QString::fromUtf8(arg0_utf));    env->ReleaseStringUTFChars(arg0, arg0_utf);
+
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetFrame(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setFrame(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetItemText(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jstring arg1) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    const char* arg1_utf = env->GetStringUTFChars(arg1, nullptr);
+    wgt->setItemText(arg0, QString::fromUtf8(arg1_utf));    env->ReleaseStringUTFChars(arg1, arg1_utf);
+
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetMaxCount(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setMaxCount(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetMaxVisibleItems(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setMaxVisibleItems(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetMinimumContentsLength(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setMinimumContentsLength(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetModelColumn(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setModelColumn(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeShowPopup(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QComboBox* wgt = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->showPopup();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jstring JNICALL Java_org_jqt_QProgressBar_nativeFormat(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    QString __jqt_ret = wgt->format();
+    return env->NewStringUTF(__jqt_ret.toUtf8().constData());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QProgressBar_nativeInvertedAppearance(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->invertedAppearance();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QProgressBar_nativeIsTextVisible(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isTextVisible();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QProgressBar_nativeMaximum(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->maximum();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QProgressBar_nativeMinimum(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->minimum();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QProgressBar_nativeResetFormat(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->resetFormat();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QProgressBar_nativeSetFormat(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    const char* arg0_utf = env->GetStringUTFChars(arg0, nullptr);
+    wgt->setFormat(QString::fromUtf8(arg0_utf));    env->ReleaseStringUTFChars(arg0, arg0_utf);
+
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QProgressBar_nativeSetInvertedAppearance(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setInvertedAppearance(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QProgressBar_nativeSetMaximum(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setMaximum(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QProgressBar_nativeSetMinimum(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setMinimum(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QProgressBar_nativeSetTextVisible(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QProgressBar* wgt = static_cast<QProgressBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setTextVisible(arg0);
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QGroupBox_nativeIsCheckable(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGroupBox* wgt = static_cast<QGroupBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isCheckable();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QGroupBox_nativeIsChecked(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGroupBox* wgt = static_cast<QGroupBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isChecked();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QGroupBox_nativeIsFlat(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGroupBox* wgt = static_cast<QGroupBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isFlat();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGroupBox_nativeSetAlignment(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QGroupBox* wgt = static_cast<QGroupBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setAlignment(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGroupBox_nativeSetCheckable(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QGroupBox* wgt = static_cast<QGroupBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setCheckable(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGroupBox_nativeSetFlat(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QGroupBox* wgt = static_cast<QGroupBox*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setFlat(arg0);
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jint JNICALL Java_org_jqt_QFrame_nativeFrameWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFrame* wgt = static_cast<QFrame*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->frameWidth();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QFrame_nativeLineWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFrame* wgt = static_cast<QFrame*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->lineWidth();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QFrame_nativeMidLineWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFrame* wgt = static_cast<QFrame*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->midLineWidth();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QFrame_nativeSetFrameStyle(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QFrame* wgt = static_cast<QFrame*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setFrameStyle(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QFrame_nativeSetLineWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QFrame* wgt = static_cast<QFrame*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setLineWidth(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QFrame_nativeSetMidLineWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QFrame* wgt = static_cast<QFrame*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setMidLineWidth(arg0);
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMainWindow_nativeDocumentMode(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMainWindow* wgt = static_cast<QMainWindow*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->documentMode();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMainWindow_nativeIsAnimated(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMainWindow* wgt = static_cast<QMainWindow*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isAnimated();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMainWindow_nativeIsDockNestingEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMainWindow* wgt = static_cast<QMainWindow*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isDockNestingEnabled();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetAnimated(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QMainWindow* wgt = static_cast<QMainWindow*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setAnimated(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetDockNestingEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QMainWindow* wgt = static_cast<QMainWindow*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setDockNestingEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetDocumentMode(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QMainWindow* wgt = static_cast<QMainWindow*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setDocumentMode(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMainWindow_nativeSetUnifiedTitleAndToolBarOnMac(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QMainWindow* wgt = static_cast<QMainWindow*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setUnifiedTitleAndToolBarOnMac(arg0);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMainWindow_nativeUnifiedTitleAndToolBarOnMac(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMainWindow* wgt = static_cast<QMainWindow*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->unifiedTitleAndToolBarOnMac();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QToolBar_nativeIsFloatable(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QToolBar* wgt = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isFloatable();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QToolBar_nativeIsFloating(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QToolBar* wgt = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isFloating();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QToolBar_nativeIsMovable(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QToolBar* wgt = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isMovable();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeSetFloatable(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QToolBar* wgt = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setFloatable(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeSetMovable(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QToolBar* wgt = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setMovable(arg0);
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QStatusBar_nativeIsSizeGripEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QStatusBar* wgt = static_cast<QStatusBar*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isSizeGripEnabled();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMenu_nativeIsEmpty(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMenu* wgt = static_cast<QMenu*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isEmpty();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMenu_nativeIsTearOffMenuVisible(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMenu* wgt = static_cast<QMenu*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isTearOffMenuVisible();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMenu_nativeSeparatorsCollapsible(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMenu* wgt = static_cast<QMenu*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->separatorsCollapsible();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMenu_nativeSetSeparatorsCollapsible(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QMenu* wgt = static_cast<QMenu*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setSeparatorsCollapsible(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMenu_nativeSetTearOffEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QMenu* wgt = static_cast<QMenu*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setTearOffEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMenu_nativeSetToolTipsVisible(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QMenu* wgt = static_cast<QMenu*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setToolTipsVisible(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMenu_nativeShowTearOffMenu(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMenu* wgt = static_cast<QMenu*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->showTearOffMenu();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMenu_nativeToolTipsVisible(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QMenu* wgt = static_cast<QMenu*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->toolTipsVisible();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QAction_nativeAutoRepeat(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->autoRepeat();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeHover(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->hover();
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QAction_nativeIconText(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    QString __jqt_ret = wgt->iconText();
+    return env->NewStringUTF(__jqt_ret.toUtf8().constData());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QAction_nativeIsCheckable(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isCheckable();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QAction_nativeIsEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isEnabled();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QAction_nativeIsIconVisibleInMenu(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isIconVisibleInMenu();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QAction_nativeIsShortcutVisibleInContextMenu(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isShortcutVisibleInContextMenu();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QAction_nativeIsVisible(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isVisible();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeResetEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->resetEnabled();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeSetAutoRepeat(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setAutoRepeat(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeSetDisabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setDisabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeSetEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeSetIconVisibleInMenu(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setIconVisibleInMenu(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeSetSeparator(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setSeparator(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeSetShortcutVisibleInContextMenu(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setShortcutVisibleInContextMenu(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeSetVisible(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setVisible(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAction_nativeSetWhatsThis(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    const char* arg0_utf = env->GetStringUTFChars(arg0, nullptr);
+    wgt->setWhatsThis(QString::fromUtf8(arg0_utf));    env->ReleaseStringUTFChars(arg0, arg0_utf);
+
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QAction_nativeStatusTip(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    QString __jqt_ret = wgt->statusTip();
+    return env->NewStringUTF(__jqt_ret.toUtf8().constData());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QAction_nativeWhatsThis(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QAction* wgt = static_cast<QAction*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    QString __jqt_ret = wgt->whatsThis();
+    return env->NewStringUTF(__jqt_ret.toUtf8().constData());
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSplitter_nativeChildrenCollapsible(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSplitter* wgt = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->childrenCollapsible();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSplitter_nativeHandleWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSplitter* wgt = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->handleWidth();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSplitter_nativeOpaqueResize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSplitter* wgt = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->opaqueResize();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeRefresh(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSplitter* wgt = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->refresh();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetChildrenCollapsible(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QSplitter* wgt = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setChildrenCollapsible(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetCollapsible(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jboolean arg1) {
+    QSplitter* wgt = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setCollapsible(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetOpaqueResize(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QSplitter* wgt = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setOpaqueResize(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSplitter_nativeSetStretchFactor(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QSplitter* wgt = static_cast<QSplitter*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setStretchFactor(arg0, arg1);
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jint JNICALL Java_org_jqt_QStackedWidget_nativeCount(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QStackedWidget* wgt = static_cast<QStackedWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->count();
 }
 

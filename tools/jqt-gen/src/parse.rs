@@ -134,6 +134,32 @@ pub fn parse_main_return_types(html: &str) -> std::collections::HashMap<String, 
     }
     out
 }
+/// 从主文档页面提取信号名：匹配 "[signal]" 标记后的 "返回类型 方法名("
+/// Qt 6 文档格式："[signal] void textEdited(const QString &text)"
+pub fn parse_signal_names(html: &str) -> Vec<String> {
+    let text = strip_tags(html);
+    let mut out = Vec::new();
+    let marker = "[signal]";
+    let mut search_from = 0usize;
+    while let Some(rel) = text[search_from..].find(marker) {
+        let i = search_from + rel;
+        let rest = &text[i + marker.len()..];
+        let mut words = rest.split(|c: char| c.is_whitespace() || c == '(').filter(|w| !w.is_empty());
+        let _ret = words.next(); // 返回类型（通常 void）
+        if let Some(name) = words.next() {
+            let name = name.trim_matches(['*', '&']).rsplit("::").next().unwrap_or(name);
+            if !name.is_empty()
+                && name.chars().next().map(|c| c.is_ascii_alphabetic()).unwrap_or(false)
+                && !out.iter().any(|n| n == name)
+            {
+                out.push(name.to_string());
+            }
+        }
+        search_from = i + marker.len();
+    }
+    out
+}
+
 /// 从页面标题提取规范类名："List of All Members for QWidget | Qt Widgets" → "QWidget"
 fn extract_class_name(html: &str) -> Option<String> {
     let marker = "List of All Members for ";
