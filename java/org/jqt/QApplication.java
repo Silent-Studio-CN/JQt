@@ -515,5 +515,39 @@ public class QApplication {
             h.run();
         }
     }
-}
+    // ---- 值对象批：全局光标与窗口查询 ----
 
+    /** 设置全局覆盖光标。 */
+    public static void setOverrideCursor(QCursor cursor) {
+        if (cursor != null) nativeSetOverrideCursor(cursor.shape().value);
+    }
+    private static native void nativeSetOverrideCursor(int shape);
+
+    /** 变更全局覆盖光标（不重复计数）。 */
+    public static void changeOverrideCursor(QCursor cursor) {
+        if (cursor != null) nativeChangeOverrideCursor(cursor.shape().value);
+    }
+    private static native void nativeChangeOverrideCursor(int shape);
+
+    /** 恢复上一个覆盖光标。 */
+    public static void restoreOverrideCursor() { nativeRestoreOverrideCursor(); }
+    private static native void nativeRestoreOverrideCursor();
+
+    /** 全局坐标处的控件（返回句柄；0=无）。 */
+    public static long widgetAt(QPoint pos) {
+        return nativeWidgetAt(pos != null ? pos.x() : 0, pos != null ? pos.y() : 0);
+    }
+    private static native long nativeWidgetAt(int x, int y);
+
+    /** 全局坐标处的最顶层窗口（返回句柄；0=无）。 */
+    public static long topLevelAt(QPoint pos) {
+        return nativeTopLevelAt(pos != null ? pos.x() : 0, pos != null ? pos.y() : 0);
+    }
+    private static native long nativeTopLevelAt(int x, int y);
+
+    /** 全局坐标处的屏幕（返回 QScreen 句柄；0=无）。 */
+    public static long screenAt(QPoint pos) {
+        return nativeScreenAt(pos != null ? pos.x() : 0, pos != null ? pos.y() : 0);
+    }
+    private static native long nativeScreenAt(int x, int y);
+}

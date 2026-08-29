@@ -31,4 +31,20 @@ public class QFileDialog {
         return nativeGetExistingDirectory(parent.nativeHandle(), title, dir);
     }
     static native String nativeGetExistingDirectory(long winHandle, String title, String dir);
+
+    // ---- 值对象批：URL 语义（QUrl） ----
+
+    /** 打开文件选择框，返回 QUrl（本地文件为 file://）；用户取消返回无效 QUrl。阻塞调用。 */
+    public static QUrl getOpenFileUrl(QMainWindow parent, String title, QUrl dir, String filter) {
+        String path = nativeGetOpenFileName(parent.nativeHandle(), title,
+                dir != null ? dir.toLocalFile() : "", filter != null ? filter : "");
+        return path != null ? QUrl.fromLocalFile(path) : new QUrl();
+    }
+
+    /** 保存文件选择框，返回 QUrl；用户取消返回无效 QUrl。阻塞调用。 */
+    public static QUrl getSaveFileUrl(QMainWindow parent, String title, QUrl dir, String filter) {
+        String path = nativeGetSaveFileName(parent.nativeHandle(), title,
+                dir != null ? dir.toLocalFile() : "", filter != null ? filter : "");
+        return path != null ? QUrl.fromLocalFile(path) : new QUrl();
+    }
 }

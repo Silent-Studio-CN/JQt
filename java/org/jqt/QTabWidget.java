@@ -71,4 +71,14 @@ public class QTabWidget extends QWidget {
     /** 页数量。 */
     public int count() { return nativeCount(nativeHandle); }
     private static native int nativeCount(long handle);
+
+    // ---- 值对象批：选项卡图标 ----
+
+    /** 设置选项卡图标。 */
+    public void setTabIcon(int index, QIcon icon) {
+        if (icon == null || icon.isNull()) return;
+        long pm = icon.pixmap().nativeHandle();
+        if (pm != 0) nativeSetTabIcon(nativeHandle, index, pm);
+    }
+    private native void nativeSetTabIcon(long handle, int index, long pixmapHandle);
 }

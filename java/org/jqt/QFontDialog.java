@@ -19,4 +19,19 @@ public class QFontDialog {
         return nativeGetFont(parent.nativeHandle(), title, family, size);
     }
     static native String nativeGetFont(long winHandle, String title, String family, int size);
+
+    /** 字体选择框（值对象版），返回 QFont；用户取消返回无效 QFont（pointSize <= 0）。阻塞调用。 */
+    public static QFont getFontQFont(QMainWindow parent, String title, QFont initial) {
+        String family = initial != null && initial.family() != null ? initial.family() : "Arial";
+        int size = initial != null && initial.pointSize() > 0 ? initial.pointSize() : 12;
+        String s = nativeGetFont(parent.nativeHandle(), title, family, size);
+        if (s == null || s.isEmpty()) return new QFont();
+        // native 返回 "Family,size" 格式
+        int comma = s.lastIndexOf(',');
+        if (comma > 0) {
+            try { return new QFont(s.substring(0, comma), Integer.parseInt(s.substring(comma + 1).trim())); }
+            catch (NumberFormatException e) { return new QFont(s, 12); }
+        }
+        return new QFont(s, 12);
+    }
 }
