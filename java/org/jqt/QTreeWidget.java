@@ -203,4 +203,18 @@ public class QTreeWidget extends QWidget {
         nativeSetHeaderLabels(nativeHandle, arr);
     }
     private native void nativeSetHeaderLabels(long handle, String[] labels);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** currentColumn（Qt currentColumn）。 */
+    public int currentColumn() {
+        return nativeCurrentColumn(nativeHandle);
+    }
+    private static native int nativeCurrentColumn(long nativeHandle);
+
+    /** setColumnCount（Qt setColumnCount）。 */
+    public void setColumnCount(int arg0) {
+        nativeSetColumnCount(nativeHandle, arg0);
+    }
+    private static native void nativeSetColumnCount(long nativeHandle, int arg0);
+
 }

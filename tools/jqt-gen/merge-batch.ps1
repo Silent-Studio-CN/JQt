@@ -5,7 +5,7 @@ function W($m) { $m | Out-File -FilePath $log -Append -Encoding UTF8 }
 try {
 Set-Location "D:\SilentStudio\JQt - Dev"
 $nl = [char]13 + [char]10
-$classes = @("QLabel","QPushButton","QLineEdit","QComboBox","QProgressBar","QGroupBox","QFrame","QMainWindow","QToolBar","QStatusBar","QMenu","QAction","QSplitter","QStackedWidget")
+$classes = @("QTabWidget","QTreeWidget","QListWidget","QSpinBox","QDateTimeEdit","QScrollArea","QStackedLayout","QMenuBar","QSystemTrayIcon","QMessageBox","QDialog","QTableWidget","QSettings","QListView","QDial")
 $javaMark = "// ---- 生成器批次（jqt-gen 自动生成，直传型） ----"
 $cppMark = "// 生成器批次（jqt-gen 自动生成，直传型）"
 $javaDone = @(); $cppDone = @()
@@ -39,7 +39,7 @@ foreach ($c in $classes) {
 
     $bfile = "native\jqt_bridge.cpp"
     $bsrc = Get-Content $bfile -Raw
-    $firstFn = [regex]::Match($ntext, 'Java_org_jqt_\w+').Value; if ($firstFn -ne '' -and $bsrc.Contains($firstFn)) { throw "bridge: ${c} 批次已存在" }
+    $firstFn = [regex]::Match($ntext, 'Java_org_jqt_\w+').Value; if ($firstFn -ne '' -and $bsrc.Contains($firstFn + '(')) { throw "bridge: ${c} 批次已存在" }
     Add-Content -Path $bfile -Value ($nl + $cppMark + $ntext) -Encoding UTF8
     $cppDone += $c
     W "  bridge ok"

@@ -81,4 +81,102 @@ public class QTabWidget extends QWidget {
         if (pm != 0) nativeSetTabIcon(nativeHandle, index, pm);
     }
     private native void nativeSetTabIcon(long handle, int index, long pixmapHandle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** documentMode（Qt documentMode）。 */
+    public boolean documentMode() {
+        return nativeDocumentMode(nativeHandle);
+    }
+    private static native boolean nativeDocumentMode(long nativeHandle);
+
+    /** hasHeightForWidth（Qt hasHeightForWidth）。 */
+    public boolean hasHeightForWidth() {
+        return nativeHasHeightForWidth(nativeHandle);
+    }
+    private static native boolean nativeHasHeightForWidth(long nativeHandle);
+
+    /** heightForWidth（Qt heightForWidth）。 */
+    public int heightForWidth(int arg0) {
+        return nativeHeightForWidth(nativeHandle, arg0);
+    }
+    private static native int nativeHeightForWidth(long nativeHandle, int arg0);
+
+    /** isMovable（Qt isMovable）。 */
+    public boolean isMovable() {
+        return nativeIsMovable(nativeHandle);
+    }
+    private static native boolean nativeIsMovable(long nativeHandle);
+
+    /** removeTab（Qt removeTab）。 */
+    public void removeTab(int arg0) {
+        nativeRemoveTab(nativeHandle, arg0);
+    }
+    private static native void nativeRemoveTab(long nativeHandle, int arg0);
+
+    /** setDocumentMode（Qt setDocumentMode）。 */
+    public void setDocumentMode(boolean arg0) {
+        nativeSetDocumentMode(nativeHandle, arg0);
+    }
+    private static native void nativeSetDocumentMode(long nativeHandle, boolean arg0);
+
+    /** setMovable（Qt setMovable）。 */
+    public void setMovable(boolean arg0) {
+        nativeSetMovable(nativeHandle, arg0);
+    }
+    private static native void nativeSetMovable(long nativeHandle, boolean arg0);
+
+    /** setTabBarAutoHide（Qt setTabBarAutoHide）。 */
+    public void setTabBarAutoHide(boolean arg0) {
+        nativeSetTabBarAutoHide(nativeHandle, arg0);
+    }
+    private static native void nativeSetTabBarAutoHide(long nativeHandle, boolean arg0);
+
+    /** setTabEnabled（Qt setTabEnabled）。 */
+    public void setTabEnabled(int arg0, boolean arg1) {
+        nativeSetTabEnabled(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetTabEnabled(long nativeHandle, int arg0, boolean arg1);
+
+    /** setTabVisible（Qt setTabVisible）。 */
+    public void setTabVisible(int arg0, boolean arg1) {
+        nativeSetTabVisible(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetTabVisible(long nativeHandle, int arg0, boolean arg1);
+
+    /** setUsesScrollButtons（Qt setUsesScrollButtons）。 */
+    public void setUsesScrollButtons(boolean arg0) {
+        nativeSetUsesScrollButtons(nativeHandle, arg0);
+    }
+    private static native void nativeSetUsesScrollButtons(long nativeHandle, boolean arg0);
+
+    /** tabBarAutoHide（Qt tabBarAutoHide）。 */
+    public boolean tabBarAutoHide() {
+        return nativeTabBarAutoHide(nativeHandle);
+    }
+    private static native boolean nativeTabBarAutoHide(long nativeHandle);
+
+    /** tabText（Qt tabText）。 */
+    public String tabText(int arg0) {
+        return nativeTabText(nativeHandle, arg0);
+    }
+    private static native String nativeTabText(long nativeHandle, int arg0);
+
+    /** tabToolTip（Qt tabToolTip）。 */
+    public String tabToolTip(int arg0) {
+        return nativeTabToolTip(nativeHandle, arg0);
+    }
+    private static native String nativeTabToolTip(long nativeHandle, int arg0);
+
+    /** tabWhatsThis（Qt tabWhatsThis）。 */
+    public String tabWhatsThis(int arg0) {
+        return nativeTabWhatsThis(nativeHandle, arg0);
+    }
+    private static native String nativeTabWhatsThis(long nativeHandle, int arg0);
+
+    /** usesScrollButtons（Qt usesScrollButtons）。 */
+    public boolean usesScrollButtons() {
+        return nativeUsesScrollButtons(nativeHandle);
+    }
+    private static native boolean nativeUsesScrollButtons(long nativeHandle);
+
 }

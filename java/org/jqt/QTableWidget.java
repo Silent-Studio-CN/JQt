@@ -126,4 +126,54 @@ public class QTableWidget extends QWidget {
             h.accept(row);
         }
     }
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** clear（Qt clear）。 */
+    public void clear() {
+        nativeClear(nativeHandle);
+    }
+    private static native void nativeClear(long nativeHandle);
+
+    /** insertColumn（Qt insertColumn）。 */
+    public void insertColumn(int arg0) {
+        nativeInsertColumn(nativeHandle, arg0);
+    }
+    private static native void nativeInsertColumn(long nativeHandle, int arg0);
+
+    /** insertRow（Qt insertRow）。 */
+    public void insertRow(int arg0) {
+        nativeInsertRow(nativeHandle, arg0);
+    }
+    private static native void nativeInsertRow(long nativeHandle, int arg0);
+
+    /** removeCellWidget（Qt removeCellWidget）。 */
+    public void removeCellWidget(int arg0, int arg1) {
+        nativeRemoveCellWidget(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeRemoveCellWidget(long nativeHandle, int arg0, int arg1);
+
+    /** removeColumn（Qt removeColumn）。 */
+    public void removeColumn(int arg0) {
+        nativeRemoveColumn(nativeHandle, arg0);
+    }
+    private static native void nativeRemoveColumn(long nativeHandle, int arg0);
+
+    /** removeRow（Qt removeRow）。 */
+    public void removeRow(int arg0) {
+        nativeRemoveRow(nativeHandle, arg0);
+    }
+    private static native void nativeRemoveRow(long nativeHandle, int arg0);
+
+    /** visualColumn（Qt visualColumn）。 */
+    public int visualColumn(int arg0) {
+        return nativeVisualColumn(nativeHandle, arg0);
+    }
+    private static native int nativeVisualColumn(long nativeHandle, int arg0);
+
+    /** visualRow（Qt visualRow）。 */
+    public int visualRow(int arg0) {
+        return nativeVisualRow(nativeHandle, arg0);
+    }
+    private static native int nativeVisualRow(long nativeHandle, int arg0);
+
 }

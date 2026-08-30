@@ -75,4 +75,30 @@ public class QSystemTrayIcon {
     }
 
     private static native void nativeDispose(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** isSystemTrayAvailable（Qt isSystemTrayAvailable）。 */
+    public boolean isSystemTrayAvailable() {
+        return nativeIsSystemTrayAvailable(nativeHandle);
+    }
+    private static native boolean nativeIsSystemTrayAvailable(long nativeHandle);
+
+    /** setVisible（Qt setVisible）。 */
+    public void setVisible(boolean arg0) {
+        nativeSetVisible(nativeHandle, arg0);
+    }
+    private static native void nativeSetVisible(long nativeHandle, boolean arg0);
+
+    /** supportsMessages（Qt supportsMessages）。 */
+    public boolean supportsMessages() {
+        return nativeSupportsMessages(nativeHandle);
+    }
+    private static native boolean nativeSupportsMessages(long nativeHandle);
+
+    /** toolTip（Qt toolTip）。 */
+    public String toolTip() {
+        return nativeToolTip(nativeHandle);
+    }
+    private static native String nativeToolTip(long nativeHandle);
+
 }

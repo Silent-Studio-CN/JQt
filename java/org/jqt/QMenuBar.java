@@ -57,4 +57,42 @@ public class QMenuBar extends QWidget {
 
     private native void nativeAddMenu(long handle, long menuHandle);
     private native void nativeClear(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** heightForWidth（Qt heightForWidth）。 */
+    public int heightForWidth(int arg0) {
+        return nativeHeightForWidth(nativeHandle, arg0);
+    }
+    private static native int nativeHeightForWidth(long nativeHandle, int arg0);
+
+    /** isDefaultUp（Qt isDefaultUp）。 */
+    public boolean isDefaultUp() {
+        return nativeIsDefaultUp(nativeHandle);
+    }
+    private static native boolean nativeIsDefaultUp(long nativeHandle);
+
+    /** isNativeMenuBar（Qt isNativeMenuBar）。 */
+    public boolean isNativeMenuBar() {
+        return nativeIsNativeMenuBar(nativeHandle);
+    }
+    private static native boolean nativeIsNativeMenuBar(long nativeHandle);
+
+    /** setDefaultUp（Qt setDefaultUp）。 */
+    public void setDefaultUp(boolean arg0) {
+        nativeSetDefaultUp(nativeHandle, arg0);
+    }
+    private static native void nativeSetDefaultUp(long nativeHandle, boolean arg0);
+
+    /** setNativeMenuBar（Qt setNativeMenuBar）。 */
+    public void setNativeMenuBar(boolean arg0) {
+        nativeSetNativeMenuBar(nativeHandle, arg0);
+    }
+    private static native void nativeSetNativeMenuBar(long nativeHandle, boolean arg0);
+
+    /** setVisible（Qt setVisible）。 */
+    public void setVisible(boolean arg0) {
+        nativeSetVisible(nativeHandle, arg0);
+    }
+    private static native void nativeSetVisible(long nativeHandle, boolean arg0);
+
 }

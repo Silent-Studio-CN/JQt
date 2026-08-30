@@ -47,4 +47,18 @@ public class QStackedLayout extends QLayout {
         nativeSetCurrentWidget(nativeHandle, widget.nativeHandle);
     }
     private native void nativeSetCurrentWidget(long handle, long childHandle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** hasHeightForWidth（Qt hasHeightForWidth）。 */
+    public boolean hasHeightForWidth() {
+        return nativeHasHeightForWidth(nativeHandle);
+    }
+    private static native boolean nativeHasHeightForWidth(long nativeHandle);
+
+    /** heightForWidth（Qt heightForWidth）。 */
+    public int heightForWidth(int arg0) {
+        return nativeHeightForWidth(nativeHandle, arg0);
+    }
+    private static native int nativeHeightForWidth(long nativeHandle, int arg0);
+
 }

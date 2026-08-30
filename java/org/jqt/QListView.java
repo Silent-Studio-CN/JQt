@@ -109,4 +109,78 @@ public class QListView extends QWidget {
     private native String nativeCurrentItem(long handle);
     private native void nativeSetCurrentItem(long handle, String text);
     private native void nativeConnectSelectionChanged(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** batchSize（Qt batchSize）。 */
+    public int batchSize() {
+        return nativeBatchSize(nativeHandle);
+    }
+    private static native int nativeBatchSize(long nativeHandle);
+
+    /** clearPropertyFlags（Qt clearPropertyFlags）。 */
+    public void clearPropertyFlags() {
+        nativeClearPropertyFlags(nativeHandle);
+    }
+    private static native void nativeClearPropertyFlags(long nativeHandle);
+
+    /** isSelectionRectVisible（Qt isSelectionRectVisible）。 */
+    public boolean isSelectionRectVisible() {
+        return nativeIsSelectionRectVisible(nativeHandle);
+    }
+    private static native boolean nativeIsSelectionRectVisible(long nativeHandle);
+
+    /** isWrapping（Qt isWrapping）。 */
+    public boolean isWrapping() {
+        return nativeIsWrapping(nativeHandle);
+    }
+    private static native boolean nativeIsWrapping(long nativeHandle);
+
+    /** modelColumn（Qt modelColumn）。 */
+    public int modelColumn() {
+        return nativeModelColumn(nativeHandle);
+    }
+    private static native int nativeModelColumn(long nativeHandle);
+
+    /** setBatchSize（Qt setBatchSize）。 */
+    public void setBatchSize(int arg0) {
+        nativeSetBatchSize(nativeHandle, arg0);
+    }
+    private static native void nativeSetBatchSize(long nativeHandle, int arg0);
+
+    /** setModelColumn（Qt setModelColumn）。 */
+    public void setModelColumn(int arg0) {
+        nativeSetModelColumn(nativeHandle, arg0);
+    }
+    private static native void nativeSetModelColumn(long nativeHandle, int arg0);
+
+    /** setRowHidden（Qt setRowHidden）。 */
+    public void setRowHidden(int arg0, boolean arg1) {
+        nativeSetRowHidden(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetRowHidden(long nativeHandle, int arg0, boolean arg1);
+
+    /** setSelectionRectVisible（Qt setSelectionRectVisible）。 */
+    public void setSelectionRectVisible(boolean arg0) {
+        nativeSetSelectionRectVisible(nativeHandle, arg0);
+    }
+    private static native void nativeSetSelectionRectVisible(long nativeHandle, boolean arg0);
+
+    /** setUniformItemSizes（Qt setUniformItemSizes）。 */
+    public void setUniformItemSizes(boolean arg0) {
+        nativeSetUniformItemSizes(nativeHandle, arg0);
+    }
+    private static native void nativeSetUniformItemSizes(long nativeHandle, boolean arg0);
+
+    /** setWrapping（Qt setWrapping）。 */
+    public void setWrapping(boolean arg0) {
+        nativeSetWrapping(nativeHandle, arg0);
+    }
+    private static native void nativeSetWrapping(long nativeHandle, boolean arg0);
+
+    /** uniformItemSizes（Qt uniformItemSizes）。 */
+    public boolean uniformItemSizes() {
+        return nativeUniformItemSizes(nativeHandle);
+    }
+    private static native boolean nativeUniformItemSizes(long nativeHandle);
+
 }

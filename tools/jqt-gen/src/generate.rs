@@ -51,6 +51,13 @@ fn is_generatable(cls: &QtClass, m: &QtMethod) -> bool {
         || m.name == "setAsDockMenu"        // macOS only（Windows 头无此成员）
         || m.name == "closestLegalPosition" // QSplitter protected
         || m.name == "setRubberBand"        // QSplitter protected
+        || m.name == "horizontalOffset"     // QAbstractItemView protected virtual
+        || m.name == "verticalOffset"       // QAbstractItemView protected virtual
+        || m.name == "updateGeometries"     // QAbstractItemView protected virtual
+        || m.name == "scrollContentsBy"     // QAbstractScrollArea/QAbstractItemView protected
+        || m.name == "tabRemoved"           // QTabWidget 信号（Qt 6.10+，文档缺 [signal] 标记）
+        || m.name == "fixup"                // QAbstractSpinBox protected（QString& 重载）
+        || m.name == "valueFromText"        // QSpinBox protected virtual
         || m.name == "setEditFocus"         // 非 QWidget API（QGraphicsWidget）
         || m.name.starts_with('~')
         || cls.signal_names.iter().any(|s| s == &m.name)   // 信号不能直调
