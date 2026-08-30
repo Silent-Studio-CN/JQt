@@ -58,6 +58,10 @@ fn is_generatable(cls: &QtClass, m: &QtMethod) -> bool {
         || m.name == "tabRemoved"           // QTabWidget 信号（Qt 6.10+，文档缺 [signal] 标记）
         || m.name == "fixup"                // QAbstractSpinBox protected（QString& 重载）
         || m.name == "valueFromText"        // QSpinBox protected virtual
+        || m.name == "readData"             // QIODevice protected virtual
+        || m.name == "readLineData"         // QIODevice protected virtual
+        || m.name == "writeData"            // QIODevice protected virtual
+        || m.name == "resizeGL"             // QOpenGLWidget protected virtual
         || m.name == "setEditFocus"         // 非 QWidget API（QGraphicsWidget）
         || m.name.starts_with('~')
         || cls.signal_names.iter().any(|s| s == &m.name)   // 信号不能直调

@@ -142,12 +142,16 @@ fn scan_jqt_implemented() -> std::collections::HashMap<String, std::collections:
                         // 生成器批次块（标记后即类尾）：视为缺口，replace 合入时整体替换
                         if t.contains("生成器批次") { break; }
                         if t.starts_with("public") && t.contains('(') {
-                            if let Some(open) = t.find('(') {
-                                let head = &t[..open];
-                                let name = head.split_whitespace().next_back().unwrap_or("").trim_end_matches(')').trim();
-                                if name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') && !name.is_empty() {
-                                    names.insert(name.to_string());
+                            // 方法名 = 最后一个含 '(' 的 token 的 '(' 前部分（兼容单行/多行签名）
+                            let mut name = String::new();
+                            for w in t.split_whitespace().rev() {
+                                if w.contains('(') {
+                                    name = w.split('(').next().unwrap_or("").to_string();
+                                    break;
                                 }
+                            }
+                            if !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_') {
+                                names.insert(name);
                             }
                         }
                     }

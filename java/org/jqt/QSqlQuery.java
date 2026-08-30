@@ -72,4 +72,60 @@ public class QSqlQuery {
     private native int nativeNumRowsAffected(long handle);
     private native String nativeLastError(long handle);
     private native void nativeDispose(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** at（Qt at）。 */
+    public int at() {
+        return nativeAt(nativeHandle);
+    }
+    private static native int nativeAt(long nativeHandle);
+
+    /** first（Qt first）。 */
+    public boolean first() {
+        return nativeFirst(nativeHandle);
+    }
+    private static native boolean nativeFirst(long nativeHandle);
+
+    /** last（Qt last）。 */
+    public boolean last() {
+        return nativeLast(nativeHandle);
+    }
+    private static native boolean nativeLast(long nativeHandle);
+
+    /** lastQuery（Qt lastQuery）。 */
+    public String lastQuery() {
+        return nativeLastQuery(nativeHandle);
+    }
+    private static native String nativeLastQuery(long nativeHandle);
+
+    /** nextResult（Qt nextResult）。 */
+    public boolean nextResult() {
+        return nativeNextResult(nativeHandle);
+    }
+    private static native boolean nativeNextResult(long nativeHandle);
+
+    /** prepare（Qt prepare）。 */
+    public boolean prepare(String arg0) {
+        return nativePrepare(nativeHandle, arg0);
+    }
+    private static native boolean nativePrepare(long nativeHandle, String arg0);
+
+    /** setForwardOnly（Qt setForwardOnly）。 */
+    public void setForwardOnly(boolean arg0) {
+        nativeSetForwardOnly(nativeHandle, arg0);
+    }
+    private static native void nativeSetForwardOnly(long nativeHandle, boolean arg0);
+
+    /** setPositionalBindingEnabled（Qt setPositionalBindingEnabled）。 */
+    public void setPositionalBindingEnabled(boolean arg0) {
+        nativeSetPositionalBindingEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetPositionalBindingEnabled(long nativeHandle, boolean arg0);
+
+    /** size（Qt size）。 */
+    public int size() {
+        return nativeSize(nativeHandle);
+    }
+    private static native int nativeSize(long nativeHandle);
+
 }

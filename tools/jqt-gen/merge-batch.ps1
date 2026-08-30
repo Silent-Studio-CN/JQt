@@ -5,7 +5,7 @@ function W($m) { $m | Out-File -FilePath $log -Append -Encoding UTF8 }
 try {
 Set-Location "D:\SilentStudio\JQt - Dev"
 $nl = [char]13 + [char]10
-$classes = @("QTabWidget","QTreeWidget","QListWidget","QSpinBox","QDateTimeEdit","QScrollArea","QStackedLayout","QMenuBar","QSystemTrayIcon","QMessageBox","QDialog","QTableWidget","QSettings","QListView","QDial")
+$classes = @("QFormLayout","QGridLayout","QLayout","QApplication","QSerialPort","QOpenGLWidget","QSqlQuery","QFile")
 $javaMark = "// ---- 生成器批次（jqt-gen 自动生成，直传型） ----"
 $cppMark = "// 生成器批次（jqt-gen 自动生成，直传型）"
 $javaDone = @(); $cppDone = @()

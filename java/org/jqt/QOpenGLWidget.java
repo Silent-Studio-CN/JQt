@@ -123,4 +123,12 @@ public class QOpenGLWidget extends QWidget {
         nativeDoneCurrent(nativeHandle);
     }
     private native void nativeDoneCurrent(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** isValid（Qt isValid）。 */
+    public boolean isValid() {
+        return nativeIsValid(nativeHandle);
+    }
+    private static native boolean nativeIsValid(long nativeHandle);
+
 }

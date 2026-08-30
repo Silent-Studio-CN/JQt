@@ -5424,9 +5424,6 @@ JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeAddSpacing(JNIEnv* env, jobjec
 // QLayout getters
 JNIEXPORT jint JNICALL Java_org_jqt_QLayout_nativeCount(JNIEnv* env, jobject, jlong h) { QLayout* w = static_cast<QLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->count()) : 0; }
 JNIEXPORT jint JNICALL Java_org_jqt_QLayout_nativeSpacing(JNIEnv* env, jobject, jlong h) { QLayout* w = static_cast<QLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->spacing()) : 0; }
-// QGridLayout getters
-JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeCount(JNIEnv* env, jobject, jlong h) { QGridLayout* w = static_cast<QGridLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->count()) : 0; }
-JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeSpacing(JNIEnv* env, jobject, jlong h) { QGridLayout* w = static_cast<QGridLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->spacing()) : 0; }
 // QListWidget itemEntered
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemEntered(JNIEnv* env, jobject thiz, jlong h) {
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
@@ -9272,5 +9269,388 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QDial_nativeWrapping(JNIEnv* env, jobjec
     QDial* wgt = static_cast<QDial*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->wrapping();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFormLayout_nativeHasHeightForWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFormLayout* wgt = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->hasHeightForWidth();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QFormLayout_nativeHeightForWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QFormLayout* wgt = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->heightForWidth(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeInvalidate(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFormLayout* wgt = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->invalidate();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeSetRowVisible(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jboolean arg1) {
+    QFormLayout* wgt = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setRowVisible(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QFormLayout_nativeSetVerticalSpacing(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QFormLayout* wgt = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setVerticalSpacing(arg0);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QFormLayout_nativeSpacing(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFormLayout* wgt = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->spacing();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QFormLayout_nativeVerticalSpacing(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFormLayout* wgt = static_cast<QFormLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->verticalSpacing();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeCount(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->count();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QGridLayout_nativeHasHeightForWidth(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->hasHeightForWidth();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeHeightForWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->heightForWidth(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGridLayout_nativeInvalidate(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->invalidate();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeMinimumHeightForWidth(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->minimumHeightForWidth(arg0);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeRowCount(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->rowCount();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGridLayout_nativeSetRowMinimumHeight(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0, jint arg1) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setRowMinimumHeight(arg0, arg1);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGridLayout_nativeSetVerticalSpacing(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setVerticalSpacing(arg0);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeSpacing(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->spacing();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QGridLayout_nativeVerticalSpacing(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QGridLayout* wgt = static_cast<QGridLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->verticalSpacing();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLayout_nativeIsEmpty(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLayout* wgt = static_cast<QLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isEmpty();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeSetEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QLayout* wgt = static_cast<QLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setEnabled(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeUnsetContentsMargins(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLayout* wgt = static_cast<QLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->unsetContentsMargins();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeUpdate(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QLayout* wgt = static_cast<QLayout*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->update();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeAutoSipEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->autoSipEnabled();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeCloseAllWindows(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->closeAllWindows();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativeCursorFlashTime(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->cursorFlashTime();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativeDoubleClickInterval(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->doubleClickInterval();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativeKeyboardInputInterval(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->keyboardInputInterval();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSetCursorFlashTime(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setCursorFlashTime(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSetDoubleClickInterval(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setDoubleClickInterval(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSetKeyboardInputInterval(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setKeyboardInputInterval(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSetStartDragDistance(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setStartDragDistance(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSetStartDragTime(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setStartDragTime(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSetWheelScrollLines(JNIEnv* env, jobject /*thiz*/, jlong handle, jint arg0) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setWheelScrollLines(arg0);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativeStartDragTime(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QApplication* wgt = static_cast<QApplication*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->startDragTime();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeBytesToWrite(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->bytesToWrite();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeCanReadLine(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->canReadLine();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeClearError(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->clearError();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsBreakEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isBreakEnabled();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsDataTerminalReady(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isDataTerminalReady();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsRequestToSend(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isRequestToSend();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsSequential(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isSequential();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetBreakEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->setBreakEnabled(arg0);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetDataTerminalReady(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->setDataTerminalReady(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetReadBufferSize(JNIEnv* env, jobject /*thiz*/, jlong handle, jlong arg0) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setReadBufferSize(arg0);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetRequestToSend(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->setRequestToSend(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetSettingsRestoredOnClose(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setSettingsRestoredOnClose(arg0);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSettingsRestoredOnClose(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->settingsRestoredOnClose();
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeWriteBufferSize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->writeBufferSize();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QOpenGLWidget_nativeIsValid(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QOpenGLWidget* wgt = static_cast<QOpenGLWidget*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->isValid();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jint JNICALL Java_org_jqt_QSqlQuery_nativeAt(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->at();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlQuery_nativeFirst(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->first();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlQuery_nativeLast(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->last();
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlQuery_nativeLastQuery(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    QString __jqt_ret = wgt->lastQuery();
+    return env->NewStringUTF(__jqt_ret.toUtf8().constData());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlQuery_nativeNextResult(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->nextResult();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlQuery_nativePrepare(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    const char* arg0_utf = env->GetStringUTFChars(arg0, nullptr);
+    return wgt->prepare(QString::fromUtf8(arg0_utf));    env->ReleaseStringUTFChars(arg0, arg0_utf);
+
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlQuery_nativeSetForwardOnly(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setForwardOnly(arg0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlQuery_nativeSetPositionalBindingEnabled(JNIEnv* env, jobject /*thiz*/, jlong handle, jboolean arg0) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return; }
+    wgt->setPositionalBindingEnabled(arg0);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSqlQuery_nativeSize(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QSqlQuery* wgt = static_cast<QSqlQuery*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->size();
+}
+
+
+// 生成器批次（jqt-gen 自动生成，直传型）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QFile_nativeSupportsMoveToTrash(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFile* wgt = static_cast<QFile*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    return wgt->supportsMoveToTrash();
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QFile_nativeSymLinkTarget(JNIEnv* env, jobject /*thiz*/, jlong handle, jstring arg0) {
+    QFile* wgt = static_cast<QFile*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    const char* arg0_utf = env->GetStringUTFChars(arg0, nullptr);
+    QString __jqt_ret = wgt->symLinkTarget(QString::fromUtf8(arg0_utf));
+    return env->NewStringUTF(__jqt_ret.toUtf8().constData());    env->ReleaseStringUTFChars(arg0, arg0_utf);
+
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QFile_nativeSymLinkTarget(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QFile* wgt = static_cast<QFile*>(requireHandle(env, handle));
+    if (wgt == nullptr) { return 0; }
+    QString __jqt_ret = wgt->symLinkTarget();
+    return env->NewStringUTF(__jqt_ret.toUtf8().constData());
 }
 

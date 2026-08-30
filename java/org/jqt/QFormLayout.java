@@ -35,4 +35,48 @@ public class QFormLayout extends QLayout {
         nativeAddRowWidget(nativeHandle, label.nativeHandle(), field.nativeHandle());
     }
     private native void nativeAddRowWidget(long handle, long labelHandle, long fieldHandle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** hasHeightForWidth（Qt hasHeightForWidth）。 */
+    public boolean hasHeightForWidth() {
+        return nativeHasHeightForWidth(nativeHandle);
+    }
+    private static native boolean nativeHasHeightForWidth(long nativeHandle);
+
+    /** heightForWidth（Qt heightForWidth）。 */
+    public int heightForWidth(int arg0) {
+        return nativeHeightForWidth(nativeHandle, arg0);
+    }
+    private static native int nativeHeightForWidth(long nativeHandle, int arg0);
+
+    /** invalidate（Qt invalidate）。 */
+    public void invalidate() {
+        nativeInvalidate(nativeHandle);
+    }
+    private static native void nativeInvalidate(long nativeHandle);
+
+    /** setRowVisible（Qt setRowVisible）。 */
+    public void setRowVisible(int arg0, boolean arg1) {
+        nativeSetRowVisible(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetRowVisible(long nativeHandle, int arg0, boolean arg1);
+
+    /** setVerticalSpacing（Qt setVerticalSpacing）。 */
+    public void setVerticalSpacing(int arg0) {
+        nativeSetVerticalSpacing(nativeHandle, arg0);
+    }
+    private static native void nativeSetVerticalSpacing(long nativeHandle, int arg0);
+
+    /** spacing（Qt spacing）。 */
+    public int spacing() {
+        return nativeSpacing(nativeHandle);
+    }
+    private static native int nativeSpacing(long nativeHandle);
+
+    /** verticalSpacing（Qt verticalSpacing）。 */
+    public int verticalSpacing() {
+        return nativeVerticalSpacing(nativeHandle);
+    }
+    private static native int nativeVerticalSpacing(long nativeHandle);
+
 }
