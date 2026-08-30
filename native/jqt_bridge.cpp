@@ -753,6 +753,11 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeCreateApp(JNIEnv* env, j
         static char arg0[] = "jqt";
         static char* argv[] = { arg0, nullptr };
         g_app = new QApplication(argc, argv);
+        // 让 Qt 能找到 lib/sqldrivers 等插件：jpackage 应用目录（applicationDirPath）
+        // 与开发/测试目录（cwd）都覆盖；否则 Qt 6.11 下 libraryPaths 不含安装目录，
+        // QSqlDatabase::isDriverAvailable("SQLITE") 永远 false。
+        QCoreApplication::addLibraryPath(QCoreApplication::applicationDirPath() + "/lib");
+        QCoreApplication::addLibraryPath(QDir::currentPath() + "/lib");
 #ifdef _WIN32
         // 全局触摸→鼠标合成（覆盖所有窗口含弹层）
         static JQtPointerFilter g_pointerFilter;
@@ -9653,4 +9658,49 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QFile_nativeSymLinkTarget(JNIEnv* env, jo
     QString __jqt_ret = wgt->symLinkTarget();
     return env->NewStringUTF(__jqt_ret.toUtf8().constData());
 }
+// QSqlDatabase 手写批次（值类型连接句柄 → jqtSqlDb 查表，非生成器模板）
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlDatabase_nativeContains(JNIEnv* env, jclass, jstring connName) {
+    const char* c = connName ? env->GetStringUTFChars(connName, nullptr) : nullptr;
+    const QString name = c ? QString::fromUtf8(c) : QString();
+    if (c) env->ReleaseStringUTFChars(connName, c);
+    return QSqlDatabase::contains(name) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlDatabase_nativeIsDriverAvailable(JNIEnv* env, jclass, jstring driver) {
+    const char* d = driver ? env->GetStringUTFChars(driver, nullptr) : nullptr;
+    const QString name = d ? QString::fromUtf8(d) : QString();
+    if (d) env->ReleaseStringUTFChars(driver, d);
+    return QSqlDatabase::isDriverAvailable(name) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlDatabase_nativeDriverName(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return nullptr;
+    return env->NewStringUTF(db->driverName().toUtf8().constData());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlDatabase_nativeIsOpenError(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return JNI_FALSE;
+    return db->isOpenError() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlDatabase_nativeIsValid(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return JNI_FALSE;
+    return db->isValid() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlDatabase_nativeTransaction(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return JNI_FALSE;
+    return db->transaction() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlDatabase_nativeUserName(JNIEnv* env, jobject, jlong handle) {
+    QSqlDatabase* db = jqtSqlDb(env, handle);
+    if (!db) return nullptr;
+    return env->NewStringUTF(db->userName().toUtf8().constData());
+}
+
 

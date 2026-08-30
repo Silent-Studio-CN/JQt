@@ -138,4 +138,49 @@ public class QSqlDatabase {
     private native long nativeExec(long handle, String sql);
     private native String nativeLastError(long handle);
     private native void nativeDispose(long handle);
+
+    // ---- 手写批次（值类型连接句柄 → jqtSqlDb 查表，非生成器模板）----
+
+    /** 连接是否存在（QSqlDatabase::contains）。 */
+    public static boolean contains(String connectionName) {
+        return nativeContains(connectionName);
+    }
+
+    /** 驱动是否可用（QSqlDatabase::isDriverAvailable）。 */
+    public static boolean isDriverAvailable(String driver) {
+        return nativeIsDriverAvailable(driver);
+    }
+
+    /** 驱动名（QSqlDatabase::driverName）。 */
+    public String driverName() {
+        return nativeDriverName(nativeHandle);
+    }
+
+    /** 打开时是否出错（QSqlDatabase::isOpenError）。 */
+    public boolean isOpenError() {
+        return nativeIsOpenError(nativeHandle);
+    }
+
+    /** 连接是否有效（QSqlDatabase::isValid）。 */
+    public boolean isValid() {
+        return nativeIsValid(nativeHandle);
+    }
+
+    /** 开启事务（QSqlDatabase::transaction）。 */
+    public boolean transaction() {
+        return nativeTransaction(nativeHandle);
+    }
+
+    /** 用户名（QSqlDatabase::userName）。 */
+    public String userName() {
+        return nativeUserName(nativeHandle);
+    }
+
+    private static native boolean nativeContains(String connectionName);
+    private static native boolean nativeIsDriverAvailable(String driver);
+    private native String nativeDriverName(long handle);
+    private native boolean nativeIsOpenError(long handle);
+    private native boolean nativeIsValid(long handle);
+    private native boolean nativeTransaction(long handle);
+    private native String nativeUserName(long handle);
 }
