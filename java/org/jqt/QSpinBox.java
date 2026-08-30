@@ -115,4 +115,18 @@ public class QSpinBox extends QWidget {
     /** 无前后缀的干净文本。 */
     public String cleanText() { return nativeCleanText(nativeHandle); }
     private static native String nativeCleanText(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** displayIntegerBase（Qt displayIntegerBase）。 */
+    public int displayIntegerBase() {
+        return nativeDisplayIntegerBase(nativeHandle);
+    }
+    private static native int nativeDisplayIntegerBase(long nativeHandle);
+
+    /** setDisplayIntegerBase（Qt setDisplayIntegerBase）。 */
+    public void setDisplayIntegerBase(int arg0) {
+        nativeSetDisplayIntegerBase(nativeHandle, arg0);
+    }
+    private static native void nativeSetDisplayIntegerBase(long nativeHandle, int arg0);
+
 }

@@ -97,4 +97,36 @@ public class QMessageBox {
     private native int nativeExec(long handle);
     private native void nativeOpen(long handle);
     private native void nativeClose(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** detailedText（Qt detailedText）。 */
+    public String detailedText() {
+        return nativeDetailedText(nativeHandle);
+    }
+    private static native String nativeDetailedText(long nativeHandle);
+
+    /** informativeText（Qt informativeText）。 */
+    public String informativeText() {
+        return nativeInformativeText(nativeHandle);
+    }
+    private static native String nativeInformativeText(long nativeHandle);
+
+    /** setDetailedText（Qt setDetailedText）。 */
+    public void setDetailedText(String arg0) {
+        nativeSetDetailedText(nativeHandle, arg0);
+    }
+    private static native void nativeSetDetailedText(long nativeHandle, String arg0);
+
+    /** setInformativeText（Qt setInformativeText）。 */
+    public void setInformativeText(String arg0) {
+        nativeSetInformativeText(nativeHandle, arg0);
+    }
+    private static native void nativeSetInformativeText(long nativeHandle, String arg0);
+
+    /** text（Qt text）。 */
+    public String text() {
+        return nativeText(nativeHandle);
+    }
+    private static native String nativeText(long nativeHandle);
+
 }

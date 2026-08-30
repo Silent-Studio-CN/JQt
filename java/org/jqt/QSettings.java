@@ -62,4 +62,36 @@ public class QSettings {
         nativeClear(nativeHandle);
     }
     private native void nativeClear(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** endArray（Qt endArray）。 */
+    public void endArray() {
+        nativeEndArray(nativeHandle);
+    }
+    private static native void nativeEndArray(long nativeHandle);
+
+    /** setArrayIndex（Qt setArrayIndex）。 */
+    public void setArrayIndex(int arg0) {
+        nativeSetArrayIndex(nativeHandle, arg0);
+    }
+    private static native void nativeSetArrayIndex(long nativeHandle, int arg0);
+
+    /** setAtomicSyncRequired（Qt setAtomicSyncRequired）。 */
+    public void setAtomicSyncRequired(boolean arg0) {
+        nativeSetAtomicSyncRequired(nativeHandle, arg0);
+    }
+    private static native void nativeSetAtomicSyncRequired(long nativeHandle, boolean arg0);
+
+    /** setFallbacksEnabled（Qt setFallbacksEnabled）。 */
+    public void setFallbacksEnabled(boolean arg0) {
+        nativeSetFallbacksEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetFallbacksEnabled(long nativeHandle, boolean arg0);
+
+    /** sync（Qt sync）。 */
+    public void sync() {
+        nativeSync(nativeHandle);
+    }
+    private static native void nativeSync(long nativeHandle);
+
 }

@@ -55,4 +55,48 @@ public class QDial extends QWidget {
             h.accept(value);
         }
     }
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** notchSize（Qt notchSize）。 */
+    public int notchSize() {
+        return nativeNotchSize(nativeHandle);
+    }
+    private static native int nativeNotchSize(long nativeHandle);
+
+    /** notchTarget（Qt notchTarget）。 */
+    public double notchTarget() {
+        return nativeNotchTarget(nativeHandle);
+    }
+    private static native double nativeNotchTarget(long nativeHandle);
+
+    /** notchesVisible（Qt notchesVisible）。 */
+    public boolean notchesVisible() {
+        return nativeNotchesVisible(nativeHandle);
+    }
+    private static native boolean nativeNotchesVisible(long nativeHandle);
+
+    /** setNotchTarget（Qt setNotchTarget）。 */
+    public void setNotchTarget(double arg0) {
+        nativeSetNotchTarget(nativeHandle, arg0);
+    }
+    private static native void nativeSetNotchTarget(long nativeHandle, double arg0);
+
+    /** setNotchesVisible（Qt setNotchesVisible）。 */
+    public void setNotchesVisible(boolean arg0) {
+        nativeSetNotchesVisible(nativeHandle, arg0);
+    }
+    private static native void nativeSetNotchesVisible(long nativeHandle, boolean arg0);
+
+    /** setWrapping（Qt setWrapping）。 */
+    public void setWrapping(boolean arg0) {
+        nativeSetWrapping(nativeHandle, arg0);
+    }
+    private static native void nativeSetWrapping(long nativeHandle, boolean arg0);
+
+    /** wrapping（Qt wrapping）。 */
+    public boolean wrapping() {
+        return nativeWrapping(nativeHandle);
+    }
+    private static native boolean nativeWrapping(long nativeHandle);
+
 }

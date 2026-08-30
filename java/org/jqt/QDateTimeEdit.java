@@ -55,4 +55,84 @@ public class QDateTimeEdit extends QWidget {
             h.accept(text);
         }
     }
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** calendarPopup（Qt calendarPopup）。 */
+    public boolean calendarPopup() {
+        return nativeCalendarPopup(nativeHandle);
+    }
+    private static native boolean nativeCalendarPopup(long nativeHandle);
+
+    /** clear（Qt clear）。 */
+    public void clear() {
+        nativeClear(nativeHandle);
+    }
+    private static native void nativeClear(long nativeHandle);
+
+    /** clearMaximumDate（Qt clearMaximumDate）。 */
+    public void clearMaximumDate() {
+        nativeClearMaximumDate(nativeHandle);
+    }
+    private static native void nativeClearMaximumDate(long nativeHandle);
+
+    /** clearMaximumDateTime（Qt clearMaximumDateTime）。 */
+    public void clearMaximumDateTime() {
+        nativeClearMaximumDateTime(nativeHandle);
+    }
+    private static native void nativeClearMaximumDateTime(long nativeHandle);
+
+    /** clearMaximumTime（Qt clearMaximumTime）。 */
+    public void clearMaximumTime() {
+        nativeClearMaximumTime(nativeHandle);
+    }
+    private static native void nativeClearMaximumTime(long nativeHandle);
+
+    /** clearMinimumDate（Qt clearMinimumDate）。 */
+    public void clearMinimumDate() {
+        nativeClearMinimumDate(nativeHandle);
+    }
+    private static native void nativeClearMinimumDate(long nativeHandle);
+
+    /** clearMinimumDateTime（Qt clearMinimumDateTime）。 */
+    public void clearMinimumDateTime() {
+        nativeClearMinimumDateTime(nativeHandle);
+    }
+    private static native void nativeClearMinimumDateTime(long nativeHandle);
+
+    /** clearMinimumTime（Qt clearMinimumTime）。 */
+    public void clearMinimumTime() {
+        nativeClearMinimumTime(nativeHandle);
+    }
+    private static native void nativeClearMinimumTime(long nativeHandle);
+
+    /** currentSectionIndex（Qt currentSectionIndex）。 */
+    public int currentSectionIndex() {
+        return nativeCurrentSectionIndex(nativeHandle);
+    }
+    private static native int nativeCurrentSectionIndex(long nativeHandle);
+
+    /** sectionCount（Qt sectionCount）。 */
+    public int sectionCount() {
+        return nativeSectionCount(nativeHandle);
+    }
+    private static native int nativeSectionCount(long nativeHandle);
+
+    /** setCalendarPopup（Qt setCalendarPopup）。 */
+    public void setCalendarPopup(boolean arg0) {
+        nativeSetCalendarPopup(nativeHandle, arg0);
+    }
+    private static native void nativeSetCalendarPopup(long nativeHandle, boolean arg0);
+
+    /** setCurrentSectionIndex（Qt setCurrentSectionIndex）。 */
+    public void setCurrentSectionIndex(int arg0) {
+        nativeSetCurrentSectionIndex(nativeHandle, arg0);
+    }
+    private static native void nativeSetCurrentSectionIndex(long nativeHandle, int arg0);
+
+    /** stepBy（Qt stepBy）。 */
+    public void stepBy(int arg0) {
+        nativeStepBy(nativeHandle, arg0);
+    }
+    private static native void nativeStepBy(long nativeHandle, int arg0);
+
 }

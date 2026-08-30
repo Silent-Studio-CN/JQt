@@ -38,7 +38,11 @@ fn cmd_fetch(args: &[String]) {
         return;
     }
     let classes: Vec<&str> = args[2].split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
-    let mut out = Vec::new();
+    // 累积模式：保留 qt-classes.json 中已抓取的类（按类名去重），支持分批抓取
+    let mut out: Vec<model::QtClass> = std::fs::read_to_string("qt-classes.json")
+        .ok()
+        .and_then(|d| serde_json::from_str(&d).ok())
+        .unwrap_or_default();
     for c in &classes {
         let lower = c.to_lowercase();
         let url = format!("https://doc.qt.io/qt-6/{}-members.html", lower);
@@ -58,7 +62,11 @@ fn cmd_fetch(args: &[String]) {
                     cls.signal_names = parse::parse_signal_names(&main_html);
                 }
                 println!("{}: {} methods", cls.name, cls.methods.len());
-                out.push(cls);
+                if let Some(existing) = out.iter_mut().find(|e| e.name == cls.name) {
+                    *existing = cls;   // 同名单次刷新
+                } else {
+                    out.push(cls);
+                }
             }
             Err(e) => {
                 eprintln!("{}: 抓取失败: {}", c, e);

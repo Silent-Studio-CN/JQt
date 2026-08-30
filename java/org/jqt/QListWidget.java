@@ -236,4 +236,18 @@ public class QListWidget extends QWidget {
         if (pm != 0) nativeSetItemIcon(nativeHandle, row, pm);
     }
     private native void nativeSetItemIcon(long handle, int row, long pixmapHandle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** isSortingEnabled（Qt isSortingEnabled）。 */
+    public boolean isSortingEnabled() {
+        return nativeIsSortingEnabled(nativeHandle);
+    }
+    private static native boolean nativeIsSortingEnabled(long nativeHandle);
+
+    /** setSortingEnabled（Qt setSortingEnabled）。 */
+    public void setSortingEnabled(boolean arg0) {
+        nativeSetSortingEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetSortingEnabled(long nativeHandle, boolean arg0);
+
 }

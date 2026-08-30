@@ -40,4 +40,18 @@ public class QScrollArea extends QWidget {
     /** 内容对齐。 */
     public int alignment() { return nativeAlignment(nativeHandle); }
     private static native int nativeAlignment(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** ensureVisible（Qt ensureVisible）。 */
+    public void ensureVisible(int arg0, int arg1, int arg2, int arg3) {
+        nativeEnsureVisible(nativeHandle, arg0, arg1, arg2, arg3);
+    }
+    private static native void nativeEnsureVisible(long nativeHandle, int arg0, int arg1, int arg2, int arg3);
+
+    /** widgetResizable（Qt widgetResizable）。 */
+    public boolean widgetResizable() {
+        return nativeWidgetResizable(nativeHandle);
+    }
+    private static native boolean nativeWidgetResizable(long nativeHandle);
+
 }
