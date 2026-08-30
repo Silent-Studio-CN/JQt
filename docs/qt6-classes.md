@@ -236,3 +236,19 @@
 
 - QtWidgets：191 类，JQt 已实现 41（21.5%），手写待做 11，机器批量候选 69
 - Qt 全模块 1623 类（classes.html）；范围外：Quick/3D/Graphs/Multimedia 等
+
+## 生成器批量落地记录（jqt-gen，2026-08-30）
+
+累计 332 个直传型方法合入 31 个类（Java 方法 + JNI bridge 函数，均带"生成器批次"标记）：
+
+| 批次 | 提交 | 类 → 方法数 |
+|------|------|-------------|
+| 1 | 288d465 | QWidget 49 |
+| 2 | c222de8 | QLabel 9、QPushButton 7、QLineEdit 17、QComboBox 19、QProgressBar 11、QGroupBox 6、QFrame 6、QMainWindow 8、QToolBar 5、QStatusBar 1、QMenu 8、QAction 19、QSplitter 8、QStackedWidget 1（新建类）|
+| 3 | fd680d4 | QTabWidget 16、QDateTimeEdit 13、QListView 12、QTableWidget 8、QDial 7、QMenuBar 6、QDialog 6、QMessageBox 5、QSettings 5、QSystemTrayIcon 4、QSpinBox 2、QTreeWidget 2、QListWidget 2、QScrollArea 2、QStackedLayout 2 |
+| 4 | e3d43a9 | QFormLayout 7、QGridLayout 10、QLayout 4、QApplication 12、QSerialPort 14、QOpenGLWidget 1、QSqlQuery 9、QFile 3 |
+
+**生成器质量机制**（Rust，穷尽 match + 编译断言）：信号排除（主文档 [signal] 解析）、protected/不存在黑名单 24 项、scan 跳过批次块（幂等重生成）、javac/g++ 编译验证闭环。
+
+**已知跳过**：QTextEdit（句柄实为 QPlainTextEdit，static_cast 危险）；QFileDialog/QColorDialog/QFontDialog/QInputDialog/QClipboard/QSqlDatabase/QDir（纯静态工具类/值类型，无实例句柄）；QRadioButton/QSlider/QScrollBar/QCheckBox（直传型为 0）。
+
