@@ -115,13 +115,35 @@ public abstract class QLayout {
 
     /** 子项数量（控件 + 间距 + 嵌套布局）。 */
     public int count() { return nativeCount(nativeHandle); }
-    protected native int nativeCount(long handle);
+    private static native int nativeCount(long handle);
 
     /** 控件间距（像素）。 */
     public int spacing() { return nativeSpacing(nativeHandle); }
-    protected native int nativeSpacing(long handle);
+    private static native int nativeSpacing(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** isEmpty（Qt isEmpty）。 */
+    public boolean isEmpty() {
+        return nativeIsEmpty(nativeHandle);
+    }
+    private static native boolean nativeIsEmpty(long nativeHandle);
+
+    /** setEnabled（Qt setEnabled）。 */
+    public void setEnabled(boolean arg0) {
+        nativeSetEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetEnabled(long nativeHandle, boolean arg0);
+
+    /** unsetContentsMargins（Qt unsetContentsMargins）。 */
+    public void unsetContentsMargins() {
+        nativeUnsetContentsMargins(nativeHandle);
+    }
+    private static native void nativeUnsetContentsMargins(long nativeHandle);
+
+    /** update（Qt update）。 */
+    public void update() {
+        nativeUpdate(nativeHandle);
+    }
+    private static native void nativeUpdate(long nativeHandle);
+
 }
-
-
-
-

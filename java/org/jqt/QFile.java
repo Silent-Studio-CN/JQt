@@ -96,4 +96,24 @@ public class QFile {
     private native boolean nativeWrite(long handle, String text);
     private native String nativeReadAll(long handle);
     private native String nativeReadLine(long handle);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** supportsMoveToTrash（Qt supportsMoveToTrash）。 */
+    public boolean supportsMoveToTrash() {
+        return nativeSupportsMoveToTrash(nativeHandle);
+    }
+    private static native boolean nativeSupportsMoveToTrash(long nativeHandle);
+
+    /** symLinkTarget（Qt symLinkTarget）。 */
+    public String symLinkTarget(String arg0) {
+        return nativeSymLinkTarget(nativeHandle, arg0);
+    }
+    private static native String nativeSymLinkTarget(long nativeHandle, String arg0);
+
+    /** symLinkTarget（Qt symLinkTarget）。 */
+    public String symLinkTarget() {
+        return nativeSymLinkTarget(nativeHandle);
+    }
+    private static native String nativeSymLinkTarget(long nativeHandle);
+
 }

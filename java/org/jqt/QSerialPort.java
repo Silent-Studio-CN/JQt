@@ -227,4 +227,90 @@ public class QSerialPort {
     void nativeHandleBytesWritten(int count) {
         for (Consumer<Integer> h : bytesWrittenHandlers) h.accept(count);
     }
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** bytesToWrite（Qt bytesToWrite）。 */
+    public long bytesToWrite() {
+        return nativeBytesToWrite(nativeHandle);
+    }
+    private static native long nativeBytesToWrite(long nativeHandle);
+
+    /** canReadLine（Qt canReadLine）。 */
+    public boolean canReadLine() {
+        return nativeCanReadLine(nativeHandle);
+    }
+    private static native boolean nativeCanReadLine(long nativeHandle);
+
+    /** clearError（Qt clearError）。 */
+    public void clearError() {
+        nativeClearError(nativeHandle);
+    }
+    private static native void nativeClearError(long nativeHandle);
+
+    /** isBreakEnabled（Qt isBreakEnabled）。 */
+    public boolean isBreakEnabled() {
+        return nativeIsBreakEnabled(nativeHandle);
+    }
+    private static native boolean nativeIsBreakEnabled(long nativeHandle);
+
+    /** isDataTerminalReady（Qt isDataTerminalReady）。 */
+    public boolean isDataTerminalReady() {
+        return nativeIsDataTerminalReady(nativeHandle);
+    }
+    private static native boolean nativeIsDataTerminalReady(long nativeHandle);
+
+    /** isRequestToSend（Qt isRequestToSend）。 */
+    public boolean isRequestToSend() {
+        return nativeIsRequestToSend(nativeHandle);
+    }
+    private static native boolean nativeIsRequestToSend(long nativeHandle);
+
+    /** isSequential（Qt isSequential）。 */
+    public boolean isSequential() {
+        return nativeIsSequential(nativeHandle);
+    }
+    private static native boolean nativeIsSequential(long nativeHandle);
+
+    /** setBreakEnabled（Qt setBreakEnabled）。 */
+    public boolean setBreakEnabled(boolean arg0) {
+        return nativeSetBreakEnabled(nativeHandle, arg0);
+    }
+    private static native boolean nativeSetBreakEnabled(long nativeHandle, boolean arg0);
+
+    /** setDataTerminalReady（Qt setDataTerminalReady）。 */
+    public boolean setDataTerminalReady(boolean arg0) {
+        return nativeSetDataTerminalReady(nativeHandle, arg0);
+    }
+    private static native boolean nativeSetDataTerminalReady(long nativeHandle, boolean arg0);
+
+    /** setReadBufferSize（Qt setReadBufferSize）。 */
+    public void setReadBufferSize(long arg0) {
+        nativeSetReadBufferSize(nativeHandle, arg0);
+    }
+    private static native void nativeSetReadBufferSize(long nativeHandle, long arg0);
+
+    /** setRequestToSend（Qt setRequestToSend）。 */
+    public boolean setRequestToSend(boolean arg0) {
+        return nativeSetRequestToSend(nativeHandle, arg0);
+    }
+    private static native boolean nativeSetRequestToSend(long nativeHandle, boolean arg0);
+
+    /** setSettingsRestoredOnClose（Qt setSettingsRestoredOnClose）。 */
+    public void setSettingsRestoredOnClose(boolean arg0) {
+        nativeSetSettingsRestoredOnClose(nativeHandle, arg0);
+    }
+    private static native void nativeSetSettingsRestoredOnClose(long nativeHandle, boolean arg0);
+
+    /** settingsRestoredOnClose（Qt settingsRestoredOnClose）。 */
+    public boolean settingsRestoredOnClose() {
+        return nativeSettingsRestoredOnClose(nativeHandle);
+    }
+    private static native boolean nativeSettingsRestoredOnClose(long nativeHandle);
+
+    /** writeBufferSize（Qt writeBufferSize）。 */
+    public long writeBufferSize() {
+        return nativeWriteBufferSize(nativeHandle);
+    }
+    private static native long nativeWriteBufferSize(long nativeHandle);
+
 }

@@ -550,4 +550,78 @@ public class QApplication {
         return nativeScreenAt(pos != null ? pos.x() : 0, pos != null ? pos.y() : 0);
     }
     private static native long nativeScreenAt(int x, int y);
+
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
+    /** autoSipEnabled（Qt autoSipEnabled）。 */
+    public boolean autoSipEnabled() {
+        return nativeAutoSipEnabled(nativeHandle);
+    }
+    private static native boolean nativeAutoSipEnabled(long nativeHandle);
+
+    /** closeAllWindows（Qt closeAllWindows）。 */
+    public void closeAllWindows() {
+        nativeCloseAllWindows(nativeHandle);
+    }
+    private static native void nativeCloseAllWindows(long nativeHandle);
+
+    /** cursorFlashTime（Qt cursorFlashTime）。 */
+    public int cursorFlashTime() {
+        return nativeCursorFlashTime(nativeHandle);
+    }
+    private static native int nativeCursorFlashTime(long nativeHandle);
+
+    /** doubleClickInterval（Qt doubleClickInterval）。 */
+    public int doubleClickInterval() {
+        return nativeDoubleClickInterval(nativeHandle);
+    }
+    private static native int nativeDoubleClickInterval(long nativeHandle);
+
+    /** keyboardInputInterval（Qt keyboardInputInterval）。 */
+    public int keyboardInputInterval() {
+        return nativeKeyboardInputInterval(nativeHandle);
+    }
+    private static native int nativeKeyboardInputInterval(long nativeHandle);
+
+    /** setCursorFlashTime（Qt setCursorFlashTime）。 */
+    public void setCursorFlashTime(int arg0) {
+        nativeSetCursorFlashTime(nativeHandle, arg0);
+    }
+    private static native void nativeSetCursorFlashTime(long nativeHandle, int arg0);
+
+    /** setDoubleClickInterval（Qt setDoubleClickInterval）。 */
+    public void setDoubleClickInterval(int arg0) {
+        nativeSetDoubleClickInterval(nativeHandle, arg0);
+    }
+    private static native void nativeSetDoubleClickInterval(long nativeHandle, int arg0);
+
+    /** setKeyboardInputInterval（Qt setKeyboardInputInterval）。 */
+    public void setKeyboardInputInterval(int arg0) {
+        nativeSetKeyboardInputInterval(nativeHandle, arg0);
+    }
+    private static native void nativeSetKeyboardInputInterval(long nativeHandle, int arg0);
+
+    /** setStartDragDistance（Qt setStartDragDistance）。 */
+    public void setStartDragDistance(int arg0) {
+        nativeSetStartDragDistance(nativeHandle, arg0);
+    }
+    private static native void nativeSetStartDragDistance(long nativeHandle, int arg0);
+
+    /** setStartDragTime（Qt setStartDragTime）。 */
+    public void setStartDragTime(int arg0) {
+        nativeSetStartDragTime(nativeHandle, arg0);
+    }
+    private static native void nativeSetStartDragTime(long nativeHandle, int arg0);
+
+    /** setWheelScrollLines（Qt setWheelScrollLines）。 */
+    public void setWheelScrollLines(int arg0) {
+        nativeSetWheelScrollLines(nativeHandle, arg0);
+    }
+    private static native void nativeSetWheelScrollLines(long nativeHandle, int arg0);
+
+    /** startDragTime（Qt startDragTime）。 */
+    public int startDragTime() {
+        return nativeStartDragTime(nativeHandle);
+    }
+    private static native int nativeStartDragTime(long nativeHandle);
+
 }
