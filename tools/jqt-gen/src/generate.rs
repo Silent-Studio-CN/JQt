@@ -41,6 +41,8 @@ fn is_generatable(cls: &QtClass, m: &QtMethod) -> bool {
         || m.name == "operator"
         || m.name == "destroy"           // 危险：直接销毁对象
         || m.name == "focusPreviousChild"  // protected
+        || m.name == "focusNextChild"       // protected
+        || m.name == "hasEditFocus"         // QGraphicsWidget API（非 QWidget）
         || m.name == "focusNextPrevChild"   // protected virtual
         || m.name == "checkStateSet"        // QAbstractButton 家族 protected slot
         || m.name == "nextCheckState"       // QAbstractButton 家族 protected slot

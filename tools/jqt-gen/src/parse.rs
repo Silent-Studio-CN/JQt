@@ -116,16 +116,18 @@ pub fn parse_main_return_types(html: &str) -> std::collections::HashMap<String, 
                 }
                 let token = text[end..k].trim();
                 let is_modifier = matches!(token, "virtual" | "static" | "const" | "inline" | "override" | "Q_DECL_OVERRIDE" | "signal" | "slot");
-                if !is_modifier && !token.is_empty() && token != name {
-                    let mut rt = token.to_string();
-                    let mut k2 = end;
-                    while k2 > 0 && (b[k2 - 1] as char).is_whitespace() { k2 -= 1; }
-                    let mut e2 = k2;
-                    while e2 > 0 && (b[e2 - 1].is_ascii_alphanumeric() || b[e2 - 1] == b'_') { e2 -= 1; }
-                    let prev = text[e2..k2].trim();
-                    if matches!(prev, "virtual" | "static" | "inline" | "signal" | "slot") {
-                        rt = format!("{} {}", prev, rt);
-                    }
+                // 返回类型白名单：主页面文本噪声（如 "or"）会被误当返回类型，
+                // 导致 setVisible 等方法的 return_type="or" 而无法生成（开发者反馈"JQt 没有 setVisible"）。
+                let is_valid_ret = matches!(token,
+                    "void" | "bool" | "int" | "uint" | "qint32" | "quint32" | "double" | "qreal" | "float"
+                    | "qint64" | "quint64" | "qlonglong" | "QString" | "char" | "QList" | "QByteArray"
+                    | "QStringList" | "QPoint" | "QPointF" | "QRect" | "QRectF" | "QSize" | "QSizeF"
+                    | "QColor" | "QIcon" | "QPixmap" | "QFont" | "QCursor" | "QPalette" | "QBrush"
+                    | "QPen" | "QWidget" | "QObject" | "QAction" | "QMenu" | "QImage" | "QVariant"
+                    | "QLayout" | "QModelIndex" | "QTime" | "QDate" | "QDateTime" | "QUrl" | "QKeySequence");
+                if !is_modifier && !token.is_empty() && token != name && is_valid_ret {
+                    // 只保留纯类型（virtual/static 等修饰符丢弃——"virtual void" 会导致 java_type 不匹配）
+                    let rt = token.to_string();
                     out.insert(name.to_string(), rt);
                 }
             }
