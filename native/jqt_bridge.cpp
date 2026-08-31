@@ -80,7 +80,8 @@ typedef unsigned long (*JQtMsgUL)(id, SEL);               // styleMask
 typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #define JQT_OBJC_CAST(FN) reinterpret_cast<FN>(objc_msgSend)
 #endif
-#if defined(__linux__)
+// Android 是 __linux__ 但无 QtDBus 模块（Qt Android 平台不支持 D-Bus）
+#if defined(__linux__) && !defined(Q_OS_ANDROID)
 #include <QtDBus>
 #endif
 
