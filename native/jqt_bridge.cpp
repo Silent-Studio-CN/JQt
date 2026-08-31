@@ -32,9 +32,24 @@
 #include <windowsx.h>
 #include <dwmapi.h>
 #include <objbase.h>
-// MinGW 旧头可能缺触摸指针消息常量
-#ifndef WM_POINTERCANCEL
-#define WM_POINTERCANCEL 0x0249
+// MinGW/llvm-mingw 头可能缺触摸指针消息常量
+#ifndef WM_POINTERUPDATE
+#define WM_POINTERUPDATE 0x0245
+#endif
+#ifndef WM_POINTERDOWN
+#define WM_POINTERDOWN 0x0246
+#endif
+#ifndef WM_POINTERUP
+#define WM_POINTERUP 0x0247
+#endif
+#ifndef WM_POINTERENTER
+#define WM_POINTERENTER 0x0249
+#endif
+#ifndef WM_POINTERLEAVE
+#define WM_POINTERLEAVE 0x024A
+#endif
+#ifndef WM_POINTERCAPTURECHANGED
+#define WM_POINTERCAPTURECHANGED 0x024C
 #endif
 #endif
 
@@ -444,7 +459,10 @@ public:
                         // 系统原生拖动（DWM 合成器直通，内容位图整体搬移，
                         // 亚克力/阴影作为内容不重算——这才是跟手路径）。
                         // 任何应用层 SetWindowPos 拖动都会触发 DWM 重合成 → 卡。
-                        const UINT dpi = GetDpiForWindow(msg->hwnd);
+                        // llvm-mingw 的 winuser.h 将 GetDpiForWindow 声明为 HWND 返回（头文件差异）；
+                        // 统一经 uintptr_t 强转兼容 GCC/Clang 双工具链（实际返回值是 UINT）。
+                        const UINT dpi = static_cast<UINT>(
+                            reinterpret_cast<uintptr_t>(GetDpiForWindow(msg->hwnd)));
                         const double dpr = dpi > 0 ? dpi / 96.0 : 1.0;
                         RECT rc;
                         GetClientRect(msg->hwnd, &rc);
