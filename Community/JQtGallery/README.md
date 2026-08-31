@@ -3,12 +3,12 @@
 Full-featured JQt demo: themes / widgets / motion / window / v0.5+ widgets.
 
 **Versioning convention (since v0.6.0):**
-- Root directory = latest version (currently v0.7.4 compatible)
+- Root directory = latest version (currently v0.7.5 compatible)
 - Old versions archived in subdirectories: v5.0/
 
 | Version | Compatible JQt | Notes |
 |---------|---------------|-------|
-| root    | v0.7.4+        | Latest: v0.6 L1 + Exclusive Kit + Universal Kit + GPU (QOpenGLWidget) + QSerialPort |
+| root    | v0.7.5+        | Latest: v0.6 L1 + Exclusive Kit + Universal Kit + GPU + Serial + value types (60 classes) |
 | v5.0/   | v0.5.x         | Five sections: theme/widgets/motion/window/v0.5 widgets, 16:9 window |
 
 ## Sections (pivot navigation)
@@ -46,11 +46,16 @@ Full-featured JQt demo: themes / widgets / motion / window / v0.5+ widgets.
    ① QOpenGLWidget (onInitialize/onPaint/onResized callbacks, clear color, repaint)
    ② QSerialPort (availablePorts/configure/open/write, graceful no-device failure)
    (auto demo clicks these after switching to section 8)
+10. v0.7.5 Generator-Kit value types:
+    ① QStackedWidget count  ② QJson build/parse/array
+    ③ QUuid + QUrl parse    ④ QDateTime/QDate/QTime
+    ⑤ QFont/QPixmap/QImage  ⑥ QInputDialog instance (open non-modal)
+    (auto demo clicks these after switching to section 9)
 
 ## Build
 
-    javac -encoding UTF-8 -cp jqt-0.7.4-Universal-Kit.jar;theme-pack -d out JQtGallery.java
-    java --enable-native-access=ALL-UNNAMED -DQT_PLUGIN_PATH=<runtime>/plugins -Djava.library.path=<runtime> -cp "out;jqt-0.7.4-Universal-Kit.jar;theme-pack" JQtGallery
+    javac -encoding UTF-8 -cp jqt-0.7.5-Generator-Kit.jar;theme-pack -d out JQtGallery.java
+    java --enable-native-access=ALL-UNNAMED -DQT_PLUGIN_PATH=<runtime>/plugins -Djava.library.path=<runtime> -cp "out;jqt-0.7.5-Generator-Kit.jar;theme-pack" JQtGallery
 
 Themes: NordTheme/SolarizedTheme/TerminalTheme (in this dir, version-independent).
 
