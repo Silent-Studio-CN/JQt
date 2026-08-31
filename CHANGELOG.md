@@ -12,6 +12,26 @@
 <a id="zh"></a>
 ## 中文版
 
+### v0.7.5（2026-08-31）— 生成器批量落地 + JNI 链接修复 + Rust 构建器
+
+**生成器批量落地（jqt-gen，332 个直传型方法 / 31 个类）**：
+- batch 1-4：QWidget 49 + QLabel/QPushButton/QLineEdit/QComboBox/QProgressBar/QGroupBox/QFrame/QMainWindow/QToolBar/QStatusBar/QMenu/QAction/QSplitter/QStackedWidget（新建类）+ QTabWidget/QDateTimeEdit/QListView/QTableWidget/QDial/QMenuBar/QDialog/QMessageBox/QSettings/QSystemTrayIcon/QSpinBox/QTreeWidget/QListWidget/QScrollArea/QStackedLayout + QFormLayout/QGridLayout/QLayout/QApplication/QSerialPort/QOpenGLWidget/QSqlQuery/QFile
+- 生成器质量机制：信号排除（主文档 [signal] 解析）、protected/不存在黑名单 24 项、重载 native 后缀（javac -h `__JI` 等）、scan 幂等（批次块跳过）
+
+**JNI 链接重大修复**：JDK 26 的 jni.h 在 C++ 模式下 jclass(_jclass*) ≠ jobject(_jobject*)——生成器模板历史版本用 jobject 导致 332 个生成方法全部被 C++ mangle（运行时 UnsatisfiedLinkError，此前从未暴露）。修复：批次区统一 jclass + 生成器模板修正 + QApplication 句柄注册 + QLayout native 私有化。
+
+**QInputDialog 实例模式**：纯静态工具类 → 实例构造 + exec()/dispose()，复用生成器 32 个直传方法（setLabelText/setIntRange/setDoubleRange 等）。
+
+**QSqlDatabase 手写批次**：contains/isDriverAvailable/driverName/isOpenError/isValid/transaction/userName（值类型连接句柄，jqtSqlDb 查表）；修复 SQLite 插件路径回归（Qt 6.11 默认 libraryPaths 不含安装目录 → 注册 lib/ 路径，jpackage/开发目录双覆盖）。
+
+**Rust 独立构建器 jqt-build-runner**：无 PowerShell 层（Command.arg() 参数数组直传），5 步镜像 build.ps1（javac → g++ → windeployqt → 插件 → 许可），失败即时报错；`--libstdcxx` 开关（llvm-mingw 用）。
+
+**跨工具链兼容**：llvm-mingw 17 头文件差异修复（_WIN32_WINNT 0x0A00 暴露触摸 API、WM_POINTER* 常量、GetDpiForWindow 声明）；GCC 13（mingw1310）与 Clang（llvm-mingw）双工具链可构建；删除过期 org_jqt_QColor.h include（干净 clone 可构建）。
+
+**远程构建链**：Windows Server 2025 完整环境（Qt 6.11.2 双 kit + MinGW 13.1 + JDK 26 + Git），agent 通道（frp）远程构建/冒烟验证全通过。
+
+**验证**：SmokeGenApi 16/16（batch 1-4 真实运行时调用）、SmokeInputDialog 13/13、SmokeSqlDb 10/10（SQLite 事务/DDL）、SmokeV074 PASS、完整 demo ✅（本机 + 远程双跑）；dll 导出 mangle 369 → 8（剩余为 Java 无声明的无害孤儿）。
+
 ### v0.7.4-Universal-Kit（2026-08-29）— QSerialPort 完整绑定（工业串口）
 
 **QSerialPort（Qt SerialPort 模块，完整实现）**：
