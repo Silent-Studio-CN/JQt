@@ -12,7 +12,10 @@
 <a id="zh"></a>
 ## 中文版
 
-### v0.7.5（2026-08-31）— 生成器批量落地 + JNI 链接修复 + Rust 构建器
+### v0.7.5-Generator-Kit（2026-08-31）— JQt 自动化生产时代（API 机器生成，非机翻）
+
+> **JQt 自动化**：jqt-gen 生成器是**自动化工程**——语义筛选（信号/protected/不存在 API 全部剔除）、金标准 diff 收敛、javac/g++ 编译断言闭环、重载 JNI 后缀精确匹配。机器生产，人只做精修——**不是照搬 Qt 的机械翻译**。
+> **我们对用户和开发者永葆初衷**：每一个生成的 API 都经过编译验证与运行时冒烟，交付的是可用、可靠、可维护的绑定。
 
 **生成器批量落地（jqt-gen，332 个直传型方法 / 31 个类）**：
 - batch 1-4：QWidget 49 + QLabel/QPushButton/QLineEdit/QComboBox/QProgressBar/QGroupBox/QFrame/QMainWindow/QToolBar/QStatusBar/QMenu/QAction/QSplitter/QStackedWidget（新建类）+ QTabWidget/QDateTimeEdit/QListView/QTableWidget/QDial/QMenuBar/QDialog/QMessageBox/QSettings/QSystemTrayIcon/QSpinBox/QTreeWidget/QListWidget/QScrollArea/QStackedLayout + QFormLayout/QGridLayout/QLayout/QApplication/QSerialPort/QOpenGLWidget/QSqlQuery/QFile

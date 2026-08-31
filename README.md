@@ -88,7 +88,7 @@ dependencyResolutionManagement {
 ```gradle
 // build.gradle
 dependencies {
-    implementation 'com.github.Silent-Studio-CN:JQt:0.7.5'
+    implementation 'com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit'
 }
 ```
 
@@ -150,7 +150,7 @@ codename only changes per major feature line.
 |---------|---------|-----------|
 | GitHub Releases | `v0.7.4-Universal-Kit` | release assets |
 | Maven Central | `0.7.4` (or `0.7.4-Universal-Kit`, identical) | `io.github.silent-xiaomiao:jqt:0.7.5` |
-| JitPack | `0.7.4-Universal-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.5` |
+| JitPack | `0.7.4-Universal-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit` |
 
 Latest: [v0.7.4-Universal-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v0.7.4-Universal-Kit)
 
