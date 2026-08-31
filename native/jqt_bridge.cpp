@@ -7600,6 +7600,7 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QWidget_nativeAccessibleDescription(JNIEn
     return env->NewStringUTF(__jqt_ret.toUtf8().constData());
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 JNIEXPORT jstring JNICALL Java_org_jqt_QWidget_nativeAccessibleIdentifier(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
@@ -7720,6 +7721,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleDescription(JNIEn
 
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleIdentifier(JNIEnv* env, jclass /*thiz*/, jlong handle, jstring arg0) {
     QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
     if (wgt == nullptr) { return; }
@@ -7958,6 +7960,10 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QLabel_nativeHasScaledContents(JNIEnv* e
     if (wgt == nullptr) { return 0; }
     return wgt->hasScaledContents();
 }
+
+#endif // Java_org_jqt_QWidget_nativeSetAccessibleIdentifier - Qt 6.9+ API
+
+#endif // Java_org_jqt_QWidget_nativeAccessibleIdentifier - Qt 6.9+ API
 
 JNIEXPORT jint JNICALL Java_org_jqt_QLabel_nativeHeightForWidth(JNIEnv* env, jclass /*thiz*/, jlong handle, jint arg0) {
     QLabel* wgt = static_cast<QLabel*>(requireHandle(env, handle));
