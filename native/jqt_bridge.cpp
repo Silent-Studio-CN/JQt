@@ -26,6 +26,14 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+// 目标 Windows 10 API 集：llvm-mingw 默认 _WIN32_WINNT 过低（0x0601），
+// POINTER_INFO/GetDpiForWindow 等触摸 API 不被 winuser.h 暴露。
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0A00
+#endif
+#ifndef WINVER
+#define WINVER 0x0A00
+#endif
 #include <windows.h>
 #include <shobjidl.h>
 #include <winreg.h>
