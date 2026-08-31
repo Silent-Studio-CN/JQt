@@ -774,6 +774,7 @@ public class JQtGallery {
             w.setFrameless(false);
             w.setBorderWidth(2);
             w.hide(); w.show();   // 强制重建窗口，原生边框立即生效
+            w.setFixedSize(1280, 720);   // 重建后恢复固定尺寸，防止客户区变化导致布局漂移
             fb61.setText("已切原生边框（DWM 边框可见，宽 2）");
             log("frameless=false border=2");
         }));
@@ -781,6 +782,7 @@ public class JQtGallery {
             w.setFrameless(true);
             w.setBorderWidth(0);
             w.hide(); w.show();   // 强制重建，阴影恢复
+            w.setFixedSize(1280, 720);
             fb61.setText("已切回无边框");
             log("frameless=true border=0");
         }));
@@ -1264,7 +1266,14 @@ public class JQtGallery {
         // 窗口几何信息每秒刷新（v0.3 几何查询 API）
         scheduleGeo(1000);
 
-        win.onClose(() -> app.quit());
+        win.onClose(() -> {
+            System.out.println("[G] onClose -> quit (窗口关闭，正常退出路径)");
+            appRunning = false;   // 停止 scheduleGeo 递归（防退出后定时器回调崩溃）
+            app.quit();
+        });
+        // 兜底：正常退出时打印确认（诊断 code=-1 用；若此日志缺失说明 JVM 在 main 返回前崩溃）
+        Runtime.getRuntime().addShutdownHook(new Thread(() ->
+            System.out.println("[G] JVM shutdown hook running (main 已正常结束)")));
         applyTheme("nord");     // 初始主题：Nord 北极蓝
         win.show();
         win.fadeIn(300);
@@ -1387,9 +1396,13 @@ public class JQtGallery {
         } catch (Exception ignored) { }
     }
 
+    static volatile boolean appRunning = true;   // 窗口关闭后停止递归调度（防退出后定时器回调）
+
     // 每秒刷新窗口几何信息（位置/尺寸/可见性）+ QSS 热重载检查
     static void scheduleGeo(long delay) {
+        if (!appRunning) return;
         app.schedule(() -> {
+            if (!appRunning) return;
             geoLabel.setText("几何信息: x=" + w.x() + " y=" + w.y() + " 宽=" + w.width() + " 高=" + w.height()
                     + " 可见=" + w.isVisible());
             checkQssHotReload();
