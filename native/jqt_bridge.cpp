@@ -7602,12 +7602,15 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QWidget_nativeAccessibleDescription(JNIEn
     return env->NewStringUTF(__jqt_ret.toUtf8().constData());
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 JNIEXPORT jstring JNICALL Java_org_jqt_QWidget_nativeAccessibleIdentifier(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     QString __jqt_ret = wgt->accessibleIdentifier();
     return env->NewStringUTF(__jqt_ret.toUtf8().constData());
 }
+
+#endif // Java_org_jqt_QWidget_nativeAccessibleIdentifier - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
 
 JNIEXPORT jstring JNICALL Java_org_jqt_QWidget_nativeAccessibleName(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
@@ -7702,6 +7705,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleDescription(JNIEn
 
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleIdentifier(JNIEnv* env, jclass /*thiz*/, jlong handle, jstring arg0) {
     QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
     if (wgt == nullptr) { return; }
@@ -7709,6 +7713,8 @@ JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleIdentifier(JNIEnv
     wgt->setAccessibleIdentifier(QString::fromUtf8(arg0_utf));    env->ReleaseStringUTFChars(arg0, arg0_utf);
 
 }
+
+#endif // Java_org_jqt_QWidget_nativeSetAccessibleIdentifier - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
 
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAccessibleName(JNIEnv* env, jclass /*thiz*/, jlong handle, jstring arg0) {
     QWidget* wgt = static_cast<QWidget*>(requireHandle(env, handle));
@@ -9569,23 +9575,32 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetRequestToSend(JNIEn
     return wgt->setRequestToSend(arg0);
 }
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetSettingsRestoredOnClose(JNIEnv* env, jclass /*thiz*/, jlong handle, jboolean arg0) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return; }
     wgt->setSettingsRestoredOnClose(arg0);
 }
 
+#endif // Java_org_jqt_QSerialPort_nativeSetSettingsRestoredOnClose - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSettingsRestoredOnClose(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->settingsRestoredOnClose();
 }
 
+#endif // Java_org_jqt_QSerialPort_nativeSettingsRestoredOnClose - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeWriteBufferSize(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->writeBufferSize();
 }
+
+#endif // Java_org_jqt_QSerialPort_nativeWriteBufferSize - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
 
 
 // 生成器批次（jqt-gen 自动生成，直传型）
@@ -9656,11 +9671,14 @@ JNIEXPORT jint JNICALL Java_org_jqt_QSqlQuery_nativeSize(JNIEnv* env, jclass /*t
 
 
 // 生成器批次（jqt-gen 自动生成，直传型）
+#if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
 JNIEXPORT jboolean JNICALL Java_org_jqt_QFile_nativeSupportsMoveToTrash(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QFile* wgt = static_cast<QFile*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->supportsMoveToTrash();
 }
+
+#endif // Java_org_jqt_QFile_nativeSupportsMoveToTrash - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
 
 JNIEXPORT jstring JNICALL Java_org_jqt_QFile_nativeSymLinkTarget__JLjava_lang_String_2(JNIEnv* env, jclass /*thiz*/, jlong handle, jstring arg0) {
     QFile* wgt = static_cast<QFile*>(requireHandle(env, handle));
