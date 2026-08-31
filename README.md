@@ -53,8 +53,8 @@ L1 (common API) is **92.7% complete**; industrial modules and platform exclusive
 Grab the latest release zip (self-contained: jar + native lib + Qt runtime):
 
 ```bash
-# Windows: jqt-0.7.4-Universal-Kit-windows-x64.zip → extract → cd lib
-java -Djava.library.path=. -cp "jqt-0.7.4-Universal-Kit.jar;.." Hello
+# Windows: jqt-0.7.5-windows-x64.zip → extract → cd lib
+java -Djava.library.path=. -cp "jqt-0.7.5.jar;.." Hello
 # Linux / macOS: same pattern, or set LD_LIBRARY_PATH / DYLD_LIBRARY_PATH to lib/
 ```
 
@@ -68,7 +68,7 @@ java -Djava.library.path=. -cp "jqt-0.7.4-Universal-Kit.jar;.." Hello
 ```gradle
 // build.gradle
 dependencies {
-    implementation 'io.github.silent-xiaomiao:jqt:0.7.4'
+    implementation 'io.github.silent-xiaomiao:jqt:0.7.5'
 }
 ```
 
@@ -88,7 +88,7 @@ dependencyResolutionManagement {
 ```gradle
 // build.gradle
 dependencies {
-    implementation 'com.github.Silent-Studio-CN:JQt:0.7.4-Universal-Kit'
+    implementation 'com.github.Silent-Studio-CN:JQt:0.7.5'
 }
 ```
 
@@ -149,15 +149,15 @@ codename only changes per major feature line.
 | Channel | Version | Coordinate |
 |---------|---------|-----------|
 | GitHub Releases | `v0.7.4-Universal-Kit` | release assets |
-| Maven Central | `0.7.4` (or `0.7.4-Universal-Kit`, identical) | `io.github.silent-xiaomiao:jqt:0.7.4` |
-| JitPack | `0.7.4-Universal-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.4-Universal-Kit` |
+| Maven Central | `0.7.4` (or `0.7.4-Universal-Kit`, identical) | `io.github.silent-xiaomiao:jqt:0.7.5` |
+| JitPack | `0.7.4-Universal-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.5` |
 
 Latest: [v0.7.4-Universal-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v0.7.4-Universal-Kit)
 
 | Asset | Platform |
 |-------|----------|
-| `jqt-0.7.4-Universal-Kit.jar` | all (Java API) |
-| `jqt-0.7.4-Universal-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
+| `jqt-0.7.5.jar` | all (Java API) |
+| `jqt-0.7.5-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 bare libs (both Qt versions) |
 | `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
 | `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux (both versions) |
