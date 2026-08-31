@@ -460,9 +460,9 @@ public:
                         // 亚克力/阴影作为内容不重算——这才是跟手路径）。
                         // 任何应用层 SetWindowPos 拖动都会触发 DWM 重合成 → 卡。
                         // llvm-mingw 的 winuser.h 将 GetDpiForWindow 声明为 HWND 返回（头文件差异）；
-                        // 统一经 uintptr_t 强转兼容 GCC/Clang 双工具链（实际返回值是 UINT）。
+                        // static_cast<uintptr_t> 对 GCC(UINT)/Clang(HWND*) 均合法（实际返回值是 UINT）。
                         const UINT dpi = static_cast<UINT>(
-                            reinterpret_cast<uintptr_t>(GetDpiForWindow(msg->hwnd)));
+                            static_cast<uintptr_t>(GetDpiForWindow(msg->hwnd)));
                         const double dpr = dpi > 0 ? dpi / 96.0 : 1.0;
                         RECT rc;
                         GetClientRect(msg->hwnd, &rc);
