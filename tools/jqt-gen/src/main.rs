@@ -142,9 +142,9 @@ fn scan_jqt_implemented() -> std::collections::HashMap<String, std::collections:
                         // 生成器批次块（标记后即类尾）：视为缺口，replace 合入时整体替换
                         if t.contains("生成器批次") { break; }
                         if t.starts_with("public") && t.contains('(') {
-                            // 方法名 = 最后一个含 '(' 的 token 的 '(' 前部分（兼容单行/多行签名）
+                            // 方法名 = 正序第一个含 '(' 的 token（声明先于方法体；rev 会误取方法体里的 native 调用名）
                             let mut name = String::new();
-                            for w in t.split_whitespace().rev() {
+                            for w in t.split_whitespace() {
                                 if w.contains('(') {
                                     name = w.split('(').next().unwrap_or("").to_string();
                                     break;

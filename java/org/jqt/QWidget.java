@@ -704,10 +704,7 @@ public abstract class QWidget {
         QIcon icon = pixmapHandle != 0 ? new QIcon(new QPixmap(pixmapHandle)) : new QIcon();
         for (java.util.function.Consumer<QIcon> h : windowIconChangedHandlers) h.accept(icon);
     }
-
-    
-    // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
-
+// ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** accessibleDescription（Qt accessibleDescription）。 */
     public String accessibleDescription() {
         return nativeAccessibleDescription(nativeHandle);
@@ -725,6 +722,12 @@ public abstract class QWidget {
         return nativeAccessibleName(nativeHandle);
     }
     private static native String nativeAccessibleName(long nativeHandle);
+
+    /** addAction（Qt addAction）。 */
+    public void addAction(String arg0) {
+        nativeAddAction(nativeHandle, arg0);
+    }
+    private static native void nativeAddAction(long nativeHandle, String arg0);
 
     /** adjustSize（Qt adjustSize）。 */
     public void adjustSize() {
@@ -756,6 +759,12 @@ public abstract class QWidget {
     }
     private static native int nativeHeightForWidth(long nativeHandle, int arg0);
 
+    /** isHidden（Qt isHidden）。 */
+    public boolean isHidden() {
+        return nativeIsHidden(nativeHandle);
+    }
+    private static native boolean nativeIsHidden(long nativeHandle);
+
     /** isMaximized（Qt isMaximized）。 */
     public boolean isMaximized() {
         return nativeIsMaximized(nativeHandle);
@@ -767,6 +776,12 @@ public abstract class QWidget {
         return nativeIsModal(nativeHandle);
     }
     private static native boolean nativeIsModal(long nativeHandle);
+
+    /** isWindow（Qt isWindow）。 */
+    public boolean isWindow() {
+        return nativeIsWindow(nativeHandle);
+    }
+    private static native boolean nativeIsWindow(long nativeHandle);
 
     /** isWindowModified（Qt isWindowModified）。 */
     public boolean isWindowModified() {
@@ -821,6 +836,12 @@ public abstract class QWidget {
         nativeSetAccessibleName(nativeHandle, arg0);
     }
     private static native void nativeSetAccessibleName(long nativeHandle, String arg0);
+
+    /** setBaseSize（Qt setBaseSize）。 */
+    public void setBaseSize(int arg0, int arg1) {
+        nativeSetBaseSize(nativeHandle, arg0, arg1);
+    }
+    private static native void nativeSetBaseSize(long nativeHandle, int arg0, int arg1);
 
     /** setDisabled（Qt setDisabled）。 */
     public void setDisabled(boolean arg0) {
@@ -894,6 +915,18 @@ public abstract class QWidget {
     }
     private static native void nativeSetToolTipDuration(long nativeHandle, int arg0);
 
+    /** setUpdatesEnabled（Qt setUpdatesEnabled）。 */
+    public void setUpdatesEnabled(boolean arg0) {
+        nativeSetUpdatesEnabled(nativeHandle, arg0);
+    }
+    private static native void nativeSetUpdatesEnabled(long nativeHandle, boolean arg0);
+
+    /** setVisible（Qt setVisible）。 */
+    public void setVisible(boolean arg0) {
+        nativeSetVisible(nativeHandle, arg0);
+    }
+    private static native void nativeSetVisible(long nativeHandle, boolean arg0);
+
     /** setWhatsThis（Qt setWhatsThis）。 */
     public void setWhatsThis(String arg0) {
         nativeSetWhatsThis(nativeHandle, arg0);
@@ -911,6 +944,12 @@ public abstract class QWidget {
         nativeSetWindowModified(nativeHandle, arg0);
     }
     private static native void nativeSetWindowModified(long nativeHandle, boolean arg0);
+
+    /** setWindowRole（Qt setWindowRole）。 */
+    public void setWindowRole(String arg0) {
+        nativeSetWindowRole(nativeHandle, arg0);
+    }
+    private static native void nativeSetWindowRole(long nativeHandle, String arg0);
 
     /** showFullScreen（Qt showFullScreen）。 */
     public void showFullScreen() {
