@@ -1,5 +1,8 @@
 # Experience Tells Us — JQt 开发经验与踩坑实录
 
+**🌐 语言 / Language / 言語 / Sprache:**
+[简体中文](README.md) · [繁體中文](README.zh-Hant.md) · [English](README.en.md) · [日本語](README.ja.md) · [Deutsch](README.de.md)
+
 > 本目录沉淀 JQt（Java bindings for Qt）开发过程中积累的经验教训。
 > 内容聚焦** JQt 开发本身**：Java API 设计、JNI/native 桥接、Qt 行为陷阱、
 > Windows 平台特性、主题渲染、打包分发、社区工程约定。
