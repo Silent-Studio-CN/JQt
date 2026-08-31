@@ -9603,12 +9603,14 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeWriteBufferSize(JNIEnv* e
 #endif // Java_org_jqt_QSerialPort_nativeWriteBufferSize - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
 
 
-// 生成器批次（jqt-gen 自动生成，直传型）
+// 生成器批次（jqt-gen 自动生成，直传型）——QOpenGLWidget 仅 Windows x64/Linux（v0.7.3 平台降级一致）
+#if (defined(_WIN32) && !defined(_M_ARM64)) || defined(__linux__)
 JNIEXPORT jboolean JNICALL Java_org_jqt_QOpenGLWidget_nativeIsValid(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QOpenGLWidget* wgt = static_cast<QOpenGLWidget*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->isValid();
 }
+#endif // QOpenGLWidget 平台守卫
 
 
 // 生成器批次（jqt-gen 自动生成，直传型）
