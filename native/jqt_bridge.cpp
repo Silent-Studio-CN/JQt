@@ -265,7 +265,8 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 #include "generated/org_jqt_QSlider.h"
 #include "generated/org_jqt_QWidget.h"
 #include "generated/org_jqt_QMainWindow.h"
-#include "generated/org_jqt_QColor.h"
+// QColor.java 已无 native 方法（值对象 Java 化重构），javac -h 不再生成该头；
+// 本机曾依赖历史残留头文件编译通过，干净 clone 会失败——必须删除此 include。
 #include "generated/org_jqt_QPrinter.h"
 #include "generated/org_jqt_QOpenGLWidget.h"
 #include "generated/org_jqt_QSerialPort.h"
