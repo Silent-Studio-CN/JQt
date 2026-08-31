@@ -28,12 +28,12 @@
 
 | 文件 | 主题 |
 |------|------|
-| [01-window-native.md](01-window-native.md) | Win32 Window System and native Layer (Complete Solution to the setFrameless Pitfall)
-| [02-theme-qss.md](02-theme-qss.md) | Theme Rendering and QSS (Template Variables/Priorities/Residues)
-| [03-java-api.md](03-java-api.md) | Java API Design and Usage Traps
-| [04-lifecycle-threads.md](04-lifecycle-threads.md) | Object lifecycle, thread, signal callback
-| [05-packaging.md](05-packaging.md) | Packaging, distribution and runtime deployment
-| [06-community.md](06-community.md) | Community engineering agreement and release process
-| [07-probes.md](07-probes.md) | Probe Testing Methodology (Reproducing native Issues)
+| [01-window-native.md](01-window-native.en.md) | Win32 Window System and native Layer (Complete Solution to the setFrameless Pitfall)
+| [02-theme-qss.md](02-theme-qss.en.md) | Theme Rendering and QSS (Template Variables/Priorities/Residues)
+| [03-java-api.md](03-java-api.en.md) | Java API Design and Usage Traps
+| [04-lifecycle-threads.md](04-lifecycle-threads.en.md) | Object lifecycle, thread, signal callback
+| [05-packaging.md](05-packaging.en.md) | Packaging, distribution and runtime deployment
+| [06-community.md](06-community.en.md) | Community engineering agreement and release process
+| [07-probes.md](07-probes.en.md) | Probe Testing Methodology (Reproducing native Issues)
 | [08-setFrameless-case.md](08-setFrameless-case.md) | setFrameless Repair Full Record (native Troubleshooting Example)
 

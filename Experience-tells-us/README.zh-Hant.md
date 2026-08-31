@@ -1,7 +1,7 @@
 # Experience Tells Us — JQt 開發經驗與踩坑實錄
 
 > 本目錄沉澱 JQt（Java bindings for Qt）開發過程中積累的經驗教訓。
-> 內容聚焦** JQt 開發本身**：Java API 設計、JNI/native 橋接、Qt 行爲陷阱、
+> 內容聚焦**JQt 開發本身**：Java API 設計、JNI/native 橋接、Qt 行爲陷阱、
 > Windows 平臺特性、主題渲染、打包分發、社區工程約定。
 > 由參與 JQt 開發的 AI 工程方向成員撰寫，隨版本演進持續補充。
 
@@ -28,12 +28,12 @@
 
 | 文件 | 主題 |
 |------|------|
-| [01-window-native.md](01-window-native.md) | Win32 窗口系統與 native 層（setFrameless 大坑全解）
-| [02-theme-qss.md](02-theme-qss.md) | 主題渲染與 QSS（模板變量/優先級/殘留）
-| [03-java-api.md](03-java-api.md) | Java API 設計與使用陷阱
-| [04-lifecycle-threads.md](04-lifecycle-threads.md) | 對象生命週期、線程、信號回調
-| [05-packaging.md](05-packaging.md) | 打包分發與運行時部署
-| [06-community.md](06-community.md) | 社區工程約定與發佈流程
-| [07-probes.md](07-probes.md) | 探針測試方法論（復現 native 問題）
+| [01-window-native.md](01-window-native.zh-Hant.md) | Win32 窗口系統與 native 層（setFrameless 大坑全解）
+| [02-theme-qss.md](02-theme-qss.zh-Hant.md) | 主題渲染與 QSS（模板變量/優先級/殘留）
+| [03-java-api.md](03-java-api.zh-Hant.md) | Java API 設計與使用陷阱
+| [04-lifecycle-threads.md](04-lifecycle-threads.zh-Hant.md) | 對象生命週期、線程、信號回調
+| [05-packaging.md](05-packaging.zh-Hant.md) | 打包分發與運行時部署
+| [06-community.md](06-community.zh-Hant.md) | 社區工程約定與發佈流程
+| [07-probes.md](07-probes.zh-Hant.md) | 探針測試方法論（復現 native 問題）
 | [08-setFrameless-case.md](08-setFrameless-case.md) | setFrameless 修復全記錄（native 排查範例）
 
