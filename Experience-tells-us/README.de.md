@@ -29,11 +29,11 @@
 
 | Datei | Thema |
 |------|------|
-| [01-window-native.md](01-window-native.md) | Win32-Fenstersystem & native Layer (setFrameless komplett gelöst) |
-| [02-theme-qss.md](02-theme-qss.md) | Theme-Rendering & QSS (Template-Variablen/Priorität/Residuen) |
-| [03-java-api.md](03-java-api.md) | Java-API-Design & Nutzungsfallen |
-| [04-lifecycle-threads.md](04-lifecycle-threads.md) | Objektlebenszyklus, Threads, Signal-Callbacks |
-| [05-packaging.md](05-packaging.md) | Packaging/Distribution & Runtime-Deployment |
-| [06-community.md](06-community.md) | Community-Konventionen & Release-Prozess |
-| [07-probes.md](07-probes.md) | Probe-Testmethodik (native Probleme reproduzieren) |
+| [01-window-native.md](01-window-native.de.md) | Win32-Fenstersystem & native Layer (setFrameless komplett gelöst) |
+| [02-theme-qss.md](02-theme-qss.de.md) | Theme-Rendering & QSS (Template-Variablen/Priorität/Residuen) |
+| [03-java-api.md](03-java-api.de.md) | Java-API-Design & Nutzungsfallen |
+| [04-lifecycle-threads.md](04-lifecycle-threads.de.md) | Objektlebenszyklus, Threads, Signal-Callbacks |
+| [05-packaging.md](05-packaging.de.md) | Packaging/Distribution & Runtime-Deployment |
+| [06-community.md](06-community.de.md) | Community-Konventionen & Release-Prozess |
+| [07-probes.md](07-probes.de.md) | Probe-Testmethodik (native Probleme reproduzieren) |
 | [08-setFrameless-case.md](08-setFrameless-case.md) | setFrameless-Reparatur komplett (native Troubleshooting-Beispiel) |
