@@ -115,13 +115,45 @@ pub fn gen_java_methods(cls: &QtClass) -> String {
     out
 }
 
+/// javac -h 对重载 native 方法的 C 函数名后缀：'__' + 参数 JNI 签名编码
+/// （nativeHandle 参数 long → J；String → Ljava_lang_String_2 等）。重载组内全部方法都加后缀。
+fn overload_suffix(m: &QtMethod) -> String {
+    let mut s = String::from("__J");   // nativeHandle (long)
+    for p in &m.params {
+        s.push_str(match java_type(&p.ty) {
+            Some("long") => "J",
+            Some("int") => "I",
+            Some("double") => "D",
+            Some("boolean") => "Z",
+            Some("String") => "Ljava_lang_String_2",
+            _ => "",
+        });
+    }
+    s
+}
+
 pub fn gen_native_functions(cls: &QtClass, cpp_class: &str) -> String {
     let mut out = String::new();
+    // 重载检测：同名可生成方法 >1 个 → javac -h 会给 C 函数名加后缀，模板必须跟随
+    let mut name_counts: std::collections::HashMap<&str, usize> = std::collections::HashMap::new();
+    for m in &cls.methods {
+        if is_generatable(cls, m) {
+            *name_counts.entry(m.name.as_str()).or_insert(0) += 1;
+        }
+    }
     for m in &cls.methods {
         if !is_generatable(cls, m) { continue; }
         let cap = camel(&m.name);
+        let suffix = if name_counts.get(m.name.as_str()).copied().unwrap_or(0) > 1 {
+            overload_suffix(m)
+        } else {
+            String::new()
+        };
         let nret = jni_type(&m.return_type).unwrap_or("void");
-        let mut jparams = String::from("JNIEnv* env, jobject /*thiz*/, jlong handle");
+        // 生成器输出 private static native（Java 声明为 static）→ JNI 第二参数必须 jclass。
+    // 注意 JDK 的 jni.h 在 C++ 模式下 jclass(_jclass*) 与 jobject(_jobject*) 是不同类型，
+    // 用 jobject 会导致符号被 C++ mangle（JVM 找不到）——batch 1-4 全部踩坑。
+    let mut jparams = String::from("JNIEnv* env, jclass /*thiz*/, jlong handle");
         let mut call_args = String::new();
         let mut pre_conv = String::new();
         let mut post_conv = String::new();
@@ -149,8 +181,8 @@ pub fn gen_native_functions(cls: &QtClass, cpp_class: &str) -> String {
         };
         let body = format!("{}{}{}", pre_conv, call_body, post_conv);
         out.push_str(&format!(
-            "\nJNIEXPORT {} JNICALL Java_org_jqt_{}_native{}({}) {{\n    {}* wgt = static_cast<{}*>(requireHandle(env, handle));\n    if (wgt == nullptr) {{ {} }}\n{}\n}}\n",
-            nret, cls.name, cap, jparams, cpp_class, cpp_class,
+            "\nJNIEXPORT {} JNICALL Java_org_jqt_{}_native{}{}({}) {{\n    {}* wgt = static_cast<{}*>(requireHandle(env, handle));\n    if (wgt == nullptr) {{ {} }}\n{}\n}}\n",
+            nret, cls.name, cap, suffix, jparams, cpp_class, cpp_class,
             if is_void { "return;" } else { "return 0;" },
             body
         ));
