@@ -1,5 +1,5 @@
 {
-    "android-compile-sdk-version": "34",
+    "android-compile-sdk-version": "36",
     "android-min-sdk-version": "24",
     "android-package-name": "org.jqt",
     "android-target-sdk-version": "34",
