@@ -1,5 +1,4 @@
 {
-    "abi": "arm64-v8a",
     "android-compile-sdk-version": 34,
     "android-min-sdk-version": 24,
     "android-package-name": "org.jqt",
@@ -7,6 +6,9 @@
     "android-version-code": 1,
     "android-version-name": "0.7.5-poc",
     "application-binary": "C:/JQt/out-android/libjqt_arm64-v8a.so",
+    "architectures": {
+        "arm64-v8a": "aarch64-linux-android"
+    },
     "ndk": "C:/AndroidSdk/ndk/27.2.12479018",
     "ndk-host": "windows-x86_64",
     "qt": "C:/Qt/6.11.2/android_arm64_v8a",
