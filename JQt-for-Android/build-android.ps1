@@ -1,7 +1,8 @@
 # ============================================================================
-# build-android.ps1 - JQt Android 构建（PoC 阶段骨架）
-# 阶段 1: NDK clang 编译 jqt_bridge.cpp -> libjqt_arm64-v8a.so（fsyntax 验证）
-# 阶段 2: 组装 APK（template/ + .so + Java DEX）-> 待模板就绪
+# build-android.ps1 - JQt Android build (PoC stage)
+# Stage 1: NDK clang compile jqt_bridge.cpp -> libjqt_arm64-v8a.so
+# Stage 2: APK assembly (template/) - pending template
+# NOTE: ASCII-only (PowerShell 5.1 reads BOM-less files as ANSI)
 # ============================================================================
 
 param(
@@ -17,7 +18,7 @@ $Pre = "$NDK\toolchains\llvm\prebuilt\windows-x86_64"
 $Clang = "$Pre\bin\aarch64-linux-android24-clang++.cmd"
 $Sysroot = "$Pre\sysroot"
 
-# ---------- 阶段 1: 编译检查 / 完整编译 ----------
+# ---------- Stage 1: compile ----------
 $outDir = Join-Path $Repo "out-android"
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
@@ -28,16 +29,15 @@ else {
     $args += @("-o", (Join-Path $outDir "libjqt_arm64-v8a.so"))
 }
 $args += @("-I", "$QtAndroid\include", "-I", "$QtAndroid\include\QtWidgets", "-I", "$QtAndroid\include\QtGui", "-I", "$QtAndroid\include\QtCore")
-$args += @("-I", "$QtAndroid\include\QtPrintSupport", "-I", "$QtAndroid\include\QtSql", "-I", "$QtAndroid\include\QtSerialPort")
+$args += @("-I", "$QtAndroid\include\QtPrintSupport", "-I", "$QtAndroid\include\QtSql", "-I", "$QtAndroid\include\QtSerialPort", "-I", "$QtAndroid\include\QtOpenGLWidgets", "-I", "$QtAndroid\include\QtOpenGL")
 $args += @("-I", "$Repo\native", "-I", "$Repo\native\generated")
 $args += @(Join-Path $Repo "native\jqt_bridge.cpp")
 
 Write-Host "==> clang (SyntaxOnly=$SyntaxOnly)"
 & $Clang @args 2>&1 | Select-Object -First 40
-if ($LASTEXITCODE -ne 0) { throw "clang 编译失败" }
+if ($LASTEXITCODE -ne 0) { throw "clang compile failed" }
 Write-Host "==> OK"
 
 if ($Full) {
-    Write-Host "==> 阶段 2: APK 组装（模板就绪后实现）"
-    Write-Host ("    产物: " + $outDir + "\libjqt_arm64-v8a.so")
+    Write-Host ("==> Stage 2: APK assembly pending template. .so at: " + $outDir + "\libjqt_arm64-v8a.so")
 }
