@@ -6,7 +6,7 @@
     "android-version-code": "1",
     "android-version-name": "0.7.5-poc",
     "application-binary": "jqt",
-    "deployment-dependencies": "plugins/platforms,plugins/styles,plugins/imageformats",
+    "deployment-dependencies": "lib/libQt6Core_arm64-v8a.so,lib/libQt6Gui_arm64-v8a.so,lib/libQt6Widgets_arm64-v8a.so,lib/libQt6OpenGL_arm64-v8a.so,lib/libQt6OpenGLWidgets_arm64-v8a.so,lib/libQt6PrintSupport_arm64-v8a.so,lib/libQt6Sql_arm64-v8a.so,lib/libQt6Svg_arm64-v8a.so,plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.so,plugins/styles/libplugins_styles_qandroidstyle_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qgif_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qico_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qjpeg_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qsvg_arm64-v8a.so",
     "architectures": {
         "arm64-v8a": "aarch64-linux-android"
     },
