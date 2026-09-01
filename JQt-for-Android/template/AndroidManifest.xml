@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<manifest package="org.jqt" xmlns:android="http://schemas.android.com/apk/res/android" android:versionName="0.7.5-poc" android:versionCode="1" android:installLocation="auto">
+    <application android:label="JQt PoC" android:icon="@mipmap/ic_launcher">
+        <activity android:name="org.qtproject.qt.android.bindings.QtActivity" android:label="JQt PoC" android:configChanges="orientation|uiMode|screenLayout|screenSize|smallestScreenSize|layoutDirection|locale|fontScale|keyboard|keyboardHidden|navigation|mcc|mnc" android:launchMode="singleTop" android:screenOrientation="unspecified" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <meta-data android:name="android.app.lib_name" android:value="jqt"/>
+        </activity>
+    </application>
+</manifest>
