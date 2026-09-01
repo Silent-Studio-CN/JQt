@@ -366,9 +366,16 @@ static std::atomic<int64_t> g_nextHandleId{1};
 // Qt 信号总是在 GUI（主）线程发出，而主线程执行 app.exec() 前已被 JVM 附加。
 static JNIEnv* callbackEnv() {
     JNIEnv* env = nullptr;
+#if defined(__ANDROID__)
+    // Android NDK jni.h：JNI_VERSION_1_6（无 1_8）；AttachCurrentThread(JNIEnv**, void*)
+    if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_EDETACHED) {
+        g_jvm->AttachCurrentThread(&env, nullptr);
+    }
+#else
     if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) == JNI_EDETACHED) {
         g_jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
     }
+#endif
     return env;
 }
 
