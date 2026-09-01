@@ -39,3 +39,5 @@
 | [06-community.md](06-community.md) | 社区工程约定与发布流程 |
 | [07-probes.md](07-probes.md) | 探针测试方法论（复现 native 问题） |
 | [08-setFrameless-case.md](08-setFrameless-case.md) | setFrameless 修复全记录（native 排查范例） |
+| [09-jpackage-qt-deploy.md](09-jpackage-qt-deploy.md) | jpackage 打包 JQt 应用实战（0xC0000142/插件路径/DLL 依赖） |
+

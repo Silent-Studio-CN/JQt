@@ -36,4 +36,6 @@
 | [06-community.md](06-community.en.md) | Community engineering agreement and release process
 | [07-probes.md](07-probes.en.md) | Probe Testing Methodology (Reproducing native Issues)
 | [08-setFrameless-case.md](08-setFrameless-case.md) | setFrameless Repair Full Record (native Troubleshooting Example)
+| [09-jpackage-qt-deploy.md](09-jpackage-qt-deploy.en.md) | jpackage packaging JQt apps (0xC0000142/plugin path/DLL deps) |
+
 

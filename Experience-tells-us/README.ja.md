@@ -36,4 +36,6 @@
 | [06-community.md](06-community.ja.md) | コミュニティプロジェクトの契約と公開の流れです
 | [07-probes.md](07-probes.ja.md) | プローブテスト方法論(ネイティブ問題の再現)です
 | [08-setFrameless-case.md](08-setFrameless-case.md) | setFramelessリペア全記録(native排査範例)
+| [09-jpackage-qt-deploy.md](09-jpackage-qt-deploy.ja.md) | jpackage で JQt アプリをパッケージ化（0xC0000142/プラグインパス/DLL依存） |
+
 
