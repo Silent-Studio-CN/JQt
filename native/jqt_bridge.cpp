@@ -6927,6 +6927,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QOpenGLWidget_nativeDoneCurrent(JNIEnv* env,
 // v0.7.4：QSerialPort（Qt SerialPort 模块）——完整串口绑定
 // ============================================================================
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNIEnv* env, jclass) {
     const QList<QSerialPortInfo> infos = QSerialPortInfo::availablePorts();
     jclass strCls = env->FindClass("java/lang/String");
@@ -6938,7 +6939,9 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
     }
     return arr;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeCreate(JNIEnv* env, jobject thiz) {
     if (requireApp(env) == nullptr) return 0;
     QSerialPort* port = new QSerialPort();
@@ -6958,6 +6961,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeCreate(JNIEnv* env, jobje
     });
     return h;
 }
+#endif // !__ANDROID__
 
 // ----------------------------------------------------------------------------
 // 值对象批 3：QTextEdit / QListWidget / QTabWidget / QTreeWidget / QApplication / QWidget 图标
@@ -7355,11 +7359,14 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QFont_nativeToString(JNIEnv* env, jclass,
 }
 
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeDispose(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (port) { port->close(); delete port; }
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetPortName(JNIEnv* env, jobject, jlong handle, jstring name) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (!port) return;
@@ -7367,43 +7374,59 @@ JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetPortName(JNIEnv* env, j
     port->setPortName(t ? QString::fromUtf8(t) : QString());
     if (t) env->ReleaseStringUTFChars(name, t);
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jstring JNICALL Java_org_jqt_QSerialPort_nativePortName(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (!port) return nullptr;
     return env->NewStringUTF(port->portName().toUtf8().constData());
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetBaudRate(JNIEnv* env, jobject, jlong handle, jint baudRate) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     return (port && port->setBaudRate(baudRate)) ? JNI_TRUE : JNI_FALSE;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeBaudRate(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     return port ? static_cast<jint>(port->baudRate()) : 0;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetDataBits(JNIEnv* env, jobject, jlong handle, jint bits) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (port) port->setDataBits(static_cast<QSerialPort::DataBits>(bits));
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetParity(JNIEnv* env, jobject, jlong handle, jint parity) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (port) port->setParity(static_cast<QSerialPort::Parity>(parity));
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetStopBits(JNIEnv* env, jobject, jlong handle, jint bits) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (port) port->setStopBits(static_cast<QSerialPort::StopBits>(bits));
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetFlowControl(JNIEnv* env, jobject, jlong handle, jint flow) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (port) port->setFlowControl(static_cast<QSerialPort::FlowControl>(flow));
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeOpen(JNIEnv* env, jobject, jlong handle, jint mode) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (!port) return JNI_FALSE;
@@ -7412,17 +7435,23 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeOpen(JNIEnv* env, jobj
     else if (mode == 2) om = QIODevice::ReadWrite;
     return port->open(om) ? JNI_TRUE : JNI_FALSE;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeClose(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (port) port->close();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsOpen(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     return (port && port->isOpen()) ? JNI_TRUE : JNI_FALSE;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeWrite(JNIEnv* env, jobject, jlong handle, jbyteArray data) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (!port || !data) return -1;
@@ -7433,7 +7462,9 @@ JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeWrite(JNIEnv* env, jobject
     env->ReleaseByteArrayElements(data, buf, JNI_ABORT);
     return static_cast<jint>(n);
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeWriteUtf8(JNIEnv* env, jobject, jlong handle, jstring text) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (!port || !text) return -1;
@@ -7443,7 +7474,9 @@ JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeWriteUtf8(JNIEnv* env, job
     env->ReleaseStringUTFChars(text, t);
     return static_cast<jint>(n);
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jbyteArray JNICALL Java_org_jqt_QSerialPort_nativeReadAll(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (!port) return nullptr;
@@ -7453,7 +7486,9 @@ JNIEXPORT jbyteArray JNICALL Java_org_jqt_QSerialPort_nativeReadAll(JNIEnv* env,
     env->SetByteArrayRegion(out, 0, static_cast<jsize>(data.size()), reinterpret_cast<const jbyte*>(data.constData()));
     return out;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jstring JNICALL Java_org_jqt_QSerialPort_nativeReadLine(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (!port) return nullptr;
@@ -7461,36 +7496,51 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QSerialPort_nativeReadLine(JNIEnv* env, j
     if (data.isEmpty()) return nullptr;
     return env->NewStringUTF(data.constData());
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jint JNICALL Java_org_jqt_QSerialPort_nativeBytesAvailable(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     return port ? static_cast<jint>(port->bytesAvailable()) : 0;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeWaitForReadyRead(JNIEnv* env, jobject, jlong handle, jint timeoutMs) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     return (port && port->waitForReadyRead(timeoutMs)) ? JNI_TRUE : JNI_FALSE;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeFlush(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     return (port && port->flush()) ? JNI_TRUE : JNI_FALSE;
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeClear(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (port) port->clear();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jstring JNICALL Java_org_jqt_QSerialPort_nativeErrorString(JNIEnv* env, jobject, jlong handle) {
     QSerialPort* port = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (!port) return env->NewStringUTF("");
     return env->NewStringUTF(port->errorString().toUtf8().constData());
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeConnectReadyRead(JNIEnv* env, jobject, jlong) { (void)env; }
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
+#endif // !__ANDROID__
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeConnectBytesWritten(JNIEnv* env, jobject, jlong) { (void)env; }
 
+#endif // !__ANDROID__
 // ============================================================================
 // L2 批次（v0.7.4）：QWidget 高频少用 API
 // ============================================================================
@@ -9554,96 +9604,124 @@ JNIEXPORT jint JNICALL Java_org_jqt_QApplication_nativeStartDragTime(JNIEnv* env
 
 
 // 生成器批次（jqt-gen 自动生成，直传型）
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeBytesToWrite(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->bytesToWrite();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeCanReadLine(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->canReadLine();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeClearError(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return; }
     wgt->clearError();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsBreakEnabled(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->isBreakEnabled();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsDataTerminalReady(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->isDataTerminalReady();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsRequestToSend(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->isRequestToSend();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeIsSequential(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->isSequential();
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetBreakEnabled(JNIEnv* env, jclass /*thiz*/, jlong handle, jboolean arg0) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->setBreakEnabled(arg0);
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetDataTerminalReady(JNIEnv* env, jclass /*thiz*/, jlong handle, jboolean arg0) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->setDataTerminalReady(arg0);
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetReadBufferSize(JNIEnv* env, jclass /*thiz*/, jlong handle, jlong arg0) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return; }
     wgt->setReadBufferSize(arg0);
 }
+#endif // !__ANDROID__
 
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSetRequestToSend(JNIEnv* env, jclass /*thiz*/, jlong handle, jboolean arg0) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->setRequestToSend(arg0);
 }
+#endif // !__ANDROID__
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT void JNICALL Java_org_jqt_QSerialPort_nativeSetSettingsRestoredOnClose(JNIEnv* env, jclass /*thiz*/, jlong handle, jboolean arg0) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return; }
     wgt->setSettingsRestoredOnClose(arg0);
 }
+#endif // !__ANDROID__
 
 #endif // Java_org_jqt_QSerialPort_nativeSetSettingsRestoredOnClose - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jboolean JNICALL Java_org_jqt_QSerialPort_nativeSettingsRestoredOnClose(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->settingsRestoredOnClose();
 }
+#endif // !__ANDROID__
 
 #endif // Java_org_jqt_QSerialPort_nativeSettingsRestoredOnClose - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
 
 #if QT_VERSION >= QT_VERSION_CHECK(6, 10, 0)
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeWriteBufferSize(JNIEnv* env, jclass /*thiz*/, jlong handle) {
     QSerialPort* wgt = static_cast<QSerialPort*>(requireHandle(env, handle));
     if (wgt == nullptr) { return 0; }
     return wgt->writeBufferSize();
 }
+#endif // !__ANDROID__
 
 #endif // Java_org_jqt_QSerialPort_nativeWriteBufferSize - Qt 6.9+ API, hidden on older Qt (CI builds 6.8.3 LTS)
 
