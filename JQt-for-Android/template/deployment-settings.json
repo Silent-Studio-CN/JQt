@@ -11,10 +11,11 @@
     },
     "ndk": "C:/AndroidSdk/ndk/27.2.12479018",
     "ndk-host": "windows-x86_64",
+    "qml-importscanner-binary": "C:/Qt/6.11.2/mingw_64/bin/qmlimportscanner.exe",
     "qt": "C:/Qt/6.11.2/android_arm64_v8a",
     "sdk": "C:/AndroidSdk",
     "sdkBuildToolsRevision": "34.0.0",
-    "stdcpp-path": "C:/AndroidSdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so",
-    "toolchain-prefix": "aarch64-linux-android",
+    "stdcpp-path": "C:/AndroidSdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib",
+    "toolchain-prefix": "llvm",
     "verbose": 1
 }
