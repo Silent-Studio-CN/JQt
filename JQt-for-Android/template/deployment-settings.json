@@ -1,0 +1,28 @@
+# deployment settings for androiddeployqt - JQt PoC APK
+# Generated manually for the PoC; androiddeployqt converts this into a
+# Gradle project (lib/ + build.gradle + manifest merge) and builds the APK.
+{
+   "android_abis": ["arm64-v8a"],
+   "android_home": "C:/AndroidSdk",
+   "android_sdk_platform": "android-34",
+   "android_ndk": "C:/AndroidSdk/ndk/27.2.12479018",
+   "android_ndk_host": "windows-x86_64",
+   "android_ndk_platform": "android-24",
+   "application_binary": "C:/JQt/out-android/libjqt_arm64-v8a.so",
+   "build_gradle": { "app_dependencies": [], "app_qt_libs": [], "app_sources": [] },
+   "gcc_toolchain_prefix": "aarch64-linux-android-",
+   "gcc_toolchain_version": "",
+   "min_sdk_version": 24,
+   "target_sdk_version": 34,
+   "qml_import_scanner_binary": "C:/Qt/6.11.2/android_arm64_v8a/bin/qmlimportscanner",
+   "qml_root_path": "C:/Qt/6.11.2/android_arm64_v8a/qml",
+   "qt": "C:/Qt/6.11.2/android_arm64_v8a",
+   "qt_lib_path": "C:/Qt/6.11.2/android_arm64_v8a/lib",
+   "qt_plugin_path": "C:/Qt/6.11.2/android_arm64_v8a/plugins",
+   "qt_plugins": { "android": [], "generic": [], "qml": [], "qmltooling": [] },
+   "qt_version": "6.11.2",
+   "sdk_build_tools_version": "34.0.0",
+   "sdk_platform_version": 34,
+   "verbose": 1,
+   "use_android_apk_dir": true
+}
