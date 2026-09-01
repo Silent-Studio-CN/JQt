@@ -34,6 +34,15 @@ $args += @("-I", "$Repo\native", "-I", "$Repo\native\generated")
 $args += @(Join-Path $Repo "native\jqt_bridge.cpp")
 $args += @(Join-Path $Repo "JQt-for-Android\template\jqt_android_main.cpp")
 
+# ---- link Qt libs (Android: full paths, _arm64-v8a suffix) ----
+# Needed so DT_NEEDED lists Qt libs -> androiddeployqt deploys Qt + platform plugin.
+if (-not $SyntaxOnly) {
+    $QtLibDir = Join-Path $QtAndroid "lib"
+    foreach ($m in @("Qt6Widgets", "Qt6Gui", "Qt6Core", "Qt6PrintSupport", "Qt6Sql", "Qt6SerialPort", "Qt6OpenGLWidgets", "Qt6OpenGL")) {
+        $args += @((Join-Path $QtLibDir ("lib" + $m + "_arm64-v8a.so")))
+    }
+}
+
 Write-Host "==> clang (SyntaxOnly=$SyntaxOnly)"
 & $Clang @args 2>&1 | Select-Object -First 40
 if ($LASTEXITCODE -ne 0) { throw "clang compile failed" }
