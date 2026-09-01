@@ -1,6 +1,3 @@
-# deployment settings for androiddeployqt - JQt PoC APK
-# Generated manually for the PoC; androiddeployqt converts this into a
-# Gradle project (lib/ + build.gradle + manifest merge) and builds the APK.
 {
    "android_abis": ["arm64-v8a"],
    "android_home": "C:/AndroidSdk",
