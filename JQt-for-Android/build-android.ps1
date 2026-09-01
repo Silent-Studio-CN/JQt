@@ -39,5 +39,5 @@ Write-Host "==> OK"
 
 if ($Full) {
     Write-Host "==> 阶段 2: APK 组装（模板就绪后实现）"
-    Write-Host "    产物: $outDir\libjqt_arm64-v8a.so"
+    Write-Host ("    产物: " + $outDir + "\libjqt_arm64-v8a.so")
 }
