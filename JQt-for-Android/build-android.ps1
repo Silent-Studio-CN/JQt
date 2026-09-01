@@ -38,7 +38,8 @@ $args += @(Join-Path $Repo "JQt-for-Android\template\jqt_android_main.cpp")
 # Needed so DT_NEEDED lists Qt libs -> androiddeployqt deploys Qt + platform plugin.
 if (-not $SyntaxOnly) {
     $QtLibDir = Join-Path $QtAndroid "lib"
-    foreach ($m in @("Qt6Widgets", "Qt6Gui", "Qt6Core", "Qt6PrintSupport", "Qt6Sql", "Qt6SerialPort", "Qt6OpenGLWidgets", "Qt6OpenGL")) {
+    # NOTE: Qt6SerialPort not shipped in the Android kit (bridge guards it with __ANDROID__)
+    foreach ($m in @("Qt6Widgets", "Qt6Gui", "Qt6Core", "Qt6PrintSupport", "Qt6Sql", "Qt6OpenGLWidgets", "Qt6OpenGL")) {
         $args += @((Join-Path $QtLibDir ("lib" + $m + "_arm64-v8a.so")))
     }
 }
