@@ -57,7 +57,7 @@ $tmplJava = Join-Path $Repo "JQt-for-Android\template\java\org\jqt"
 $srcJava = Join-Path $Repo "java\org\jqt"
 if (Test-Path $srcJava) {
     New-Item -ItemType Directory -Force -Path $tmplJava | Out-Null
-    Copy-Item (Join-Path $srcJava "*") $tmplJava -Recurse -Force
+    Get-ChildItem $srcJava -Filter *.java | Where-Object { -not (Test-Path (Join-Path $tmplJava $_.Name)) } | Copy-Item -Destination $tmplJava
     Write-Host "==> staged java tree into template/java"
 }
 if ($Full) {
