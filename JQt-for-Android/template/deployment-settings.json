@@ -6,6 +6,7 @@
     "android-version-code": "1",
     "android-version-name": "0.7.5-poc",
     "application-binary": "jqt",
+    "deployment-dependencies": "plugins/platforms,plugins/styles,plugins/imageformats",
     "architectures": {
         "arm64-v8a": "aarch64-linux-android"
     },
