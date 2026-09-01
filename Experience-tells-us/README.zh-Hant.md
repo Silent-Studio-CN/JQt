@@ -36,4 +36,6 @@
 | [06-community.md](06-community.zh-Hant.md) | 社區工程約定與發佈流程
 | [07-probes.md](07-probes.zh-Hant.md) | 探針測試方法論（復現 native 問題）
 | [08-setFrameless-case.md](08-setFrameless-case.md) | setFrameless 修復全記錄（native 排查範例）
+| [09-jpackage-qt-deploy.md](09-jpackage-qt-deploy.zh-Hant.md) | jpackage 打包 JQt 應用實戰（0xC0000142/插件路徑/DLL 依賴） |
+
 

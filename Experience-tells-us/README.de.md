@@ -37,3 +37,5 @@
 | [06-community.md](06-community.de.md) | Community-Konventionen & Release-Prozess |
 | [07-probes.md](07-probes.de.md) | Probe-Testmethodik (native Probleme reproduzieren) |
 | [08-setFrameless-case.md](08-setFrameless-case.md) | setFrameless-Reparatur komplett (native Troubleshooting-Beispiel) |
+| [09-jpackage-qt-deploy.md](09-jpackage-qt-deploy.de.md) | jpackage JQt-Apps packen (0xC0000142/Plugin-Pfad/DLL-Abhängigkeiten) |
+
