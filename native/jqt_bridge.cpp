@@ -5644,7 +5644,7 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeSetAutoStart(JNIEnv* 
     }
     RegCloseKey(key);
     return (result == ERROR_SUCCESS) ? JNI_TRUE : JNI_FALSE;
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__ANDROID__)
     // XDG autostart: ~/.config/autostart/<name>.desktop
     const QString dir = QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QStringLiteral("/autostart");
     const QString file = dir + QLatin1Char('/') + name + QStringLiteral(".desktop");
@@ -5723,7 +5723,7 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativePreventSleep(JNIEnv* 
         s_activity = nullptr;
     }
     return JNI_TRUE;
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__ANDROID__)
     // org.freedesktop.ScreenSaver Inhibit（KDE/GNOME）；失败回退 org.gnome.SessionManager Inhibit
     static uint s_cookie = 0;
     static bool s_active = false;
@@ -5801,7 +5801,7 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeShowNotification(JNIE
     if (tstr) CFRelease(tstr);
     if (bstr) CFRelease(bstr);
     return JNI_TRUE;
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__ANDROID__)
     QDBusInterface notif(QStringLiteral("org.freedesktop.Notifications"),
                          QStringLiteral("/org/freedesktop/Notifications"),
                          QStringLiteral("org.freedesktop.Notifications"),
@@ -6656,7 +6656,7 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QSqlDatabase_nativeAddDatabase(JNIEnv* env,
         QString pluginPath;
 #ifdef _WIN32
         const QString ext = QStringLiteral(".dll");
-#elif defined(__linux__)
+#elif defined(__linux__) && !defined(__ANDROID__)
         const QString ext = QStringLiteral(".so");
 #else
         const QString ext = QStringLiteral(".dylib");
