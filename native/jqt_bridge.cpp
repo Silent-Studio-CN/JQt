@@ -325,6 +325,12 @@ static void jqtSetAcrylic(HWND hwnd, bool on) {
 
 static JavaVM* g_jvm = nullptr;        // 缓存的 JVM 句柄（供 C++ → Java 回调）
 static QApplication* g_app = nullptr;  // 进程级唯一的 QApplication
+
+// Android: QtLoader 在 Qt 线程调用 main()，main() 创建 QApplication 后 attach 给桥，
+// Java 侧 nativeCreateApp 复用（g_app 守卫），避免双实例 abort。
+extern "C" void jqtAndroidAttachApp(void* app) {
+    g_app = static_cast<QApplication*>(app);
+}
 static jobject g_appJavaRef = nullptr; // JQtApplication Java 全局引用（系统主题回调用）
 
 // 句柄注册表：Java 侧持有自增 ID（从 1 开始，永不复用），native 查表获得指针。
