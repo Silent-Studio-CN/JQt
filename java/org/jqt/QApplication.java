@@ -9,6 +9,7 @@ package org.jqt;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -408,7 +409,7 @@ public class QApplication {
                 vars.put("accent-hover", lighten(currentAccent, 0.12));
                 themeVars = vars;
             }
-            String qss = Files.readString(Path.of(themeTemplatePath), StandardCharsets.UTF_8);
+            String qss = new String(Files.readAllBytes(Paths.get(themeTemplatePath)), StandardCharsets.UTF_8);
             for (java.util.Map.Entry<String, String> e : themeVars.entrySet()) {
                 qss = qss.replace("%" + e.getKey() + "%", e.getValue());
             }
@@ -488,11 +489,11 @@ public class QApplication {
         themeTemplatePath = null;   // 纯文件模式：setAccentColor 只影响调色板/自绘控件
         themeVars = null;
         try {
-            Path p = Path.of(path);
+            Path p = Paths.get(path);
             if (!Files.exists(p)) {
                 throw new IllegalArgumentException("主题文件不存在: " + path);
             }
-            String qss = Files.readString(p, StandardCharsets.UTF_8);
+            String qss = new String(Files.readAllBytes(p), StandardCharsets.UTF_8);
             setColorScheme(light);
             setStyleSheet(qss);
         } catch (java.io.IOException e) {
