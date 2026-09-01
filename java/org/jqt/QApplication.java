@@ -28,7 +28,24 @@ public class QApplication {
 
     static {
         // 加载 native 库：jqt.dll (Windows) / libjqt.so (Linux) / libjqt.dylib (macOS)
-        System.loadLibrary("jqt");
+        // Android: QtLoader dlopen 了 libjqt_arm64-v8a.so（APK 内按 ABI 后缀命名），
+        // System.loadLibrary("jqt") 找不到 libjqt.so；JNI 按名匹配，无需再次加载。
+        try {
+            System.loadLibrary("jqt");
+        } catch (UnsatisfiedLinkError e) {
+            if (!isAndroidRuntime()) {
+                throw e;
+            }
+        }
+    }
+
+    private static boolean isAndroidRuntime() {
+        try {
+            Class.forName("android.os.Build");
+            return true;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /** C++ 侧 QApplication 指针。 */
