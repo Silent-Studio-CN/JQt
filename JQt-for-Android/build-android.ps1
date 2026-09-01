@@ -49,6 +49,17 @@ Write-Host "==> clang (SyntaxOnly=$SyntaxOnly)"
 if ($LASTEXITCODE -ne 0) { throw "clang compile failed" }
 Write-Host "==> OK"
 
+
+# ---- Stage 2 prep: java tree into template/java ----
+# androiddeployqt (Qt 6.11) ignores --java-source; sources must be copied
+# by android-package-source-directory. Gradle srcDirs includes 'java'.
+$tmplJava = Join-Path $Repo "JQt-for-Android\template\java\org\jqt"
+$srcJava = Join-Path $Repo "java\org\jqt"
+if (Test-Path $srcJava) {
+    New-Item -ItemType Directory -Force -Path $tmplJava | Out-Null
+    Copy-Item (Join-Path $srcJava "*") $tmplJava -Recurse -Force
+    Write-Host "==> staged java tree into template/java"
+}
 if ($Full) {
     Write-Host ("==> Stage 2: APK assembly pending template. .so at: " + $outDir + "\libjqt_arm64-v8a.so")
 }
