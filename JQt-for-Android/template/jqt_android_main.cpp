@@ -1,8 +1,15 @@
-// JQt Android C++ entry stub - Qt Android plugin calls main() of the app lib.
-// JQt is Java-driven: QApplication is created via JNI (nativeCreateApp) from
-// the Java Activity; the Qt event loop on Android is managed by QtActivity.
-// main() must exist (QtLoader expects it) but does nothing else.
+// JQt Android C++ entry - called by QtLoader on the Qt thread.
+// Creates the QApplication and the PoC window, then runs the Qt event loop.
+// JQt is Java-driven: the Java side (JQtPocActivity) may create a second
+// QApplication object later - jqt_bridge nativeCreateApp reuses g_app when
+// it already exists.
 // NOTE: ASCII-only.
-int main(int, char**) {
-    return 0;
+#include <QApplication>
+#include <QPushButton>
+
+int main(int argc, char **argv) {
+    QApplication app(argc, argv);
+    QPushButton btn("Hello JQt on Android");
+    btn.show();
+    return app.exec();
 }
