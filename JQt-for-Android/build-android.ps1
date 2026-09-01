@@ -32,6 +32,7 @@ $args += @("-I", "$QtAndroid\include", "-I", "$QtAndroid\include\QtWidgets", "-I
 $args += @("-I", "$QtAndroid\include\QtPrintSupport", "-I", "$QtAndroid\include\QtSql", "-I", "$QtAndroid\include\QtSerialPort", "-I", "$QtAndroid\include\QtOpenGLWidgets", "-I", "$QtAndroid\include\QtOpenGL")
 $args += @("-I", "$Repo\native", "-I", "$Repo\native\generated")
 $args += @(Join-Path $Repo "native\jqt_bridge.cpp")
+$args += @(Join-Path $Repo "JQt-for-Android\template\jqt_android_main.cpp")
 
 Write-Host "==> clang (SyntaxOnly=$SyntaxOnly)"
 & $Clang @args 2>&1 | Select-Object -First 40
