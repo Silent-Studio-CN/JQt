@@ -169,10 +169,12 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QOpenGLContext>
 #endif
 // QtSerialPort 头布局因平台而异（mac framework fake-header / 扁平 / 标准布局）——双 include 保险
+#if !defined(__ANDROID__) // qtserialport android 模块后续安装
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QtSerialPort/QSerialPort>
 #include <QtSerialPort/QSerialPortInfo>
+#endif // !__ANDROID__
 #include <QPluginLoader>
 #include <QLibraryInfo>
 #include <QDir>
