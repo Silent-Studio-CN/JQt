@@ -1,9 +1,9 @@
 {
-    "android-compile-sdk-version": 34,
-    "android-min-sdk-version": 24,
+    "android-compile-sdk-version": "34",
+    "android-min-sdk-version": "24",
     "android-package-name": "org.jqt",
-    "android-target-sdk-version": 34,
-    "android-version-code": 1,
+    "android-target-sdk-version": "34",
+    "android-version-code": "1",
     "android-version-name": "0.7.5-poc",
     "application-binary": "C:/JQt/out-android/libjqt_arm64-v8a.so",
     "architectures": {
