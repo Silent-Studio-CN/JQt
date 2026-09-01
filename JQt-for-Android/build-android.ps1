@@ -57,6 +57,10 @@ $tmplJava = Join-Path $Repo "JQt-for-Android\template\java\org\jqt"
 $srcJava = Join-Path $Repo "java\org\jqt"
 if (Test-Path $srcJava) {
     New-Item -ItemType Directory -Force -Path $tmplJava | Out-Null
+    # remove stale staged files (keep committed android variants)
+    $keep = @("QColor.java","QFont.java","QCursor.java","QFontMetrics.java","QBitmap.java","QImage.java","QPixmap.java","JQtPocActivity.java")
+    if (Test-Path $tmplJava) { Get-ChildItem $tmplJava -Filter *.java | Where-Object { $keep -notcontains $_.Name } | Remove-Item -Force }
+
     Get-ChildItem $srcJava -Filter *.java | Where-Object { -not (Test-Path (Join-Path $tmplJava $_.Name)) } | Copy-Item -Destination $tmplJava
     Write-Host "==> staged java tree into template/java"
 }
