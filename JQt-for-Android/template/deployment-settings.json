@@ -1,20 +1,28 @@
 {
     "android-compile-sdk-version": "36",
-    "android-min-sdk-version": "24",
+    "android-min-sdk-version": "28",
     "android-package-name": "org.jqt",
     "android-target-sdk-version": "34",
     "android-version-code": "1",
     "android-version-name": "0.7.5-poc",
-    "application-binary": "jqt",
     "android-package-source-directory": "C:/JQt/JQt-for-Android/template",
-    "deployment-dependencies": "jar/Qt6Android.jar,lib/libQt6Core_arm64-v8a.so,lib/libQt6Gui_arm64-v8a.so,lib/libQt6Widgets_arm64-v8a.so,lib/libQt6OpenGL_arm64-v8a.so,lib/libQt6OpenGLWidgets_arm64-v8a.so,lib/libQt6PrintSupport_arm64-v8a.so,lib/libQt6Sql_arm64-v8a.so,lib/libQt6Svg_arm64-v8a.so,plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.so,plugins/styles/libplugins_styles_qandroidstyle_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qgif_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qico_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qjpeg_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qsvg_arm64-v8a.so",
+    "application-binary": "jqt",
     "architectures": {
-        "arm64-v8a": "aarch64-linux-android"
+        "arm64-v8a": "aarch64-linux-android",
+        "armeabi-v7a": "arm-linux-androideabi",
+        "x86_64": "x86_64-linux-android",
+        "x86": "i686-linux-android"
     },
+    "deployment-dependencies": "jar/Qt6Android.jar,lib/libQt6Core_arm64-v8a.so,lib/libQt6Gui_arm64-v8a.so,lib/libQt6Widgets_arm64-v8a.so,lib/libQt6OpenGL_arm64-v8a.so,lib/libQt6OpenGLWidgets_arm64-v8a.so,lib/libQt6PrintSupport_arm64-v8a.so,lib/libQt6Sql_arm64-v8a.so,lib/libQt6Svg_arm64-v8a.so,plugins/platforms/libplugins_platforms_qtforandroid_arm64-v8a.so,plugins/styles/libplugins_styles_qandroidstyle_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qgif_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qico_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qjpeg_arm64-v8a.so,plugins/imageformats/libplugins_imageformats_qsvg_arm64-v8a.so,lib/libQt6Core_armeabi-v7a.so,lib/libQt6Gui_armeabi-v7a.so,lib/libQt6Widgets_armeabi-v7a.so,lib/libQt6OpenGL_armeabi-v7a.so,lib/libQt6OpenGLWidgets_armeabi-v7a.so,lib/libQt6PrintSupport_armeabi-v7a.so,lib/libQt6Sql_armeabi-v7a.so,lib/libQt6Svg_armeabi-v7a.so,plugins/platforms/libplugins_platforms_qtforandroid_armeabi-v7a.so,plugins/styles/libplugins_styles_qandroidstyle_armeabi-v7a.so,plugins/imageformats/libplugins_imageformats_qgif_armeabi-v7a.so,plugins/imageformats/libplugins_imageformats_qico_armeabi-v7a.so,plugins/imageformats/libplugins_imageformats_qjpeg_armeabi-v7a.so,plugins/imageformats/libplugins_imageformats_qsvg_armeabi-v7a.so,lib/libQt6Core_x86_64.so,lib/libQt6Gui_x86_64.so,lib/libQt6Widgets_x86_64.so,lib/libQt6OpenGL_x86_64.so,lib/libQt6OpenGLWidgets_x86_64.so,lib/libQt6PrintSupport_x86_64.so,lib/libQt6Sql_x86_64.so,lib/libQt6Svg_x86_64.so,plugins/platforms/libplugins_platforms_qtforandroid_x86_64.so,plugins/styles/libplugins_styles_qandroidstyle_x86_64.so,plugins/imageformats/libplugins_imageformats_qgif_x86_64.so,plugins/imageformats/libplugins_imageformats_qico_x86_64.so,plugins/imageformats/libplugins_imageformats_qjpeg_x86_64.so,plugins/imageformats/libplugins_imageformats_qsvg_x86_64.so,lib/libQt6Core_x86.so,lib/libQt6Gui_x86.so,lib/libQt6Widgets_x86.so,lib/libQt6OpenGL_x86.so,lib/libQ... (line truncated to 2000 chars)
     "ndk": "C:/AndroidSdk/ndk/27.2.12479018",
     "ndk-host": "windows-x86_64",
     "qml-importscanner-binary": "C:/Qt/6.11.2/mingw_64/bin/qmlimportscanner.exe",
-    "qt": "C:/Qt/6.11.2/android_arm64_v8a",
+    "qt": {
+        "arm64-v8a": "C:/Qt/6.11.2/android_arm64_v8a",
+        "armeabi-v7a": "C:/Qt/6.11.2/android_armv7",
+        "x86_64": "C:/Qt/6.11.2/android_x86_64",
+        "x86": "C:/Qt/6.11.2/android_x86"
+    },
     "sdk": "C:/AndroidSdk",
     "sdkBuildToolsRevision": "34.0.0",
     "stdcpp-path": "C:/AndroidSdk/ndk/27.2.12479018/toolchains/llvm/prebuilt/windows-x86_64/sysroot/usr/lib",
