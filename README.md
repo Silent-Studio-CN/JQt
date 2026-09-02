@@ -5,7 +5,7 @@
 
 **中文版**：[简体中文](README.zh.md) · **English**: this file
 
-![CI](https://img.shields.io/badge/CI-4%20platforms%20%E2%9C%93-green) ![Qt](https://img.shields.io/badge/Qt-6.8.3%20%2F%206.11.2-blue) ![API](https://img.shields.io/badge/API-580%2B%20methods%2C%2056%20classes-orange) ![License](https://img.shields.io/badge/License-JSL--1.0%20%2B%20LGPLv3-lightgrey)
+![CI](https://img.shields.io/badge/CI-4%20platforms%20%E2%9C%93-green) ![Qt](https://img.shields.io/badge/Qt-6.8.3%20%2F%206.11.2-blue) ![API](https://img.shields.io/badge/API-580%2B%20methods%2C%20140%2B%20classes-orange) ![License](https://img.shields.io/badge/License-JSL--1.0%20%2B%20LGPLv3-lightgrey)
 
 JQt is a Java binding for [Qt 6](https://www.qt.io/), exposing Qt Widgets as plain Java classes.
 Write your UI in Java; Qt handles rendering, events, theming, and platform integration.
@@ -55,8 +55,8 @@ L1 (common API) is **92.7% complete**; industrial modules and platform exclusive
 Grab the latest release zip (self-contained: jar + native lib + Qt runtime):
 
 ```bash
-# Windows: jqt-0.7.5-windows-x64.zip → extract → cd lib
-java -Djava.library.path=. -cp "jqt-0.7.5.jar;.." Hello
+# Windows: jqt-0.7.5-Generator-Kit-windows-x64.zip → extract → cd lib
+java -Djava.library.path=. -cp "jqt-0.7.5-Generator-Kit.jar;.." Hello
 # Linux / macOS: same pattern, or set LD_LIBRARY_PATH / DYLD_LIBRARY_PATH to lib/
 ```
 
@@ -94,7 +94,7 @@ dependencies {
 }
 ```
 
-The jar is the pure-Java API (89 classes); the native lib and Qt runtime come
+The jar is the pure-Java API (140+ classes); the native lib and Qt runtime come
 from the release zip below.
 
 ### 3. Write code
@@ -138,35 +138,34 @@ app.setTheme("themes/fluent.qss.tpl", myTheme.vars(), true);        // custom
 - **QSql** — SQLite/PostgreSQL/MySQL via Qt SQL (open/query/result iteration)
 - **QPrinter** — native printing + PDF export (`QTextEdit.printToPdf`, `QWidget.printToPdf`)
 - **QOpenGLWidget** — GPU canvas; LWJGL attachable (GL context is current inside paintGL)
-- **QAction / QDialog / QMenuBar / QListView / QColor / ...** — 56 classes and growing
+- **QAction / QDialog / QMenuBar / QListView / QColor / ...** — 140+ classes and growing
 
 ---
 
 ## Releases
 
-**Versioning**: the number is the version (`0.7.4`); anything after it is a *release codename*
-(`-Universal-Kit` = the same full API on all 3 platforms). Same code, same artifacts —
-codename only changes per major feature line.
+**Versioning**: the number is the version (`0.7.5`); anything after it is a *release codename*
+(`-Generator-Kit` = the automation-production line). Same code, same artifacts across
+channels — Maven Central uses the plain numeric version.
 
 | Channel | Version | Coordinate |
 |---------|---------|-----------|
-| GitHub Releases | `v0.7.4-Universal-Kit` | release assets |
-| Maven Central | `0.7.4` (or `0.7.4-Universal-Kit`, identical) | `io.github.silent-xiaomiao:jqt:0.7.5` |
-| JitPack | `0.7.4-Universal-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit` |
+| GitHub Releases | `v0.7.5-Generator-Kit` | release assets below |
+| Maven Central | `0.7.5` | `io.github.silent-xiaomiao:jqt:0.7.5` |
+| JitPack | `0.7.5-Generator-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit` |
 
-Latest: [v0.7.4-Universal-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v0.7.4-Universal-Kit)
+Latest: [v0.7.5-Generator-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v0.7.5-Generator-Kit)
 
 | Asset | Platform |
 |-------|----------|
-| `jqt-0.7.5.jar` | all (Java API) |
-| `jqt-0.7.5-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
+| `jqt-0.7.5-Generator-Kit.jar` | all (Java API) |
+| `jqt-0.7.5-Generator-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 bare libs (both Qt versions) |
 | `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
-| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux (both versions) |
-| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS (both versions) |
+| `libjqt-6.11.2.so` / `libjqt-6.8.3.so` | Linux (both versions) |
+| `libjqt-6.11.2.dylib` / `libjqt-6.8.3.dylib` | macOS (both versions) |
 
-CI builds all 4 platforms (Windows x64/ARM64, Linux, macOS) × 2 Qt versions on every push —
-[see the workflow](.github/workflows/ci.yml).
+Release notes: [docs/releases/](docs/releases/) (per-version, v0.1.0 → v0.7.5).
 
 ---
 
@@ -178,7 +177,7 @@ CI builds all 4 platforms (Windows x64/ARM64, Linux, macOS) × 2 Qt versions on 
 | [docs/api-implemented.md](docs/api-implemented.md) | Full implemented-API list (bilingual) |
 | [docs/api-tiering.md](docs/api-tiering.md) | L1/L2/L3 tiering design |
 | [docs/behavior.md](docs/behavior.md) | Behavior contract (display rules, theming, DPI) |
-| [docs/releases/](docs/releases/) | Per-version release notes (v0.1.0 → v0.7.4, all 14 releases) |
+| [docs/releases/](docs/releases/) | Per-version release notes (v0.1.0 → v0.7.5) |
 | [docs/qt6-classes.md](docs/qt6-classes.md) | Qt6 class coverage roadmap (Widgets 191, hand-written vs generated) |
 | [CHANGELOG.md](CHANGELOG.md) | Changelog |
 
