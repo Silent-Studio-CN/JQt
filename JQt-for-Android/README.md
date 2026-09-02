@@ -3,16 +3,16 @@
 > JQt Android 支持工程（绑定同源：Java API + jqt_bridge.cpp 与桌面共用一份，
 > 本目录只含 Android 打包层与平台适配）。
 
-## 现状（2026-09-01）
+## 现状（2026-09-02）
 
 | 项 | 状态 |
 |------|------|
-| 绑定代码（java/ + native/jqt_bridge.cpp） | 桌面全平台验证（0.7.5-Generator-Kit） |
-| Qt 6.11.2 android_arm64_v8a / x86_64 kit | 已安装（远程构建机） |
+| 绑定代码（java/ + native/jqt_bridge.cpp） | 桌面全平台验证（0.7.5-Generator-Kit）；Android 平台适配已提交（DBus/SerialPort/回调/attach） |
+| Qt 6.11.2 android 4 ABI kit（arm64/armv7/x86_64/x86） | 已安装（远程构建机） |
 | Android SDK + NDK 27.2 + Gradle 8.9 + JDK 17 | 已安装 |
-| bridge Android 编译验证（NDK clang -fsyntax-only） | 进行中（PoC 第一步） |
-| APK 模板工程 | 规划中 |
-| 真机运行验证（QMainWindow + 控件 + 软键盘） | PoC 第二步 |
+| bridge Android 编译（4 ABI libjqt_<abi>.so） | 完成 |
+| 多 ABI APK（minSdk 28，jqtpoc-debug.apk ~109MB） | **完成** |
+| 模拟器运行验证（SVM dev2：原生 x86_64 + ARM 翻译层均通过，按钮点击交互正常；MuMu Android 15 用户侧通过） | **完成** |
 
 ## 为什么不用新仓库
 
@@ -24,7 +24,7 @@
 
 1. PoC 编译：NDK clang 编译 jqt_bridge.cpp（-fsyntax-only → 完整 .so）
 2. PoC 运行：最小 APK（QMainWindow + QPushButton + 输入框 + 软键盘）真机/模拟器验证
-3. 结论：Widgets-on-Android 可行 → 平台适配（触摸/生命周期/安全区）+ build-android.ps1 固化
+3. 结论：**Widgets-on-Android 可行**（QApplication/控件/事件循环/点击交互全链路验证）→ 平台适配（触摸/生命周期/安全区）继续
    不可行 → 转 Qt Quick 绑定层立项（意见书替代路线）
 4. 发布：Android 产物随 JQt 版本发布（CI 加 android job）
 
@@ -39,6 +39,7 @@
 
 | 文件 | 说明 |
 |------|------|
-| build-android.ps1 | 一键构建（编译 bridge .so → 组装 APK） |
+| build-android.ps1 | 一键构建（4 ABI 编译 bridge .so + java 暂存） |
+| docs/android-build-guide.md | **完整开发步骤指南（环境/构建/验证/FAQ）** |
 | template/ | APK 模板（Manifest/gradle/Activity） |
 | docs/ | PoC 状态与决策记录 |
