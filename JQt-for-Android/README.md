@@ -9,16 +9,23 @@
 |------|------|
 | 绑定代码（java/ + native/jqt_bridge.cpp） | 桌面全平台验证（0.7.5-Generator-Kit）；Android 平台适配已提交（DBus/SerialPort/回调/attach） |
 | Qt 6.11.2 android 4 ABI kit（arm64/armv7/x86_64/x86） | 已安装（远程构建机） |
-| Android SDK + NDK 27.2 + Gradle 8.9 + JDK 17 | 已安装 |
+| Android SDK + NDK 27.2 + Gradle 9.3.1 + JDK 17 | 已安装 |
 | bridge Android 编译（4 ABI libjqt_<abi>.so） | 完成 |
 | 多 ABI APK（minSdk 28，jqtpoc-debug.apk ~109MB） | **完成** |
 | 模拟器运行验证（SVM dev2：原生 x86_64 + ARM 翻译层均通过，按钮点击交互正常；MuMu Android 15 用户侧通过） | **完成** |
 
-## 为什么不用新仓库
+## 技术栈
 
-绑定（Java API + JNI 桥）是平台无关的同一份代码——Android 只是换编译目标
-（NDK clang 编译 bridge → libjqt_arm64-v8a.so，Java 类进 APK DEX）。
-绑定留在主仓库单一事实源，本目录只承载 Android 工程层，避免双维护分叉。
+| 层 | 技术 | 说明 |
+|------|------|------|
+| 绑定语言 | Java 17 (org.jqt.*) + C++17 | 同一份源码，桌面/Android 共用；JNI 按名匹配（Java_org_jqt_*），无需 JNI_OnLoad |
+| GUI 框架 | Qt 6.11.2 Widgets | QPA android 平台插件（qtforandroid）；QApplication 单实例由 main() 创建并 attach 给桥 |
+| 交叉编译 | NDK r27 clang（aarch64 / armv7a / x86_64 / i686-linux-android24） | build-android.ps1 参数化 4 ABI；链接 Qt6 Widgets/Gui/Core/OpenGL/OpenGLWidgets/PrintSupport/Sql + -llog |
+| Android 工程 | androiddeployqt（Qt 6.11 键格式）→ Gradle 9.3.1 + AGP 9.0.0 | compileSdk 36 / minSdk 28（Android 9）/ targetSdk 34；androidx.core 1.17.0 |
+| 目标 ABI | arm64-v8a / armeabi-v7a（32 位老机）/ x86_64 / x86 | 通用 APK 四 ABI 全打包（~109 MB），gradle 自动 strip 符号 |
+| 平台适配 | Q_OS_ANDROID 守卫（DBus/SerialPort/Linux 分支）+ AWT-free Java 变体 + 主题读取降级（readAllBytes） | 详见 docs/android-build-guide.md §5 |
+| 运行验证 | SVM（Silent Virtual Machine：Rust + QEMU + adb）、ARM 翻译层（libndk_translation）、uiautomator、logcat（tag=jqt）、screencap | 原生 x86_64 与 arm64 翻译层均通过；MuMu Android 15 用户侧通过 |
+| 调试 | __android_log_print（fprintf(stderr) 在 Android 被丢弃）、adb shell input tap | 点击交互（clicked 信号）logcat 可证 |
 
 ## 路线（对应 docs/JQt移动端意见书.md）
 
