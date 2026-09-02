@@ -64,3 +64,29 @@ tools/*.log
 
 # Gradle 构建产物
 build/
+
+# ===== sensitive / internal content (had accidental commits - no regressions) =====
+chat/
+tools/chat_bridge.py
+tools/cli1.ps1
+docs/BACKUP-*.md
+tools/portal-api.html
+tools/portal-upload.html
+tools/build-remote.ps1
+tools/install-arm64.bat
+tools/kill-ime.ps1
+tools/fetch-retry.ps1
+tools/sdk-install.bat
+tools/setup-gradle.bat
+tools/setup-sdk.ps1
+tools/setup-sdk2.ps1
+tools/get-mingw.ps1
+tools/get-qt-modules.ps1
+tools/shot.ps1
+Community/QraftLab-Edit/*.zip
+Community/QraftLab-Edit/*.msi
+smoke_v072.*
+
+# ===== download/audit artifacts (never commit) =====
+*.apk
+central-*.jar
