@@ -1,11 +1,28 @@
-> 📚 **功能与 API 文档**：见本仓库 [docs/](docs/)（官网文档站 https://jqt.silentstudio.cn/docs 筹备中）
+> 📚 **功能与 API 文档**：见本仓库 [docs/](docs/) 与官网 https://jqt.silentstudio.cn/docs（已上线）
 
 # JQt — Java 绑定 Qt 框架 / Java Bindings for Qt
 
 > 用 Java 写桌面应用，Qt（C++）负责渲染与事件。无需 C++ 编译器、无需 Qt SDK。
 > Desktop apps in Java, powered by Qt underneath.
 
+> **运行要求：Java 17+（LTS）**——发布的 jar 以 Java 17 字节码（--release 17）构建。
+
 ---
+
+---
+
+## 🆚 为什么选 JQt（Why JQt?）
+
+| | JQt | JavaFX / Swing | QtJambi |
+|---|-----|---------------|---------|
+| 原生观感 | ✅ Qt 原生 | ⚠️ 模拟 | ✅ |
+| API 与 Qt 对齐度 | ✅ 1:1 Widgets 映射 | — | ⚠️ 偏 Qt Quick |
+| 中文文档与支持 | ✅ | — | ❌ |
+| 工业模块（SQL/串口/打印） | ✅ 内置 | ❌ | ⚠️ |
+| 运行时轻量度 | ✅ 单 zip | ✅ JDK | ⚠️ 重 |
+
+JQt 对完整 Qt 6 API 面（路线图跟踪约 2172 方法）做 **L1/L2/L3 分级覆盖**：
+L1（常用 API）**92.7% 完成**；工业模块与平台独家能力已在交付中。
 
 ## 🛠 怎么实现的（How It Works）
 
@@ -85,7 +102,7 @@ list.onItemClicked(row -> ...);  window.onClose(() -> ...);
 window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 ```
 
-> 📚 **全部功能与完整 API**：见本仓库 [docs/](docs/)（官网文档站筹备中）
+> 📚 **全部功能与完整 API**：见本仓库 [docs/](docs/) 与官网 https://jqt.silentstudio.cn/docs
 
 ---
 
@@ -109,9 +126,9 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 | `jqt-0.7.5-Generator-Kit.jar` | 全部（Java API） |
 | `jqt-0.7.5-Generator-Kit-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库（双 Qt 版本） |
-| `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
-| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux（双版本） |
-| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS（双版本） |
+| `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
+| `libjqt-6.11.2.so` / `libjqt-6.8.3.so` | Linux（双版本） |
+| `libjqt-6.11.2.dylib` / `libjqt-6.8.3.dylib` | macOS（双版本） |
 
 > 最新发布见 [GitHub Releases](https://github.com/Silent-Studio-CN/JQt/releases)
 ## 📄 仓库内文档
@@ -125,9 +142,9 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 
 ## 🎁 社区资源（Community）
 
-仓库 [Community/](Community/) 目录收录社区贡献的**全部开源免费**资源：
+仓库 [Community/](Community/) 目录收录社区贡献的**免费源码**资源（source-available）：
 
-- **许可**：JSL-1.0（与 JQt 相同，见 [LICENSE.md](LICENSE.md)）——**免费使用、免费修改、免费分发**（遵守 JSL-1.0 条款即可）
+- **许可**：JSL-1.0（与 JQt 相同，见 [LICENSE.md](LICENSE.md)）——免费使用/修改/分发，但需遵守 JSL-1.0 条款（含商业营收门槛与开源义务，详见许可全文）
 - **当前收录**：
 
 | 资源 | 说明 |
@@ -173,3 +190,4 @@ app.setTheme("themes/fluent.qss.tpl", SolarizedTheme.vars(), true);   // 亮色
 - **JQt**：JSL-1.0（分层许可）——非商业使用免费；商业使用且累计营收低于 100 万美元免费（但需按 3.2(b) 开源义务公开应用源码）；累计营收达到或超过 100 万美元需签署商业许可或满足开源义务。完整条款见 [LICENSE.md](LICENSE.md)。
 - **Qt 运行时**：LGPLv3（动态链接），见 [LGPL-3.0.txt](LGPL-3.0.txt) 与 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 - **运行要求**：Java 17+（LTS）。发布的 jar 以 Java 17 字节码（--release 17）构建。
+

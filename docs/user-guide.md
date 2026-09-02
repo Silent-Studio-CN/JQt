@@ -1,4 +1,4 @@
-# JQt 用户指南（v0.7.4-Universal-Kit）
+# JQt 用户指南（v0.7.5-Generator-Kit）
 
 <details>
 <summary>🌐 语言 / Language</summary>
@@ -351,3 +351,4 @@ window.setLayout(hbox);
 
 - JQt: **JSL-1.0** tiered license (`LICENSE.md`);
 - Qt runtime in the package: **LGPLv3** (`LGPL-3.0.txt`) — dynamic linking satisfies compliance; your app need not be open source.
+

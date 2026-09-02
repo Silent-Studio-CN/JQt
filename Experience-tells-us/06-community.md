@@ -78,8 +78,8 @@ v0.7.3/0.7.4（QOpenGLWidget/QSerialPort）→ v0.7.5（60 值类型类）。
   - GitHub Releases（主渠道）
   - Maven Central：`io.github.silent-xiaomiao:jqt:0.7.5`（数字版本）
   - JitPack：`com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit`
-- GitHub Releases 只传 JDK26 主 jar + 完整包；旧版本 jar 放
-  `jqt.silentstudio.cn/releases`（站点尚未上线，README 显示 Coming Soon）。
+- GitHub Releases 传 Java 17（--release 17）主 jar + 完整包（每版资产见 Releases 页）；
+  官网 jqt.silentstudio.cn 已上线（文档/下载按版本归档）。
 
 ## 6. 测试文化（JQt 质量承诺）
 
@@ -98,3 +98,4 @@ v0.7.3/0.7.4（QOpenGLWidget/QSerialPort）→ v0.7.5（60 值类型类）。
 - 用户反馈退出码 -1 → onClose + shutdown hook 打点定位（见 04 章）。
 - 触摸屏环境的自动点击事件：先验证程序逻辑是否有触发路径（grep onClicked），
   不要轻易归因硬件——用户会介意。
+

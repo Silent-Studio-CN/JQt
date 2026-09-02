@@ -78,8 +78,8 @@ Example structure (v0.7.2) :
 - GitHub Releases (main channel)
 - Maven Central`io.github.silent-xiaomiao:jqt:0.7.5`(Digital version
 - JitPack:`com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit`
-- GitHub Releases only upload the JDK26 main jar + complete package; Old version jar storage
-`jqt.silentstudio.cn/releases`(The site has not been launched yet. The README shows Coming Soon.)
+- GitHub Releases upload the Java 17 (--release 17) main jar + complete package (assets per version on the Releases page);
+  the official site jqt.silentstudio.cn is live (docs/downloads archived per version).
 
 ## 6. Testing Culture (JQt Quality Commitment)
 
@@ -98,4 +98,5 @@ SmokeSqlDb 10/10.
 - User feedback exit code -1 → onClose + shutdown hook dot location (see Chapter 04).
 - Automatic click event in touchscreen environment: First verify whether the program logic has a trigger path (grep onClicked),
 Don't attribute it to hardware easily - users will mind.
+
 

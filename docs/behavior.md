@@ -1,6 +1,6 @@
 # JQt 行为契约（Behavior Contract）
 
-> 版本：v0.6.0 · 本文档是**显示规则/布局顺序/特殊控件行为**的权威说明，
+> 版本：v0.7.5（v0.6.0 起持续更新）· 本文档是**显示规则/布局顺序/特殊控件行为**的权威说明，
 > 回答社区反馈的高频问题（addWidget 规则、QStackedLayout、hide 顺序、动画清理等）。
 
 ## 1. 控件显示规则（v0.4.1+ 变更，最重要）
@@ -111,3 +111,4 @@ window.setLayout(stack);
 > 完整映射见 [qt-mapping.md](qt-mapping.md)。
 
 (C) SilentStudio
+

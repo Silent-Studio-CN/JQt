@@ -78,8 +78,8 @@ v0.7.3/0.7.4（QOpenGLWidget/QSerialPort）→ v0.7.5（60 值類型類）。
 - GitHub Releases（主渠道）
 - Maven Central：`io.github.silent-xiaomiao:jqt:0.7.5`（數字版本）
 - JitPack：`com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit`
-- GitHub Releases 只傳 JDK26 主 jar + 完整包；舊版本 jar 放
-`jqt.silentstudio.cn/releases`（站點尚未上線，README 顯示 Coming Soon）。
+- GitHub Releases 傳 Java 17（--release 17）主 jar + 完整包（每版資產見 Releases 頁）；
+  官網 jqt.silentstudio.cn 已上線（文件/下載按版本歸檔）。
 
 ## 6. 測試文化（JQt 質量承諾）
 
@@ -98,4 +98,5 @@ SmokeSqlDb 10/10。
 - 用戶反饋退出碼 -1 → onClose + shutdown hook 打點定位（見 04 章）。
 - 觸摸屏環境的自動點擊事件：先驗證程序邏輯是否有觸發路徑（grep onClicked），
 不要輕易歸因硬件——用戶會介意。
+
 

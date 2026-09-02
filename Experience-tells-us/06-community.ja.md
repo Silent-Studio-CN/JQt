@@ -78,8 +78,8 @@ v0.7.3 / 0.7.4 (qopenglwidget / qserialport)→v0.7.5(60値タイプの类)。
 - GitHub Releases(メインチャネル)です
 - Maven Centralです`io.github.silent-xiaomiao:jqt:0.7.5`(デジタル版です)
 - JitPackです`com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit`
-- GitHub ReleasesはただJDK26主jar +完全なパッケージをパスします;旧バージョンのjarは再生します
-`jqt.silentstudio.cn/releases`(サイトはまだローンチしていません、READMEはComing Soonを表示します)。
+- GitHub ReleasesはJava 17（--release 17）の主jar +完全なパッケージをアップロードします（各バージョンの資産はReleasesページにあります）；
+  公式サイト jqt.silentstudio.cn は稼働中です（ドキュメント/ダウンロードはバージョンごとにアーカイブ）。
 
 ## 6.テスト文化(JQt品質承諾)です。
 
@@ -98,4 +98,5 @@ SmokeSqlDb 10/10です。
 - ユーザーフィードバック退出コード-1→onClose + shutdown hook打点位置(04章参照)です。
 - タッチスクリーン環境の自働クリックイベント:まず、プログラム論理がトリガーパス(grep onClicked)を持っているかどうかを検証します。
 ハードウェアのせいにしてはいけませんユーザーは気にします
+
 

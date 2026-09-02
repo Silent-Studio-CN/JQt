@@ -1,3 +1,5 @@
+> ⚠️ **历史存档**：本文档记录 v0.5.0-TEST 时期的路线图决策，仅作历史参考。
+> 当前覆盖进度见 docs/qt6-classes.md 与 docs/api-implemented.md。
 # JQt v0.5.0-TEST 路线图
 
 > 版本命名：v0.5.0-TEST（v0.4.1-alpha 之后，后缀 alpha → test）
@@ -46,3 +48,4 @@
 - v0.5.0-TEST 发布：jar + Windows x64 完整包 + 双 Qt 裸库（x64/arm64/linux/macos）
 - API 文档同步：api-implemented.md / qt-mapping.md 增量更新
 - 版本标注：VERSION / README / CHANGELOG / RELEASE_NOTES 统一 v0.5.0-TEST
+

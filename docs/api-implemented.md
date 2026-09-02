@@ -1,4 +1,4 @@
-# JQt 已实现 API 清单（v0.7.4-Universal-Kit）
+# JQt 已实现 API 清单（v0.7.5-Generator-Kit）
 
 <details>
 <summary>🌐 语言 / Language</summary>
@@ -12,7 +12,7 @@
 <a id="zh"></a>
 ## 中文版
 
-> 本清单从源码自动提取，与 v0.7.4-Universal-Kit 发布包一一对应。
+> 本清单从源码自动提取，与 v0.7.5-Generator-Kit 发布包对应（最新 API 以源码为准）。
 > 所有控件继承 `QWidget`，共享其基础方法（见 1.0）。
 
 ### 1.0 基类 QWidget（所有控件共享）
@@ -267,7 +267,7 @@ clean-room 独立实现；Fluent 公开动效规范参数）。触摸屏无 hove
 <a id="en"></a>
 ## English Version
 
-> Extracted from the v0.7.4-Universal-Kit sources. All widgets extend `QWidget` (base methods in 1.0).
+> Extracted from the v0.7.5-Generator-Kit sources. All widgets extend `QWidget` (base methods in 1.0).
 
 ### 1.0 QWidget (base, shared by all widgets)
 
@@ -691,3 +691,4 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 - Linux 全局热键（X11 XGrabKey / Wayland portal）需 libX11 依赖且 Wayland 受限，列为 v0.7.x 候选，暂未实现
 - macOS 通知使用 NSUserNotification（Apple 已弃用但可用，无需权限弹窗）；Windows 通知为托盘气泡而非通知中心 Toast（Toast 需打包身份）
 - macOS 标题栏 API 建议在窗口 show() 前调用（NSWindow styleMask 修改时机）
+
