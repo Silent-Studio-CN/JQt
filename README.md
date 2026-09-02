@@ -11,6 +11,8 @@ JQt is a Java binding for [Qt 6](https://www.qt.io/), exposing Qt Widgets as pla
 Write your UI in Java; Qt handles rendering, events, theming, and platform integration.
 Works on **Windows, Linux, and macOS** (x64 + ARM64), built against **both Qt 6.8.3 LTS and 6.11.2**.
 
+> **Requires Java 17+ (LTS).** Published jars target Java 17 bytecode (--release 17).
+
 ```java
 import org.jqt.*;
 
@@ -184,7 +186,7 @@ CI builds all 4 platforms (Windows x64/ARM64, Linux, macOS) × 2 Qt versions on 
 
 ## Community
 
-The [Community/](Community/) directory collects open-source, free contributions:
+The [Community/](Community/) directory collects free source contributions (source-available, licensed under JSL-1.0 like the rest of the project):
 
 | Resource | What |
 |----------|------|
@@ -229,7 +231,7 @@ Want to contribute? Put your source in `Community/` (no build artifacts) — rev
 
 ## License
 
-- **JQt**: JSL-1.0 (JQt Source License) — free to use, modify, and distribute; see [LICENSE.md](LICENSE.md)
+- **JQt**: JSL-1.0 (JQt Source License) — tiered: free for non-commercial use; free for commercial use below USD 1M cumulative revenue (with open-source obligation for your app); commercial license required at/above the threshold. See [LICENSE.md](LICENSE.md) for the full terms.
 - **Qt runtime**: LGPLv3 (dynamic linking) — see [LGPL-3.0.txt](LGPL-3.0.txt) and [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)
 
 ---

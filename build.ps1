@@ -12,6 +12,7 @@
 #
 # NOTE: this file must stay ASCII-only (Windows PowerShell 5.1 reads
 #       BOM-less files as ANSI and would garble non-ASCII text).
+# NOTE: --release 17 keeps the published jar runnable on Java 17+ (LTS).
 # ============================================================================
 
 param(
@@ -35,7 +36,7 @@ $env:PATH = "$Mingw\bin;$Kit\bin;$env:PATH"
 Write-Host "==> [1/4] Compiling Java and generating JNI headers"
 New-Item -ItemType Directory -Force -Path $OutDir, $LibDir, $GenDir | Out-Null
 $javaFiles = Get-ChildItem (Join-Path $Root "java") -Recurse -Filter "*.java" | ForEach-Object { $_.FullName }
-& "$JDK\bin\javac.exe" -encoding UTF-8 -d $OutDir -h $GenDir $javaFiles
+& "$JDK\bin\javac.exe" --release 17 -encoding UTF-8 -d $OutDir -h $GenDir $javaFiles
 if ($LASTEXITCODE -ne 0) { throw "javac failed" }
 
 Write-Host "==> [2/4] Compiling native bridge (jqt.dll)"

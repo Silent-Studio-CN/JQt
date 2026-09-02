@@ -6,7 +6,8 @@
 #   dist/jqt-<VERSION>-<platform>.zip full platform package (jar + dll + runtime + docs)
 #
 # Usage:
-#   .\build-release.ps1               (uses local JDK 26 and current lib/)
+#   .\build-release.ps1               (uses local JDK and current lib/)
+#   jar classes target Java 17 (javac --release 17 in build.ps1).
 # ============================================================================
 
 param(
@@ -29,7 +30,15 @@ if (-not (Test-Path (Join-Path $Lib "jqt.dll"))) {
 New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 
 Write-Host "==> Packaging jqt-$Version.jar"
-& "$JDK\bin\jar.exe" --create --file (Join-Path $Dist "jqt-$Version.jar") -C $Out .
+# Clean residue: only org/jqt API classes belong in the published jar
+# (community demos may linger in out/ from dev runs).
+Get-ChildItem $Out -Filter "*.class" -File | Remove-Item -Force
+# Drop test/smoke/demo classes that share the org.jqt package (dev-only):
+#   Smoke*.class, JQt*Smoke*.class, *Demo*.class, JQtCrashProbe*, JQtHitTest*.class
+Get-ChildItem (Join-Path $Out "org\jqt") -Filter "*.class" | Where-Object {
+    $_.BaseName -match '^(Smoke|JQt\w*Smoke|\w*Demo|JQtCrashProbe|JQtHitTest)'
+} | Remove-Item -Force
+& "$JDK\bin\jar.exe" --create --file (Join-Path $Dist "jqt-$Version.jar") -C $Out org/jqt
 if ($LASTEXITCODE -ne 0) { throw "jar failed" }
 
 Write-Host "==> Assembling $Platform package"
@@ -39,7 +48,7 @@ New-Item -ItemType Directory -Force -Path $Pkg | Out-Null
 # Java API jar + native lib + Qt runtime (lib/ is self-contained) + docs
 Copy-Item (Join-Path $Dist "jqt-$Version.jar") $Pkg
 Copy-Item (Join-Path $Lib "jqt.dll") $Pkg
-Get-ChildItem $Lib -File | Where-Object { $_.Name -notmatch "^jqt\.dll$" } | Copy-Item -Destination $Pkg
+Get-ChildItem $Lib -File | Where-Object { $_.Name -notmatch "^jqt\.dll$" -and $_.Name -notmatch "\.bak$" } | Copy-Item -Destination $Pkg
 Get-ChildItem $Lib -Directory | Copy-Item -Destination $Pkg -Recurse
 
 # 文档（双语）

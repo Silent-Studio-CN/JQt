@@ -1,33 +1,24 @@
-# JQt v0.4.1-alpha
+# JQt Release Notes
 
-JQt v0.4.1 —— **Qt API 对齐版**：类名 Q 化 + 信号对齐 + 链式 API。
+Per-version release notes live in [docs/releases/](docs/releases/):
 
-## 本版变更（API 命名体系）
+| Version | Note |
+|---------|------|
+| v0.1.0-alpha | [docs/releases/v0.1.0-alpha.md](docs/releases/v0.1.0-alpha.md) |
+| v0.2.0-alpha | [docs/releases/v0.2.0-alpha.md](docs/releases/v0.2.0-alpha.md) |
+| v0.3.0-alpha | [docs/releases/v0.3.0-alpha.md](docs/releases/v0.3.0-alpha.md) |
+| v0.4.0-alpha | [docs/releases/v0.4.0-alpha.md](docs/releases/v0.4.0-alpha.md) |
+| v0.4.1-alpha | [docs/releases/v0.4.1-alpha.md](docs/releases/v0.4.1-alpha.md) |
+| v0.5.0-TEST | [docs/releases/v0.5.0-TEST.md](docs/releases/v0.5.0-TEST.md) |
+| v0.5.1-TEST | [docs/releases/v0.5.1-TEST.md](docs/releases/v0.5.1-TEST.md) |
+| v0.6.0-TEST | [docs/releases/v0.6.0-TEST.md](docs/releases/v0.6.0-TEST.md) |
+| v0.6.1-Exclusive-Kit | [docs/releases/v0.6.1-Exclusive-Kit.md](docs/releases/v0.6.1-Exclusive-Kit.md) |
+| v0.7.0-Universal-Kit | [docs/releases/v0.7.0-Universal-Kit.md](docs/releases/v0.7.0-Universal-Kit.md) |
+| v0.7.1-Universal-Kit | [docs/releases/v0.7.1-Universal-Kit.md](docs/releases/v0.7.1-Universal-Kit.md) |
+| v0.7.2-Universal-Kit | [docs/releases/v0.7.2-Universal-Kit.md](docs/releases/v0.7.2-Universal-Kit.md) |
+| v0.7.3-Universal-Kit | [docs/releases/v0.7.3-Universal-Kit.md](docs/releases/v0.7.3-Universal-Kit.md) |
+| v0.7.4-Universal-Kit | [docs/releases/v0.7.4-Universal-Kit.md](docs/releases/v0.7.4-Universal-Kit.md) |
+| v0.7.5-Generator-Kit | [docs/releases/v0.7.5-Generator-Kit.md](docs/releases/v0.7.5-Generator-Kit.md) |
 
-- **类名 Q 化**：有 Qt 对应物的类改用 Q 前缀——
-  `QPushButton` / `QLineEdit` / `QComboBox` / `QListWidget` / `QCheckBox` / `QMainWindow` /
-  `QWidget` / `QApplication` / `QSlider` / `QProgressBar` / `QScrollArea` / `QMessageBox` /
-  `QFrame` / `QVBoxLayout` / `QHBoxLayout` / `QLayout` —— **Qt 文档直接可查，零认知成本**
-- **JQt 原创控件保留 JQt 前缀**：JQtSwitch / JQtPivot / JQtNavigation / JQtTitleBar /
-  JQtInfoBar / JQtEasing / JQtAnimation 系列
-- **信号对齐 Qt**：`onClick` → `onClicked`（其余本就对齐）
-- **链式 API**：所有 onXxx 返回 this：`btn.onClicked(...).setText("OK").setFixedSize(100,40)`
-- 完整映射：[docs/qt-mapping.md](docs/qt-mapping.md)
+---
 
-> 破坏性变更：旧类名（JQtButton 等）不再存在，迁移见映射表。
-
-## 发布包
-
-| 资产 | 说明 |
-|------|------|
-| `jqt-0.4.1-alpha.jar` | Java API（平台无关） |
-| `jqt-0.4.1-alpha-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2） |
-| `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库 |
-| `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
-| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux |
-| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS |
-
-## 许可
-
-- JQt：JQt Source License v1.0（JSL-1.0）（LICENSE.md）
-- Qt 运行时：LGPLv3（LGPL-3.0.txt）
