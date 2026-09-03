@@ -27,12 +27,11 @@
 | 运行验证 | SVM（Silent Virtual Machine：Rust + QEMU + adb）、ARM 翻译层（libndk_translation）、uiautomator、logcat（tag=jqt）、screencap | 原生 x86_64 与 arm64 翻译层均通过；MuMu Android 15 用户侧通过 |
 | 调试 | __android_log_print（fprintf(stderr) 在 Android 被丢弃）、adb shell input tap | 点击交互（clicked 信号）logcat 可证 |
 
-## 路线（对应 docs/JQt移动端意见书.md）
+## 路线（详见 docs/android-build-guide.md 与 docs/poc-status.md）
 
-1. PoC 编译：NDK clang 编译 jqt_bridge.cpp（-fsyntax-only → 完整 .so）
-2. PoC 运行：最小 APK（QMainWindow + QPushButton + 输入框 + 软键盘）真机/模拟器验证
-3. 结论：**Widgets-on-Android 可行**（QApplication/控件/事件循环/点击交互全链路验证）→ 平台适配（触摸/生命周期/安全区）继续
-   不可行 → 转 Qt Quick 绑定层立项（意见书替代路线）
+1. ~~PoC 编译~~ **完成**：NDK clang 编译 jqt_bridge.cpp → 4 ABI libjqt_<abi>.so
+2. ~~PoC 运行~~ **完成**：多 ABI APK（minSdk 28）+ 模拟器验证（原生 x86_64 与 ARM 翻译层、MuMu Android 15）
+3. **进行中**：Java API 调用链接入（Java → JNI → Qt 全链路）→ 平台适配（触摸/生命周期/安全区）→ 真机验证
 4. 发布：Android 产物随 JQt 版本发布（CI 加 android job）
 
 ## 关键踩坑（2026-09）
