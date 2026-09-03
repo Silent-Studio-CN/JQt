@@ -22,14 +22,6 @@
 
 #include <jni.h>
 
-// Android (ART) resolves JNI natives by C symbol name only (no C++ demangling,
-// unlike HotSpot). Force extern "C" linkage for every JNIEXPORT function on
-// Android builds so Java_org_jqt_* symbols are exported unmangled.
-#ifdef __ANDROID__
-#undef JNIEXPORT
-#define JNIEXPORT extern "C" __attribute__((visibility("default")))
-#endif
-
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -1049,6 +1041,9 @@ JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSchedule(JNIEnv* env, job
 JNIEXPORT void JNICALL Java_org_jqt_QApplication_runOnQtThread(JNIEnv* env, jclass /*cls*/, jobject task) {
     if (g_app == nullptr || task == nullptr) {
         return;
+    }
+    if (g_jvm == nullptr) {
+        env->GetJavaVM(&g_jvm);   // callbackEnv() 依赖 g_jvm；静态入口可能先于 nativeCreateApp 被调用
     }
     jobject gTask = env->NewGlobalRef(task);
     QMetaObject::invokeMethod(g_app, [gTask]() {
