@@ -41,14 +41,9 @@ public class JQtPocActivity extends QtActivity {
                 try {
                     QApplication app = new QApplication();   // reuses main()'s QApplication
                     System.out.println("[jqt-poc] QApplication reused");
-                    QMainWindow win = new QMainWindow("JQt on Android", 720, 1280);
-                    System.out.println("[jqt-poc] window created");
                     QPushButton btn = new QPushButton("Java button");
                     btn.onClicked(() -> System.out.println("[jqt-poc] Java clicked"));
-                    QVBoxLayout layout = new QVBoxLayout();
-                    layout.addWidget(btn);
-                    win.setLayout(layout);
-                    win.show();
+                    btn.show();   // top-level button window (verified rendering path)
                     System.out.println("[jqt-poc] Java-driven UI ready");
                 } catch (Throwable t) {
                     System.out.println("[jqt-poc] FAILED: " + t);
