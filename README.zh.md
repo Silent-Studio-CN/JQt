@@ -1,4 +1,4 @@
-> 📚 **功能与 API 文档**：见本仓库 [docs/](docs/) 与官网 https://jqt.silentstudio.cn/docs（已上线）
+> 📚 **功能与 API 文档**：见本仓库 [docs/](docs/) · 官网/文档导航 https://jqt.silentstudio.cn/docs
 
 # JQt — Java 绑定 Qt 框架 / Java Bindings for Qt
 
@@ -102,7 +102,7 @@ list.onItemClicked(row -> ...);  window.onClose(() -> ...);
 window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 ```
 
-> 📚 **全部功能与完整 API**：见本仓库 [docs/](docs/) 与官网 https://jqt.silentstudio.cn/docs
+> 📚 **全部功能与完整 API**：见本仓库 [docs/](docs/) · 官网/文档导航 https://jqt.silentstudio.cn/docs
 
 ---
 
@@ -190,4 +190,6 @@ app.setTheme("themes/fluent.qss.tpl", SolarizedTheme.vars(), true);   // 亮色
 - **JQt**：JSL-1.0（分层许可）——非商业使用免费；商业使用且累计营收低于 100 万美元免费（但需按 3.2(b) 开源义务公开应用源码）；累计营收达到或超过 100 万美元需签署商业许可或满足开源义务。完整条款见 [LICENSE.md](LICENSE.md)。
 - **Qt 运行时**：LGPLv3（动态链接），见 [LGPL-3.0.txt](LGPL-3.0.txt) 与 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)。
 - **运行要求**：Java 17+（LTS）。发布的 jar 以 Java 17 字节码（--release 17）构建。
+
+
 

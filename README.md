@@ -12,6 +12,7 @@ Write your UI in Java; Qt handles rendering, events, theming, and platform integ
 Works on **Windows, Linux, and macOS** (x64 + ARM64), built against **both Qt 6.8.3 LTS and 6.11.2**.
 
 > **Requires Java 17+ (LTS).** Published jars target Java 17 bytecode (--release 17).
+> **Official site**: https://jqt.silentstudio.cn · **Docs**: https://jqt.silentstudio.cn/docs (redirects to the docs site)
 
 ```java
 import org.jqt.*;
