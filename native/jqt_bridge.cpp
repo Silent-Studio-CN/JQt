@@ -1038,7 +1038,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeSchedule(JNIEnv* env, job
 // 静态入口：立即在 Qt GUI 线程执行 Java Runnable（不依赖 QApplication Java 实例）。
 // Android：main() 创建 QApplication 并 attach 到 g_app 后即可调用；
 // g_app 未就绪时直接返回（调用方用 nativeIsQtReady 轮询）。
-JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeRunOnQtThread(JNIEnv* env, jclass /*cls*/, jobject task) {
+JNIEXPORT void JNICALL Java_org_jqt_QApplication_runOnQtThread(JNIEnv* env, jclass /*cls*/, jobject task) {
     if (g_app == nullptr || task == nullptr) {
         return;
     }
@@ -1055,7 +1055,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QApplication_nativeRunOnQtThread(JNIEnv* env
 }
 
 // Qt 运行时就绪查询（进程级 QApplication 已创建并 attach）。
-JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_nativeIsQtReady(JNIEnv* /*env*/, jclass /*cls*/) {
+JNIEXPORT jboolean JNICALL Java_org_jqt_QApplication_isQtReady(JNIEnv* /*env*/, jclass /*cls*/) {
     return g_app != nullptr ? JNI_TRUE : JNI_FALSE;
 }
 
