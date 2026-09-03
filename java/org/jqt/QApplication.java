@@ -276,6 +276,15 @@ public class QApplication {
         appInstance().schedule(task, 0);
     }
 
+    /**
+     * 立即在 Qt GUI 线程执行任务（静态入口，无需先创建 QApplication 实例）。
+     * Android：main() 完成 QApplication attach 后可用；就绪判断用 {@link #isQtReady()}。
+     */
+    public static native void runOnQtThread(Runnable task);
+
+    /** Qt 运行时是否就绪（进程级 QApplication 已创建并 attach；Android main() 之后为 true）。 */
+    public static native boolean isQtReady();
+
     /** 单例访问（runOnUiThread 静态入口用）。 */
     private static volatile QApplication instance;
 
