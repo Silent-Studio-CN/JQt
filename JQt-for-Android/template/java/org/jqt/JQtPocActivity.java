@@ -23,14 +23,22 @@ public class JQtPocActivity extends QtActivity {
         tryStartJavaDemo(0);
     }
 
-    /** Poll Qt readiness (first launch JITs Qt java bindings -> can take seconds). */
+    /** Poll Qt readiness. QtLoader dlopens libjqt asynchronously (can take seconds);
+     *  until then static native lookups throw UnsatisfiedLinkError - keep polling. */
     private void tryStartJavaDemo(final int elapsedMs) {
-        if (QApplication.isQtReady()) {
+        boolean ready = false;
+        try {
+            ready = QApplication.isQtReady();
+            if (elapsedMs == 0) System.out.println("[jqt-poc] isQtReady=" + ready);
+        } catch (UnsatisfiedLinkError e) {
+            if (elapsedMs == 0) System.out.println("[jqt-poc] link pending: " + e);
+            ready = false;   // libjqt not yet loaded by QtLoader
+        }
+        if (ready) {
             QApplication.runOnQtThread(() -> {
                 try {
                     QApplication app = new QApplication();   // reuses main()'s QApplication
-                    QWidget win = new QWidget();
-                    win.setWindowTitle("JQt on Android");
+                    QMainWindow win = new QMainWindow("JQt on Android", 720, 1280);
                     QPushButton btn = new QPushButton("Java button");
                     btn.onClicked(() -> System.out.println("[jqt-poc] Java clicked"));
                     QVBoxLayout layout = new QVBoxLayout();

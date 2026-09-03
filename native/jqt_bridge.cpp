@@ -22,6 +22,14 @@
 
 #include <jni.h>
 
+// Android (ART) resolves JNI natives by C symbol name only (no C++ demangling,
+// unlike HotSpot). Force extern "C" linkage for every JNIEXPORT function on
+// Android builds so Java_org_jqt_* symbols are exported unmangled.
+#ifdef __ANDROID__
+#undef JNIEXPORT
+#define JNIEXPORT extern "C" __attribute__((visibility("default")))
+#endif
+
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
