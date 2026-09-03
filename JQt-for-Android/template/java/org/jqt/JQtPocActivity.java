@@ -35,10 +35,14 @@ public class JQtPocActivity extends QtActivity {
             ready = false;   // libjqt not yet loaded by QtLoader
         }
         if (ready) {
+            System.out.println("[jqt-poc] scheduling Java UI on Qt thread");
             QApplication.runOnQtThread(() -> {
+                System.out.println("[jqt-poc] runnable entered (Qt thread)");
                 try {
                     QApplication app = new QApplication();   // reuses main()'s QApplication
+                    System.out.println("[jqt-poc] QApplication reused");
                     QMainWindow win = new QMainWindow("JQt on Android", 720, 1280);
+                    System.out.println("[jqt-poc] window created");
                     QPushButton btn = new QPushButton("Java button");
                     btn.onClicked(() -> System.out.println("[jqt-poc] Java clicked"));
                     QVBoxLayout layout = new QVBoxLayout();
