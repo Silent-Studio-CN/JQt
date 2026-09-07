@@ -96,6 +96,31 @@ public class QMenu extends QWidget {
     public int exec(QWidget anchor) { return nativeExecAnchor(nativeHandle, anchor.nativeHandle); }
     private static native int nativeExecAnchor(long handle, long anchorHandle);
 
+    // ---- v1.8.0 L1-100 收官：分隔线与子菜单（手搓）----
+
+    /** 添加分隔线（QMenu::addSeparator）。 */
+    public void addSeparator() {
+        nativeAddSeparator(nativeHandle);
+    }
+    private static native void nativeAddSeparator(long handle);
+
+    /** 添加子菜单并返回（QMenu::addMenu(String)；与 QMenuBar.addMenu 同款，子菜单归本菜单管理）。 */
+    public QMenu addMenu(String title) {
+        QMenu sub = new QMenu();
+        sub.setTitle(title);
+        nativeAddMenu(nativeHandle, sub.nativeHandle());
+        return sub;
+    }
+
+    /** 添加已有菜单为子菜单（QMenu::addMenu(QMenu)）。 */
+    public void addMenu(QMenu menu) {
+        if (menu == null) {
+            return;
+        }
+        nativeAddMenu(nativeHandle, menu.nativeHandle());
+    }
+    private static native void nativeAddMenu(long handle, long subHandle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isEmpty（Qt isEmpty）。 */
     public boolean isEmpty() {

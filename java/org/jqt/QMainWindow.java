@@ -306,6 +306,229 @@ public class QMainWindow extends QWidget {
 
     // L1：toolbar 相关信号由 QToolBar 提供（JQtWindowShell 非 QMainWindow 类型）
 
+    // ==================== v1.8.0 L1-100：主窗口语义（手搓批）====================
+    // 设计（壳内组装）：不动 C++ JQtWindowShell；在 Java 侧用现有布局/控件组装
+    //   [menuBar] → [toolbar…] → [topDock] → [leftDock | central | rightDock] → [bottomDock] → [statusBar]
+    // 容器（QFrame）与条均为持久对象，结构变化时整体重建内部布局（Qt 会销毁旧布局，控件保留）。
+    // 说明：未调用下列任何 API 的旧窗口保持原行为（addWidget 自动摆放 / setLayout 直挂），零回归。
+
+    /** 停靠区常量（与 Qt::DockWidgetArea 一致）。 */
+    public static final int DOCK_LEFT = 1;
+    public static final int DOCK_RIGHT = 2;
+    public static final int DOCK_TOP = 4;
+    public static final int DOCK_BOTTOM = 8;
+
+    private boolean mainStructureEngaged;
+    private QMenuBar menuBarWidget;          // setMenuBar / menuBar() 惰性创建
+    private QStatusBar statusBarWidget;      // setStatusBar / statusBar() 惰性创建
+    private final List<QToolBar> toolBars = new ArrayList<>();
+    private QWidget centralContent;
+    private final List<QWidget> leftDocks = new ArrayList<>();
+    private final List<QWidget> rightDocks = new ArrayList<>();
+    private final List<QWidget> topDocks = new ArrayList<>();
+    private final List<QWidget> bottomDocks = new ArrayList<>();
+    private QFrame centralFrame;              // central 内容容器（持久）
+    private QFrame leftFrame, rightFrame, topFrame, bottomFrame;
+    private QFrame middleFrame;               // 中行（左停靠|中央|右停靠）容器（持久）
+
+    /** 设置中央控件（setCentralWidget；替换旧的中央内容）。 */
+    public void setCentralWidget(QWidget widget) {
+        ensureCentralFrame();
+        if (widget == null) {
+            if (centralContent != null) {
+                centralContent.setParent(null);
+                centralContent = null;
+            }
+            return;
+        }
+        if (centralContent != widget) {
+            if (centralContent != null) {
+                centralContent.setParent(null);
+            }
+            centralContent = widget;
+        }
+        engage();
+        rebuildMainLayout();
+    }
+
+    /** 中央控件（未设置返回 null）。 */
+    public QWidget centralWidget() {
+        return centralContent;
+    }
+
+    /** 设置菜单栏（setMenuBar；替换旧的）。 */
+    public void setMenuBar(QMenuBar bar) {
+        if (menuBarWidget != null && menuBarWidget != bar) {
+            menuBarWidget.setParent(null);
+        }
+        menuBarWidget = bar;
+        engage();
+        rebuildMainLayout();
+    }
+
+    /** 菜单栏（menuBar；Qt 语义：无则惰性创建一个并挂载）。 */
+    public QMenuBar menuBar() {
+        if (menuBarWidget == null) {
+            setMenuBar(new QMenuBar());
+        }
+        return menuBarWidget;
+    }
+
+    /** 设置状态栏（setStatusBar；替换旧的）。 */
+    public void setStatusBar(QStatusBar bar) {
+        if (statusBarWidget != null && statusBarWidget != bar) {
+            statusBarWidget.setParent(null);
+        }
+        statusBarWidget = bar;
+        engage();
+        rebuildMainLayout();
+    }
+
+    /** 状态栏（statusBar；Qt 语义：无则惰性创建一个并挂载）。 */
+    public QStatusBar statusBar() {
+        if (statusBarWidget == null) {
+            setStatusBar(new QStatusBar());
+        }
+        return statusBarWidget;
+    }
+
+    /** 添加工具条（addToolBar；多个按添加顺序纵向堆叠）。 */
+    public void addToolBar(QToolBar bar) {
+        if (bar == null || toolBars.contains(bar)) {
+            return;
+        }
+        toolBars.add(bar);
+        engage();
+        rebuildMainLayout();
+    }
+
+    /** 移除工具条（removeToolBar；控件脱离窗口）。 */
+    public void removeToolBar(QToolBar bar) {
+        if (bar == null || !toolBars.remove(bar)) {
+            return;
+        }
+        bar.setParent(null);
+        rebuildMainLayout();
+    }
+
+    /** 添加停靠控件（addDockWidget；area 见 DOCK_* 常量）。 */
+    public void addDockWidget(int area, QWidget widget) {
+        if (widget == null) {
+            return;
+        }
+        List<QWidget> target;
+        switch (area) {
+            case DOCK_LEFT:  target = leftDocks; break;
+            case DOCK_RIGHT: target = rightDocks; break;
+            case DOCK_TOP:   target = topDocks; break;
+            case DOCK_BOTTOM: target = bottomDocks; break;
+            default: throw new IllegalArgumentException("非法停靠区: " + area + "（DOCK_LEFT/RIGHT/TOP/BOTTOM）");
+        }
+        if (!target.contains(widget)) {
+            target.add(widget);
+        }
+        engage();
+        rebuildMainLayout();
+    }
+
+    /** 移除停靠控件（removeDockWidget；控件脱离窗口）。 */
+    public void removeDockWidget(QWidget widget) {
+        if (widget == null) {
+            return;
+        }
+        boolean removed = leftDocks.remove(widget) | rightDocks.remove(widget)
+                        | topDocks.remove(widget) | bottomDocks.remove(widget);
+        if (removed) {
+            widget.setParent(null);
+            rebuildMainLayout();
+        }
+    }
+
+    // ---- 内部：惰性容器 + 布局重建 ----
+
+    private void ensureCentralFrame() {
+        if (centralFrame == null) {
+            centralFrame = new QFrame();
+        }
+    }
+
+    /** 侧停靠帧：持久对象，每次重建仅替换其内部布局（避免孤儿控件）。 */
+    private QFrame ensureSideFrame(QFrame frame, List<QWidget> docks, boolean horizontal) {
+        QFrame f = frame != null ? frame : new QFrame();
+        QLayout fill = horizontal ? new QHBoxLayout() : new QVBoxLayout();
+        fill.setContentsMargins(0, 0, 0, 0);
+        fill.setSpacing(0);
+        for (QWidget w : docks) {
+            fill.addWidget(w);
+        }
+        nativeSetLayoutForce(f.nativeHandle(), fill.nativeHandle());
+        return f;
+    }
+
+    private void engage() {
+        if (mainStructureEngaged) {
+            return;
+        }
+        mainStructureEngaged = true;
+        ensureCentralFrame();
+    }
+
+    /** 结构变更后重建内部布局（旧主布局由 Qt 销毁；条/帧为持久对象，仅内层布局重建）。 */
+    private void rebuildMainLayout() {
+        if (!mainStructureEngaged) {
+            return;
+        }
+        QVBoxLayout mainV = new QVBoxLayout();
+        mainV.setContentsMargins(0, 0, 0, 0);
+        mainV.setSpacing(0);
+
+        if (menuBarWidget != null) {
+            mainV.addWidget(menuBarWidget);
+        }
+        for (QToolBar tb : toolBars) {
+            mainV.addWidget(tb);
+        }
+        if (!topDocks.isEmpty()) {
+            topFrame = ensureSideFrame(topFrame, topDocks, true);
+            mainV.addWidget(topFrame);
+        }
+        // 中行：左停靠 | 中央(拉伸) | 右停靠
+        QHBoxLayout middle = new QHBoxLayout();
+        middle.setContentsMargins(0, 0, 0, 0);
+        middle.setSpacing(0);
+        if (!leftDocks.isEmpty()) {
+            leftFrame = ensureSideFrame(leftFrame, leftDocks, false);
+            middle.addWidget(leftFrame);
+        }
+        ensureCentralFrame();
+        QVBoxLayout centralFill = new QVBoxLayout();
+        centralFill.setContentsMargins(0, 0, 0, 0);
+        centralFill.setSpacing(0);
+        if (centralContent != null) {
+            centralFill.addWidget(centralContent);
+        }
+        nativeSetLayoutForce(centralFrame.nativeHandle(), centralFill.nativeHandle());
+        middle.addWidget(centralFrame);
+        middle.setStretch(middle.count() - 1, 1);
+        if (!rightDocks.isEmpty()) {
+            rightFrame = ensureSideFrame(rightFrame, rightDocks, false);
+            middle.addWidget(rightFrame);
+        }
+        if (middleFrame == null) {
+            middleFrame = new QFrame();
+        }
+        nativeSetLayoutForce(middleFrame.nativeHandle(), middle.nativeHandle());
+        mainV.addWidget(middleFrame);
+        if (!bottomDocks.isEmpty()) {
+            bottomFrame = ensureSideFrame(bottomFrame, bottomDocks, true);
+            mainV.addWidget(bottomFrame);
+        }
+        if (statusBarWidget != null) {
+            mainV.addWidget(statusBarWidget);
+        }
+        nativeSetLayoutForce(nativeHandle, mainV.nativeHandle());
+    }
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** documentMode（Qt documentMode）。 */
     public boolean documentMode() {
