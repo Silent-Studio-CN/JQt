@@ -54,6 +54,62 @@ public class QDialog extends QWidget {
     private native void nativeAccept(long handle);
     private native void nativeReject(long handle);
 
+    // ---- v1.8.0 L1-100：结果码 + accepted/rejected 信号 ----
+
+    /** 以指定结果码关闭对话框（QDialog::done；模态 exec() 返回该码）。 */
+    public void done(int result) {
+        nativeDone(nativeHandle, result);
+    }
+    private native void nativeDone(long handle, int result);
+
+    /** 对话框结果码（QDialog::result；默认 0 = Rejected，accept 后为 1）。 */
+    public int result() {
+        return nativeResult(nativeHandle);
+    }
+    private native int nativeResult(long handle);
+
+    private final java.util.List<Runnable> onAcceptedHandlers = new java.util.ArrayList<>();
+    private final java.util.List<Runnable> onRejectedHandlers = new java.util.ArrayList<>();
+    private volatile boolean acceptedConn;
+    private volatile boolean rejectedConn;
+
+    /** 对话框以 Accepted 结果关闭回调（Qt accepted 信号；accept()/done(1) 触发）。链式。 */
+    public QDialog onAccepted(Runnable handler) {
+        onAcceptedHandlers.add(handler);
+        if (!acceptedConn) {
+            acceptedConn = true;
+            nativeConnectAccepted(nativeHandle);
+        }
+        return this;
+    }
+
+    /** 对话框以 Rejected 结果关闭回调（Qt rejected 信号；reject()/done(0) 触发）。链式。 */
+    public QDialog onRejected(Runnable handler) {
+        onRejectedHandlers.add(handler);
+        if (!rejectedConn) {
+            rejectedConn = true;
+            nativeConnectRejected(nativeHandle);
+        }
+        return this;
+    }
+
+    private native void nativeConnectAccepted(long handle);
+    private native void nativeConnectRejected(long handle);
+
+    /** 由 C++ 侧在 accepted 信号时回调（JNI）。 */
+    void nativeHandleAccepted() {
+        for (Runnable h : onAcceptedHandlers) {
+            h.run();
+        }
+    }
+
+    /** 由 C++ 侧在 rejected 信号时回调（JNI）。 */
+    void nativeHandleRejected() {
+        for (Runnable h : onRejectedHandlers) {
+            h.run();
+        }
+    }
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isModal（Qt isModal）。 */
     public boolean isModal() {

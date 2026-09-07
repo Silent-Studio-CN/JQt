@@ -17,9 +17,19 @@ public class QScrollArea extends QWidget {
         registerCleaner();
     }
 
-    /** 设置滚动内容（内容控件生命周期移交滚动区管理）。 */
+    private QWidget contentWidget;
+
+    /** 设置滚动内容（内容控件生命周期移交滚动区管理；widget() 返回同一对象）。 */
     public void setWidget(QWidget widget) {
-        nativeSetWidget(nativeHandle, widget.nativeHandle());
+        contentWidget = widget;
+        if (widget != null) {
+            nativeSetWidget(nativeHandle, widget.nativeHandle());
+        }
+    }
+
+    /** 当前滚动内容（QScrollArea::widget；未设置返回 null）。 */
+    public QWidget widget() {
+        return contentWidget;
     }
 
     /** 内容宽度是否跟随滚动区（默认 true）。 */

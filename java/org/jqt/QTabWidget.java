@@ -62,6 +62,15 @@ public class QTabWidget extends QWidget {
         }
     }
 
+    /** 在指定位置插入一页，返回其 index（QTabWidget::insertTab）。 */
+    public int insertTab(int index, QWidget widget, String title) {
+        if (widget == null) {
+            return -1;
+        }
+        return nativeInsertTab(nativeHandle, index, widget.nativeHandle, title);
+    }
+    private static native int nativeInsertTab(long handle, int index, long childHandle, String title);
+
     // ---- L1 补全（v0.6.0）----
 
     /** 清空全部页。 */

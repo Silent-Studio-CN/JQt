@@ -10143,3 +10143,310 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QInputDialog_nativeTextValue(JNIEnv* env,
     return env->NewStringUTF(__jqt_ret.toUtf8().constData());
 }
 
+// ============================================================================
+// v1.8.0 L1-100 批次（Java 侧同名区块；静态 native → jclass，实例 native → jobject）
+// ============================================================================
+
+// ---- QWidget：setParent / setAttribute（WA_ 白名单 1-9）----
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetParent(JNIEnv* env, jclass /*cls*/, jlong handle, jlong parentHandle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+    QWidget* p = nullptr;
+    if (parentHandle != 0) {
+        p = static_cast<QWidget*>(requireHandle(env, parentHandle));
+        if (p == nullptr) { return; }  // requireHandle 已抛 IllegalStateException
+    }
+    w->setParent(p);
+    std::lock_guard<std::mutex> lock(g_handleMutex);
+    auto it = g_javaOwned.find(static_cast<int64_t>(handle));
+    if (it != g_javaOwned.end()) {
+        it->second = (p == nullptr);  // 有父 → Qt 管理；脱离 → 回 Java（Cleaner）管理
+    }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetAttribute(JNIEnv* env, jclass /*cls*/, jlong handle, jint attribute, jboolean on) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+    Qt::WidgetAttribute wa;
+    switch (attribute) {
+        case 1: wa = Qt::WA_DeleteOnClose; break;
+        case 2: wa = Qt::WA_TranslucentBackground; break;
+        case 3: wa = Qt::WA_NoSystemBackground; break;
+        case 4: wa = Qt::WA_OpaquePaintEvent; break;
+        case 5: wa = Qt::WA_ShowWithoutActivating; break;
+        case 6: wa = Qt::WA_AcceptTouchEvents; break;
+        case 7: wa = Qt::WA_DontShowOnScreen; break;
+        case 8: wa = Qt::WA_AlwaysShowToolTips; break;
+        case 9: wa = Qt::WA_Disabled; break;
+        default: return;  // 白名单外静默忽略（值仅供本 API，勿跨版本依赖）
+    }
+    w->setAttribute(wa, on == JNI_TRUE);
+}
+
+// ---- QPushButton（QAbstractButton 状态）----
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPushButton_nativeIsCheckable(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QPushButton* btn = static_cast<QPushButton*>(requireHandle(env, handle));
+    return (btn != nullptr && btn->isCheckable()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QPushButton_nativeIsDown(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QPushButton* btn = static_cast<QPushButton*>(requireHandle(env, handle));
+    return (btn != nullptr && btn->isDown()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QPushButton_nativeSetDown(JNIEnv* env, jclass /*cls*/, jlong handle, jboolean down) {
+    QPushButton* btn = static_cast<QPushButton*>(requireHandle(env, handle));
+    if (btn != nullptr) { btn->setDown(down == JNI_TRUE); }
+}
+
+// ---- QLabel：setPixmap（QPixmap 非 QObject：句柄 = 裸指针，仅作读取不接管）----
+JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeSetPixmap(JNIEnv* env, jclass /*cls*/, jlong handle, jlong pixmapHandle) {
+    QLabel* lbl = static_cast<QLabel*>(requireHandle(env, handle));
+    QPixmap* pm = reinterpret_cast<QPixmap*>(pixmapHandle);
+    if (lbl == nullptr || pm == nullptr || pm->isNull()) { return; }
+    lbl->setPixmap(*pm);
+}
+
+// ---- QLineEdit：选区三件 ----
+JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeDeselect(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QLineEdit* edit = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (edit != nullptr) { edit->deselect(); }
+}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QLineEdit_nativeHasSelectedText(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QLineEdit* edit = static_cast<QLineEdit*>(requireHandle(env, handle));
+    return (edit != nullptr && edit->hasSelectedText()) ? JNI_TRUE : JNI_FALSE;
+}
+JNIEXPORT jstring JNICALL Java_org_jqt_QLineEdit_nativeSelectedText(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QLineEdit* edit = static_cast<QLineEdit*>(requireHandle(env, handle));
+    if (edit == nullptr) { return env->NewStringUTF(""); }
+    return env->NewStringUTF(edit->selectedText().toUtf8().constData());
+}
+
+// ---- QComboBox：insertItem / itemText / currentData（QVariant 简化契约）----
+JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeInsertItem(JNIEnv* env, jclass /*cls*/, jlong handle, jint index, jstring text) {
+    QComboBox* combo = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (combo == nullptr) { return; }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    combo->insertItem(static_cast<int>(index), QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+JNIEXPORT jstring JNICALL Java_org_jqt_QComboBox_nativeItemText(JNIEnv* env, jclass /*cls*/, jlong handle, jint index) {
+    QComboBox* combo = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (combo == nullptr) { return env->NewStringUTF(""); }
+    return env->NewStringUTF(combo->itemText(static_cast<int>(index)).toUtf8().constData());
+}
+JNIEXPORT jobject JNICALL Java_org_jqt_QComboBox_nativeCurrentData(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QComboBox* combo = static_cast<QComboBox*>(requireHandle(env, handle));
+    if (combo == nullptr) { return nullptr; }
+    const QVariant v = combo->currentData();
+    if (!v.isValid()) { return nullptr; }
+    switch (v.metaType().id()) {
+        case QMetaType::Int: {
+            jclass c = env->FindClass("java/lang/Integer");
+            jmethodID m = env->GetStaticMethodID(c, "valueOf", "(I)Ljava/lang/Integer;");
+            return env->CallStaticObjectMethod(c, m, static_cast<jint>(v.toInt()));
+        }
+        case QMetaType::Double: {
+            jclass c = env->FindClass("java/lang/Double");
+            jmethodID m = env->GetStaticMethodID(c, "valueOf", "(D)Ljava/lang/Double;");
+            return env->CallStaticObjectMethod(c, m, static_cast<jdouble>(v.toDouble()));
+        }
+        case QMetaType::Bool: {
+            jclass c = env->FindClass("java/lang/Boolean");
+            jmethodID m = env->GetStaticMethodID(c, "valueOf", "(Z)Ljava/lang/Boolean;");
+            return env->CallStaticObjectMethod(c, m, v.toBool() ? JNI_TRUE : JNI_FALSE);
+        }
+        case QMetaType::LongLong: {
+            jclass c = env->FindClass("java/lang/Long");
+            jmethodID m = env->GetStaticMethodID(c, "valueOf", "(J)Ljava/lang/Long;");
+            return env->CallStaticObjectMethod(c, m, static_cast<jlong>(v.toLongLong()));
+        }
+        case QMetaType::QString:
+            return env->NewStringUTF(v.toString().toUtf8().constData());
+        default:
+            return nullptr;  // 其余 QVariant 类型 → null（简化契约）
+    }
+}
+
+// ---- QLayout：insertWidget / setStretch（仅盒布局；其余布局抛 IllegalStateException）----
+JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeInsertWidget(JNIEnv* env, jclass /*cls*/, jlong handle, jint index, jlong childHandle) {
+    QObject* obj = static_cast<QObject*>(requireHandle(env, handle));
+    if (obj == nullptr) { return; }
+    QBoxLayout* box = dynamic_cast<QBoxLayout*>(obj);
+    if (box == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/IllegalStateException"),
+                      "JQt: insertWidget/setStretch 仅适用于盒布局（QVBoxLayout/QHBoxLayout）");
+        return;
+    }
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (child == nullptr) { return; }
+    box->insertWidget(static_cast<int>(index), child);
+    markQtOwned(childHandle);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QLayout_nativeSetStretch(JNIEnv* env, jclass /*cls*/, jlong handle, jint index, jint stretch) {
+    QObject* obj = static_cast<QObject*>(requireHandle(env, handle));
+    if (obj == nullptr) { return; }
+    QBoxLayout* box = dynamic_cast<QBoxLayout*>(obj);
+    if (box == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/IllegalStateException"),
+                      "JQt: insertWidget/setStretch 仅适用于盒布局（QVBoxLayout/QHBoxLayout）");
+        return;
+    }
+    box->setStretch(static_cast<int>(index), static_cast<int>(stretch));
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QLayout_nativeStretch(JNIEnv* env, jclass /*cls*/, jlong handle, jint index) {
+    QObject* obj = static_cast<QObject*>(requireHandle(env, handle));
+    if (obj == nullptr) { return 0; }
+    QBoxLayout* box = dynamic_cast<QBoxLayout*>(obj);
+    if (box == nullptr) {
+        env->ThrowNew(env->FindClass("java/lang/IllegalStateException"),
+                      "JQt: insertWidget/setStretch/stretch 仅适用于盒布局（QVBoxLayout/QHBoxLayout）");
+        return 0;
+    }
+    if (static_cast<int>(index) < 0 || static_cast<int>(index) >= box->count()) {
+        return 0;  // 越界契约:返回 0(与 Java 文档一致)
+    }
+    return static_cast<jint>(box->stretch(static_cast<int>(index)));
+}
+
+// ---- QWidget：强制替换布局（先删旧布局；子控件保留，供主窗口结构重建）----
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetLayoutForce(JNIEnv* env, jclass /*cls*/, jlong handle, jlong layoutHandle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+    QLayout* nl = nullptr;
+    if (layoutHandle != 0) {
+        nl = static_cast<QLayout*>(requireHandle(env, layoutHandle));
+        if (nl == nullptr) { return; }
+    }
+    QLayout* old = w->layout();
+    if (old != nullptr && old != nl) {
+        delete old;  // 删除旧布局：子控件仍为 w 的子级（不销毁），由新布局重新接管
+    }
+    if (nl != nullptr && w->layout() != nl) {
+        w->setLayout(nl);
+    }
+}
+
+// ============================================================================
+// v1.8.0 L1-100 收官批（QMenu/QToolBar/QStatusBar/QTabWidget，手搓直传）
+// ============================================================================
+
+JNIEXPORT void JNICALL Java_org_jqt_QMenu_nativeAddSeparator(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QMenu* menu = static_cast<QMenu*>(requireHandle(env, handle));
+    if (menu != nullptr) { menu->addSeparator(); }
+}
+JNIEXPORT void JNICALL Java_org_jqt_QMenu_nativeAddMenu(JNIEnv* env, jclass /*cls*/, jlong handle, jlong subHandle) {
+    QMenu* menu = static_cast<QMenu*>(requireHandle(env, handle));
+    QMenu* sub = static_cast<QMenu*>(requireHandle(env, subHandle));
+    if (menu != nullptr && sub != nullptr) {
+        menu->addMenu(sub);
+        markQtOwned(subHandle);  // 子菜单归父菜单管理
+    }
+}
+JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeAddSeparator(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QToolBar* bar = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (bar != nullptr) { bar->addSeparator(); }
+}
+JNIEXPORT void JNICALL Java_org_jqt_QStatusBar_nativeAddWidget(JNIEnv* env, jclass /*cls*/, jlong handle, jlong childHandle) {
+    QStatusBar* bar = static_cast<QStatusBar*>(requireHandle(env, handle));
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (bar != nullptr && child != nullptr) {
+        bar->addWidget(child);
+        markQtOwned(childHandle);
+    }
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QTabWidget_nativeInsertTab(JNIEnv* env, jclass /*cls*/, jlong handle, jint index, jlong childHandle, jstring title) {
+    QTabWidget* tabs = static_cast<QTabWidget*>(requireHandle(env, handle));
+    QWidget* child = static_cast<QWidget*>(requireHandle(env, childHandle));
+    if (tabs == nullptr || child == nullptr) { return -1; }
+    const char* utf = env->GetStringUTFChars(title, nullptr);
+    int actual = tabs->insertTab(static_cast<int>(index), child, QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(title, utf);
+    markQtOwned(childHandle);
+    return static_cast<jint>(actual);
+}
+
+// ---- QDialog：done / result / accepted / rejected（懒连接，同 QLabel 模式）----
+JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeDone(JNIEnv* env, jobject /*thiz*/, jlong handle, jint result) {
+    QDialog* dlg = static_cast<QDialog*>(requireHandle(env, handle));
+    if (dlg != nullptr) { dlg->done(static_cast<int>(result)); }
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QDialog_nativeResult(JNIEnv* env, jobject /*thiz*/, jlong handle) {
+    QDialog* dlg = static_cast<QDialog*>(requireHandle(env, handle));
+    return (dlg != nullptr) ? static_cast<jint>(dlg->result()) : 0;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeConnectAccepted(JNIEnv* env, jobject thiz, jlong handle) {
+    QDialog* dlg = static_cast<QDialog*>(requireHandle(env, handle));
+    if (dlg == nullptr) { return; }
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(dlg, &QDialog::accepted, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleAccepted", "()V");
+        if (mid != nullptr) { JQT_CALL_VOID(e, gRef, mid); }
+    });
+}
+JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeConnectRejected(JNIEnv* env, jobject thiz, jlong handle) {
+    QDialog* dlg = static_cast<QDialog*>(requireHandle(env, handle));
+    if (dlg == nullptr) { return; }
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(dlg, &QDialog::rejected, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleRejected", "()V");
+        if (mid != nullptr) { JQT_CALL_VOID(e, gRef, mid); }
+    });
+}
+
+// ---- QMessageBox：addButton / setDefaultButton（StandardButton 位值直传）----
+JNIEXPORT void JNICALL Java_org_jqt_QMessageBox_nativeAddButton(JNIEnv* env, jclass /*cls*/, jlong handle, jint standardButton) {
+    QMessageBox* box = static_cast<QMessageBox*>(requireHandle(env, handle));
+    if (box == nullptr) { return; }
+    box->addButton(static_cast<QMessageBox::StandardButton>(standardButton));
+}
+JNIEXPORT void JNICALL Java_org_jqt_QMessageBox_nativeSetDefaultButton(JNIEnv* env, jclass /*cls*/, jlong handle, jint standardButton) {
+    QMessageBox* box = static_cast<QMessageBox*>(requireHandle(env, handle));
+    if (box == nullptr) { return; }
+    box->setDefaultButton(static_cast<QMessageBox::StandardButton>(standardButton));
+}
+
+// ---- QListWidget：插入/删除/摘除/选区/排序（行语义）----
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeInsertItem(JNIEnv* env, jclass /*cls*/, jlong handle, jint row, jstring text) {
+    QListWidget* list = static_cast<QListWidget*>(requireHandle(env, handle));
+    if (list == nullptr) { return; }
+    const char* utf = env->GetStringUTFChars(text, nullptr);
+    list->insertItem(static_cast<int>(row), QString::fromUtf8(utf));
+    env->ReleaseStringUTFChars(text, utf);
+}
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeRemoveItem(JNIEnv* env, jclass /*cls*/, jlong handle, jint row) {
+    QListWidget* list = static_cast<QListWidget*>(requireHandle(env, handle));
+    if (list == nullptr) { return; }
+    QListWidgetItem* it = list->takeItem(static_cast<int>(row));
+    delete it;  // 行语义：删除即销毁
+}
+JNIEXPORT jstring JNICALL Java_org_jqt_QListWidget_nativeTakeItem(JNIEnv* env, jclass /*cls*/, jlong handle, jint row) {
+    QListWidget* list = static_cast<QListWidget*>(requireHandle(env, handle));
+    if (list == nullptr) { return nullptr; }
+    QListWidgetItem* it = list->takeItem(static_cast<int>(row));
+    if (it == nullptr) { return nullptr; }
+    QString text = it->text();
+    delete it;  // 行语义：摘除即销毁（无 item 句柄暴露）
+    return env->NewStringUTF(text.toUtf8().constData());
+}
+JNIEXPORT jintArray JNICALL Java_org_jqt_QListWidget_nativeSelectedItems(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QListWidget* list = static_cast<QListWidget*>(requireHandle(env, handle));
+    if (list == nullptr) { return env->NewIntArray(0); }
+    const QList<QListWidgetItem*> sel = list->selectedItems();
+    jintArray out = env->NewIntArray(static_cast<jsize>(sel.size()));
+    if (sel.isEmpty()) { return out; }
+    jint* buf = new jint[sel.size()];
+    for (int i = 0; i < sel.size(); ++i) {
+        buf[i] = static_cast<jint>(list->row(sel.at(i)));
+    }
+    env->SetIntArrayRegion(out, 0, static_cast<jsize>(sel.size()), buf);
+    delete[] buf;
+    return out;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeSortItems(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QListWidget* list = static_cast<QListWidget*>(requireHandle(env, handle));
+    if (list != nullptr) { list->sortItems(); }
+}
+

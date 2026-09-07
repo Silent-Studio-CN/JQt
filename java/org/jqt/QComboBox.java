@@ -162,6 +162,44 @@ public class QComboBox extends QWidget {
         for (Consumer<Integer> h : onHighlightedHandlers) h.accept(index);
     }
 
+    // ---- v1.8.0 L1-100：批量条目 / 插入 / 查询 ----
+
+    /** 批量追加条目（addItems；内部逐条 {@link #addItem(String)}，null 元素跳过）。 */
+    public void addItems(java.util.List<String> items) {
+        if (items == null) {
+            return;
+        }
+        for (String t : items) {
+            if (t != null) {
+                addItem(t);
+            }
+        }
+    }
+
+    /** 在指定位置插入条目（QComboBox::insertItem；index 越界时追加）。 */
+    public void insertItem(int index, String text) {
+        nativeInsertItem(nativeHandle, index, text);
+    }
+    private static native void nativeInsertItem(long handle, int index, String text);
+
+    /** 指定索引的条目文本（QComboBox::itemText；越界返回空串）。 */
+    public String itemText(int index) {
+        return nativeItemText(nativeHandle, index);
+    }
+    private static native String nativeItemText(long handle, int index);
+
+    // ---- v1.8.0 L1-100 B+：currentData（QVariant 简化契约）----
+
+    /**
+     * 当前项关联数据（QComboBox::currentData）。
+     * <p>简化契约：仅映射基础类型——Integer / Double / Boolean / String；
+     * 其余（复杂 QVariant 或空数据）返回 null。复杂数据建议以索引 + 自建映射替代。
+     */
+    public Object currentData() {
+        return nativeCurrentData(nativeHandle);
+    }
+    private static native Object nativeCurrentData(long handle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** clearEditText（Qt clearEditText）。 */
     public void clearEditText() {

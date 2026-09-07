@@ -114,6 +114,29 @@ public class QLabel extends QWidget {
         for (Consumer<String> h : onLinkHoveredHandlers) h.accept(url);
     }
 
+    // ---- v1.8.0 L1-100：图像内容（QPixmap）----
+
+    /** 显示图片（QLabel::setPixmap；QPixmap 值对象传入，null 无操作）。 */
+    public void setPixmap(QPixmap pixmap) {
+        if (pixmap == null) {
+            return;
+        }
+        long h = pixmap.nativeHandle();
+        if (h != 0) {
+            nativeSetPixmap(nativeHandle, h);
+        }
+    }
+    private static native void nativeSetPixmap(long handle, long pixmapHandle);
+
+    /** 显示图片文件（便捷重载，等同 setPixmap(new QPixmap(path))；加载失败则显示空图，不抛异常）。 */
+    public void setPixmap(String path) {
+        if (path == null || path.isEmpty()) {
+            return;
+        }
+        QPixmap pm = new QPixmap(path);
+        setPixmap(pm);
+    }
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** hasScaledContents（Qt hasScaledContents）。 */
     public boolean hasScaledContents() {

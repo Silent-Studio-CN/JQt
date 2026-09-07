@@ -121,6 +121,37 @@ public abstract class QLayout {
     public int spacing() { return nativeSpacing(nativeHandle); }
     private static native int nativeSpacing(long handle);
 
+    // ---- v1.8.0 L1-100：盒布局插入与伸缩（仅垂直/水平布局；网格等不适用）----
+
+    /**
+     * 在指定位置插入子控件（QBoxLayout::insertWidget；仅 QVBoxLayout / QHBoxLayout）。
+     * index 越界等同追加；子控件归 Qt 管理后不再由 Cleaner 回收。
+     * @throws IllegalStateException 本布局不是盒布局（如 QGridLayout）时由 native 抛出
+     */
+    public void insertWidget(int index, QWidget widget) {
+        if (widget == null) {
+            return;
+        }
+        nativeInsertWidget(nativeHandle, index, widget.nativeHandle());
+    }
+    private static native void nativeInsertWidget(long handle, int index, long childHandle);
+
+    /** 设置指定位置子项的伸缩因子（QBoxLayout::setStretch；仅 QVBoxLayout / QHBoxLayout）。 */
+    public void setStretch(int index, int stretch) {
+        nativeSetStretch(nativeHandle, index, stretch);
+    }
+    private static native void nativeSetStretch(long handle, int index, int stretch);
+
+    /**
+     * 指定位置子项的伸缩因子（QBoxLayout::stretch(int) getter；仅 QVBoxLayout / QHBoxLayout；
+     * index 处无子项或越界返回 0）。
+     * <p>注：该 getter 曾误归档为"Qt 6 无此 API"，经 6.11 头文件核实存在（2026-09-03 解锁）。
+     */
+    public int stretch(int index) {
+        return nativeStretch(nativeHandle, index);
+    }
+    private static native int nativeStretch(long handle, int index);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isEmpty（Qt isEmpty）。 */
     public boolean isEmpty() {

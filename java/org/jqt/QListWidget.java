@@ -237,6 +237,63 @@ public class QListWidget extends QWidget {
     }
     private native void nativeSetItemIcon(long handle, int row, long pixmapHandle);
 
+    // ---- v1.8.0 L1-100：列表项批量/删除/选区（行语义）----
+
+    /** 批量追加项（addItems；内部逐条 {@link #addItem(String)}，null 元素跳过）。 */
+    public void addItems(List<String> items) {
+        if (items == null) {
+            return;
+        }
+        for (String t : items) {
+            if (t != null) {
+                addItem(t);
+            }
+        }
+    }
+
+    /** 在指定行插入项（QListWidget::insertItem(int, String)）。 */
+    public void insertItem(int row, String text) {
+        nativeInsertItem(nativeHandle, row, text);
+    }
+    private static native void nativeInsertItem(long handle, int row, String text);
+
+    /** 删除指定行（行语义 removeItem：以 takeItem + 销毁实现；越界无操作）。 */
+    public void removeItem(int row) {
+        nativeRemoveItem(nativeHandle, row);
+    }
+    private static native void nativeRemoveItem(long handle, int row);
+
+    /**
+     * 摘除指定行并返回其文本（行语义 takeItem：项随之销毁，无句柄暴露；越界返回 null）。
+     * 与 {@link #removeItem(int)} 行为等价，保留以对齐 Qt 命名。
+     */
+    public String takeItem(int row) {
+        return nativeTakeItem(nativeHandle, row);
+    }
+    private static native String nativeTakeItem(long handle, int row);
+
+    /** 选中指定行（setCurrentItem 行语义，等同 {@link #setCurrentRow(int)}）。 */
+    public void setCurrentItem(int row) {
+        setCurrentRow(row);
+    }
+
+    /** 全部选中行号（selectedItems 行语义；无选区返回空列表）。 */
+    public List<Integer> selectedItems() {
+        int[] rows = nativeSelectedItems(nativeHandle);
+        List<Integer> out = new ArrayList<>(rows.length);
+        for (int r : rows) {
+            out.add(r);
+        }
+        return out;
+    }
+    private static native int[] nativeSelectedItems(long handle);
+
+    /** 按文本排序（QListWidget::sortItems，升序）。 */
+    public void sortItems() {
+        nativeSortItems(nativeHandle);
+    }
+    private static native void nativeSortItems(long handle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isSortingEnabled（Qt isSortingEnabled）。 */
     public boolean isSortingEnabled() {

@@ -95,6 +95,14 @@ public class QToolBar extends QWidget {
         for (Consumer<Integer> h : onToolButtonStyleChangedHandlers) h.accept(style);
     }
 
+    // ---- v1.8.0 L1-100 收官：分隔线（手搓）----
+
+    /** 添加分隔线（QToolBar::addSeparator）。 */
+    public void addSeparator() {
+        nativeAddSeparator(nativeHandle);
+    }
+    private static native void nativeAddSeparator(long handle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isFloatable（Qt isFloatable）。 */
     public boolean isFloatable() {

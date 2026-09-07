@@ -74,6 +74,13 @@ public abstract class QWidget {
     }
     private static native void nativeSetLayout(long handle, long layoutHandle);
 
+    /**
+     * 强制替换布局（内部专用：先销毁控件上现有布局再挂新布局；子控件不随之销毁，保持原父子关系）。
+     * 供 QMainWindow 主窗口结构重建等需要多次换布局的场景使用（QWidget::setLayout 对已存在布局
+     * 只会告警并忽略，不能替换）。
+     */
+    static native void nativeSetLayoutForce(long handle, long layoutHandle);
+
     // ---- 动画（QPropertyAnimation）----
 
     /** 平滑移动到目标位置（属性动画，OutCubic 缓动）。 */
@@ -264,6 +271,18 @@ public abstract class QWidget {
     /** 窗口标题。 */
     public String windowTitle() { return nativeWindowTitle(nativeHandle); }
     static native String nativeWindowTitle(long handle);
+
+    /**
+     * 设置窗口标题（语义短名，等同 {@link #setWindowTitle(String)}——类本身是窗口，无需 window 前缀）。
+     */
+    public void setTitle(String title) {
+        setWindowTitle(title);
+    }
+
+    /** 窗口标题（语义短名，等同 {@link #windowTitle()}）。 */
+    public String title() {
+        return windowTitle();
+    }
 
     /**
      * 设置窗口状态（Qt::WindowState 位）：0 正常 / 1 最小化 / 2 最大化 / 4 全屏，可组合。
@@ -704,6 +723,35 @@ public abstract class QWidget {
         QIcon icon = pixmapHandle != 0 ? new QIcon(new QPixmap(pixmapHandle)) : new QIcon();
         for (java.util.function.Consumer<QIcon> h : windowIconChangedHandlers) h.accept(icon);
     }
+    // ---- v1.8.0 L1-100：父控件与窗口属性 ----
+
+    /** 常用窗口属性常量（Qt::WidgetAttribute 常用子集；值仅供本 API 内部使用，勿持久化/跨版本依赖）。 */
+    public static final int WA_DELETE_ON_CLOSE = 1;
+    public static final int WA_TRANSLUCENT_BACKGROUND = 2;
+    public static final int WA_NO_SYSTEM_BACKGROUND = 3;
+    public static final int WA_OPAQUE_PAINT_EVENT = 4;
+    public static final int WA_SHOW_WITHOUT_ACTIVATING = 5;
+    public static final int WA_ACCEPT_TOUCH_EVENTS = 6;
+    public static final int WA_DONT_SHOW_ON_SCREEN = 7;
+    public static final int WA_ALWAYS_SHOW_TOOLTIPS = 8;
+    public static final int WA_DISABLED = 9;
+
+    /**
+     * 设置父控件（QWidget::setParent；null = 脱离父级成为顶层窗口）。
+     * <p>布局场景请用布局/容器 addWidget 建立父子关系；setParent 直接 reparent，
+     * 非空父级下对象归 Qt 管理（Cleaner 不再回收）。
+     */
+    public void setParent(QWidget parent) {
+        nativeSetParent(nativeHandle, parent != null ? parent.nativeHandle : 0);
+    }
+    private static native void nativeSetParent(long handle, long parentHandle);
+
+    /** 开关窗口属性位（QWidget::setAttribute；常量见本类 WA_* 系列）。 */
+    public void setAttribute(int attribute, boolean on) {
+        nativeSetAttribute(nativeHandle, attribute, on);
+    }
+    private static native void nativeSetAttribute(long handle, int attribute, boolean on);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** accessibleDescription（Qt accessibleDescription）。 */
     public String accessibleDescription() {

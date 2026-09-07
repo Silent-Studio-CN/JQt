@@ -219,6 +219,20 @@ public class QLineEdit extends QWidget {
         for (Consumer<Integer> h : onCursorPositionChangedHandlers) h.accept(pos);
     }
 
+    // ---- v1.8.0 L1-100：文本选区（QLineEdit 选区三件）----
+
+    /** 清除选区（QLineEdit::deselect）。 */
+    public void deselect() { nativeDeselect(nativeHandle); }
+    private static native void nativeDeselect(long handle);
+
+    /** 是否有选中文本（QLineEdit::hasSelectedText）。 */
+    public boolean hasSelectedText() { return nativeHasSelectedText(nativeHandle); }
+    private static native boolean nativeHasSelectedText(long handle);
+
+    /** 当前选中文本（QLineEdit::selectedText；无选区返回空串）。 */
+    public String selectedText() { return nativeSelectedText(nativeHandle); }
+    private static native String nativeSelectedText(long handle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** cursorForward（Qt cursorForward）。 */
     public void cursorForward(boolean arg0, int arg1) {

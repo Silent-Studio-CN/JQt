@@ -36,6 +36,17 @@ public class QStatusBar extends QWidget {
     }
     private native String nativeCurrentMessage(long handle);
 
+    // ---- v1.8.0 L1-100 收官：常驻控件（手搓）----
+
+    /** 添加常驻控件（QStatusBar::addWidget；常驻于消息区，不随 showMessage 清除）。 */
+    public void addWidget(QWidget widget) {
+        if (widget == null) {
+            return;
+        }
+        nativeAddWidget(nativeHandle, widget.nativeHandle());
+    }
+    private static native void nativeAddWidget(long handle, long childHandle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isSizeGripEnabled（Qt isSizeGripEnabled）。 */
     public boolean isSizeGripEnabled() {

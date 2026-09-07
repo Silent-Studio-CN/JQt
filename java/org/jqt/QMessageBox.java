@@ -48,6 +48,28 @@ public class QMessageBox {
     }
     static native void nativeShowAbout(long winHandle, String title, String text);
 
+    // ---- Qt 静态工厂名别名（v1.8.0 L1-100；与 Qt info/warning/critical/question 命名对齐）----
+
+    /** 信息框（Qt 名，等同 {@link #showInfo}）。阻塞调用。 */
+    public static void info(QMainWindow parent, String title, String text) {
+        showInfo(parent, title, text);
+    }
+
+    /** 警告框（Qt 名，等同 {@link #showWarning}）。阻塞调用。 */
+    public static void warning(QMainWindow parent, String title, String text) {
+        showWarning(parent, title, text);
+    }
+
+    /** 错误框（Qt 名，等同 {@link #showCritical}）。阻塞调用。 */
+    public static void critical(QMainWindow parent, String title, String text) {
+        showCritical(parent, title, text);
+    }
+
+    /** 是/否询问框（Qt 名，等同 {@link #showQuestion}）。阻塞调用，true = 是。 */
+    public static boolean question(QMainWindow parent, String title, String text) {
+        return showQuestion(parent, title, text);
+    }
+
     // ---- L1 补全（v0.8.0）：QMessageBox 实例化（Qt 风格 setText/setIcon/exec/open）----
 
     /** 图标类型（QMessageBox::Icon）。 */
@@ -97,6 +119,37 @@ public class QMessageBox {
     private native int nativeExec(long handle);
     private native void nativeOpen(long handle);
     private native void nativeClose(long handle);
+
+    // ---- v1.8.0 L1-100：标准按钮 ----
+
+    /** 标准按钮（值 = Qt::StandardButton 位值；自定义按钮后 exec() 返回同编码）。 */
+    public enum StandardButton {
+        NO_BUTTON(0x00000000), OK(0x00000400), SAVE(0x00000800), OPEN(0x00002000),
+        YES(0x00004000), NO(0x00008000), YES_TO_ALL(0x00010000), NO_TO_ALL(0x00020000),
+        ABORT(0x00040000), RETRY(0x00080000), IGNORE(0x00100000), CLOSE(0x00200000),
+        HELP(0x01000000), APPLY(0x02000000), RESET(0x04000000);
+        public final int value;
+        StandardButton(int v) { value = v; }
+    }
+
+    /** 追加标准按钮（QMessageBox::addButton(StandardButton)）；此后 exec() 返回该按钮位值。 */
+    public void addButton(StandardButton button) {
+        if (button == null) {
+            return;
+        }
+        nativeAddButton(nativeHandle, button.value);
+    }
+
+    /** 设置默认按钮（QMessageBox::setDefaultButton(StandardButton)；回车触发）。 */
+    public void setDefaultButton(StandardButton button) {
+        if (button == null) {
+            return;
+        }
+        nativeSetDefaultButton(nativeHandle, button.value);
+    }
+
+    private static native void nativeAddButton(long handle, int standardButton);
+    private static native void nativeSetDefaultButton(long handle, int standardButton);
 
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** detailedText（Qt detailedText）。 */

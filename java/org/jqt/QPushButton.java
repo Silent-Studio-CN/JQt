@@ -155,6 +155,20 @@ public class QPushButton extends QWidget {
     public boolean menu() { return nativeHasMenu(nativeHandle); }
     private static native boolean nativeHasMenu(long handle);
 
+    // ---- v1.8.0 L1-100：QAbstractButton 状态查询（直传型）----
+
+    /** 是否可勾选（QAbstractButton::isCheckable；与 {@link #setCheckable(boolean)} 配对）。 */
+    public boolean isCheckable() { return nativeIsCheckable(nativeHandle); }
+    private static native boolean nativeIsCheckable(long handle);
+
+    /** 是否处于按下状态（QAbstractButton::isDown）。 */
+    public boolean isDown() { return nativeIsDown(nativeHandle); }
+    private static native boolean nativeIsDown(long handle);
+
+    /** 设置按下状态（QAbstractButton::setDown；程序化按下，不发 clicked 信号）。 */
+    public void setDown(boolean down) { nativeSetDown(nativeHandle, down); }
+    private static native void nativeSetDown(long handle, boolean down);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** autoDefault（Qt autoDefault）。 */
     public boolean autoDefault() {
