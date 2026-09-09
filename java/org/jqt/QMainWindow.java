@@ -398,6 +398,12 @@ public class QMainWindow extends QWidget {
             return;
         }
         toolBars.add(bar);
+        if (mainIconSize >= 0) {
+            bar.setIconSize(mainIconSize);
+        }
+        if (mainToolStyle >= 0) {
+            bar.setToolButtonStyle(mainToolStyle);
+        }
         engage();
         rebuildMainLayout();
     }
@@ -735,6 +741,38 @@ public class QMainWindow extends QWidget {
             mainV.addWidget(statusBarWidget);
         }
         nativeSetLayoutForce(nativeHandle, mainV.nativeHandle());
+    }
+
+    // ==================== v1.8.0 L2 功能层收尾：工具条图标尺寸/按钮样式（壳内聚合）====================
+    // 语义：作用于本窗口全部已挂工具条；新挂工具条自动继承当前设置（-1 = 未显式设置）。
+
+    private int mainIconSize = -1;
+    private int mainToolStyle = -1;
+
+    /** 统一设置已挂工具条的图标尺寸（像素；-1 恢复默认）。 */
+    public void setIconSize(int size) {
+        mainIconSize = size;
+        for (QToolBar tb : toolBars) {
+            tb.setIconSize(size);
+        }
+    }
+
+    /** 当前工具条图标尺寸（-1 = 未显式设置，随各工具条默认）。 */
+    public int iconSize() {
+        return mainIconSize;
+    }
+
+    /** 统一设置已挂工具条的按钮样式（0 图标/1 文字/2 旁/3 下；-1 恢复默认）。 */
+    public void setToolButtonStyle(int style) {
+        mainToolStyle = style;
+        for (QToolBar tb : toolBars) {
+            tb.setToolButtonStyle(style);
+        }
+    }
+
+    /** 当前工具条按钮样式（-1 = 未显式设置）。 */
+    public int toolButtonStyle() {
+        return mainToolStyle;
     }
 
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----

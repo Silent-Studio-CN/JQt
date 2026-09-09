@@ -820,6 +820,82 @@ public abstract class QWidget {
         return nativeGroup;
     }
 
+    // ==================== v1.8.0 L2 功能层收尾：窗口语义短名直曝 ====================
+    // 这些方法同时经 window() 门面可及；此处按蓝图提供类级直曝名（api-tiering L2 行）。
+
+    /** 全屏显示（语义短名，等同 {@link #showFullScreen()}）。 */
+    public void fullScreen() { showFullScreen(); }
+
+    /** 恢复正常大小（语义短名，等同 {@link #showNormal()}）。 */
+    public void normal() { showNormal(); }
+
+    /** 窗口不透明度（0.0-1.0；语义短名，等同 {@link #setWindowOpacity(double)}）。 */
+    public void setOpacity(double opacity) { setWindowOpacity(opacity); }
+
+    /** 窗口不透明度（语义短名，等同 {@link #windowOpacity()}）。 */
+    public double opacity() { return windowOpacity(); }
+
+    /** 激活窗口（语义短名，等同 {@link #activateWindow()}）。 */
+    public void activate() { activateWindow(); }
+
+    /** 是否为活动窗口（语义短名，等同 {@link #isActiveWindow()}）。 */
+    public boolean isActive() { return isActiveWindow(); }
+
+    /** 窗口旗标位（Qt::WindowType 常用值；组合见 Qt 文档）。 */
+    public static final int WINDOW = 0x00000001;
+    public static final int DIALOG = 0x00000003;
+    public static final int POPUP = 0x00000009;
+    public static final int TOOL = 0x00000011;
+
+    /** 设置窗口旗标（QWidget::setWindowFlags；值 = Qt::WindowType 位组合）。 */
+    public void setWindowFlags(int flags) {
+        nativeSetWindowFlags(nativeHandle, flags);
+    }
+    private static native void nativeSetWindowFlags(long handle, int flags);
+
+    /** 开关单个窗口旗标（QWidget::setWindowFlag(flag, on)；flag 见本类 WINDOW/DIALOG/POPUP/TOOL 等）。 */
+    public void setWindowFlag(int flag, boolean on) {
+        nativeSetWindowFlag(nativeHandle, flag, on);
+    }
+    private static native void nativeSetWindowFlag(long handle, int flag, boolean on);
+
+    /** 输入法提示（QWidget::setInputMethodHints；值 = Qt::InputMethodHint 位组合，见 Qt 文档）。 */
+    public void setInputMethodHints(int hints) {
+        nativeSetInputMethodHints(nativeHandle, hints);
+    }
+    private static native void nativeSetInputMethodHints(long handle, int hints);
+
+    // ---- 焦点链族 ----
+
+    private QWidget focusProxyRef;
+
+    /**
+     * 设置焦点代理（QWidget::setFocusProxy；经本 API 设置后 {@link #focusProxy()} 可回读；
+     * 传 null 清除）。焦点代理负责接收本控件的键盘焦点。
+     */
+    public void setFocusProxy(QWidget proxy) {
+        focusProxyRef = proxy;
+        nativeSetFocusProxy(nativeHandle, proxy != null ? proxy.nativeHandle : 0);
+    }
+    private static native void nativeSetFocusProxy(long handle, long proxyHandle);
+
+    /** 焦点代理（仅回读经 {@link #setFocusProxy(QWidget)} 设置者；其余原生代理返回 null）。 */
+    public QWidget focusProxy() {
+        return focusProxyRef;
+    }
+
+    /** 焦点链中下一控件句柄（QWidget::nextInFocusChain；高级用途，0=无）。 */
+    public long nextInFocusChain() {
+        return nativeNextInFocusChain(nativeHandle);
+    }
+    private static native long nativeNextInFocusChain(long handle);
+
+    /** 焦点链中上一控件句柄（QWidget::previousInFocusChain；高级用途，0=无）。 */
+    public long previousInFocusChain() {
+        return nativePreviousInFocusChain(nativeHandle);
+    }
+    private static native long nativePreviousInFocusChain(long handle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** accessibleDescription（Qt accessibleDescription）。 */
     public String accessibleDescription() {
