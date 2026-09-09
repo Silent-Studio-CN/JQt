@@ -444,6 +444,214 @@ public class QMainWindow extends QWidget {
         }
     }
 
+    // ==================== v1.8.0 L2-B2：主窗口结构状态持久化 ====================
+    // 语义说明:JQtWindowShell 非 Qt QMainWindow,无 Qt 内部 dock 状态机可序列化;
+    // 本实现序列化"我们自己的壳结构"(chrome 存在性 + 工具条顺序 + 停靠分布),以 objectName 为稳定标识,
+    // 原子恢复(先校验后应用)。跨进程重启需应用侧重建同名控件;本格式带版本头,可演进。
+
+    private static final byte[] STATE_MAGIC = { 'J', 'Q', 'T', 'S' };
+
+    /** 保存主窗口结构状态（menuBar/statusBar 存在性、工具条顺序、四向停靠分布）。 */
+    public byte[] saveState() {
+        ensureChromeNames();
+        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+        bos.write(STATE_MAGIC, 0, STATE_MAGIC.length);
+        bos.write(1);  // version
+        bos.write(menuBarWidget != null ? 1 : 0);
+        bos.write(statusBarWidget != null ? 1 : 0);
+        bos.write(centralContent != null ? 1 : 0);
+        writeNames(bos, namesOf(toolBars));
+        writeNames(bos, namesOf(leftDocks));
+        writeNames(bos, namesOf(rightDocks));
+        writeNames(bos, namesOf(topDocks));
+        writeNames(bos, namesOf(bottomDocks));
+        return bos.toByteArray();
+    }
+
+    /**
+     * 恢复主窗口结构状态（与 {@link #saveState()} 配对）。
+     * 匹配规则:按 objectName 对当前已存在的工具条/停靠控件重排;保存时存在的 chrome 当前必须仍在,
+     * 否则返回 false 且不改变任何状态（原子）。
+     */
+    public boolean restoreState(byte[] state) {
+        if (state == null || state.length < 7) {
+            return false;
+        }
+        try {
+            java.io.ByteArrayInputStream bis = new java.io.ByteArrayInputStream(state);
+            byte[] magic = new byte[4];
+            if (bis.read(magic) != 4 || !java.util.Arrays.equals(magic, STATE_MAGIC)) {
+                return false;
+            }
+            if (bis.read() != 1) {
+                return false;  // 版本不兼容
+            }
+            boolean wantMenu = bis.read() == 1;
+            boolean wantStatus = bis.read() == 1;
+            boolean wantCentral = bis.read() == 1;
+            java.util.List<String> tbNames = readNames(bis);
+            java.util.List<String> left = readNames(bis);
+            java.util.List<String> right = readNames(bis);
+            java.util.List<String> top = readNames(bis);
+            java.util.List<String> bottom = readNames(bis);
+            if (tbNames == null || left == null || right == null || top == null || bottom == null) {
+                return false;
+            }
+            if (wantMenu != (menuBarWidget != null) || wantStatus != (statusBarWidget != null)
+                    || wantCentral != (centralContent != null)) {
+                return false;
+            }
+            // 校验:目标名字与现存对象一一对应(集合相等,顺序按保存)
+            java.util.List<QToolBar> newToolbars = new ArrayList<>();
+            if (!matchOrder(tbNames, toolBars, newToolbars)) {
+                return false;
+            }
+            java.util.List<QWidget> allDocks = new ArrayList<>();
+            allDocks.addAll(leftDocks); allDocks.addAll(rightDocks);
+            allDocks.addAll(topDocks); allDocks.addAll(bottomDocks);
+            java.util.List<QWidget> newLeft = new ArrayList<>();
+            java.util.List<QWidget> newRight = new ArrayList<>();
+            java.util.List<QWidget> newTop = new ArrayList<>();
+            java.util.List<QWidget> newBottom = new ArrayList<>();
+            java.util.List<QWidget> pool = new ArrayList<>(allDocks);
+            if (!matchArea(left, pool, newLeft) || !matchArea(right, pool, newRight)
+                    || !matchArea(top, pool, newTop) || !matchArea(bottom, pool, newBottom)
+                    || !pool.isEmpty()) {
+                return false;
+            }
+            // 原子应用
+            toolBars.clear();
+            toolBars.addAll(newToolbars);
+            leftDocks.clear(); leftDocks.addAll(newLeft);
+            rightDocks.clear(); rightDocks.addAll(newRight);
+            topDocks.clear(); topDocks.addAll(newTop);
+            bottomDocks.clear(); bottomDocks.addAll(newBottom);
+            rebuildMainLayout();
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static java.util.List<String> namesOf(java.util.List<? extends QWidget> list) {
+        java.util.List<String> out = new java.util.ArrayList<>(list.size());
+        for (QWidget w : list) {
+            out.add(w.objectName());
+        }
+        return out;
+    }
+
+    /** 按保存顺序从 pool 中逐名匹配现存对象(不匹配/数量不符 → false)。 */
+    private static <T extends QWidget> boolean matchOrder(java.util.List<String> names, java.util.List<T> pool,
+                                                          java.util.List<T> out) {
+        if (names.size() != pool.size()) {
+            return false;
+        }
+        java.util.List<T> copy = new java.util.ArrayList<>(pool);
+        for (String n : names) {
+            int idx = -1;
+            for (int i = 0; i < copy.size(); i++) {
+                if (copy.get(i).objectName().equals(n)) {
+                    idx = i;
+                    break;
+                }
+            }
+            if (idx < 0) {
+                return false;
+            }
+            out.add(copy.remove(idx));
+        }
+        return true;
+    }
+
+    private static <T extends QWidget> boolean matchArea(java.util.List<String> names, java.util.List<T> pool,
+                                                         java.util.List<T> out) {
+        for (String n : names) {
+            int idx = -1;
+            for (int i = 0; i < pool.size(); i++) {
+                if (pool.get(i).objectName().equals(n)) {
+                    idx = i;
+                    break;
+                }
+            }
+            if (idx < 0) {
+                return false;
+            }
+            out.add(pool.remove(idx));
+        }
+        return true;
+    }
+
+    /** 为未命名的 chrome/停靠控件分配稳定默认名(仅一次,已有名不动)。 */
+    private void ensureChromeNames() {
+        if (menuBarWidget != null && menuBarWidget.objectName().isEmpty()) {
+            menuBarWidget.setObjectName("jqt.menuBar");
+        }
+        if (statusBarWidget != null && statusBarWidget.objectName().isEmpty()) {
+            statusBarWidget.setObjectName("jqt.statusBar");
+        }
+        nameIfEmpty(toolBars, "jqt.toolBar.");
+        nameIfEmpty(leftDocks, "jqt.dock.left.");
+        nameIfEmpty(rightDocks, "jqt.dock.right.");
+        nameIfEmpty(topDocks, "jqt.dock.top.");
+        nameIfEmpty(bottomDocks, "jqt.dock.bottom.");
+    }
+
+    private static void nameIfEmpty(java.util.List<? extends QWidget> list, String prefix) {
+        for (QWidget w : list) {
+            if (w.objectName().isEmpty()) {
+                int i = 0;
+                String candidate;
+                do {
+                    candidate = prefix + (i++);
+                } while (anyNamed(list, candidate));
+                w.setObjectName(candidate);
+            }
+        }
+    }
+
+    private static boolean anyNamed(java.util.List<? extends QWidget> list, String name) {
+        for (QWidget w : list) {
+            if (w.objectName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void writeNames(java.io.ByteArrayOutputStream bos, java.util.List<String> names) {
+        bos.write((names.size() >> 24) & 0xFF);
+        bos.write((names.size() >> 16) & 0xFF);
+        bos.write((names.size() >> 8) & 0xFF);
+        bos.write(names.size() & 0xFF);
+        for (String n : names) {
+            byte[] b = n.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            bos.write((b.length >> 8) & 0xFF);
+            bos.write(b.length & 0xFF);
+            bos.write(b, 0, b.length);
+        }
+    }
+
+    private static java.util.List<String> readNames(java.io.ByteArrayInputStream bis) {
+        int count = (bis.read() << 24) | (bis.read() << 16) | (bis.read() << 8) | bis.read();
+        if (count < 0 || count > 4096) {
+            return null;
+        }
+        java.util.List<String> out = new java.util.ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            int len = (bis.read() << 8) | bis.read();
+            if (len < 0 || len > 65535) {
+                return null;
+            }
+            byte[] b = new byte[len];
+            if (bis.read(b, 0, len) != len) {
+                return null;
+            }
+            out.add(new String(b, java.nio.charset.StandardCharsets.UTF_8));
+        }
+        return out;
+    }
+
     // ---- 内部：惰性容器 + 布局重建 ----
 
     private void ensureCentralFrame() {

@@ -65,6 +65,12 @@ public abstract class QWidget {
     }
     private static native void nativeSetObjectName(long handle, String name);
 
+    /** 控件对象名（未设置返回空串）。 */
+    public String objectName() {
+        return nativeObjectName(nativeHandle);
+    }
+    private static native String nativeObjectName(long handle);
+
     /**
      * 给本控件设置布局管理器（任何控件都可用，如面板/卡片内部布局）。
      * 设置后由布局接管子控件排列。
@@ -751,6 +757,68 @@ public abstract class QWidget {
         nativeSetAttribute(nativeHandle, attribute, on);
     }
     private static native void nativeSetAttribute(long handle, int attribute, boolean on);
+
+    // ==================== v1.8.0 L2-B10：分组门面访问器（api-tiering §2）====================
+    // L2 少用方法按语义分组收纳，惰性创建并缓存（同一实例）；现有直曝 API 全部保留（兼容）。
+    // 各组成员缺口账见对应门面类 javadoc。
+
+    private QWidgetWindow windowGroup;
+    private QWidgetStyle styleGroup;
+    private QWidgetDrag dragGroup;
+    private QWidgetFocus focusGroup;
+    private QWidgetEvent eventGroup;
+    private QWidgetNative nativeGroup;
+
+    /** 窗口级状态与几何分组（全屏/最大化/透明度/几何持久化/激活等）。 */
+    public QWidgetWindow window() {
+        if (windowGroup == null) {
+            windowGroup = new QWidgetWindow(this);
+        }
+        return windowGroup;
+    }
+
+    /** 外观样式分组（字体/调色板/样式表/鼠标跟踪/光标）。 */
+    public QWidgetStyle style() {
+        if (styleGroup == null) {
+            styleGroup = new QWidgetStyle(this);
+        }
+        return styleGroup;
+    }
+
+    /** 拖拽与捕获分组（拖放/鼠标/键盘）。 */
+    public QWidgetDrag drag() {
+        if (dragGroup == null) {
+            dragGroup = new QWidgetDrag(this);
+        }
+        return dragGroup;
+    }
+
+    /** 焦点管理分组。 */
+    public QWidgetFocus focus() {
+        if (focusGroup == null) {
+            focusGroup = new QWidgetFocus(this);
+        }
+        return focusGroup;
+    }
+
+    /** 事件系统分组（预留；成员随缺口补齐）。 */
+    public QWidgetEvent event() {
+        if (eventGroup == null) {
+            eventGroup = new QWidgetEvent(this);
+        }
+        return eventGroup;
+    }
+
+    /**
+     * 底层/高级入口分组（句柄/原生查询）。
+     * 注:蓝图中的 .native() 因 native 为 Java 关键字,命名 nativeApi()。
+     */
+    public QWidgetNative nativeApi() {
+        if (nativeGroup == null) {
+            nativeGroup = new QWidgetNative(this);
+        }
+        return nativeGroup;
+    }
 
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** accessibleDescription（Qt accessibleDescription）。 */

@@ -169,6 +169,36 @@ public class QPushButton extends QWidget {
     public void setDown(boolean down) { nativeSetDown(nativeHandle, down); }
     private static native void nativeSetDown(long handle, boolean down);
 
+    // ---- v1.8.0 L2-B3：自动重复 / 程序化点击 / 互斥（手写直传）----
+
+    /** 按住时是否自动重复触发 clicked（QAbstractButton::setAutoRepeat）。 */
+    public void setAutoRepeat(boolean on) { nativeSetAutoRepeat(nativeHandle, on); }
+    private static native void nativeSetAutoRepeat(long handle, boolean on);
+
+    /** 是否自动重复。 */
+    public boolean autoRepeat() { return nativeAutoRepeat(nativeHandle); }
+    private static native boolean nativeAutoRepeat(long handle);
+
+    /** 自动重复初始延迟（毫秒，按下到首次重复）。 */
+    public void setAutoRepeatDelay(int ms) { nativeSetAutoRepeatDelay(nativeHandle, ms); }
+    private static native void nativeSetAutoRepeatDelay(long handle, int ms);
+
+    /** 自动重复间隔（毫秒）。 */
+    public void setAutoRepeatInterval(int ms) { nativeSetAutoRepeatInterval(nativeHandle, ms); }
+    private static native void nativeSetAutoRepeatInterval(long handle, int ms);
+
+    /** 程序化点击（按下→释放；QAbstractButton::animateClick，Qt 6 无时长参数）。 */
+    public void animateClick() { nativeAnimateClick(nativeHandle); }
+    private static native void nativeAnimateClick(long handle);
+
+    /** 互斥组模式（同父按钮组内至多一个选中；QAbstractButton::setAutoExclusive）。 */
+    public void setAutoExclusive(boolean on) { nativeSetAutoExclusive(nativeHandle, on); }
+    private static native void nativeSetAutoExclusive(long handle, boolean on);
+
+    /** 是否互斥组模式。 */
+    public boolean autoExclusive() { return nativeAutoExclusive(nativeHandle); }
+    private static native boolean nativeAutoExclusive(long handle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** autoDefault（Qt autoDefault）。 */
     public boolean autoDefault() {

@@ -663,6 +663,14 @@ Maps Qt `QEasingCurve::Type` 0~40; optional param of every animation method.
 - **Qt 6 无此 API**：QUrl clear、QBoxLayout stretch(int) getter（注：setStretch 存在，可做）
 > 已解锁：QPlainTextEdit print（v0.7.2 printToPdf）、QSpinBox textChanged（v0.7.4 绑定，Qt 6 确认存在）。
 
+**⛔ 归档复核（2026-09-03）· Archive re-review**（逐项对照源码与 Qt 6.11 头文件；完整台账见本地记忆库 README/2026-09-03-L1L2完成度审计.md 附录 2）：
+- 已解锁（归档未更新）：QLabel pixmap（v1.8.0 前 L1-100 批 setPixmap）、QIcon pixmap（QIcon 值类带 pixmap()）、QWidget mask（QRegion + setMask 手写批；mask() getter 仍缺，L3）
+- **误判项已实现**：QBoxLayout stretch(int) getter——Qt 6.11 qboxlayout.h 明确存在，归档备注"Qt 6 无此 API"核实错误；Java `QLayout.stretch(int)` 已补（越界返回 0，网格抛 ISE）
+- 半解锁：QLabel picture（QPicture 类已存在，setPicture 未接线，小活）
+- 真阻塞（改列后续"对象体系批次"，不再以归档表述）：QComboBox model/validator、QLineEdit validator、QLabel movie、QCursor mask/pixmap、QFont Stretch
+- 永久项：QUrl clear（Qt 6 确无此 API）
+- 新增（v1.8.0 前夕 · 2026-09-03）：L1 手写收官——语义短名 setTitle/title、QMessageBox info/warning/critical/question 别名与 StandardButton；setParent/setAttribute、isCheckable/isDown/setDown、setPixmap、QLineEdit 选区、QComboBox addItems/insertItem/itemText/currentData、盒布局 insertWidget/setStretch/stretch、QDialog done/result/onAccepted/onRejected、QListWidget 行语义批、QMainWindow 主窗口语义、QMenu/QToolBar 分隔线与子菜单、QScrollArea.widget()、QStatusBar.addWidget、QTabWidget.insertTab（api-tiering §4.1-4.10 L1 清单 178/178 = 100%）
+
 ---
 
 ## 新增（v0.7.0-Universal-Kit）· New in v0.7.0-Universal-Kit

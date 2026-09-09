@@ -152,6 +152,26 @@ public abstract class QLayout {
     }
     private static native int nativeStretch(long handle, int index);
 
+    // ---- v1.8.0 L2-B8：盒布局方向与支柱（手写直传；仅垂直/水平布局）----
+
+    /** 布局方向（QBoxLayout::Direction）：0 左→右 / 1 右→左 / 2 上→下 / 3 下→上。 */
+    public static final int LEFT_TO_RIGHT = 0;
+    public static final int RIGHT_TO_LEFT = 1;
+    public static final int TOP_TO_BOTTOM = 2;
+    public static final int BOTTOM_TO_TOP = 3;
+
+    /** 布局方向（仅盒布局；见本类 *_TO_* 常量）。 */
+    public int direction() { return nativeDirection(nativeHandle); }
+    private static native int nativeDirection(long handle);
+
+    /** 设置布局方向（仅盒布局；网格抛 IllegalStateException）。 */
+    public void setDirection(int direction) { nativeSetDirection(nativeHandle, direction); }
+    private static native void nativeSetDirection(long handle, int direction);
+
+    /** 添加固定宽度支柱（QBoxLayout::addStrut；用于限制整行最小宽度，仅盒布局）。 */
+    public void addStrut(int size) { nativeAddStrut(nativeHandle, size); }
+    private static native void nativeAddStrut(long handle, int size);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isEmpty（Qt isEmpty）。 */
     public boolean isEmpty() {

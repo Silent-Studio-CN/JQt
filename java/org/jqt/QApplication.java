@@ -578,6 +578,36 @@ public class QApplication {
     }
     private static native long nativeScreenAt(int x, int y);
 
+    // ---- v1.8.0 L2-B6：窗口/焦点查询与退出语义（手写直传）----
+
+    /** 当前活动顶层窗口（QApplication::activeWindow；返回窗口句柄，无则 0；可与 QWidget.find 配合）。 */
+    public static long activeWindow() { return nativeActiveWindow(); }
+    private static native long nativeActiveWindow();
+
+    /** 当前焦点控件（QApplication::focusWidget；返回句柄，无则 0）。 */
+    public static long focusWidget() { return nativeFocusWidget(); }
+    private static native long nativeFocusWidget();
+
+    /** 全部顶层窗口句柄（QApplication::topLevelWidgets）。 */
+    public static long[] topLevelWidgets() { return nativeTopLevelWidgets(); }
+    private static native long[] nativeTopLevelWidgets();
+
+    /** 全部控件句柄（QApplication::allWidgets，含隐藏）。 */
+    public static long[] allWidgets() { return nativeAllWidgets(); }
+    private static native long[] nativeAllWidgets();
+
+    /** 最后一个窗口关闭时是否退出事件循环（QApplication::setQuitOnLastWindowClosed）。 */
+    public static void setQuitOnLastWindowClosed(boolean on) { nativeSetQuitOnLastWindowClosed(on); }
+    private static native void nativeSetQuitOnLastWindowClosed(boolean on);
+
+    /** 当前是否"最后窗口关闭即退出"。 */
+    public static boolean quitOnLastWindowClosed() { return nativeQuitOnLastWindowClosed(); }
+    private static native boolean nativeQuitOnLastWindowClosed();
+
+    /** 当前风格名（QApplication::style()->objectName，如 windows11/fusion）。 */
+    public static String style() { return nativeStyleName(); }
+    private static native String nativeStyleName();
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** autoSipEnabled（Qt autoSipEnabled）。 */
     public boolean autoSipEnabled() {

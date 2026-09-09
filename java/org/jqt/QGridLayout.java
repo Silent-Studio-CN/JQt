@@ -50,6 +50,47 @@ public class QGridLayout extends QLayout {
     }
     private native void nativeSetRowStretch(long handle, int row, int stretch);
 
+    // ---- v1.8.0 L2-B8：列最小宽 / 双向间距 / 原点 / 几何查询（手写直传）----
+
+    /** 原点角（Qt::Corner）：0 左上 / 1 右上 / 2 左下 / 3 右下。 */
+    public static final int CORNER_TOP_LEFT = 0;
+    public static final int CORNER_TOP_RIGHT = 1;
+    public static final int CORNER_BOTTOM_LEFT = 2;
+    public static final int CORNER_BOTTOM_RIGHT = 3;
+
+    /** 设置列最小宽度（像素）。 */
+    public void setColumnMinimumWidth(int col, int width) {
+        nativeSetColumnMinimumWidth(nativeHandle, col, width);
+    }
+    private static native void nativeSetColumnMinimumWidth(long handle, int col, int width);
+
+    /** 水平间距（像素；未单独设置返回 -1，沿用全局）。 */
+    public int horizontalSpacing() { return nativeHorizontalSpacing(nativeHandle); }
+    private static native int nativeHorizontalSpacing(long handle);
+
+    /** 设置水平间距（像素）。 */
+    public void setHorizontalSpacing(int spacing) { nativeSetHorizontalSpacing(nativeHandle, spacing); }
+    private static native void nativeSetHorizontalSpacing(long handle, int spacing);
+
+    /** 原点角（行/列方向起点，见 CORNER_*）。 */
+    public int originCorner() { return nativeOriginCorner(nativeHandle); }
+    private static native int nativeOriginCorner(long handle);
+
+    /** 设置原点角。 */
+    public void setOriginCorner(int corner) { nativeSetOriginCorner(nativeHandle, corner); }
+    private static native void nativeSetOriginCorner(long handle, int corner);
+
+    /** 单元格几何 [x, y, w, h]（QGridLayout::cellRect；越界返回 0 矩形）。 */
+    public int[] cellRect(int row, int col) { return nativeCellRect(nativeHandle, row, col); }
+    private static native int[] nativeCellRect(long handle, int row, int col);
+
+    /**
+     * 子项网格位置 [row, col, rowSpan, colSpan]（QGridLayout::getItemPosition 行语义）。
+     * index 越界返回全 -1。
+     */
+    public int[] getItemPosition(int index) { return nativeGetItemPosition(nativeHandle, index); }
+    private static native int[] nativeGetItemPosition(long handle, int index);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** count（Qt count）。 */
     public int count() {

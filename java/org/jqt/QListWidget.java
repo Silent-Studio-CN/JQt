@@ -294,6 +294,88 @@ public class QListWidget extends QWidget {
     }
     private static native void nativeSortItems(long handle);
 
+    // ---- v1.8.0 L2-B7：查找 / 命中 / 选择模式 / 滚动与编辑器（行语义）----
+
+    /** 选择模式（QAbstractItemView::SelectionMode）：0 禁止 / 1 单选 / 2 多选 / 3 扩展 / 4 连续。 */
+    public static final int NO_SELECTION = 0;
+    public static final int SINGLE_SELECTION = 1;
+    public static final int MULTI_SELECTION = 2;
+    public static final int EXTENDED_SELECTION = 3;
+    public static final int CONTIGUOUS_SELECTION = 4;
+
+    /** 查找文本完全匹配的行（区分大小写；QListWidget::findItems 简化）。 */
+    public java.util.List<Integer> findItems(String text) {
+        return findItems(text, true);
+    }
+
+    /**
+     * 查找文本匹配的行（QListWidget::findItems 简化；完全匹配语义）。
+     * @param caseSensitive 是否区分大小写
+     */
+    public java.util.List<Integer> findItems(String text, boolean caseSensitive) {
+        java.util.List<Integer> out = new ArrayList<>();
+        if (text == null) {
+            return out;
+        }
+        int[] rows = nativeFindItems(nativeHandle, text, caseSensitive);
+        for (int r : rows) {
+            out.add(r);
+        }
+        return out;
+    }
+    private static native int[] nativeFindItems(long handle, String text, boolean caseSensitive);
+
+    /** 坐标处的行号（QListWidget::itemAt(QPoint) 行语义；无项返回 -1）。 */
+    public int itemAt(int x, int y) {
+        return nativeItemAt(nativeHandle, x, y);
+    }
+    private static native int nativeItemAt(long handle, int x, int y);
+
+    /** 设置选择模式（见本类 *_SELECTION 常量）。 */
+    public void setSelectionMode(int mode) {
+        nativeSetSelectionMode(nativeHandle, mode);
+    }
+    private static native void nativeSetSelectionMode(long handle, int mode);
+
+    /** 滚动到指定行可见（QListWidget::scrollToItem 行语义，EnsureVisible）。 */
+    public void scrollToItem(int row) {
+        nativeScrollToItem(nativeHandle, row);
+    }
+    private static native void nativeScrollToItem(long handle, int row);
+
+    /** 指定行的可视区域 [x, y, w, h]（QListWidget::visualItemRect 行语义；不可见行返回 0 矩形）。 */
+    public int[] visualItemRect(int row) {
+        return nativeVisualItemRect(nativeHandle, row);
+    }
+    private static native int[] nativeVisualItemRect(long handle, int row);
+
+    /** 为指定行挂自定义编辑控件（QListWidget::setItemWidget 行语义）。 */
+    public void setItemWidget(int row, QWidget widget) {
+        if (widget == null) {
+            return;
+        }
+        nativeSetItemWidget(nativeHandle, row, widget.nativeHandle());
+    }
+    private static native void nativeSetItemWidget(long handle, int row, long widgetHandle);
+
+    /** 移除指定行的编辑控件（保留行与文本；QListWidget::removeItemWidget 行语义）。 */
+    public void removeItemWidget(int row) {
+        nativeRemoveItemWidget(nativeHandle, row);
+    }
+    private static native void nativeRemoveItemWidget(long handle, int row);
+
+    /** 就地编辑模式开启（QListWidget::openPersistentEditor 行语义）。 */
+    public void openPersistentEditor(int row) {
+        nativeOpenPersistentEditor(nativeHandle, row);
+    }
+    private static native void nativeOpenPersistentEditor(long handle, int row);
+
+    /** 就地编辑模式关闭。 */
+    public void closePersistentEditor(int row) {
+        nativeClosePersistentEditor(nativeHandle, row);
+    }
+    private static native void nativeClosePersistentEditor(long handle, int row);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isSortingEnabled（Qt isSortingEnabled）。 */
     public boolean isSortingEnabled() {

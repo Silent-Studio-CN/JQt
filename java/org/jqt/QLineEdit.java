@@ -233,6 +233,65 @@ public class QLineEdit extends QWidget {
     public String selectedText() { return nativeSelectedText(nativeHandle); }
     private static native String nativeSelectedText(long handle);
 
+    // ---- v1.8.0 L2-B4：光标导航 / 输入掩码 / 文本边距（手写直传）----
+
+    /** 设置光标位置（字符索引；QLineEdit::setCursorPosition）。 */
+    public void setCursorPosition(int pos) { nativeSetCursorPosition(nativeHandle, pos); }
+    private static native void nativeSetCursorPosition(long handle, int pos);
+
+    /** 光标位置（字符索引）。 */
+    public int cursorPosition() { return nativeCursorPosition(nativeHandle); }
+    private static native int nativeCursorPosition(long handle);
+
+    /** 坐标处的字符索引（QLineEdit::cursorPositionAt(QPoint)；越界返回 -1）。 */
+    public int cursorPositionAt(int x, int y) { return nativeCursorPositionAt(nativeHandle, x, y); }
+    private static native int nativeCursorPositionAt(long handle, int x, int y);
+
+    /** 退格删除光标前一字符（QLineEdit::backspace）。 */
+    public void backspace() { nativeBackspace(nativeHandle); }
+    private static native void nativeBackspace(long handle);
+
+    /** 光标移到行尾（QLineEdit::end(mark)；mark=true 时扩展选区）。 */
+    public void end(boolean mark) { nativeEnd(nativeHandle, mark); }
+    private static native void nativeEnd(long handle, boolean mark);
+
+    /** 光标向后移动 steps 个字符（QLineEdit::cursorBackward(mark, steps)）。 */
+    public void cursorBackward(boolean mark, int steps) { nativeCursorBackward(nativeHandle, mark, steps); }
+    private static native void nativeCursorBackward(long handle, boolean mark, int steps);
+
+    /** 输入掩码（QLineEdit::inputMask；空串清除）。 */
+    public String inputMask() { return nativeInputMask(nativeHandle); }
+    private static native String nativeInputMask(long handle);
+
+    /** 文本边距 [左, 上, 右, 下]（QLineEdit::textMargins）。 */
+    public int[] textMargins() { return nativeTextMargins(nativeHandle); }
+    private static native int[] nativeTextMargins(long handle);
+
+    /** 设置文本边距（像素）。 */
+    public void setTextMargins(int left, int top, int right, int bottom) {
+        nativeSetTextMargins(nativeHandle, left, top, right, bottom);
+    }
+    private static native void nativeSetTextMargins(long handle, int left, int top, int right, int bottom);
+
+    // ---- v1.8.0 L2-B9：输入校验器（对象体系）----
+
+    private QValidator validatorField;
+
+    /**
+     * 设置输入校验器（QLineEdit::setValidator；Java 持引用保活）。
+     * 传 null 清除校验。
+     */
+    public void setValidator(QValidator validator) {
+        validatorField = validator;
+        nativeSetValidator(nativeHandle, validator != null ? validator.nativeHandle : 0);
+    }
+    private static native void nativeSetValidator(long handle, long validatorHandle);
+
+    /** 当前校验器（未设置返回 null；与 set 传入对象同一实例）。 */
+    public QValidator validator() {
+        return validatorField;
+    }
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** cursorForward（Qt cursorForward）。 */
     public void cursorForward(boolean arg0, int arg1) {

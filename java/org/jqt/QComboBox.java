@@ -200,6 +200,65 @@ public class QComboBox extends QWidget {
     }
     private static native Object nativeCurrentData(long handle);
 
+    // ---- v1.8.0 L2-B5：查找 / 尺寸与插入策略（手写直传）----
+
+    /** 尺寸自适应策略（Qt::SizeAdjustPolicy）：0 随内容 / 1 首次显示时 / 2 随最短内容长度。 */
+    public static final int ADJUST_TO_CONTENTS = 0;
+    public static final int ADJUST_TO_CONTENTS_ON_FIRST_SHOW = 1;
+    public static final int ADJUST_TO_MINIMUM_CONTENTS_LENGTH = 2;
+
+    /** 插入策略（Qt::InsertPolicy）：0 不插 / 1 顶部 / 2 当前项 / 3 底部 / 4 当前后 / 5 当前前 / 6 字母序。 */
+    public static final int NO_INSERT = 0;
+    public static final int INSERT_AT_TOP = 1;
+    public static final int INSERT_AT_CURRENT = 2;
+    public static final int INSERT_AT_BOTTOM = 3;
+    public static final int INSERT_AFTER_CURRENT = 4;
+    public static final int INSERT_BEFORE_CURRENT = 5;
+    public static final int INSERT_ALPHABETICALLY = 6;
+
+    /**
+     * 查找包含给定文本的项（QComboBox::findText；默认精确匹配且区分大小写；未找到返回 -1）。
+     */
+    public int findText(String text) {
+        if (text == null) {
+            return -1;
+        }
+        return nativeFindText(nativeHandle, text);
+    }
+    private static native int nativeFindText(long handle, String text);
+
+    /** 尺寸自适应策略（QComboBox::sizeAdjustPolicy）。 */
+    public int sizeAdjustPolicy() { return nativeSizeAdjustPolicy(nativeHandle); }
+    private static native int nativeSizeAdjustPolicy(long handle);
+
+    /** 设置尺寸自适应策略（见本类 ADJUST_* 常量）。 */
+    public void setSizeAdjustPolicy(int policy) { nativeSetSizeAdjustPolicy(nativeHandle, policy); }
+    private static native void nativeSetSizeAdjustPolicy(long handle, int policy);
+
+    /** 插入策略（QComboBox::insertPolicy；见本类 INSERT_* 常量）。 */
+    public int insertPolicy() { return nativeInsertPolicy(nativeHandle); }
+    private static native int nativeInsertPolicy(long handle);
+
+    /** 设置插入策略（可编辑下拉时用户输入如何插入列表）。 */
+    public void setInsertPolicy(int policy) { nativeSetInsertPolicy(nativeHandle, policy); }
+    private static native void nativeSetInsertPolicy(long handle, int policy);
+
+    // ---- v1.8.0 L2-B9：输入校验器（对象体系，可编辑下拉用）----
+
+    private QValidator validatorField;
+
+    /** 设置输入校验器（QComboBox::setValidator，可编辑模式生效；null 清除）。 */
+    public void setValidator(QValidator validator) {
+        validatorField = validator;
+        nativeSetValidator(nativeHandle, validator != null ? validator.nativeHandle : 0);
+    }
+    private static native void nativeSetValidator(long handle, long validatorHandle);
+
+    /** 当前校验器（未设置返回 null）。 */
+    public QValidator validator() {
+        return validatorField;
+    }
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** clearEditText（Qt clearEditText）。 */
     public void clearEditText() {

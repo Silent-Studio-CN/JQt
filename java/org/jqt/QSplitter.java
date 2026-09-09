@@ -66,6 +66,23 @@ public class QSplitter extends QWidget {
     public int count() { return nativeCount(nativeHandle); }
     private static native int nativeCount(long handle);
 
+    // ---- v1.8.0 L2-B1：状态持久化 ----
+
+    /** 保存分隔布局状态（QSplitter::saveState；配合 {@link #restoreState(byte[])} 使用）。 */
+    public byte[] saveState() {
+        return nativeSaveState(nativeHandle);
+    }
+    private native byte[] nativeSaveState(long handle);
+
+    /** 恢复分隔布局状态（QSplitter::restoreState；state 为 null 时返回 false）。@return 是否成功 */
+    public boolean restoreState(byte[] state) {
+        if (state == null) {
+            return false;
+        }
+        return nativeRestoreState(nativeHandle, state);
+    }
+    private native boolean nativeRestoreState(long handle, byte[] state);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** childrenCollapsible（Qt childrenCollapsible）。 */
     public boolean childrenCollapsible() {
