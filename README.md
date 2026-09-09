@@ -45,7 +45,8 @@ public class Hello {
 | Lightweight runtime story | ✅ single zip | ✅ JDK | ⚠️ heavy |
 
 JQt targets **L1/L2/L3 tiered coverage** of the full Qt 6 API surface (~2172 methods tracked in our roadmap).
-L1 (common API) is **92.7% complete**; industrial modules and platform exclusives are shipping now.
+L1 (tiering blueprint, 178 methods across the core classes) is **100% complete**; L2 ships grouped facades
+(window()/style()/drag()/focus()/event()/nativeApi()), state persistence, and a validator object system.
 
 ---
 

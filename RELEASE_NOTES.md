@@ -19,6 +19,7 @@ Per-version release notes live in [docs/releases/](docs/releases/):
 | v0.7.3-Universal-Kit | [docs/releases/v0.7.3-Universal-Kit.md](docs/releases/v0.7.3-Universal-Kit.md) |
 | v0.7.4-Universal-Kit | [docs/releases/v0.7.4-Universal-Kit.md](docs/releases/v0.7.4-Universal-Kit.md) |
 | v0.7.5-Generator-Kit | [docs/releases/v0.7.5-Generator-Kit.md](docs/releases/v0.7.5-Generator-Kit.md) |
+| v1.8.0-Emerge-Kit | [docs/releases/v1.8.0-Emerge-Kit.md](docs/releases/v1.8.0-Emerge-Kit.md) |
 
 ---
 
