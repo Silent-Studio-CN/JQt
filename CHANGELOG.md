@@ -12,6 +12,34 @@
 <a id="zh"></a>
 ## 中文版
 
+### v1.8.0-Emerge-Kit（2026-09-07）— 第一正式版线 · 展露头角
+
+> **版本语义**：0.7.5 发布后推进 JQt-for-Android（0.8 功能序列），故 0.8.0 以第一正式版线晋升正式名 **1.8.0**（Emerge-Kit）。
+> **本版主题**：L1 手写收官 100% + L2 十批落地（状态持久化 / 控件各族 / validator 对象体系 / 分组门面）+ 质量账本重审计。
+
+**L1（蓝图 §4.1-4.10，178/178 = 100%，手写批）**
+- 语义别名：QWidget.setTitle/title、QMessageBox info/warning/critical/question 静态名
+- 直传补全：setParent/setAttribute(WA 白名单)、isCheckable/isDown/setDown、setPixmap、行编辑选区三件、
+  QComboBox addItems/insertItem/itemText/currentData、布局 insertWidget/setStretch/stretch、
+  QDialog done/result/onAccepted/onRejected、QListWidget 行语义批、QMessageBox StandardButton
+- QMainWindow 主窗口语义（壳内组装）：centralWidget/menuBar/statusBar/addToolBar/addDockWidget 全家 +
+  nativeSetLayoutForce（先删旧布局再挂新）
+- §4.11 残余：QMenu 分隔线/子菜单、QToolBar 分隔线、QScrollArea.widget()、QStatusBar.addWidget、QTabWidget.insertTab
+
+**L2（十批 + 功能层冲刺；分组门面 6/6，严格口径 114/123 = 92.7%）**
+- 状态持久化：QSplitter.saveState/restoreState（直传）、QMainWindow 壳结构 saveState/restoreState（objectName + 原子恢复）
+- 控件各族：QPushButton autoRepeat/animateClick/autoExclusive、QLabel 文本格式与旗标、QLineEdit 光标导航/掩码/边距、
+  QComboBox findText/策略/数据层、QListWidget 查找/命中/选区/滚动/编辑器、QApplication 查询族、
+  布局方向/支柱/网格几何、QWidget 窗口旗标/输入法提示/焦点链
+- **validator 对象体系**：QValidator 基 + QIntValidator/QDoubleValidator/QRegularExpressionValidator + 控件接线
+- **分组门面**：window()/style()/drag()/focus()/event()/nativeApi()（native 为关键字故 nativeApi），缺口账在 javadoc
+- 汇总冒烟：SmokeL2b1（25 断言）+ SmokeL2b2（34 断言），fail 非零退出
+
+**质量与账本**
+- api-completeness 矩阵重审计（All-Members 口径 51 类、可复现）；归档 13 项复核（4 解锁 + 1 误判已实现）
+- 预留 API 复原（QMainWindow toolbar 信号为 v0.7.1 登记 API，撤销误删）
+- 验证：每批独立构建 + 冒烟；四平台 CI 全绿（含 Windows ARM64）；汇总冒烟本地 25/25、34/34、SmokeL1、SmokeGenApi 16/16
+
 ### v0.7.5-Generator-Kit（2026-08-31）— JQt 自动化生产时代（API 机器生成，非机翻）
 
 > **JQt 自动化**：jqt-gen 生成器是**自动化工程**——语义筛选（信号/protected/不存在 API 全部剔除）、金标准 diff 收敛、javac/g++ 编译断言闭环、重载 JNI 后缀精确匹配。机器生产，人只做精修——**不是照搬 Qt 的机械翻译**。

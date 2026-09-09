@@ -22,7 +22,8 @@
 | 运行时轻量度 | ✅ 单 zip | ✅ JDK | ⚠️ 重 |
 
 JQt 对完整 Qt 6 API 面（路线图跟踪约 2172 方法）做 **L1/L2/L3 分级覆盖**：
-L1（常用 API）**92.7% 完成**；工业模块与平台独家能力已在交付中。
+L1（蓝图 178 项，核心类）**100% 完成**；L2 分组门面（window()/style()/drag()/focus()/event()/nativeApi()）、
+状态持久化与 validator 对象体系已交付。
 
 ## 🛠 怎么实现的（How It Works）
 
