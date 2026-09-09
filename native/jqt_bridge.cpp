@@ -10875,3 +10875,49 @@ JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetValidator(JNIEnv* env, jc
 }
 }  // extern "C" (L2-B9)
 
+// ============================================================================
+// v1.8.0 L2 功能层收尾：窗口旗标/输入法提示/焦点链 + QToolBar 按钮样式
+// ============================================================================
+extern "C" {
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowFlags(JNIEnv* env, jclass /*cls*/, jlong handle, jint flags) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w != nullptr) { w->setWindowFlags(static_cast<Qt::WindowFlags>(flags)); }
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowFlag(JNIEnv* env, jclass /*cls*/, jlong handle, jint flag, jboolean on) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w != nullptr) { w->setWindowFlag(static_cast<Qt::WindowType>(flag), on == JNI_TRUE); }
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetInputMethodHints(JNIEnv* env, jclass /*cls*/, jlong handle, jint hints) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w != nullptr) { w->setInputMethodHints(static_cast<Qt::InputMethodHints>(hints)); }
+}
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetFocusProxy(JNIEnv* env, jclass /*cls*/, jlong handle, jlong proxyHandle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return; }
+    QWidget* p = proxyHandle != 0 ? static_cast<QWidget*>(requireHandle(env, proxyHandle)) : nullptr;
+    if (proxyHandle != 0 && p == nullptr) { return; }
+    w->setFocusProxy(p);
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QWidget_nativeNextInFocusChain(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return 0; }
+    QWidget* n = w->nextInFocusChain();
+    return n != nullptr ? reinterpret_cast<jlong>(n) : 0;
+}
+JNIEXPORT jlong JNICALL Java_org_jqt_QWidget_nativePreviousInFocusChain(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) { return 0; }
+    QWidget* n = w->previousInFocusChain();
+    return n != nullptr ? reinterpret_cast<jlong>(n) : 0;
+}
+JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeSetToolButtonStyle(JNIEnv* env, jclass /*cls*/, jlong handle, jint style) {
+    QToolBar* bar = static_cast<QToolBar*>(requireHandle(env, handle));
+    if (bar != nullptr) { bar->setToolButtonStyle(static_cast<Qt::ToolButtonStyle>(style)); }
+}
+JNIEXPORT jint JNICALL Java_org_jqt_QToolBar_nativeToolButtonStyle(JNIEnv* env, jclass /*cls*/, jlong handle) {
+    QToolBar* bar = static_cast<QToolBar*>(requireHandle(env, handle));
+    return (bar != nullptr) ? static_cast<jint>(bar->toolButtonStyle()) : 0;
+}
+}  // extern "C" (L2 功能层收尾)
+

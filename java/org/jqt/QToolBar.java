@@ -103,6 +103,16 @@ public class QToolBar extends QWidget {
     }
     private static native void nativeAddSeparator(long handle);
 
+    // ---- v1.8.0 L2 功能层收尾：按钮样式（QMainWindow 聚合用）----
+
+    /** 按钮样式（Qt::ToolButtonStyle）：0 仅图标 / 1 仅文字 / 2 文字在旁 / 3 文字在下。 */
+    public void setToolButtonStyle(int style) { nativeSetToolButtonStyle(nativeHandle, style); }
+    private static native void nativeSetToolButtonStyle(long handle, int style);
+
+    /** 按钮样式。 */
+    public int toolButtonStyle() { return nativeToolButtonStyle(nativeHandle); }
+    private static native int nativeToolButtonStyle(long handle);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** isFloatable（Qt isFloatable）。 */
     public boolean isFloatable() {

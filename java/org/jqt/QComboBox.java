@@ -259,6 +259,48 @@ public class QComboBox extends QWidget {
         return validatorField;
     }
 
+    // ==================== v1.8.0 L2 功能层收尾：条目数据层（简化契约）====================
+    // 附加 Object 数据(Java 侧按索引映射)。契约:仅推荐"纯追加"模式(addItem*);
+    // 使用 removeItem/insertItem/clear 等索引变动操作后数据映射不自动跟随——此时请勿依赖本层。
+    // 与 Qt QVariant 数据不同:数据只活在 Java 侧,跨进程/序列化不保留。
+
+    private final java.util.Map<Integer, Object> dataByIndex = new java.util.HashMap<>();
+
+    /** 追加条目并附着数据（数据随索引存于 Java 侧，见类注释契约）。 */
+    public void addItem(String text, Object data) {
+        addItem(text);
+        dataByIndex.put(count() - 1, data);
+    }
+
+    /** 为指定索引附着数据（null 清除该索引数据）。 */
+    public void setItemData(int index, Object data) {
+        if (data == null) {
+            dataByIndex.remove(index);
+        } else {
+            dataByIndex.put(index, data);
+        }
+    }
+
+    /** 指定索引的数据（未设置返回 null）。 */
+    public Object itemData(int index) {
+        return dataByIndex.get(index);
+    }
+
+    /**
+     * 按数据查找索引（QComboBox::findData 简化契约：equals 比较，首中即返；未找到 -1）。
+     */
+    public int findData(Object data) {
+        if (data == null) {
+            return -1;
+        }
+        for (java.util.Map.Entry<Integer, Object> e : dataByIndex.entrySet()) {
+            if (data.equals(e.getValue())) {
+                return e.getKey();
+            }
+        }
+        return -1;
+    }
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** clearEditText（Qt clearEditText）。 */
     public void clearEditText() {
