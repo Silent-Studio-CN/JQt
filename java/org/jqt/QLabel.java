@@ -137,6 +137,34 @@ public class QLabel extends QWidget {
         setPixmap(pm);
     }
 
+    // ---- v1.8.0 L2-B3：文本格式与交互旗标（手写直传）----
+
+    /** 文本格式（Qt::TextFormat）：0 纯文本 / 1 富文本 / 2 自动 / 3 Markdown。 */
+    public static final int TEXT_PLAIN = 0;
+    public static final int TEXT_RICH = 1;
+    public static final int TEXT_AUTO = 2;
+    public static final int TEXT_MARKDOWN = 3;
+
+    /** 文本交互旗标位（Qt::TextInteractionFlag）：按位组合。 */
+    public static final int NO_TEXT_INTERACTION = 0;
+    public static final int TEXT_SELECTABLE_BY_MOUSE = 1;
+    public static final int TEXT_SELECTABLE_BY_KEYBOARD = 2;
+    public static final int LINKS_ACCESSIBLE_BY_MOUSE = 4;
+    public static final int LINKS_ACCESSIBLE_BY_KEYBOARD = 8;
+    public static final int TEXT_EDITABLE = 16;
+    /** 浏览器式交互(选择+链接),常用组合。 */
+    public static final int TEXT_BROWSER_INTERACTION = 15;
+    /** 编辑器式交互(选择+可编辑)。 */
+    public static final int TEXT_EDITOR_INTERACTION = 19;
+
+    /** 设置文本格式（QLabel::setTextFormat；0 纯/1 富/2 自动/3 Markdown）。 */
+    public void setTextFormat(int format) { nativeSetTextFormat(nativeHandle, format); }
+    private static native void nativeSetTextFormat(long handle, int format);
+
+    /** 文本交互旗标（QLabel::setTextInteractionFlags；按位组合，见本类常量）。 */
+    public void setTextInteractionFlags(int flags) { nativeSetTextInteractionFlags(nativeHandle, flags); }
+    private static native void nativeSetTextInteractionFlags(long handle, int flags);
+
 // ---- 生成器批次（jqt-gen 自动生成，直传型） ----
     /** hasScaledContents（Qt hasScaledContents）。 */
     public boolean hasScaledContents() {
