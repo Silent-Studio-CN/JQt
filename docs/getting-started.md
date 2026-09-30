@@ -22,6 +22,19 @@
 
 **不需要**安装 C++ 编译器或 Qt SDK。
 
+### 一键启动脚本（可选）
+
+源码仓库提供自检式启动器 `run.sh`（Linux / macOS / Windows 的 Git Bash），会：找 JDK → 定位
+`out/` 类或 `dist/*.jar` → 缺失时从 GitHub Release 自动下载 jar 与当前平台裸库 → 设置
+`LD_LIBRARY_PATH` / `DYLD_LIBRARY_PATH` / `QT_QPA_PLATFORM_PLUGIN_PATH` → 启动指定类。
+
+```bash
+./run.sh --list                                   # 看有哪些可运行类
+./run.sh --class org.jqt.SmokeL1 --auto-close 2000
+JQT_QTVER=6.8.3 ./run.sh                          # 指定下载的裸库 Qt 版本
+JQT_JAVA=/path/to/java ./run.sh                   # 指定 JDK
+```
+
 ### 三步跑起来
 
 1. 把 `jqt-0.1.0-alpha.jar` 加入项目依赖；

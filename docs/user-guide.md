@@ -65,6 +65,16 @@ lib/
   ```
 - **macOS**：`-Djava.library.path=lib`，且 `DYLD_LIBRARY_PATH` 包含 `lib` 与 Qt 框架目录。
 
+### 3.5 一键启动脚本（源码仓库）
+
+`run.sh`（Linux / macOS / Windows Git Bash）自动完成上面第 2、3 步：
+
+```bash
+./run.sh --list                                   # 列出 out/ 可运行类
+./run.sh --class org.jqt.SmokeL1 --auto-close 2000
+JQT_NO_DOWNLOAD=1 ./run.sh                        # 禁止自动下载（只用本地产物）
+```
+
 ### 4. Hello World
 
 ```java
