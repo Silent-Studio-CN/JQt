@@ -66,7 +66,8 @@ jobs:
 
       - name: Build qtserialport 6.11.2 (source)
         run: |
-          curl -sL -A "Mozilla/5.0" -o /tmp/qtserialport.zip "https://download.qt.io/official_releases/qt/6.11/6.11.2/submodules/qtserialport-everywhere-src-6.11.2.zip"
+          # 用 archive 路径（长期保留）；official_releases 会被 Qt 下架，会导致 404 → unzip 失败
+          curl -fsSL -A "Mozilla/5.0" -o /tmp/qtserialport.zip "https://download.qt.io/archive/qt/6.11/6.11.2/submodules/qtserialport-everywhere-src-6.11.2.zip"
           cd /tmp && unzip -q qtserialport.zip && cd qtserialport-everywhere-src-6.11.2
           cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/6.11.2/gcc_64 -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
           cmake --build build -j$(nproc)
@@ -74,7 +75,8 @@ jobs:
 
       - name: Build qtserialport 6.8.3 (source)
         run: |
-          curl -sL -A "Mozilla/5.0" -o /tmp/qtserialport683.zip "https://download.qt.io/official_releases/qt/6.8/6.8.3/submodules/qtserialport-everywhere-src-6.8.3.zip"
+          # v1.8.0 后修复：official_releases/qt/6.8/6.8.3 的源码 zip 已下架（404），改用 archive 路径
+          curl -fsSL -A "Mozilla/5.0" -o /tmp/qtserialport683.zip "https://download.qt.io/archive/qt/6.8/6.8.3/submodules/qtserialport-everywhere-src-6.8.3.zip"
           cd /tmp && unzip -q qtserialport683.zip && cd qtserialport-everywhere-src-6.8.3
           cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/Qt683/6.8.3/gcc_64 -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
           cmake --build build -j$(nproc)
