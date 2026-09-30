@@ -55,19 +55,21 @@ L1（蓝图 178 项，核心类）**100% 完成**；L2 分组门面（window()/s
 | **双 Qt 版本** | 同一套代码编译 Qt 6.11.2 与 6.8.3 LTS 两个版本 |
 | **定时任务** | Qt 定时器 → GUI 线程执行 Java Runnable（`app.schedule`，任意线程可调） |
 
+> 权威结构说明（含主窗口壳模型、对象生命周期、信号路径）见 [docs/architecture.md](docs/architecture.md)。
+
 ---
 
 ## ⚡ 快速开始（Hello World）
 
 ```powershell
-# 下载 jqt-0.7.5-Generator-Kit-windows-x64.zip → 解压
+# 下载 jqt-1.8.0-Emerge-Kit-windows-x64.zip → 解压
 # 运行注意：jqt.dll 依赖 Qt6*.dll，需把 lib 目录加入 DLL 搜索路径
 # （cd 到 lib 目录，或把 lib 加入 PATH）——-Djava.library.path 只定位 jqt.dll 本身
 cd lib
-java -Djava.library.path=. -cp "jqt-0.7.5-Generator-Kit.jar;.." Hello
+java -Djava.library.path=. -cp "jqt-1.8.0-Emerge-Kit.jar;.." Hello
 # 或：不切目录，用 PATH 方式
 # $env:PATH = "$PWD\lib;$env:PATH"
-# java -Djava.library.path=lib -cp "lib\jqt-0.7.5-Generator-Kit.jar;." Hello
+# java -Djava.library.path=lib -cp "lib\jqt-1.8.0-Emerge-Kit.jar;." Hello
 ```
 
 ```java
@@ -120,22 +122,24 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 | DWM 原生窗口样式 | `setNativeBorderColor` 等（v0.6.1） | `setMacTitlebarTransparent` 等（v0.7.0） | — |
 | 全局热键 | GlobalHotkey（v0.6.1） | — | 候选（v0.7.x，X11 依赖） |
 
-## 📦 发布包（v0.7.5-Generator-Kit）
+## 📦 发布包（v1.8.0-Emerge-Kit）
 
 | 资产 | 平台 |
 |------|------|
-| `jqt-0.7.5-Generator-Kit.jar` | 全部（Java API） |
-| `jqt-0.7.5-Generator-Kit-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
+| `jqt-1.8.0-Emerge-Kit.jar` | 全部（Java API） |
+| `jqt-1.8.0-Emerge-Kit-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库（双 Qt 版本） |
 | `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
-| `libjqt-6.11.2.so` / `libjqt-6.8.3.so` | Linux（双版本） |
-| `libjqt-6.11.2.dylib` / `libjqt-6.8.3.dylib` | macOS（双版本） |
+| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux（双版本） |
+| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS（双版本） |
 
-> 最新发布见 [GitHub Releases](https://github.com/Silent-Studio-CN/JQt/releases)
+> 最新发布见 [GitHub Releases](https://github.com/Silent-Studio-CN/JQt/releases)（`v1.8.0-Emerge-Kit`）
+> Maven Central 当前为 `0.7.5`，1.8.0 渠道发布待定。
 ## 📄 仓库内文档
 
 | 文档 | 内容 |
 |------|------|
+| [docs/architecture.md](docs/architecture.md) | **权威架构说明**：分层 / 主窗口壳模型 / 对象生命周期 / 信号路径 / 生成器流水线 / CI |
 | [docs/api-implemented.md](docs/api-implemented.md) | 已实现 API 完整清单（双语） |
 | [docs/user-guide.md](docs/user-guide.md) | 安装配置 / 三平台运行 / FAQ |
 | [docs/api-tiering.md](docs/api-tiering.md) | API 分级设计（L1/L2/L3） |

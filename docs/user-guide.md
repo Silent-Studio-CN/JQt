@@ -1,4 +1,4 @@
-# JQt 用户指南（v0.7.5-Generator-Kit）
+# JQt 用户指南（v1.8.0-Emerge-Kit）
 
 <details>
 <summary>🌐 语言 / Language</summary>

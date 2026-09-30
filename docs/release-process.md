@@ -1,6 +1,6 @@
 # 发布流程（Release Process）
 
-> 适用：每次发版（示例 v0.7.5-Generator-Kit → 下版 Emerge-Kit）。目标：资产一致、渠道同步、可审计。
+> 适用：每次发版（示例 v0.7.5-Generator-Kit → v1.8.0-Emerge-Kit）。目标：资产一致、渠道同步、可审计。
 
 ## 0. 前置（一次性）
 
@@ -10,7 +10,7 @@
 
 ## 1. 版本与内容
 
-1. `VERSION` 写新版本号（如 `0.7.5-Generator-Kit`）
+1. `VERSION` 写新版本号（如 `1.8.0-Emerge-Kit`）
 2. `CHANGELOG.md` 追加条目（中英）
 3. `docs/releases/<version>.md` 新建发布说明（公开版，无内部记录）
 4. jqt-gen 重新导出 `docs/api-implemented.md`（标题版本同步）
@@ -38,17 +38,20 @@ gh release upload <tag> <file> --clobber
 ```
 
 - 资产集（Windows 为主）：jar + windows-x64.zip + 各平台裸库（命名见 README Releases 表）
+- ⚠️ **易漏项（v1.8.0 实际踩过）**：CI 的 `windows` job 只产出 Qt 6.8.3 的 x64 裸库；
+  **Qt 6.11.2 的 x64 裸库（`jqt-windows-6.11.2.dll`）与 `windows-x64` 完整 zip 需本地
+  `build.ps1` + `build-release.ps1` 产出后 `gh release upload <tag> dist\<zip> dist\jqt-windows-6.11.2.dll` 补挂**
 - 上传前在本地解压抽查一次 zip（无 .bak / 无多余文件）
 
 ## 4. Maven Central（纯数字版本）
 
-1. `tools/publish-central.ps1 -Version 0.7.5`（gradle 构建 → 签名 → Portal 上传 → 轮询 VALIDATED → publish）
+1. `tools/publish-central.ps1 -Version 1.8.0`（gradle 构建 → 签名 → Portal 上传 → 轮询 VALIDATED → publish）
 2. 验证：repo1.maven.org 的 pom/jar/sources/javadoc HTTP 200；class major=61
 3. Central artifact 不可变——发现错误只能发新版本，发布前必须过 release-check
 
 ## 5. JitPack
 
-- tag 与 GitHub Release 同名（`v0.7.5-Generator-Kit`）；JitPack 自动从 tag 构建
+- tag 与 GitHub Release 同名（`v1.8.0-Emerge-Kit`）；JitPack 自动从 tag 构建
 - 验证：https://jitpack.io/com/github/Silent-Studio-CN/JQt/<tag>/ 构建状态
 
 ## 6. 发版后清单

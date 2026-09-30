@@ -47,6 +47,8 @@ public class Hello {
 JQt targets **L1/L2/L3 tiered coverage** of the full Qt 6 API surface (~2172 methods tracked in our roadmap).
 L1 (tiering blueprint, 178 methods across the core classes) is **100% complete**; L2 ships grouped facades
 (window()/style()/drag()/focus()/event()/nativeApi()), state persistence, and a validator object system.
+See **[docs/architecture.md](docs/architecture.md)** for the authoritative structure (incl. why `QMainWindow`
+is backed by a C++ `JQtWindowShell`).
 
 ---
 
@@ -57,8 +59,8 @@ L1 (tiering blueprint, 178 methods across the core classes) is **100% complete**
 Grab the latest release zip (self-contained: jar + native lib + Qt runtime):
 
 ```bash
-# Windows: jqt-0.7.5-Generator-Kit-windows-x64.zip → extract → cd lib
-java -Djava.library.path=. -cp "jqt-0.7.5-Generator-Kit.jar;.." Hello
+# Windows: jqt-1.8.0-Emerge-Kit-windows-x64.zip → extract → cd lib
+java -Djava.library.path=. -cp "jqt-1.8.0-Emerge-Kit.jar;.." Hello
 # Linux / macOS: same pattern, or set LD_LIBRARY_PATH / DYLD_LIBRARY_PATH to lib/
 ```
 
@@ -67,7 +69,7 @@ java -Djava.library.path=. -cp "jqt-0.7.5-Generator-Kit.jar;.." Hello
 
 ### 2. Maven — Maven Central or JitPack
 
-**Maven Central** (official, mirrored in China via Aliyun/Tencent):
+**Maven Central** (official, mirrored in China via Aliyun/Tencent) — *latest published: 0.7.5; 1.8.0 publication pending*:
 
 ```gradle
 // build.gradle
@@ -92,7 +94,7 @@ dependencyResolutionManagement {
 ```gradle
 // build.gradle
 dependencies {
-    implementation 'com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit'
+    implementation 'com.github.Silent-Studio-CN:JQt:1.8.0-Emerge-Kit'
 }
 ```
 
@@ -146,28 +148,28 @@ app.setTheme("themes/fluent.qss.tpl", myTheme.vars(), true);        // custom
 
 ## Releases
 
-**Versioning**: the number is the version (`0.7.5`); anything after it is a *release codename*
-(`-Generator-Kit` = the automation-production line). Same code, same artifacts across
+**Versioning**: the number is the version (`1.8.0`); anything after it is a *release codename*
+(`-Emerge-Kit` = the first stable line). Same code, same artifacts across
 channels — Maven Central uses the plain numeric version.
 
 | Channel | Version | Coordinate |
 |---------|---------|-----------|
-| GitHub Releases | `v0.7.5-Generator-Kit` | release assets below |
-| Maven Central | `0.7.5` | `io.github.silent-xiaomiao:jqt:0.7.5` |
-| JitPack | `0.7.5-Generator-Kit` | `com.github.Silent-Studio-CN:JQt:0.7.5-Generator-Kit` |
+| GitHub Releases | `v1.8.0-Emerge-Kit` | release assets below |
+| Maven Central | `0.7.5` *(1.8.0 pending)* | `io.github.silent-xiaomiao:jqt:0.7.5` |
+| JitPack | `1.8.0-Emerge-Kit` | `com.github.Silent-Studio-CN:JQt:1.8.0-Emerge-Kit` |
 
-Latest: [v0.7.5-Generator-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v0.7.5-Generator-Kit)
+Latest: [v1.8.0-Emerge-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v1.8.0-Emerge-Kit)
 
 | Asset | Platform |
 |-------|----------|
-| `jqt-0.7.5-Generator-Kit.jar` | all (Java API) |
-| `jqt-0.7.5-Generator-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
+| `jqt-1.8.0-Emerge-Kit.jar` | all (Java API) |
+| `jqt-1.8.0-Emerge-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
 | `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 bare libs (both Qt versions) |
 | `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
-| `libjqt-6.11.2.so` / `libjqt-6.8.3.so` | Linux (both versions) |
-| `libjqt-6.11.2.dylib` / `libjqt-6.8.3.dylib` | macOS (both versions) |
+| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux (both versions) |
+| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS (both versions) |
 
-Release notes: [docs/releases/](docs/releases/) (per-version, v0.1.0 → v0.7.5).
+Release notes: [docs/releases/](docs/releases/) (per-version, v0.1.0 → v1.8.0).
 
 ---
 
@@ -176,10 +178,11 @@ Release notes: [docs/releases/](docs/releases/) (per-version, v0.1.0 → v0.7.5)
 | Doc | What |
 |-----|------|
 | [docs/getting-started.md](docs/getting-started.md) | Install, run, FAQ |
+| [docs/architecture.md](docs/architecture.md) | **Authoritative architecture**: layers, window-shell model, object lifecycle, signal path, generator pipeline, CI |
 | [docs/api-implemented.md](docs/api-implemented.md) | Full implemented-API list (bilingual) |
 | [docs/api-tiering.md](docs/api-tiering.md) | L1/L2/L3 tiering design |
 | [docs/behavior.md](docs/behavior.md) | Behavior contract (display rules, theming, DPI) |
-| [docs/releases/](docs/releases/) | Per-version release notes (v0.1.0 → v0.7.5) |
+| [docs/releases/](docs/releases/) | Per-version release notes (v0.1.0 → v1.8.0) |
 | [docs/qt6-classes.md](docs/qt6-classes.md) | Qt6 class coverage roadmap (Widgets 191, hand-written vs generated) |
 | [CHANGELOG.md](CHANGELOG.md) | Changelog |
 
