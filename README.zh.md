@@ -72,6 +72,15 @@ java -Djava.library.path=. -cp "jqt-1.8.0-Emerge-Kit.jar;.." Hello
 # java -Djava.library.path=lib -cp "lib\jqt-1.8.0-Emerge-Kit.jar;." Hello
 ```
 
+**或者用自检式 Shell 启动器**（Linux / macOS / Windows 的 Git Bash）——自动找 JDK、定位产物、
+缺件时从 GitHub Release 下载、设好 Qt 路径并启动：
+
+```bash
+./run.sh                        # 跑 org.jqt.JQtDemo（源码仓库：用 out/ 或 dist/ 的 jar）
+./run.sh --class org.jqt.SmokeL1 --auto-close 2000
+./run.sh --list                 # 列出 out/ 里可运行的类
+```
+
 ```java
 import org.jqt.*;
 

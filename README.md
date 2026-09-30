@@ -64,6 +64,15 @@ java -Djava.library.path=. -cp "jqt-1.8.0-Emerge-Kit.jar;.." Hello
 # Linux / macOS: same pattern, or set LD_LIBRARY_PATH / DYLD_LIBRARY_PATH to lib/
 ```
 
+**Or use the self-checking shell launcher** (Linux / macOS / Git Bash on Windows) — it finds a JDK,
+locates the artifacts, downloads them from the GitHub Release when missing, sets the Qt paths and runs:
+
+```bash
+./run.sh                        # runs org.jqt.JQtDemo (source checkout: builds' out/ or dist/ jar)
+./run.sh --class org.jqt.SmokeL1 --auto-close 2000
+./run.sh --list                 # list runnable classes in out/
+```
+
 > **Note**: the native lib (jqt.dll / libjqt.so / libjqt.dylib) depends on the Qt6 runtime DLLs
 > shipped inside the zip; add the `lib` dir to the DLL search path (PATH / LD_LIBRARY_PATH / DYLD_LIBRARY_PATH).
 
