@@ -1,7 +1,8 @@
 # JQt — Qt for Java
 
 > Build native desktop apps in Java with the Qt (C++) rendering and event engine underneath.
-> No C++ compiler. No Qt SDK. Just Java.
+> No C++ compiler. No Qt SDK to write code. Just Java.
+> (Runtime needs the Qt libraries — grab the `*-qt-runtime` bundle, which ships them.)
 
 **中文版**：[简体中文](README.zh.md) · **English**: this file
 
