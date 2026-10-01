@@ -38,9 +38,9 @@ gh release upload <tag> <file> --clobber
 ```
 
 - 资产集（Windows 为主）：jar + windows-x64.zip + 各平台裸库（命名见 README Releases 表）
-- ⚠️ **易漏项（v1.8.0 实际踩过）**：CI 的 `windows` job 只产出 Qt 6.8.3 的 x64 裸库；
-  **Qt 6.12.0 的 x64 裸库（`jqt-windows-6.12.0.dll`）与 `windows-x64` 完整 zip 需本地
-  `build.ps1` + `build-release.ps1` 产出后 `gh release upload <tag> dist\<zip> dist\jqt-windows-6.12.0.dll` 补挂**
+- ✅ **v1.9.0 起已修**：CI 的 `windows` job 现在同时产出 `jqt-windows-6.8.3.dll` 与
+  **`jqt-windows-6.12.0.dll`**（v1.8.0 时只出 6.8.3，导致 6.x 新线裸库要本地补挂）。
+  仍需本地产出的只有 `windows-x64` 完整 zip：`build.ps1 -QtRoot D:\Qt\6.12.0` + `build-release.ps1`
 - 上传前在本地解压抽查一次 zip（无 .bak / 无多余文件）
 
 ## 4. Maven Central（纯数字版本）
