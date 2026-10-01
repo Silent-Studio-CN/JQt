@@ -12,6 +12,36 @@
 <a id="zh"></a>
 ## 中文版
 
+### v1.9.0-Qt612-Kit（2026-10-02）— 跟进 Qt 6.12.0 LTS
+
+> **为什么有这个版本**：上游 Qt 6.12 LTS 已于 2026-09 发布（QML 热重载、StyleKit 实验形态等）。
+> JQt 的绑定层**无需改动即通过编译与全部冒烟**，因此这一版的主题是"把版本线拉到最新 + 补齐矩阵缺口"。
+
+**Qt 版本线**
+
+- 新增 **Qt 6.12.0** 支持（MinGW 13.1，与既有工具链一致）；保留 **Qt 6.8.3 LTS**，双线并行
+- 本机实测：`build.ps1 -QtRoot D:\Qt\6.12.0` 一次编译通过；冒烟 SmokeL1 / SmokeL2b1(25) / SmokeL2b2(34) / SmokeGenApi(16) 全绿
+- 源兼容结论：JNI 桥与 Java 层未改动一行 —— 说明 JQt 的 API 使用面在 6.11 → 6.12 之间保持稳定
+
+**CI 矩阵（4 平台 × 2 版本线）**
+
+- **Linux x64**：6.12.0 / 6.8.3（新增 6.12.0 的 qtbase+icu 手动 7z 安装；qtserialport 改用 prebuilt addon，去掉源码编译）
+- **Windows x64**：**补齐 6.12.0**（此前该作业只产出 6.8.3 的 jqt.dll，导致发布时 6.11.2 x64 裸库需本地补产）；现在一次产出 `jqt-windows-6.8.3.dll` 与 `jqt-windows-6.12.0.dll`
+- **Windows ARM64**：6.12.0 / 6.8.3（MSVC2022 AArch64 手动 7z）
+- **macOS x64**：6.12.0 / 6.8.3（6.12.0 改用手动 7z，因为 aqtinstall 尚不能解析 Qt 新仓库的版本元数据）
+- 新增 Qt 6.12.0 的 Windows x64 冒烟步骤（L1 / L2b1 / L2b2 / GenApi，offscreen）
+
+**工具与文档**
+
+- `build.ps1` 默认 `-QtRoot` 指向 `D:\Qt\6.12.0`；`build-linux.sh` / `build-macos.sh` 版本引用同步
+- README / README.zh / 用户指南 / 发布流程文档中的 Qt 版本引用统一为 6.12.0 + 6.8.3
+- `VERSION` → `1.9.0-Qt612-Kit`
+
+**踩坑记录（可复用）**
+
+- Qt 新仓库（6.11+）的元数据在**架构子目录**（`qt6_6120/qt6_6120_mingw/Updates.xml`），aqtinstall 3.3 仍按旧路径取 → 只能用 7z 直装
+- 官方站与镜像的 `download.qt.io/online/qtsdkrepository/...` 在 6.12.0 上均可用；CN 镜像以清华最快（本地实测 17 MB/s）
+
 ### v1.8.0-Emerge-Kit（2026-09-07）— 第一正式版线 · 展露头角
 
 > **版本语义**：0.7.5 发布后推进 JQt-for-Android（0.8 功能序列），故 0.8.0 以第一正式版线晋升正式名 **1.8.0**（Emerge-Kit）。
@@ -327,6 +357,17 @@ NaN
 
 <a id="en"></a>
 ## English Version
+
+### v1.9.0-Qt612-Kit (2026-10-02) - Qt 6.12.0 LTS support
+
+- Adds **Qt 6.12.0** alongside the existing **Qt 6.8.3 LTS** line (MinGW 13.1 toolchain unchanged).
+- The binding layer compiles and passes the whole smoke suite **without any code change** on 6.12.0
+  (SmokeL1 / SmokeL2b1 25 checks / SmokeL2b2 34 checks / SmokeGenApi 16 checks).
+- CI: Linux, Windows ARM64 and macOS now target 6.12.0 (plus 6.8.3); **Windows x64 gains a 6.12.0 build**
+  (previously it only produced the 6.8.3 dll, which forced a local build at release time).
+- Qt's new SDK repo keeps version metadata under the arch sub-directory, which aqtinstall cannot parse yet,
+  so the CI installs Qt from the official .7z packages directly.
+
 
 ### v0.6.0-TEST (2026-08-27) — L1 API completion + community feedback fixes
 

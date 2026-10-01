@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  # ================= Linux (aqt Qt 6.11.2 + apt system deps) =================
+  # ================= Linux (Qt 6.12.0 + apt system deps) =================
   linux:
     name: Linux x64
     runs-on: ubuntu-22.04
@@ -23,27 +23,27 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y qt6-base-dev libgl1-mesa-dev g++ libqt6sql6-sqlite
 
-      - name: Install Qt 6.11.2 (manual 7z - aqt cannot parse new repo XML)
+      - name: Install Qt 6.12.0 (manual 7z - aqt cannot parse new repo XML)
         run: |
           sudo apt-get install -y p7zip-full libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libegl1 libfontconfig1 libglib2.0-0 libdbus-1-3
           mkdir -p /tmp/qt7z/qt /tmp/qt7z/icu
-          # Qt 6.11.2 uses the NEW repo layout: <module-dir>/<build-id><filename> (no slash)
-          curl -fsSL -o /tmp/qtbase.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.linux_gcc_64/6.11.2-0-202608131018qtbase-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
-          curl -fsSL -o /tmp/icu.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.linux_gcc_64/6.11.2-0-202608131018icu-linux-Rhel8.6-x86_64.7z"
+          # Qt 6.12.0 uses the NEW repo layout: <module-dir>/<build-id><filename> (no slash)
+          curl -fsSL -o /tmp/qtbase.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.linux_gcc_64/6.12.0-0-202609280346qtbase-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
+          curl -fsSL -o /tmp/icu.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.linux_gcc_64/6.12.0-0-202609280346icu-linux-Rhel8.6-x86_64.7z"
           7z x -y -o/tmp/qt7z/qt /tmp/qtbase.7z > /dev/null
           7z x -y -o/tmp/qt7z/icu /tmp/icu.7z > /dev/null
           # 新仓库的 7z 是扁平结构（直接 include/bin/lib，无 gcc_64 前缀）
-          sudo mkdir -p /opt/6.11.2
+          sudo mkdir -p /opt/6.12.0
           if [ -f /tmp/qt7z/qt/bin/qmake ]; then
-            sudo mv /tmp/qt7z/qt /opt/6.11.2/gcc_64
+            sudo mv /tmp/qt7z/qt /opt/6.12.0/gcc_64
           else
             GCC_DIR=$(find /tmp/qt7z/qt -type d -name gcc_64 | head -1)
             if [ -z "$GCC_DIR" ]; then echo "gcc_64 NOT FOUND in qt archive"; find /tmp/qt7z/qt -maxdepth 2 | head -20; exit 1; fi
-            sudo mv "$GCC_DIR" /opt/6.11.2/gcc_64
+            sudo mv "$GCC_DIR" /opt/6.12.0/gcc_64
           fi
-          find /tmp/qt7z/icu -name "libicu*" -exec sudo cp {} /opt/6.11.2/gcc_64/lib/ \;
+          find /tmp/qt7z/icu -name "libicu*" -exec sudo cp {} /opt/6.12.0/gcc_64/lib/ \;
           rm -rf /tmp/qt7z /tmp/qtbase.7z /tmp/icu.7z
-          test -f /opt/6.11.2/gcc_64/bin/qmake || (echo "qmake missing"; find /opt/6.11.2 -maxdepth 3 -type d | head -20; exit 1)
+          test -f /opt/6.12.0/gcc_64/bin/qmake || (echo "qmake missing"; find /opt/6.12.0 -maxdepth 3 -type d | head -20; exit 1)
 
       - name: Install Qt 6.8.3 (manual 7z - aqt cannot parse Linux XML)
         run: |
@@ -64,12 +64,12 @@ jobs:
           rm -rf /tmp/qt683 /tmp/qtbase683.7z /tmp/icu683.7z
           test -f /opt/Qt683/6.8.3/gcc_64/bin/qmake || { echo "qmake missing"; exit 1; }
 
-      - name: Build qtserialport 6.11.2 (source)
+      - name: Build qtserialport 6.12.0 (source)
         run: |
           # 用 archive 路径（长期保留）；official_releases 会被 Qt 下架，会导致 404 → unzip 失败
-          curl -fsSL -A "Mozilla/5.0" -o /tmp/qtserialport.zip "https://download.qt.io/archive/qt/6.11/6.11.2/submodules/qtserialport-everywhere-src-6.11.2.zip"
-          cd /tmp && unzip -q qtserialport.zip && cd qtserialport-everywhere-src-6.11.2
-          cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/6.11.2/gcc_64 -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
+          curl -fsSL -A "Mozilla/5.0" -o /tmp/qtserialport.zip "https://download.qt.io/archive/qt/6.12/6.12.0/submodules/qtserialport-everywhere-src-6.12.0.zip"
+          cd /tmp && unzip -q qtserialport.zip && cd qtserialport-everywhere-src-6.12.0
+          cmake -S . -B build -DCMAKE_PREFIX_PATH=/opt/6.12.0/gcc_64 -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON
           cmake --build build -j$(nproc)
           sudo cmake --install build
 
@@ -88,18 +88,18 @@ jobs:
           QT_BASE=/opt/Qt683/6.8.3/gcc_64 ./build-linux.sh
           mv lib/libjqt.so lib/libjqt-6.8.3.so
 
-      - name: Build libjqt.so (Qt 6.11.2)
+      - name: Build libjqt.so (Qt 6.12.0)
         run: |
-          QT_BASE=/opt/6.11.2/gcc_64 ./build-linux.sh
-          mv lib/libjqt.so lib/libjqt-6.11.2.so
+          QT_BASE=/opt/6.12.0/gcc_64 ./build-linux.sh
+          mv lib/libjqt.so lib/libjqt-6.12.0.so
 
-      - name: Smoke test (Qt 6.11.2, offscreen)
+      - name: Smoke test (Qt 6.12.0, offscreen)
         timeout-minutes: 4
         run: |
           chmod +x run-linux.sh
-          cp lib/libjqt-6.11.2.so lib/libjqt.so
-          export QT_BASE=/opt/6.11.2/gcc_64
-          export QT_PLUGIN_PATH=/opt/6.11.2/gcc_64/plugins
+          cp lib/libjqt-6.12.0.so lib/libjqt.so
+          export QT_BASE=/opt/6.12.0/gcc_64
+          export QT_PLUGIN_PATH=/opt/6.12.0/gcc_64/plugins
           set +e
           QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -AutoClose 2000 > smoke_out.txt 2>&1
           CODE=$?
@@ -182,7 +182,7 @@ jobs:
         run: |
           pip install aqtinstall
           Write-Host "=== Updates.xml probe ==="
-          curl.exe -s -o NUL -w 'HTTP %{http_code}\n' "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6112/qt6_6112/Updates.xml"
+          curl.exe -s -o NUL -w 'HTTP %{http_code}\n' "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6120/qt6_6120/Updates.xml"
           Write-Host "=== install-qt (with config) ==="
           python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_mingw --outputdir C:/Qt --archives qtbase -m qtserialport *> aqt_qt.log
           Write-Host "install-qt exit=$LASTEXITCODE"
@@ -264,6 +264,44 @@ jobs:
           path: |
             build_log.txt
             smoke_log.txt
+
+      - name: Install Qt 6.12.0 (manual 7z - aqt cannot parse new repo XML)
+        shell: pwsh
+        run: |
+          $base = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6120/qt6_6120"
+          $items = @{
+            "qtbase.7z"      = "$base/qt.qt6.6120.win64_mingw/6.12.0-0-202609280346qtbase-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
+            "d3dcompiler.7z" = "$base/qt.qt6.6120.win64_mingw/6.12.0-0-202609280346d3dcompiler_47-x64.7z"
+            "opengl32sw.7z"  = "$base/qt.qt6.6120.win64_mingw/6.12.0-0-202609280346opengl32sw-64-mesa_11_2_2-signed_sha256.7z"
+            "serialport.7z"  = "$base/qt.qt6.6120.addons.qtserialport.win64_mingw/6.12.0-0-202609280346qtserialport-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
+          }
+          New-Item -ItemType Directory -Force -Path C:/Qt/6.12.0/mingw_64 | Out-Null
+          foreach ($k in $items.Keys) {
+            curl.exe -fsSL -o "C:/$k" $items[$k]
+            7z x -y -oC:/Qt/6.12.0/mingw_64 "C:/$k" | Out-Null
+          }
+          if (-not (Test-Path "C:/Qt/6.12.0/mingw_64/bin/qmake.exe")) { throw "qmake.exe missing for Qt 6.12.0" }
+          if (-not (Test-Path "C:/Qt/6.12.0/mingw_64/bin/Qt6SerialPort.dll")) { throw "Qt6SerialPort.dll missing for 6.12.0" }
+          Copy-Item lib/jqt.dll lib/jqt-windows-6.8.3.dll -Force
+
+      - name: Build jqt.dll (Qt 6.12.0)
+        shell: pwsh
+        run: |
+          $gpp = Get-ChildItem "C:/Qt/Tools" -Recurse -Depth 3 -Filter "g++.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          $mingw = if ($gpp) { Split-Path (Split-Path $gpp.FullName) } else { "C:/Qt/Tools/mingw1310_64" }
+          powershell -File build.ps1 -JDK "$env:JAVA_HOME" -QtRoot "C:/Qt/6.12.0" -Mingw $mingw *> build612_log.txt
+          if ($LASTEXITCODE -ne 0) { Write-Host "=== BUILD 6.12.0 FAILED ==="; Get-Content build612_log.txt -Tail 60; exit $LASTEXITCODE }
+          Copy-Item lib/jqt.dll lib/jqt-windows-6.12.0.dll -Force
+
+      - name: Smoke test Qt 6.12.0 (offscreen, headless)
+        shell: pwsh
+        run: |
+          $env:QT_QPA_PLATFORM = "offscreen"
+          $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
+          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi")) {
+            powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
+            if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
+          }
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -377,42 +415,42 @@ jobs:
             exit $LASTEXITCODE
           }
 
-      - name: Install Qt 6.11.2 win64_arm64 (manual 7z)
+      - name: Install Qt 6.12.0 win64_arm64 (manual 7z)
         shell: pwsh
         run: |
-          $url = "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.win64_msvc2022_arm64/6.11.2-0-202608131017qtbase-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
+          $url = "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.win64_msvc2022_arm64/6.12.0-0-202609280346qtbase-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
           Write-Host "Downloading: $url"
-          curl.exe -fsSL -o C:/qtbase6112.7z $url
-          New-Item -ItemType Directory -Force -Path C:/Qt6112 | Out-Null
-          7z x -y -oC:/Qt6112 C:/qtbase6112.7z | Out-Null
-          $qmake = Get-ChildItem C:/Qt6112 -Recurse -Filter qmake.exe | Select-Object -First 1
-          if (-not $qmake) { throw "qmake.exe not found for Qt 6.11.2 arm64" }
+          curl.exe -fsSL -o C:/qtbase6120.7z $url
+          New-Item -ItemType Directory -Force -Path C:/Qt6120 | Out-Null
+          7z x -y -oC:/Qt6120 C:/qtbase6120.7z | Out-Null
+          $qmake = Get-ChildItem C:/Qt6120 -Recurse -Filter qmake.exe | Select-Object -First 1
+          if (-not $qmake) { throw "qmake.exe not found for Qt 6.12.0 arm64" }
           $qtRoot = Split-Path (Split-Path $qmake.FullName)
-          Write-Host "QTBASE6112=$qtRoot"
-          "QTBASE6112=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
+          Write-Host "QTBASE6120=$qtRoot"
+          "QTBASE6120=$qtRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding ascii
           # v0.7.4: qtserialport 模块（解压后定位并复制到 QTBASE）
-          curl.exe -fsSL -o C:/qtserialport6112.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6112/qt6_6112/qt.qt6.6112.addons.qtserialport.win64_msvc2022_arm64/6.11.2-0-202608131017qtserialport-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
-          7z x -y -oC:/Qt6112 C:/qtserialport6112.7z | Out-Null
-          $sp = Get-ChildItem C:/Qt6112 -Recurse -Filter qserialport.h | Select-Object -First 1
-          if (-not $sp) { throw "qserialport.h not found for 6.11.2" }
+          curl.exe -fsSL -o C:/qtserialport6120.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtserialport.win64_msvc2022_arm64/6.12.0-0-202609280346qtserialport-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
+          7z x -y -oC:/Qt6120 C:/qtserialport6120.7z | Out-Null
+          $sp = Get-ChildItem C:/Qt6120 -Recurse -Filter qserialport.h | Select-Object -First 1
+          if (-not $sp) { throw "qserialport.h not found for 6.12.0" }
           $spDir = $sp.Directory
           while ($spDir -and $spDir.Name -ne "QtSerialPort" -and $spDir.Parent) { $spDir = $spDir.Parent }
-          if (-not $spDir) { throw "QtSerialPort dir not found for 6.11.2" }
-          if (-not (Test-Path "$env:QTBASE6112\include\QtSerialPort")) { Copy-Item $spDir.FullName "$env:QTBASE6112\include\\" -Recurse -Force }
-          $splib = Get-ChildItem C:/Qt6112 -Recurse -Filter "Qt6SerialPort.lib" | Select-Object -First 1
-          if ($splib) { Copy-Item $splib.FullName "$env:QTBASE6112\lib\\" -Force -ErrorAction SilentlyContinue }
-          Write-Host "qtserialport 6.11.2 copied"
+          if (-not $spDir) { throw "QtSerialPort dir not found for 6.12.0" }
+          if (-not (Test-Path "$env:QTBASE6120\include\QtSerialPort")) { Copy-Item $spDir.FullName "$env:QTBASE6120\include\\" -Recurse -Force }
+          $splib = Get-ChildItem C:/Qt6120 -Recurse -Filter "Qt6SerialPort.lib" | Select-Object -First 1
+          if ($splib) { Copy-Item $splib.FullName "$env:QTBASE6120\lib\\" -Force -ErrorAction SilentlyContinue }
+          Write-Host "qtserialport 6.12.0 copied"
 
-      - name: Build jqt.dll (MSVC ARM64, Qt 6.11.2)
+      - name: Build jqt.dll (MSVC ARM64, Qt 6.12.0)
         shell: pwsh
         run: |
-          powershell -File build-arm64.ps1 -JDK "$env:JAVA_HOME" -QtRoot "$env:QTBASE6112" *> build6112_log.txt
+          powershell -File build-arm64.ps1 -JDK "$env:JAVA_HOME" -QtRoot "$env:QTBASE6120" *> build6120_log.txt
           if ($LASTEXITCODE -ne 0) {
-            Write-Host "=== BUILD FAILED (6.11.2), tail of build6112_log.txt ==="
-            Get-Content build6112_log.txt -Tail 60
+            Write-Host "=== BUILD FAILED (6.12.0), tail of build6120_log.txt ==="
+            Get-Content build6120_log.txt -Tail 60
             exit $LASTEXITCODE
           }
-          Copy-Item lib/jqt.dll lib/jqt-windows-arm64-6.11.2.dll -Force
+          Copy-Item lib/jqt.dll lib/jqt-windows-arm64-6.12.0.dll -Force
       - name: Upload build log on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -440,13 +478,23 @@ jobs:
           distribution: temurin
           java-version: '26'
 
-      - name: Install Qt 6.11.2 for macOS (clang_64)
+      - name: Install Qt 6.12.0 for macOS (manual 7z - aqt cannot parse new repo XML)
+        run: |
+          brew install p7zip > /dev/null 2>&1 || true
+          base="https://download.qt.io/online/qtsdkrepository/mac_x64/desktop/qt6_6120/qt6_6120"
+          curl -fsSL -o /tmp/qtbase6120.7z "$base/qt.qt6.6120.clang_64/6.12.0-0-202609280346qtbase-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
+          curl -fsSL -o /tmp/qtserialport6120.7z "$base/qt.qt6.6120.addons.qtserialport.clang_64/6.12.0-0-202609280346qtserialport-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
+          mkdir -p "$HOME/Qt6120"
+          7z x -y -o"$HOME/Qt6120" /tmp/qtbase6120.7z > /dev/null
+          7z x -y -o"$HOME/Qt6120" /tmp/qtserialport6120.7z > /dev/null
+          rm -f /tmp/qtbase6120.7z /tmp/qtserialport6120.7z
+          test -f "$HOME/Qt6120/lib/QtWidgets.framework/Headers/QWidget" || (echo "QtWidgets.framework missing"; find "$HOME/Qt6120" -maxdepth 3 -type d | head -20; exit 1)
+
+      - name: Install aqt (for Qt 6.8.3)
         run: |
           python3 -m venv /tmp/aqt-venv
           /tmp/aqt-venv/bin/pip install aqtinstall
           printf '[mirrors]\ntrusted_mirrors = https://download.qt.io\n' > /tmp/aqt.ini
-          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.11.2 clang_64 --outputdir $HOME/Qt -m qtserialport
-          test -f "$HOME/Qt/6.11.2/macos/lib/QtWidgets.framework/Headers/QWidget" || (find "$HOME/Qt" -maxdepth 4 -type d | head -20 && exit 1)
 
       - name: Install Qt 6.8.3 for macOS (clang_64)
         run: |
@@ -459,16 +507,16 @@ jobs:
           QT_BASE="$HOME/Qt683/6.8.3/macos" ./build-macos.sh
           mv lib/libjqt.dylib lib/libjqt-6.8.3.dylib
 
-      - name: Build libjqt.dylib (Qt 6.11.2)
+      - name: Build libjqt.dylib (Qt 6.12.0)
         run: |
-          QT_BASE="$HOME/Qt/6.11.2/macos" ./build-macos.sh
-          mv lib/libjqt.dylib lib/libjqt-6.11.2.dylib
+          QT_BASE="$HOME/Qt6120" ./build-macos.sh
+          mv lib/libjqt.dylib lib/libjqt-6.12.0.dylib
 
       - name: Smoke test (offscreen, headless)
         run: |
           chmod +x run-macos.sh
-          cp lib/libjqt-6.11.2.dylib lib/libjqt.dylib
-          export QT_BASE="$HOME/Qt/6.11.2/macos"
+          cp lib/libjqt-6.12.0.dylib lib/libjqt.dylib
+          export QT_BASE="$HOME/Qt6120"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -AutoClose 2000
           # Exclusive Kit 跨平台 API 冒烟（v0.7.0）
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeExclusive -AutoClose 1000
@@ -517,12 +565,13 @@ jobs:
         run: |
           VERSION=$(cat VERSION)
           mkdir -p dist/native
-          cp artifacts/libjqt-linux-x64/libjqt-6.11.2.so dist/native/libjqt-linux-6.11.2.so
+          cp artifacts/libjqt-linux-x64/libjqt-6.12.0.so dist/native/libjqt-linux-6.12.0.so
           cp artifacts/libjqt-linux-x64/libjqt-6.8.3.so dist/native/libjqt-linux-6.8.3.so
-          cp artifacts/jqt-windows-x64/jqt.dll dist/native/jqt-windows-6.8.3.dll
+          cp artifacts/jqt-windows-x64/jqt-windows-6.8.3.dll dist/native/jqt-windows-6.8.3.dll
+          cp artifacts/jqt-windows-x64/jqt-windows-6.12.0.dll dist/native/jqt-windows-6.12.0.dll
           cp artifacts/jqt-windows-arm64/jqt-windows-arm64-6.8.3.dll dist/native/jqt-windows-arm64-6.8.3.dll
-          cp artifacts/jqt-windows-arm64/jqt-windows-arm64-6.11.2.dll dist/native/jqt-windows-arm64-6.11.2.dll
-          cp artifacts/libjqt-macos-x64/libjqt-6.11.2.dylib dist/native/libjqt-macos-6.11.2.dylib
+          cp artifacts/jqt-windows-arm64/jqt-windows-arm64-6.12.0.dll dist/native/jqt-windows-arm64-6.12.0.dll
+          cp artifacts/libjqt-macos-x64/libjqt-6.12.0.dylib dist/native/libjqt-macos-6.12.0.dylib
           cp artifacts/libjqt-macos-x64/libjqt-6.8.3.dylib dist/native/libjqt-macos-6.8.3.dylib
           cp README.md LICENSE.md LICENSE LGPL-3.0.txt THIRD-PARTY-NOTICES.md CHANGELOG.md VERSION dist/
           cp docs/getting-started.md dist/

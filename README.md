@@ -5,11 +5,11 @@
 
 **中文版**：[简体中文](README.zh.md) · **English**: this file
 
-![CI](https://img.shields.io/badge/CI-4%20platforms%20%E2%9C%93-green) ![Qt](https://img.shields.io/badge/Qt-6.8.3%20%2F%206.11.2-blue) ![API](https://img.shields.io/badge/API-580%2B%20methods%2C%20140%2B%20classes-orange) ![License](https://img.shields.io/badge/License-JSL--1.0%20%2B%20LGPLv3-lightgrey)
+![CI](https://img.shields.io/badge/CI-4%20platforms%20%E2%9C%93-green) ![Qt](https://img.shields.io/badge/Qt-6.8.3%20%2F%206.12.0-blue) ![API](https://img.shields.io/badge/API-580%2B%20methods%2C%20140%2B%20classes-orange) ![License](https://img.shields.io/badge/License-JSL--1.0%20%2B%20LGPLv3-lightgrey)
 
 JQt is a Java binding for [Qt 6](https://www.qt.io/), exposing Qt Widgets as plain Java classes.
 Write your UI in Java; Qt handles rendering, events, theming, and platform integration.
-Works on **Windows, Linux, and macOS** (x64 + ARM64), built against **both Qt 6.8.3 LTS and 6.11.2**.
+Works on **Windows, Linux, and macOS** (x64 + ARM64), built against **both Qt 6.8.3 LTS and 6.12.0**.
 
 > **Requires Java 17+ (LTS).** Published jars target Java 17 bytecode (--release 17).
 > **Official site**: https://jqt.silentstudio.cn · **Docs**: https://jqt.silentstudio.cn/docs (redirects to the docs site)
@@ -172,11 +172,11 @@ Latest: [v1.8.0-Emerge-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag
 | Asset | Platform |
 |-------|----------|
 | `jqt-1.8.0-Emerge-Kit.jar` | all (Java API) |
-| `jqt-1.8.0-Emerge-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.11.2 runtime) |
-| `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 bare libs (both Qt versions) |
-| `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
-| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux (both versions) |
-| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS (both versions) |
+| `jqt-1.8.0-Emerge-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.12.0 runtime) |
+| `jqt-windows-6.12.0.dll` / `jqt-windows-6.8.3.dll` | Windows x64 bare libs (both Qt versions) |
+| `jqt-windows-arm64-6.12.0.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
+| `libjqt-linux-6.12.0.so` / `libjqt-linux-6.8.3.so` | Linux (both versions) |
+| `libjqt-macos-6.12.0.dylib` / `libjqt-macos-6.8.3.dylib` | macOS (both versions) |
 
 Release notes: [docs/releases/](docs/releases/) (per-version, v0.1.0 → v1.8.0).
 
@@ -237,7 +237,7 @@ Want to contribute? Put your source in `Community/` (no build artifacts) — rev
 | Memory | handle registry (incrementing IDs, destroyed-sync) + Java Cleaner + dangling protection (throws, no crash) |
 | Layouts | QVBoxLayout / QHBoxLayout / QGridLayout / QFormLayout / QStackedLayout |
 | Cross-platform | 3-platform CI, artifacts libjqt.so / jqt.dll / libjqt.dylib |
-| Dual Qt | same code → Qt 6.11.2 + 6.8.3 LTS |
+| Dual Qt | same code → Qt 6.12.0 + 6.8.3 LTS |
 | Timers | Qt timers → GUI-thread Java runnables (`app.schedule`, callable from any thread) |
 
 ---
