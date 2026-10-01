@@ -9,7 +9,7 @@
 #
 # Usage:
 #   QT_BASE=/usr ./build-linux.sh          (Debian/Ubuntu Qt6 layout)
-#   QT_BASE=$HOME/Qt/6.11.2/gcc_64 ./build-linux.sh   (Qt online installer layout)
+#   QT_BASE=$HOME/Qt/6.12.0/gcc_64 ./build-linux.sh   (Qt online installer layout)
 # ============================================================================
 set -euo pipefail
 

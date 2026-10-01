@@ -4,7 +4,7 @@
 
 ## 0. 前置（一次性）
 
-- 本地：Qt 6.11.2 + 6.8.3、MinGW 13.1、JDK 17+（编译用 --release 17，任何 ≥17 的 JDK 均可）
+- 本地：Qt 6.12.0 + 6.8.3、MinGW 13.1、JDK 17+（编译用 --release 17，任何 ≥17 的 JDK 均可）
 - 远程构建机（可选，Windows Server 2025）：用于原生 Windows 冒烟
 - 凭据：`.signing/`（GPG 私钥、SONATYPE token、cli-1 token）——永不上库
 
@@ -39,8 +39,8 @@ gh release upload <tag> <file> --clobber
 
 - 资产集（Windows 为主）：jar + windows-x64.zip + 各平台裸库（命名见 README Releases 表）
 - ⚠️ **易漏项（v1.8.0 实际踩过）**：CI 的 `windows` job 只产出 Qt 6.8.3 的 x64 裸库；
-  **Qt 6.11.2 的 x64 裸库（`jqt-windows-6.11.2.dll`）与 `windows-x64` 完整 zip 需本地
-  `build.ps1` + `build-release.ps1` 产出后 `gh release upload <tag> dist\<zip> dist\jqt-windows-6.11.2.dll` 补挂**
+  **Qt 6.12.0 的 x64 裸库（`jqt-windows-6.12.0.dll`）与 `windows-x64` 完整 zip 需本地
+  `build.ps1` + `build-release.ps1` 产出后 `gh release upload <tag> dist\<zip> dist\jqt-windows-6.12.0.dll` 补挂**
 - 上传前在本地解压抽查一次 zip（无 .bak / 无多余文件）
 
 ## 4. Maven Central（纯数字版本）

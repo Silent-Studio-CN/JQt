@@ -7,7 +7,7 @@
 #
 # Prerequisites (already installed on this machine):
 #   JDK 26      C:\Program Files\Java\latest\jdk-26
-#   Qt 6.11.2   D:\Qt\6.11.2\mingw_64
+#   Qt 6.12.0   D:\Qt\6.12.0\mingw_64
 #   MinGW 13.1  D:\Qt\Tools\mingw1310_64
 #
 # NOTE: this file must stay ASCII-only (Windows PowerShell 5.1 reads
@@ -17,7 +17,7 @@
 
 param(
     [string]$JDK    = "C:\Program Files\Java\latest\jdk-26",
-    [string]$QtRoot = "D:\Qt\6.11.2",
+    [string]$QtRoot = "D:\Qt\6.12.0",
     [string]$Mingw  = "D:\Qt\Tools\mingw1310_64"
 )
 

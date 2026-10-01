@@ -26,14 +26,14 @@
 
 | 你的平台 | 下载 | 说明 |
 |----------|------|------|
-| Windows | `jqt-windows-6.11.2-full.zip` | 完整包，内置 Qt 6.11.2 运行库（推荐，最新） |
+| Windows | `jqt-windows-6.12.0-full.zip` | 完整包，内置 Qt 6.12.0 运行库（推荐，最新） |
 | Windows | `jqt-windows-6.8.3-full.zip` | 完整包，内置 Qt 6.8.3 LTS 运行库 |
-| Linux | `libjqt-linux-6.11.2.so` + 系统 Qt | 需要系统安装 Qt 6 运行库 |
-| macOS | `libjqt-macos-6.11.2.dylib` + 系统 Qt | 需要系统安装 Qt 6 运行库 |
+| Linux | `libjqt-linux-6.12.0.so` + 系统 Qt | 需要系统安装 Qt 6 运行库 |
+| macOS | `libjqt-macos-6.12.0.dylib` + 系统 Qt | 需要系统安装 Qt 6 运行库 |
 | 任意平台 | `jqt-0.1.0-alpha.jar` | Java API（必须） |
 
 > **如何选版本**：两个 Qt 版本功能完全一致（JQt 同一套代码编译）。
-> 6.11.2 是最新 Qt；6.8.3 是 LTS（长期维护）。Windows 用户推荐 `jqt-windows-6.11.2-full.zip`。
+> 6.12.0 是最新 Qt；6.8.3 是 LTS（长期维护）。Windows 用户推荐 `jqt-windows-6.12.0-full.zip`。
 
 ### 3. 安装（三步）
 
@@ -218,14 +218,14 @@ window.setLayout(hbox);
 
 | Platform | Download | Notes |
 |----------|----------|-------|
-| Windows | `jqt-windows-6.11.2-full.zip` | full package, Qt 6.11.2 bundled (latest) |
+| Windows | `jqt-windows-6.12.0-full.zip` | full package, Qt 6.12.0 bundled (latest) |
 | Windows | `jqt-windows-6.8.3-full.zip` | full package, Qt 6.8.3 LTS bundled |
-| Linux | `libjqt-linux-6.11.2.so` + system Qt | requires system Qt 6 runtime |
-| macOS | `libjqt-macos-6.11.2.dylib` + system Qt | requires system Qt 6 runtime |
+| Linux | `libjqt-linux-6.12.0.so` + system Qt | requires system Qt 6 runtime |
+| macOS | `libjqt-macos-6.12.0.dylib` + system Qt | requires system Qt 6 runtime |
 | Any | `jqt-0.1.0-alpha.jar` | Java API (required) |
 
-> Both Qt versions provide identical features (same JQt codebase). 6.11.2 is the latest Qt;
-> 6.8.3 is LTS. Windows users: use `jqt-windows-6.11.2-full.zip`.
+> Both Qt versions provide identical features (same JQt codebase). 6.12.0 is the latest Qt;
+> 6.8.3 is LTS. Windows users: use `jqt-windows-6.12.0-full.zip`.
 
 ### 3. Install (3 Steps)
 

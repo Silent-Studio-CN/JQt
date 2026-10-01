@@ -52,7 +52,7 @@ L1（蓝图 178 项，核心类）**100% 完成**；L2 分组门面（window()/s
 | **内存管理** | 句柄注册表（自增 ID，destroyed 同步注销）+ Java Cleaner 回收 + 悬垂保护（抛异常不崩溃） |
 | **布局** | QVBoxLayout / QHBoxLayout 封装（间距/弹性空间） |
 | **跨平台** | 三平台 CI（Windows/Linux/macOS），产物 libjqt.so / jqt.dll / libjqt.dylib |
-| **双 Qt 版本** | 同一套代码编译 Qt 6.11.2 与 6.8.3 LTS 两个版本 |
+| **双 Qt 版本** | 同一套代码编译 Qt 6.12.0 与 6.8.3 LTS 两个版本 |
 | **定时任务** | Qt 定时器 → GUI 线程执行 Java Runnable（`app.schedule`，任意线程可调） |
 
 > 权威结构说明（含主窗口壳模型、对象生命周期、信号路径）见 [docs/architecture.md](docs/architecture.md)。
@@ -136,11 +136,11 @@ window.onResized((w, h) -> ...); window.onMoved((x, y) -> ...);
 | 资产 | 平台 |
 |------|------|
 | `jqt-1.8.0-Emerge-Kit.jar` | 全部（Java API） |
-| `jqt-1.8.0-Emerge-Kit-windows-x64.zip` | Windows x64 完整包（Qt 6.11.2 运行库） |
-| `jqt-windows-6.11.2.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库（双 Qt 版本） |
-| `jqt-windows-arm64-6.11.2.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
-| `libjqt-linux-6.11.2.so` / `libjqt-linux-6.8.3.so` | Linux（双版本） |
-| `libjqt-macos-6.11.2.dylib` / `libjqt-macos-6.8.3.dylib` | macOS（双版本） |
+| `jqt-1.8.0-Emerge-Kit-windows-x64.zip` | Windows x64 完整包（Qt 6.12.0 运行库） |
+| `jqt-windows-6.12.0.dll` / `jqt-windows-6.8.3.dll` | Windows x64 裸库（双 Qt 版本） |
+| `jqt-windows-arm64-6.12.0.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
+| `libjqt-linux-6.12.0.so` / `libjqt-linux-6.8.3.so` | Linux（双版本） |
+| `libjqt-macos-6.12.0.dylib` / `libjqt-macos-6.8.3.dylib` | macOS（双版本） |
 
 > 最新发布见 [GitHub Releases](https://github.com/Silent-Studio-CN/JQt/releases)（`v1.8.0-Emerge-Kit`）
 > Maven Central 当前为 `0.7.5`，1.8.0 渠道发布待定。
