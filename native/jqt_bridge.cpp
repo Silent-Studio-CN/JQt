@@ -335,6 +335,25 @@ static jobject g_appJavaRef = nullptr; // JQtApplication Java 全局引用（系
 
 // 句柄注册表：Java 侧持有自增 ID（从 1 开始，永不复用），native 查表获得指针。
 // destroyed 信号保证注册表与 Qt 对象生命周期严格同步。
+// ---------------------------------------------------------------------------
+// 信号连接去重(v1.9.1):同一对象 + 同一信号只建立一条 Qt 连接。
+// 旧实现每次 onXxx() 都新建一条 connect 并泄漏一个 global ref —— 注册 N 次
+// 信号就投递 N 次(每次都遍历全部 handler),实机表现为非确定重复回调
+// (观测到 1/1/6 这类计数)。现以 native 为唯一真相,Java 侧 flag 退化为冗余保险。
+// ---------------------------------------------------------------------------
+static std::mutex g_signalMutex;
+static std::unordered_map<long long, std::unordered_set<std::string>> g_signalConnected;
+
+static bool jqtConnectOnce(jlong handle, const char* key) {
+    std::lock_guard<std::mutex> lock(g_signalMutex);
+    return g_signalConnected[static_cast<long long>(handle)].insert(std::string(key)).second;
+}
+
+static void jqtForgetConnections(jlong handle) {
+    std::lock_guard<std::mutex> lock(g_signalMutex);
+    g_signalConnected.erase(static_cast<long long>(handle));
+}
+
 static std::mutex g_handleMutex;
 static std::unordered_map<int64_t, void*> g_handles;          // id -> QObject*
 static std::unordered_map<int64_t, bool> g_javaOwned;         // id -> 是否归 Java（Cleaner）管理
@@ -408,12 +427,21 @@ static jlong registerHandle(void* ptr, bool javaOwned) {
     // Qt 对象销毁（含父删子、布局清理、deleteLater 等一切途径）→ 自动注销
     QObject* obj = static_cast<QObject*>(ptr);
     QObject::connect(obj, &QObject::destroyed, [id](QObject*) {
-        std::lock_guard<std::mutex> lock(g_handleMutex);
-        g_handles.erase(id);
-        g_javaOwned.erase(id);
+        {
+            std::lock_guard<std::mutex> lock(g_handleMutex);
+            g_handles.erase(id);
+            g_javaOwned.erase(id);
+        }
+        jqtForgetConnections(static_cast<jlong>(id));
     });
     return static_cast<jlong>(id);
 }
+
+// ---------------------------------------------------------------------------
+// 信号连接去重(v1.9.1):同一对象 + 同一信号只建立一条 Qt 连接。
+// 旧实现每次 onXxx() 都新建一条 connect 并泄漏一个 global ref —— 注册 N 次
+// 信号就投递 N 次(每次都遍历全部 handler),实机表现为非确定重复回调
+// (观测到 1/1/6 这类计数)。现以 native 为唯一真相,Java 侧 flag 退化为冗余保险。
 
 // 句柄 → 指针；无效/已销毁 → 抛 IllegalStateException 并返回 nullptr
 static void* requireHandle(JNIEnv* env, jlong handle) {
@@ -4812,6 +4840,7 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QWidget_nativeGraphicsEffect(JNIEnv* env
 
 // QWidget 信号（懒连接：注册首个回调时连接；thiz 全局引用供回调）
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeConnectWindowTitleChanged(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QWidget.nativeConnectWindowTitleChanged")) return;
     QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
     if (w == nullptr) { return; }
     jobject gRef = env->NewGlobalRef(thiz);
@@ -4828,6 +4857,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeConnectWindowTitleChanged(JNIE
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeConnectContextMenu(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QWidget.nativeConnectContextMenu")) return;
     QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
     if (w == nullptr) { return; }
     w->setContextMenuPolicy(Qt::CustomContextMenu);   // 启用自定义右键菜单信号
@@ -4868,6 +4898,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeSetReadOnly(JNIEnv* env, jcl
 JNIEXPORT jboolean JNICALL Java_org_jqt_QLineEdit_nativeIsReadOnly(JNIEnv* env, jclass, jlong h) { QLineEdit* w = static_cast<QLineEdit*>(requireHandle(env, h)); return (w && w->isReadOnly()) ? JNI_TRUE : JNI_FALSE; }
 
 JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeConnectEditingFinished(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QLineEdit.nativeConnectEditingFinished")) return;
     QLineEdit* w = static_cast<QLineEdit*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QLineEdit::editingFinished, [gRef]() {
@@ -4878,6 +4909,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeConnectEditingFinished(JNIEn
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeConnectTextEdited(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QLineEdit.nativeConnectTextEdited")) return;
     QLineEdit* w = static_cast<QLineEdit*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QLineEdit::textEdited, [gRef](const QString& text) {
@@ -4903,6 +4935,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeSetEditable(JNIEnv* env, jcl
 JNIEXPORT jboolean JNICALL Java_org_jqt_QComboBox_nativeIsEditable(JNIEnv* env, jclass, jlong h) { QComboBox* w = static_cast<QComboBox*>(requireHandle(env, h)); return (w && w->isEditable()) ? JNI_TRUE : JNI_FALSE; }
 
 JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeConnectActivated(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QComboBox.nativeConnectActivated")) return;
     QComboBox* w = static_cast<QComboBox*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, QOverload<int>::of(&QComboBox::activated), [gRef](int index) {
@@ -4913,6 +4946,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeConnectActivated(JNIEnv* env
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeConnectCurrentTextChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QComboBox.nativeConnectCurrentTextChanged")) return;
     QComboBox* w = static_cast<QComboBox*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QComboBox::currentTextChanged, [gRef](const QString& text) {
@@ -4935,6 +4969,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeSetIndent(JNIEnv* env, jclass, 
 JNIEXPORT jint JNICALL Java_org_jqt_QLabel_nativeIndent(JNIEnv* env, jclass, jlong h) { QLabel* w = static_cast<QLabel*>(requireHandle(env, h)); return w ? static_cast<jint>(w->indent()) : 0; }
 
 JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeConnectLinkActivated(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QLabel.nativeConnectLinkActivated")) return;
     QLabel* w = static_cast<QLabel*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QLabel::linkActivated, [gRef](const QString& url) {
@@ -5010,6 +5045,7 @@ JNIEXPORT jint JNICALL Java_org_jqt_QTreeWidget_nativeCurrentItem(JNIEnv* env, j
     return (f != g_treeItemIds.end()) ? static_cast<jint>(f->second) : -1;
 }
 JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectCurrentItemChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTreeWidget.nativeConnectCurrentItemChanged")) return;
     QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QTreeWidget::currentItemChanged, [gRef](QTreeWidgetItem* cur, QTreeWidgetItem*) {
@@ -5020,6 +5056,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectCurrentItemChanged(
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemDoubleClicked(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTreeWidget.nativeConnectItemDoubleClicked")) return;
     QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QTreeWidget::itemDoubleClicked, [gRef](QTreeWidgetItem* item, int) {
@@ -5030,6 +5067,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemDoubleClicked(J
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemActivated(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTreeWidget.nativeConnectItemActivated")) return;
     QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QTreeWidget::itemActivated, [gRef](QTreeWidgetItem* item, int) {
@@ -5048,6 +5086,7 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QListWidget_nativeCurrentText(JNIEnv* env
     return it ? env->NewStringUTF(it->text().toUtf8().constData()) : nullptr;
 }
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemDoubleClicked(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QListWidget.nativeConnectItemDoubleClicked")) return;
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QListWidget::itemDoubleClicked, [gRef, w](QListWidgetItem* item) {
@@ -5058,6 +5097,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemDoubleClicked(J
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemActivated(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QListWidget.nativeConnectItemActivated")) return;
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QListWidget::itemActivated, [gRef, w](QListWidgetItem* item) {
@@ -5068,6 +5108,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemActivated(JNIEn
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectCurrentTextChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QListWidget.nativeConnectCurrentTextChanged")) return;
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QListWidget::currentTextChanged, [gRef](const QString& text) {
@@ -5105,6 +5146,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeSetCurrentRow(JNIEnv* env,
 // L1 补全批 D：剩余信号 + QMessageBox.about
 // QListWidget
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemPressed(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QListWidget.nativeConnectItemPressed")) return;
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QListWidget::itemPressed, [gRef, w](QListWidgetItem* item) {
@@ -5114,6 +5156,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemPressed(JNIEnv*
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemSelectionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QListWidget.nativeConnectItemSelectionChanged")) return;
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QListWidget::itemSelectionChanged, [gRef]() {
@@ -5124,6 +5167,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemSelectionChange
 }
 // QTreeWidget
 JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTreeWidget.nativeConnectItemChanged")) return;
     QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QTreeWidget::itemChanged, [gRef](QTreeWidgetItem* item, int) {
@@ -5134,6 +5178,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemChanged(JNIEnv*
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemPressed(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTreeWidget.nativeConnectItemPressed")) return;
     QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QTreeWidget::itemPressed, [gRef](QTreeWidgetItem* item, int) {
@@ -5145,6 +5190,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemPressed(JNIEnv*
 }
 // QComboBox
 JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeConnectEditTextChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QComboBox.nativeConnectEditTextChanged")) return;
     QComboBox* w = static_cast<QComboBox*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QComboBox::editTextChanged, [gRef](const QString& text) {
@@ -5155,6 +5201,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeConnectEditTextChanged(JNIEn
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeConnectHighlighted(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QComboBox.nativeConnectHighlighted")) return;
     QComboBox* w = static_cast<QComboBox*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, QOverload<int>::of(&QComboBox::highlighted), [gRef](int index) {
@@ -5165,6 +5212,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QComboBox_nativeConnectHighlighted(JNIEnv* e
 }
 // QLineEdit
 JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeConnectSelectionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QLineEdit.nativeConnectSelectionChanged")) return;
     QLineEdit* w = static_cast<QLineEdit*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QLineEdit::selectionChanged, [gRef]() {
@@ -5174,6 +5222,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeConnectSelectionChanged(JNIE
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QLineEdit_nativeConnectCursorPositionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QLineEdit.nativeConnectCursorPositionChanged")) return;
     QLineEdit* w = static_cast<QLineEdit*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QLineEdit::cursorPositionChanged, [gRef](int oldPos, int newPos) {
@@ -5203,6 +5252,7 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QCheckBox_nativeIsTristate(JNIEnv* env, 
 JNIEXPORT jint JNICALL Java_org_jqt_QCheckBox_nativeCheckState(JNIEnv* env, jclass, jlong h) { QCheckBox* w = static_cast<QCheckBox*>(requireHandle(env, h)); return w ? static_cast<jint>(w->checkState()) : 0; }
 JNIEXPORT void JNICALL Java_org_jqt_QCheckBox_nativeSetCheckState(JNIEnv* env, jclass, jlong h, jint s) { QCheckBox* w = static_cast<QCheckBox*>(requireHandle(env, h)); if (w) w->setCheckState(static_cast<Qt::CheckState>(s)); }
 JNIEXPORT void JNICALL Java_org_jqt_QCheckBox_nativeConnectCheckStateChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QCheckBox.nativeConnectCheckStateChanged")) return;
     QCheckBox* w = static_cast<QCheckBox*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QCheckBox::checkStateChanged, [gRef](Qt::CheckState s) {
@@ -5258,6 +5308,7 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QTextEdit_nativeFind(JNIEnv* env, jclass
 // L1 补全批 F：剩余信号
 // QToolBar
 JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeConnectIconSizeChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QToolBar.nativeConnectIconSizeChanged")) return;
     QToolBar* w = static_cast<QToolBar*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QToolBar::iconSizeChanged, [gRef](const QSize& s) {
@@ -5267,6 +5318,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeConnectIconSizeChanged(JNIEnv
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeConnectToolButtonStyleChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QToolBar.nativeConnectToolButtonStyleChanged")) return;
     QToolBar* w = static_cast<QToolBar*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QToolBar::toolButtonStyleChanged, [gRef](Qt::ToolButtonStyle s) {
@@ -5277,6 +5329,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QToolBar_nativeConnectToolButtonStyleChanged
 }
 // QTextEdit
 JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeConnectSelectionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTextEdit.nativeConnectSelectionChanged")) return;
     QPlainTextEdit* w = static_cast<QPlainTextEdit*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QPlainTextEdit::selectionChanged, [gRef]() {
@@ -5286,6 +5339,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeConnectSelectionChanged(JNIE
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeConnectCursorPositionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTextEdit.nativeConnectCursorPositionChanged")) return;
     QPlainTextEdit* w = static_cast<QPlainTextEdit*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QPlainTextEdit::cursorPositionChanged, [gRef, w]() {
@@ -5296,6 +5350,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QTextEdit_nativeConnectCursorPositionChanged
 }
 // QTreeWidget itemEntered
 JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemEntered(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTreeWidget.nativeConnectItemEntered")) return;
     QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QTreeWidget::itemEntered, [gRef](QTreeWidgetItem* item, int) {
@@ -5333,6 +5388,7 @@ JNIEXPORT jint JNICALL Java_org_jqt_QMenu_nativeExecAnchor(JNIEnv* env, jclass, 
 }
 // QTreeWidget itemSelectionChanged
 JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemSelectionChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QTreeWidget.nativeConnectItemSelectionChanged")) return;
     QTreeWidget* w = static_cast<QTreeWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QTreeWidget::itemSelectionChanged, [gRef]() {
@@ -5343,6 +5399,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QTreeWidget_nativeConnectItemSelectionChange
 }
 // QListWidget currentItemChanged
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectCurrentItemChanged(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QListWidget.nativeConnectCurrentItemChanged")) return;
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QListWidget::currentItemChanged, [gRef, w](QListWidgetItem* cur, QListWidgetItem*) {
@@ -5494,6 +5551,7 @@ JNIEXPORT jint JNICALL Java_org_jqt_QLayout_nativeCount(JNIEnv* env, jclass, jlo
 JNIEXPORT jint JNICALL Java_org_jqt_QLayout_nativeSpacing(JNIEnv* env, jclass, jlong h) { QLayout* w = static_cast<QLayout*>(requireHandle(env, h)); return w ? static_cast<jint>(w->spacing()) : 0; }
 // QListWidget itemEntered
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemEntered(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QListWidget.nativeConnectItemEntered")) return;
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QListWidget::itemEntered, [gRef, w](QListWidgetItem* item) {
@@ -5511,6 +5569,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QPushButton_nativeSetMenu(JNIEnv* env, jclas
 JNIEXPORT jboolean JNICALL Java_org_jqt_QPushButton_nativeHasMenu(JNIEnv* env, jclass, jlong h) { QPushButton* w = static_cast<QPushButton*>(requireHandle(env, h)); return (w && w->menu()) ? JNI_TRUE : JNI_FALSE; }
 // QLabel linkHovered
 JNIEXPORT void JNICALL Java_org_jqt_QLabel_nativeConnectLinkHovered(JNIEnv* env, jobject thiz, jlong h) {
+    if (!jqtConnectOnce(h, "QLabel.nativeConnectLinkHovered")) return;
     QLabel* w = static_cast<QLabel*>(requireHandle(env, h)); if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
     QObject::connect(w, &QLabel::linkHovered, [gRef](const QString& url) {
@@ -5547,6 +5606,7 @@ JNIEXPORT jint JNICALL Java_org_jqt_QDir_nativeCount(JNIEnv* env, jclass, jstrin
 }
 // QClipboard selectionChanged
 JNIEXPORT void JNICALL Java_org_jqt_QClipboard_nativeConnectSelectionChanged(JNIEnv* env, jclass) {
+    if (!jqtConnectOnce(0, "QClipboard.nativeConnectSelectionChanged")) return;   // 静态/全局信号
     QClipboard* c = QApplication::clipboard();
     QObject::connect(c, &QClipboard::dataChanged, []() {
         JNIEnv* e = callbackEnv();
@@ -6088,6 +6148,7 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QFile_nativeReadLine(JNIEnv* env, jobject
 
 // QListWidget：itemChanged 信号 + row(text)
 JNIEXPORT void JNICALL Java_org_jqt_QListWidget_nativeConnectItemChanged(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QListWidget.nativeConnectItemChanged")) return;
     QListWidget* w = static_cast<QListWidget*>(requireHandle(env, handle));
     if (!w) return;
     jobject gRef = env->NewGlobalRef(thiz);
@@ -7116,6 +7177,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeSetWindowIconPixmap(JNIEnv* en
 }
 
 JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeConnectWindowIconChanged(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QWidget.nativeConnectWindowIconChanged")) return;
     QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
     if (w == nullptr) return;
     jobject gRef = env->NewGlobalRef(thiz);
@@ -10374,6 +10436,7 @@ JNIEXPORT jint JNICALL Java_org_jqt_QDialog_nativeResult(JNIEnv* env, jobject /*
     return (dlg != nullptr) ? static_cast<jint>(dlg->result()) : 0;
 }
 JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeConnectAccepted(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QDialog.nativeConnectAccepted")) return;
     QDialog* dlg = static_cast<QDialog*>(requireHandle(env, handle));
     if (dlg == nullptr) { return; }
     jobject gRef = env->NewGlobalRef(thiz);
@@ -10385,6 +10448,7 @@ JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeConnectAccepted(JNIEnv* env, j
     });
 }
 JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeConnectRejected(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QDialog.nativeConnectRejected")) return;
     QDialog* dlg = static_cast<QDialog*>(requireHandle(env, handle));
     if (dlg == nullptr) { return; }
     jobject gRef = env->NewGlobalRef(thiz);

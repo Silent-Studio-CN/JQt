@@ -2,7 +2,8 @@
 
 # JQt — Java 绑定 Qt 框架 / Java Bindings for Qt
 
-> 用 Java 写桌面应用，Qt（C++）负责渲染与事件。无需 C++ 编译器、无需 Qt SDK。
+> 用 Java 写桌面应用，Qt（C++）负责渲染与事件。**写代码无需 C++ 编译器、无需 Qt SDK。**
+> 运行需要 Qt 运行库 —— 发布包提供 `*-qt-runtime` 自带运行库版本（含启动器），开箱即用。
 > Desktop apps in Java, powered by Qt underneath.
 
 > **运行要求：Java 17+（LTS）**——发布的 jar 以 Java 17 字节码（--release 17）构建。

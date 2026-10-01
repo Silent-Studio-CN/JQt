@@ -153,6 +153,30 @@ jobs:
           echo "smoke v0.7.4 exit code: $CODE6"
           cat smoke_v074.txt
           if [ $CODE6 -ne 0 ]; then exit $CODE6; fi
+          # 信号投递确定性回归（v1.9.1：重复投递 / global ref 泄漏）
+          QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class org.jqt.SmokeSignalOnce -AutoClose 800 > smoke_sig.txt 2>&1
+          CODE7=$?
+          echo "smoke signal-once exit code: $CODE7"
+          cat smoke_sig.txt
+          if [ $CODE7 -ne 0 ]; then exit $CODE7; fi
+
+      - name: Bundle Qt runtime (Linux) + validate bundled launcher
+        run: |
+          chmod +x tools/bundle-qt.sh
+          QT_BASE=/opt/6.12.0/gcc_64 ./tools/bundle-qt.sh
+          # 解包 -> 放入我们的 classes -> 用包内启动器离屏冒烟(证明自带 Qt 真能用)
+          TMP="$(mktemp -d)"
+          tar -xzf dist/*-qt-runtime.tar.gz -C "$TMP"
+          PKG="$(ls -d "$TMP"/*/ | head -1)"
+          cp -R out "$PKG/"
+          ( cd "$PKG" && QT_QPA_PLATFORM=offscreen timeout 90 ./run-with-bundled-qt.sh org.jqt.SmokeL1 )
+          ( cd "$PKG" && QT_QPA_PLATFORM=offscreen timeout 90 ./run-with-bundled-qt.sh org.jqt.SmokeSignalOnce )
+
+      - name: Upload Qt runtime bundle (Linux)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jqt-linux-qt-runtime
+          path: dist/*-qt-runtime.tar.gz
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -311,7 +335,7 @@ jobs:
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
-          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi")) {
+          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce")) {
             powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
             if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
           }
@@ -542,11 +566,33 @@ jobs:
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeV073 -AutoClose 1000
           # QSerialPort 冒烟（v0.7.4）
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeV074 -AutoClose 1000
+      - name: Smoke test signal determinism (Qt 6.12.0)
+        run: |
+          QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeSignalOnce -AutoClose 800
+
+      - name: Bundle Qt runtime (macOS) + validate bundled launcher
+        run: |
+          chmod +x tools/bundle-qt.sh
+          QT_BASE="$HOME/Qt6120" ./tools/bundle-qt.sh
+          # 解包 -> 放入我们的 classes -> 用包内启动器跑一次离屏冒烟(证明自带 Qt 真能用)
+          TMP="$(mktemp -d)"
+          tar -xzf dist/*-qt-runtime.tar.gz -C "$TMP"
+          PKG="$(ls -d "$TMP"/*/ | head -1)"
+          cp -R out "$PKG/"
+          ( cd "$PKG" && QT_QPA_PLATFORM=offscreen ./run-with-bundled-qt.sh org.jqt.SmokeL1 )
+          ( cd "$PKG" && QT_QPA_PLATFORM=offscreen ./run-with-bundled-qt.sh org.jqt.SmokeSignalOnce )
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: libjqt-macos-x64
           path: lib/libjqt-*.dylib
+
+      - name: Upload Qt runtime bundle (macOS)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jqt-macos-qt-runtime
+          path: dist/*-qt-runtime.tar.gz
 
   # ================= Release package (jar + 3 platform libs + docs) =================
   release-package:
