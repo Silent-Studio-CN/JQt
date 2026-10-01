@@ -25,13 +25,13 @@ OS="$(uname -s)"
 case "$OS" in
   Darwin)
     NATIVE_LIB="libjqt.dylib"; PLATFORM="macos-x64"; QTDIR="$QT_BASE/lib"
-    QTPATTERNS=("QtCore.framework" "QtGui.framework" "QtWidgets.framework" "QtPrintSupport.framework"
-                "QtSql.framework" "QtSerialPort.framework" "QtNetwork.framework")
+    # 整套 Qt 框架都带上:只带子集会让动态链接器回落到系统 Qt,出现
+    # "libQt6DBus.so.6: undefined symbol" 这类混版问题
+    QTPATTERNS=("Qt*.framework")
     ;;
   Linux)
     NATIVE_LIB="libjqt.so"; PLATFORM="linux-x64"; QTDIR="$QT_BASE/lib"
-    QTPATTERNS=("libQt6Core.so"* "libQt6Gui.so"* "libQt6Widgets.so"* "libQt6PrintSupport.so"*
-                "libQt6Sql.so"* "libQt6SerialPort.so"* "libQt6Network.so"* "libicu"*)
+    QTPATTERNS=("libQt6"*.so* "libicu"*.so*)
     ;;
   *) echo "unsupported OS: $OS" >&2; exit 1 ;;
 esac
@@ -54,6 +54,13 @@ for pat in "${QTPATTERNS[@]}"; do
 done
 echo "    $copied 个 Qt 运行库/框架"
 
+# Qt 插件(平台插件/图片格式/SQL 驱动/样式)必须随包,否则 offscreen/xcb 平台起不来
+if [ -d "$QT_BASE/plugins" ]; then
+  mkdir -p "$STAGE/qt/plugins"
+  cp -R "$QT_BASE/plugins/." "$STAGE/qt/plugins/"
+  echo "    plugins: $(find "$STAGE/qt/plugins" -type f | wc -l) 个文件"
+fi
+
 cp "$ROOT/lib/$NATIVE_LIB" "$STAGE/lib/"
 [ -f "$ROOT/LGPL-3.0.txt" ] && cp "$ROOT/LGPL-3.0.txt" "$STAGE/licenses/"
 [ -f "$ROOT/THIRD-PARTY-NOTICES.md" ] && cp "$ROOT/THIRD-PARTY-NOTICES.md" "$STAGE/licenses/"
@@ -73,6 +80,7 @@ else JAVA="$(/usr/libexec/java_home 2>/dev/null)/bin/java"; fi
 [ -x "$JAVA" ] || { echo "no JDK found" >&2; exit 1; }
 export DYLD_FRAMEWORK_PATH="$HERE/qt:${DYLD_FRAMEWORK_PATH:-}"
 export DYLD_LIBRARY_PATH="$HERE/lib:$HERE/qt:${DYLD_LIBRARY_PATH:-}"
+export QT_PLUGIN_PATH="$HERE/qt/plugins:${QT_PLUGIN_PATH:-}"
 CLASS="${1:-org.jqt.JQtDemo}"; shift || true
 exec "$JAVA" -XstartOnFirstThread -Djava.library.path="$HERE/lib" \
   --enable-native-access=ALL-UNNAMED "$@" -cp "$HERE/lib/*:$HERE:$HERE/out:." "$CLASS"
@@ -88,6 +96,7 @@ if [ -n "${JAVA_HOME:-}" ] && [ -x "$JAVA_HOME/bin/java" ]; then JAVA="$JAVA_HOM
 else JAVA="$(command -v java || true)"; fi
 [ -x "$JAVA" ] || { echo "no JDK found - set JAVA_HOME" >&2; exit 1; }
 export LD_LIBRARY_PATH="$HERE/lib:$HERE/qt:${LD_LIBRARY_PATH:-}"
+export QT_PLUGIN_PATH="$HERE/qt/plugins:${QT_PLUGIN_PATH:-}"
 CLASS="${1:-org.jqt.JQtDemo}"; shift || true
 exec "$JAVA" -Djava.library.path="$HERE/lib" \
   --enable-native-access=ALL-UNNAMED "$@" -cp "$HERE/lib/*:$HERE:$HERE/out:." "$CLASS"
