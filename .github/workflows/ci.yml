@@ -268,16 +268,29 @@ jobs:
       - name: Install Qt 6.12.0 (manual 7z - aqt cannot parse new repo XML)
         shell: pwsh
         run: |
-          $base = "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6120/qt6_6120"
+          # download.qt.io 会按地域 302 到各镜像, 而镜像同步有先后 -> 逐个镜像回退
+          $rel = "qt6_6120/qt6_6120_mingw"
+          $bases = @(
+            "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/$rel",
+            "https://mirrors.tuna.tsinghua.edu.cn/qt/online/qtsdkrepository/windows_x86/desktop/$rel",
+            "https://mirrors.ustc.edu.cn/qtproject/online/qtsdkrepository/windows_x86/desktop/$rel",
+            "https://mirror.nju.edu.cn/qt/online/qtsdkrepository/windows_x86/desktop/$rel"
+          )
           $items = @{
-            "qtbase.7z"      = "$base/qt.qt6.6120.win64_mingw/6.12.0-0-202609280346qtbase-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
-            "d3dcompiler.7z" = "$base/qt.qt6.6120.win64_mingw/6.12.0-0-202609280346d3dcompiler_47-x64.7z"
-            "opengl32sw.7z"  = "$base/qt.qt6.6120.win64_mingw/6.12.0-0-202609280346opengl32sw-64-mesa_11_2_2-signed_sha256.7z"
-            "serialport.7z"  = "$base/qt.qt6.6120.addons.qtserialport.win64_mingw/6.12.0-0-202609280346qtserialport-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
+            "qtbase.7z"      = "qt.qt6.6120.win64_mingw/6.12.0-0-202609280346qtbase-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
+            "d3dcompiler.7z" = "qt.qt6.6120.win64_mingw/6.12.0-0-202609280346d3dcompiler_47-x64.7z"
+            "opengl32sw.7z"  = "qt.qt6.6120.win64_mingw/6.12.0-0-202609280346opengl32sw-64-mesa_11_2_2-signed_sha256.7z"
+            "serialport.7z"  = "qt.qt6.6120.addons.qtserialport.win64_mingw/6.12.0-0-202609280346qtserialport-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
           }
           New-Item -ItemType Directory -Force -Path C:/Qt/6.12.0/mingw_64 | Out-Null
           foreach ($k in $items.Keys) {
-            curl.exe -fsSL -o "C:/$k" $items[$k]
+            $got = $false
+            foreach ($b in $bases) {
+              curl.exe -fsSL -o "C:/$k" "$b/$($items[$k])"
+              if ($LASTEXITCODE -eq 0) { Write-Host "$k <- $b"; $got = $true; break }
+              Write-Host "mirror miss for $k (exit $LASTEXITCODE): $b"
+            }
+            if (-not $got) { throw "all mirrors failed for $k" }
             7z x -y -oC:/Qt/6.12.0/mingw_64 "C:/$k" | Out-Null
           }
           if (-not (Test-Path "C:/Qt/6.12.0/mingw_64/bin/qmake.exe")) { throw "qmake.exe missing for Qt 6.12.0" }
