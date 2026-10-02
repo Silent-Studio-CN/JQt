@@ -147,6 +147,18 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QPlainTextEdit>
 #include <QPainter>
 #include <QMessageBox>
+// QtNetwork 与 QtSql 都属于 qtbase,任何平台都有 —— 默认启用。
+// 构建脚本可显式 -D... 覆盖;这样即使某个平台脚本漏加宏,也不会出现
+// "include 被跳过、实现仍在编译"的半截状态(ARM64 上就踩过)。
+// JQT_HAVE_NETWORK 默认 1
+#ifndef JQT_HAVE_NETWORK
+#define JQT_HAVE_NETWORK 1
+#endif
+// JQT_HAVE_SQL_MODELS 默认 1
+#ifndef JQT_HAVE_SQL_MODELS
+#define JQT_HAVE_SQL_MODELS 1
+#endif
+
 #if defined(JQT_HAVE_SQL_MODELS)
 #include <QSqlQueryModel>   // P1:SQL 模型
 #include <QSqlTableModel>
