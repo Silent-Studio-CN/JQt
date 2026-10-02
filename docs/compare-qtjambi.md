@@ -10,7 +10,7 @@
 | | JQt | QtJambi |
 |---|---|---|
 | 定位 | **手写 + 生成的精选绑定**,面向"Java 桌面小工具/内部工具" | **全量生成绑定**,面向"用 Java 做完整 Qt 应用" |
-| 类数 | **153 个 API 类**(另有 25 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
+| 类数 | **154 个 API 类**(另有 26 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
 | Qt 版本线 | 6.12.0(最新)+ 6.8.3 LTS | 6.12.0(最新)+ 历史各线 |
 | 广度差距 | —— | **约 20×**(核心类数比) |
 | 优势 | 纯 Java 值对象、显式所有权、精选 API、自带高层控件门面、单端口远程控制台配套 | 模块覆盖近乎完整(QML/Quick、Multimedia、WebEngine、Charts、Bluetooth…)、Maven Central 直发、生态成熟 |
@@ -36,7 +36,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'      # 1,174 个 native 
 
 | 指标 | 数值 |
 |---|---|
-| Java 源文件 | 178(API 153 + 冒烟 25) |
+| Java 源文件 | 180(API 154 + 冒烟 26) |
 | Java 行数 | 17,186 |
 | JNI 桥行数 | 11,497 |
 | jar 内 class | 205 |
@@ -99,7 +99,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | Sql | ✅ | `QSqlDatabase` `QSqlQuery` + **`QSqlQueryModel` / `QSqlTableModel`**(v1.9.1 P1:只读查询模型与可写表模型,支持显式绑定连接) |
 | PrintSupport | ✅ | `QPrinter` `QPageSize` `QPageLayout` `QPageRanges` |
 | SerialPort | ✅ | `QSerialPort`(CI 单独构建该模块) |
-| **QStateMachine 状态机** | ❌ | |
+| **QStateMachine 状态机** | ⛔ 上游受阻 | 本 SDK 路径下**拿不到 QtStateMachine**(无 DLL/无 cmake 配置,在线仓库也无该 addon);需 Qt 官方安装器勾选 "Qt State Machine" 才能实现 —— 已记录待上游模块可得再做 |
 | **QSvg 矢量渲染** | ✅ | v1.9.1 P0-④:`QSvgRenderer`(文件/字节 → `renderToPng`;缺 qtsvg 时构建特性探测自动跳过) |
 | **QNetwork 网络** | ✅ | v1.9.1 P0-⑤:`QNetworkAccessManager`(GET/POST + 管理器级 `onFinished` + 超时/UA);`QTcpSocket`/`QUdpSocket` 仍无 |
 | **QML / Quick** | ❌ | 无 `QQmlApplicationEngine`/`QQuickView`/`QQuickWidget` |
@@ -113,11 +113,11 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **Concurrent** | ❌ | |
 | **Designer 插件** | ❌ | |
 | **Help** | ❌ | |
-| **QTest** | ❌ | 我们用自研冒烟框架代替 |
+| **QTest** | ✅ | v1.9.1 P1:`JQtTest` 兼容层(QVERIFY/QVERIFY2/QCOMPARE/QFAIL/QSKIP + test*/init/cleanup 运行器,零原生依赖) |
 
-**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 23 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
-**12 项仍缺失**,另有 `DBus` 一项"桥内有、API 无"。命中率 **23/36 ≈ 64%**。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 进行中**:QSqlQueryModel/QSqlTableModel ✅、QWebSocket 客户端 ✅;剩 QStateMachine(需 QtStateMachine addon)与 QTest 兼容层。
+**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 24 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
+**11 项仍缺失**(另 1 项上游受阻、`DBus` 属"桥内有、API 无")。命中率 **24/36 ≈ 67%**。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**下一步进入 P2**(Charts / Multimedia / QML 等,模块均已就绪)。
 
 ---
 
@@ -161,7 +161,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **QWebSocket(客户端)** | ✅ 已完成(v1.9.1 P1) |
 | **DBus(暴露已有桥能力)** | 桥里已有,补 Java API 即可 |
 | **QSqlQueryModel/QSqlTableModel** | 现在只有 `QSqlDatabase/QSqlQuery`,做表格应用要手写映射 |
-| **QTest 兼容层** | 让外部项目能用标准测试写法(或用我们的冒烟框架包一层) |
+| **QTest 兼容层** | ✅ 已完成(v1.9.1 P1) |
 
 ### P2 —— 长期/按需(投入大,先不做)
 
