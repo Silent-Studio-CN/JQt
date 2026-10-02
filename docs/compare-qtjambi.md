@@ -10,7 +10,7 @@
 | | JQt | QtJambi |
 |---|---|---|
 | 定位 | **手写 + 生成的精选绑定**,面向"Java 桌面小工具/内部工具" | **全量生成绑定**,面向"用 Java 做完整 Qt 应用" |
-| 类数 | **148 个 API 类**(另有 22 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
+| 类数 | **150 个 API 类**(另有 23 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
 | Qt 版本线 | 6.12.0(最新)+ 6.8.3 LTS | 6.12.0(最新)+ 历史各线 |
 | 广度差距 | —— | **约 20×**(核心类数比) |
 | 优势 | 纯 Java 值对象、显式所有权、精选 API、自带高层控件门面、单端口远程控制台配套 | 模块覆盖近乎完整(QML/Quick、Multimedia、WebEngine、Charts、Bluetooth…)、Maven Central 直发、生态成熟 |
@@ -36,7 +36,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'      # 1,174 个 native 
 
 | 指标 | 数值 |
 |---|---|
-| Java 源文件 | 170(API 148 + 冒烟 22) |
+| Java 源文件 | 173(API 150 + 冒烟 23) |
 | Java 行数 | 17,186 |
 | JNI 桥行数 | 11,497 |
 | jar 内 class | 205 |
@@ -101,7 +101,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | SerialPort | ✅ | `QSerialPort`(CI 单独构建该模块) |
 | **QStateMachine 状态机** | ❌ | |
 | **QSvg 矢量渲染** | ✅ | v1.9.1 P0-④:`QSvgRenderer`(文件/字节 → `renderToPng`;缺 qtsvg 时构建特性探测自动跳过) |
-| **QNetwork 网络** | ❌ | 无 `QNetworkAccessManager`/`QTcpSocket`/`QUdpSocket` |
+| **QNetwork 网络** | ✅ | v1.9.1 P0-⑤:`QNetworkAccessManager`(GET/POST + 管理器级 `onFinished` + 超时/UA);`QTcpSocket`/`QUdpSocket` 仍无 |
 | **QML / Quick** | ❌ | 无 `QQmlApplicationEngine`/`QQuickView`/`QQuickWidget` |
 | **Multimedia** | ❌ | 无 `QMediaPlayer`/`QAudioOutput`/`QVideoWidget` |
 | **WebEngine / WebView** | ❌ | |
@@ -115,8 +115,9 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **Help** | ❌ | |
 | **QTest** | ❌ | 我们用自研冒烟框架代替 |
 
-**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 20 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg),
-**15 项仍缺失**,另有 `DBus` 一项"桥内有、API 无"。命中率 **20/36 ≈ 56%**。
+**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 21 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
+**14 项仍缺失**,另有 `DBus` 一项"桥内有、API 无"。命中率 **21/36 ≈ 58%**。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅)。
 
 ---
 
@@ -150,7 +151,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **QEvent 事件体系** ✅ 已完成(v1.9.1) | 事件过滤器 → Java 回调;键盘/鼠标/滚轮/Resize 全通 | 1–2 天 |
 | **QThread + QtConcurrent 子集** ✅ 已完成(v1.9.1) | `QThread` + `QThreadPool.runAsync`;跨线程编组用 `QTimer.singleShot` | 1–2 天 |
 | **QSvgRenderer** ✅ 已完成(v1.9.1) | 文件/字节 → `renderToPng`;缺 qtsvg 的平台自动降级(isAvailable=false) | 0.5 天 |
-| **QNetworkAccessManager 子集** ⏳ 下一个 | HTTP GET/POST + 信号回调;"下载/上报"类需求的高频刚需 | 2–3 天 |
+| **QNetworkAccessManager 子集** ✅ 已完成(v1.9.1) | HTTP GET/POST + 信号回调;"下载/上报"类需求的高频刚需 | 2–3 天 |
 
 ### P1 —— 补齐常用模块
 

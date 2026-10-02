@@ -147,6 +147,13 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QPlainTextEdit>
 #include <QPainter>
 #include <QMessageBox>
+#if defined(JQT_HAVE_NETWORK)
+#include <QNetworkAccessManager>   // P0-⑤:qtbase 自带,默认启用
+#include <QNetworkReply>
+#include <QNetworkRequest>
+#include <QUrl>
+#include <QVariant>
+#endif
 #if defined(JQT_HAVE_SVG)
 #include <QSvgRenderer>   // 仅在装了 qtsvg 时编译 P0-④
 #endif
@@ -7081,6 +7088,156 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
 // ---------------------------------------------------------------------------
+extern "C" {   // QNetworkAccessManager(P0-⑤)
+
+// ---------------------------------------------------------------------------
+// QNetworkAccessManager(v1.9.1 P0-⑤):HTTP GET/POST 子集
+//   · 回调在 Qt 主线程;请求级 handler + 管理器级 onFinished 都在 Java 侧分发
+//   · 应答处理完即 deleteLater(),Java 只拿到纯 Java 快照(无句柄 → 不泄漏)
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QNetworkAccessManager_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_NETWORK
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_NETWORK
+
+// 把 QNetworkReply 的最终状态一次性交给 Java(此时还没 deleteLater)
+static void jqtDeliverReply(JNIEnv* e, jobject manager, jobject handler,
+                            const QString& url, QNetworkReply* r) {
+    const int status = r->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+    const int error = static_cast<int>(r->error());
+    const QString errStr = r->errorString();
+    const QByteArray body = r->readAll();
+
+    // 响应头(名字/值两个数组,避免 Java 侧再解析分隔符)
+    QList<QByteArray> rawNames = r->rawHeaderList();
+    jobjectArray names = e->NewObjectArray(rawNames.size(), e->FindClass("java/lang/String"), nullptr);
+    jobjectArray values = e->NewObjectArray(rawNames.size(), e->FindClass("java/lang/String"), nullptr);
+    for (int i = 0; i < rawNames.size(); i++) {
+        jstring n = e->NewStringUTF(rawNames.at(i).constData());
+        jstring v = e->NewStringUTF(r->rawHeader(rawNames.at(i)).constData());
+        e->SetObjectArrayElement(names, i, n);
+        e->SetObjectArrayElement(values, i, v);
+        e->DeleteLocalRef(n);
+        e->DeleteLocalRef(v);
+    }
+
+    jbyteArray jbody = e->NewByteArray(body.size());
+    e->SetByteArrayRegion(jbody, 0, body.size(), reinterpret_cast<const jbyte*>(body.constData()));
+    jstring jurl = e->NewStringUTF(url.toUtf8().constData());
+    jstring jerr = e->NewStringUTF(errStr.toUtf8().constData());
+
+    jmethodID mid = e->GetMethodID(e->GetObjectClass(manager), "nativeHandleReply",
+        "(Ljava/lang/String;IILjava/lang/String;[B[Ljava/lang/String;[Ljava/lang/String;Ljava/util/function/Consumer;)V");
+    if (mid != nullptr) {
+        e->CallVoidMethod(manager, mid, jurl, static_cast<jint>(status), static_cast<jint>(error),
+                          jerr, jbody, names, values, handler);
+        checkJniException(e);
+    }
+    e->DeleteLocalRef(jurl);
+    e->DeleteLocalRef(jerr);
+    e->DeleteLocalRef(jbody);
+    e->DeleteLocalRef(names);
+    e->DeleteLocalRef(values);
+}
+
+static void jqtStartRequest(JNIEnv* env, jobject thiz, jlong handle, const QString& url,
+                            bool isPost, const QByteArray& payload, const QString& contentType,
+                            jobject handler) {
+    QNetworkAccessManager* nam = static_cast<QNetworkAccessManager*>(requireHandle(env, handle));
+    if (nam == nullptr || url.isEmpty()) return;
+    QNetworkRequest req{QUrl(url)};
+    req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                     QNetworkRequest::NoLessSafeRedirectPolicy);
+    if (!contentType.isEmpty()) req.setHeader(QNetworkRequest::ContentTypeHeader, contentType);
+    const QVariant ua = nam->property("jqtUserAgent");     // setUserAgent() 存下的
+    if (ua.isValid() && !ua.toString().isEmpty()) {
+        req.setHeader(QNetworkRequest::UserAgentHeader, ua.toString());
+    }
+    QNetworkReply* reply = isPost ? nam->post(req, payload) : nam->get(req);
+
+    jobject gManager = env->NewGlobalRef(thiz);
+    jobject gHandler = handler ? env->NewGlobalRef(handler) : nullptr;
+    const QString urlCopy = url;
+    QObject::connect(reply, &QNetworkReply::finished, [reply, gManager, gHandler, urlCopy]() {
+        JNIEnv* e = callbackEnv();
+        if (e != nullptr && gManager != nullptr) {
+            jqtDeliverReply(e, gManager, gHandler, urlCopy, reply);
+        }
+        reply->deleteLater();
+        if (e != nullptr) {
+            if (gHandler) e->DeleteGlobalRef(gHandler);
+            e->DeleteGlobalRef(gManager);
+        }
+    });
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QNetworkAccessManager_nativeCreate(JNIEnv* env, jobject) {
+    if (requireApp(env) == nullptr) return 0;
+    return registerHandle(new QNetworkAccessManager(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    QNetworkAccessManager* nam = static_cast<QNetworkAccessManager*>(requireHandle(env, handle));
+    if (nam) delete nam;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativeSetUserAgent(JNIEnv* env, jobject, jlong handle, jstring jua) {
+    QNetworkAccessManager* nam = static_cast<QNetworkAccessManager*>(requireHandle(env, handle));
+    if (nam == nullptr || jua == nullptr) return;
+    const char* c = env->GetStringUTFChars(jua, nullptr);
+    nam->setProperty("jqtUserAgent", QString::fromUtf8(c));   // 由发起请求时读取并写入请求头
+    env->ReleaseStringUTFChars(jua, c);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativeSetTransferTimeout(JNIEnv* env, jobject, jlong handle, jint ms) {
+    QNetworkAccessManager* nam = static_cast<QNetworkAccessManager*>(requireHandle(env, handle));
+    if (nam) nam->setTransferTimeout(ms > 0 ? ms : 0);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativeGet(JNIEnv* env, jobject thiz, jlong handle, jstring jurl, jobject handler) {
+    if (jurl == nullptr) return;
+    const char* c = env->GetStringUTFChars(jurl, nullptr);
+    const QString url = QString::fromUtf8(c);
+    env->ReleaseStringUTFChars(jurl, c);
+    jqtStartRequest(env, thiz, handle, url, /*isPost=*/false, QByteArray(), QString(), handler);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativePost(JNIEnv* env, jobject thiz, jlong handle, jstring jurl, jbyteArray jbody, jstring jctype, jobject handler) {
+    if (jurl == nullptr) return;
+    const char* c = env->GetStringUTFChars(jurl, nullptr);
+    const QString url = QString::fromUtf8(c);
+    env->ReleaseStringUTFChars(jurl, c);
+    QByteArray payload;
+    if (jbody != nullptr) {
+        const jsize n = env->GetArrayLength(jbody);
+        payload.resize(static_cast<int>(n));
+        env->GetByteArrayRegion(jbody, 0, n, reinterpret_cast<jbyte*>(payload.data()));
+    }
+    QString ctype;
+    if (jctype != nullptr) {
+        const char* cc = env->GetStringUTFChars(jctype, nullptr);
+        ctype = QString::fromUtf8(cc);
+        env->ReleaseStringUTFChars(jctype, cc);
+    }
+    jqtStartRequest(env, thiz, handle, url, /*isPost=*/true, payload, ctype, handler);
+}
+
+#else
+JNIEXPORT jlong JNICALL Java_org_jqt_QNetworkAccessManager_nativeCreate(JNIEnv*, jobject) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativeDispose(JNIEnv*, jobject, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativeSetUserAgent(JNIEnv*, jobject, jlong, jstring) {}
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativeSetTransferTimeout(JNIEnv*, jobject, jlong, jint) {}
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativeGet(JNIEnv*, jobject, jlong, jstring, jobject) {}
+JNIEXPORT void JNICALL Java_org_jqt_QNetworkAccessManager_nativePost(JNIEnv*, jobject, jlong, jstring, jbyteArray, jstring, jobject) {}
+#endif
+
+}   // extern "C" (QNetworkAccessManager)
+
 extern "C" {   // QSvgRenderer(P0-④)
 
 // ---------------------------------------------------------------------------
