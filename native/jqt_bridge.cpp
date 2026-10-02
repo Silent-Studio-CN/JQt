@@ -147,8 +147,10 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QPlainTextEdit>
 #include <QPainter>
 #include <QMessageBox>
+#include <QThread>
 #include <QTimer>
 #include <QMessageBox>
+#include <QThread>
 #include <QTimer>
 #include <QInputDialog>
 #include <QFileDialog>
@@ -184,6 +186,7 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QMoveEvent>
 #include <QPushButton>
 #include <QResizeEvent>
+#include <QThread>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -7045,6 +7048,104 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 #endif // !__ANDROID__
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
+// ---------------------------------------------------------------------------
+extern "C" {   // QTimer:必须 C 链接,否则导出名被修饰,JNI 按名查找会失败
+// QTimer(v1.9.1 P0):定时器 + "后台线程 → Qt 主线程"编组(singleShot)
+// ---------------------------------------------------------------------------
+JNIEXPORT jlong JNICALL Java_org_jqt_QTimer_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) return 0;
+    QTimer* t = new QTimer();
+    return registerHandle(t, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTimer_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    if (t) { t->stop(); delete t; }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTimer_nativeSetInterval(JNIEnv* env, jobject, jlong handle, jint ms) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    if (t) t->setInterval(ms);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTimer_nativeInterval(JNIEnv* env, jobject, jlong handle) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    return t ? t->interval() : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTimer_nativeSetSingleShot(JNIEnv* env, jobject, jlong handle, jboolean on) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    if (t) t->setSingleShot(on == JNI_TRUE);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QTimer_nativeIsSingleShot(JNIEnv* env, jobject, jlong handle) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    return (t && t->isSingleShot()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTimer_nativeStart(JNIEnv* env, jobject, jlong handle, jint ms) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    if (!t) return;
+    if (ms >= 0) t->start(ms); else t->start();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTimer_nativeStop(JNIEnv* env, jobject, jlong handle) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    if (t) t->stop();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QTimer_nativeIsActive(JNIEnv* env, jobject, jlong handle) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    return (t && t->isActive()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QTimer_nativeRemainingTime(JNIEnv* env, jobject, jlong handle) {
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    return t ? t->remainingTime() : -1;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QTimer_nativeConnectTimeout(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QTimer.timeout")) return;   // v1.9.1 去重
+    QTimer* t = static_cast<QTimer*>(requireHandle(env, handle));
+    if (!t) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(t, &QTimer::timeout, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "nativeHandleTimeout", "()V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid);
+    });
+}
+
+// 从任意线程调用;回调在 Qt 主线程执行(等价 QTimer::singleShot(0, ...))
+JNIEXPORT void JNICALL Java_org_jqt_QTimer_nativeSingleShot(JNIEnv* env, jclass, jint ms, jobject runner) {
+    if (runner == nullptr) return;
+    jobject gRef = env->NewGlobalRef(runner);
+    auto fire = [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(gRef), "run", "()V");
+        if (mid) JQT_CALL_VOID(e, gRef, mid);
+        e->DeleteGlobalRef(gRef);          // 一次性:燃尽即释放,避免泄漏
+    };
+    // 坑(实测):QTimer::singleShot 的任何重载都把定时器建在**调用线程**上。
+    // 后台线程没有事件循环 -> 回调永不触发,带 context 参数也一样。
+    // 正确做法:先把动作投递到主线程,再由主线程决定是否延时。
+    if (g_app != nullptr) {
+        QMetaObject::invokeMethod(g_app, [ms, fire]() {
+            if (ms <= 0) fire();
+            else QTimer::singleShot(ms, fire);      // 已在主线程,安全
+        }, Qt::QueuedConnection);
+    } else {
+        QTimer::singleShot(ms, fire);
+    }
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QTimer_nativeIsMainThread(JNIEnv*, jclass) {
+    QCoreApplication* app = QCoreApplication::instance();
+    return (app && QThread::currentThread() == app->thread()) ? JNI_TRUE : JNI_FALSE;
+}
+}   // extern "C" (QTimer)
+
+
 JNIEXPORT jlong JNICALL Java_org_jqt_QSerialPort_nativeCreate(JNIEnv* env, jobject thiz) {
     if (requireApp(env) == nullptr) return 0;
     QSerialPort* port = new QSerialPort();
