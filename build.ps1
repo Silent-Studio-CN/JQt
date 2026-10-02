@@ -65,6 +65,12 @@ $gppArgs = @(
 $svgLib = Join-Path $Kit "lib\libQt6Svg.a"
 $svgDll = Join-Path $Kit "bin\Qt6Svg.dll"
 $gppArgs += @("-DJQT_HAVE_NETWORK", "-DJQT_HAVE_SQL_MODELS")   # QtNetwork 属 qtbase,始终可用
+if ((Test-Path (Join-Path $Kit "lib\libQt6Charts.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Charts.dll"))) {
+    $gppArgs += @("-DJQT_HAVE_CHARTS", "-I", (Join-Path $Kit "include\QtCharts"), "-lQt6Charts")
+    Write-Host "==> QtCharts found - QChart enabled"
+} else {
+    Write-Host "==> QtCharts not found - QChart will report unavailable"
+}
 if ((Test-Path (Join-Path $Kit "lib\libQt6WebSockets.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6WebSockets.dll"))) {
     $gppArgs += @("-DJQT_HAVE_WEBSOCKETS", "-I", (Join-Path $Kit "include\QtWebSockets"), "-lQt6WebSockets")
     Write-Host "==> QtWebSockets found - QWebSocket enabled"

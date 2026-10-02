@@ -64,6 +64,14 @@ jobs:
           rm -rf /tmp/qt683 /tmp/qtbase683.7z /tmp/icu683.7z
           test -f /opt/Qt683/6.8.3/gcc_64/bin/qmake || { echo "qmake missing"; exit 1; }
 
+      - name: Install QtCharts 6.12.0 (prebuilt addon)
+        run: |
+          curl -fsSL -o /tmp/qtcharts.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtcharts.linux_gcc_64/6.12.0-0-202609280346qtcharts-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
+          7z x -y -o/tmp/qtcharts /tmp/qtcharts.7z > /dev/null
+          sudo cp -a /tmp/qtcharts/lib/. /opt/6.12.0/gcc_64/lib/
+          [ -d /tmp/qtcharts/include ] && sudo cp -a /tmp/qtcharts/include/. /opt/6.12.0/gcc_64/include/
+          ls /opt/6.12.0/gcc_64/lib | grep -qi charts || (echo "libQt6Charts missing"; exit 1)
+
       - name: Install QtWebSockets 6.12.0 (prebuilt addon)
         run: |
           curl -fsSL -o /tmp/qtwebsockets.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtwebsockets.linux_gcc_64/6.12.0-0-202609280346qtwebsockets-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
@@ -174,7 +182,7 @@ jobs:
           cat smoke_timer.txt
           if [ $CODE8 -ne 0 ]; then exit $CODE8; fi
           # 新增冒烟:v1.9.1(P0 并发 / 回调异常 / QStackedWidget)
-          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest; do
+          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeCharts; do
             QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class $C -AutoClose 1200 > "smoke_$C.txt" 2>&1
             RC=$?
             echo "smoke $C exit code: $RC"; cat "smoke_$C.txt"
@@ -336,6 +344,7 @@ jobs:
             "opengl32sw.7z"  = "qt.qt6.6120.win64_mingw/6.12.0-0-202609280346opengl32sw-64-mesa_11_2_2-signed_sha256.7z"
             "serialport.7z"  = "qt.qt6.6120.addons.qtserialport.win64_mingw/6.12.0-0-202609280346qtserialport-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
             "websockets.7z"  = "qt.qt6.6120.addons.qtwebsockets.win64_mingw/6.12.0-0-202609280346qtwebsockets-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
+            "charts.7z"      = "qt.qt6.6120.addons.qtcharts.win64_mingw/6.12.0-0-202609280346qtcharts-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
           }
           New-Item -ItemType Directory -Force -Path C:/Qt/6.12.0/mingw_64 | Out-Null
           foreach ($k in $items.Keys) {
@@ -366,7 +375,7 @@ jobs:
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
-          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer","org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked","org.jqt.SmokeEvent","org.jqt.SmokeNetwork","org.jqt.SmokeSqlModel","org.jqt.SmokeWebSocket","org.jqt.SmokeJQtTest")) {
+          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer","org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked","org.jqt.SmokeEvent","org.jqt.SmokeNetwork","org.jqt.SmokeSqlModel","org.jqt.SmokeWebSocket","org.jqt.SmokeJQtTest","org.jqt.SmokeCharts")) {
             powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
             if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
           }
@@ -499,6 +508,8 @@ jobs:
           # v0.7.4: qtserialport 模块（解压后定位并复制到 QTBASE）
           curl.exe -fsSL -o C:/qtserialport6120.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtserialport.win64_msvc2022_arm64/6.12.0-0-202609280346qtserialport-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
           curl.exe -fsSL -o C:/qtwebsockets6120.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtwebsockets.win64_msvc2022_arm64/6.12.0-0-202609280346qtwebsockets-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
+          curl.exe -fsSL -o C:/qtcharts6120.7z "https://download.qt.io/online/qtsdkrepository/windows_arm64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtcharts.win64_msvc2022_arm64/6.12.0-0-202609280346qtcharts-Windows-Windows_11_23H2-MSVC2022-Windows-Windows_11_23H2-AARCH64.7z"
+          7z x -y -oC:/Qt6120 C:/qtcharts6120.7z | Out-Null
           7z x -y -oC:/Qt6120 C:/qtwebsockets6120.7z | Out-Null
           7z x -y -oC:/Qt6120 C:/qtserialport6120.7z | Out-Null
           $sp = Get-ChildItem C:/Qt6120 -Recurse -Filter qserialport.h | Select-Object -First 1
@@ -555,10 +566,12 @@ jobs:
           curl -fsSL -o /tmp/qtbase6120.7z "$base/qt.qt6.6120.clang_64/6.12.0-0-202609280346qtbase-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
           curl -fsSL -o /tmp/qtserialport6120.7z "$base/qt.qt6.6120.addons.qtserialport.clang_64/6.12.0-0-202609280346qtserialport-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
           curl -fsSL -o /tmp/qtwebsockets6120.7z "$base/qt.qt6.6120.addons.qtwebsockets.clang_64/6.12.0-0-202609280346qtwebsockets-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
+          curl -fsSL -o /tmp/qtcharts6120.7z "$base/qt.qt6.6120.addons.qtcharts.clang_64/6.12.0-0-202609280346qtcharts-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
           mkdir -p "$HOME/Qt6120"
           7z x -y -o"$HOME/Qt6120" /tmp/qtbase6120.7z > /dev/null
           7z x -y -o"$HOME/Qt6120" /tmp/qtserialport6120.7z > /dev/null
           7z x -y -o"$HOME/Qt6120" /tmp/qtwebsockets6120.7z > /dev/null
+          7z x -y -o"$HOME/Qt6120" /tmp/qtcharts6120.7z > /dev/null
           rm -f /tmp/qtbase6120.7z /tmp/qtserialport6120.7z
           test -f "$HOME/Qt6120/lib/QtWidgets.framework/Headers/QWidget" || (echo "QtWidgets.framework missing"; find "$HOME/Qt6120" -maxdepth 3 -type d | head -20; exit 1)
 
