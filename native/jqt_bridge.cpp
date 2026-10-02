@@ -148,9 +148,13 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QPainter>
 #include <QMessageBox>
 #include <QThread>
+#include <QThreadPool>
+#include <QRunnable>
 #include <QTimer>
 #include <QMessageBox>
 #include <QThread>
+#include <QThreadPool>
+#include <QRunnable>
 #include <QTimer>
 #include <QInputDialog>
 #include <QFileDialog>
@@ -187,6 +191,8 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QPushButton>
 #include <QResizeEvent>
 #include <QThread>
+#include <QThreadPool>
+#include <QRunnable>
 #include <QTimer>
 #include <QVBoxLayout>
 #include <QWidget>
@@ -394,22 +400,45 @@ static std::atomic<int64_t> g_nextHandleId{1};
 // Qt 信号总是在 GUI（主）线程发出，而主线程执行 app.exec() 前已被 JVM 附加。
 static JNIEnv* callbackEnv() {
     JNIEnv* env = nullptr;
+    // 必须以 **daemon** 方式附加:AttachCurrentThread 会创建非守护附加线程,
+    // 只要 Qt 侧还有线程活着(线程池 worker 常态存活),JVM 就不会退出 ——
+    // 表现为 main() 跑完进程却挂住(实测踩过)。
 #if defined(__ANDROID__)
-    // Android NDK jni.h：JNI_VERSION_1_6（无 1_8）；AttachCurrentThread(JNIEnv**, void*)
+    // Android NDK jni.h：JNI_VERSION_1_6（无 1_8）
     if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) == JNI_EDETACHED) {
-        g_jvm->AttachCurrentThread(&env, nullptr);
+        g_jvm->AttachCurrentThreadAsDaemon(&env, nullptr);
     }
 #else
     if (g_jvm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_8) == JNI_EDETACHED) {
-        g_jvm->AttachCurrentThread(reinterpret_cast<void**>(&env), nullptr);
+        g_jvm->AttachCurrentThreadAsDaemon(reinterpret_cast<void**>(&env), nullptr);
     }
 #endif
     return env;
 }
 
 // JNI 回调中 Java 抛出的异常：打印并清除，避免悬挂污染后续 JNI 调用
+// 回调异常处理器(v1.9.1,修 J3):默认打印后清除;若 Java 侧注册了处理器,
+// 则把 Throwable 交给它 —— 用户终于能在 Java 里 try/catch 到回调里抛出的异常
+static jobject g_callbackErrorHandler = nullptr;
+
 static void checkJniException(JNIEnv* env) {
     if (env->ExceptionCheck()) {
+        if (g_callbackErrorHandler != nullptr) {
+            jthrowable ex = env->ExceptionOccurred();
+            env->ExceptionClear();
+            if (ex != nullptr) {
+                jclass cls = env->GetObjectClass(g_callbackErrorHandler);
+                jmethodID mid = env->GetMethodID(cls, "accept", "(Ljava/lang/Object;)V");
+                if (mid != nullptr) {
+                    env->CallVoidMethod(g_callbackErrorHandler, mid, ex);
+                    if (env->ExceptionCheck()) { env->ExceptionDescribe(); env->ExceptionClear(); }
+                } else {
+                    env->Throw(ex);      // 处理器签名不符:退回默认行为,不静默吞掉
+                }
+                env->DeleteLocalRef(cls);
+            }
+            return;
+        }
         env->ExceptionDescribe();
         env->ExceptionClear();
     }
@@ -7049,6 +7078,175 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
 // ---------------------------------------------------------------------------
+extern "C" {   // QStackedWidget(J5)
+
+// ---------------------------------------------------------------------------
+// QStackedWidget(v1.9.1,修 J5):此前只有 count(),Java 侧甚至无法创建
+// ---------------------------------------------------------------------------
+// 指针 → 句柄反查(O(n),仅用于取回容器里的子控件句柄)
+static jlong jqtHandleOfPtr(const void* ptr) {
+    if (ptr == nullptr) return 0;
+    std::lock_guard<std::mutex> lock(g_handleMutex);
+    for (const auto& kv : g_handles) {
+        if (kv.second == ptr) return static_cast<jlong>(kv.first);
+    }
+    return 0;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QStackedWidget_nativeCreate(JNIEnv* env, jobject /*thiz*/) {
+    if (requireApp(env) == nullptr) return 0;
+    QStackedWidget* w = new QStackedWidget();
+    return registerHandle(w, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QStackedWidget_nativeAddWidget(JNIEnv* env, jclass, jlong handle, jlong widgetHandle) {
+    QStackedWidget* w = static_cast<QStackedWidget*>(requireHandle(env, handle));
+    QWidget* c = static_cast<QWidget*>(requireHandle(env, widgetHandle));
+    if (w && c) w->addWidget(c);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QStackedWidget_nativeRemoveWidget(JNIEnv* env, jclass, jlong handle, jlong widgetHandle) {
+    QStackedWidget* w = static_cast<QStackedWidget*>(requireHandle(env, handle));
+    QWidget* c = static_cast<QWidget*>(requireHandle(env, widgetHandle));
+    if (w && c) w->removeWidget(c);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QStackedWidget_nativeWidgetAt(JNIEnv* env, jclass, jlong handle, jint index) {
+    QStackedWidget* w = static_cast<QStackedWidget*>(requireHandle(env, handle));
+    if (!w) return 0;
+    return jqtHandleOfPtr(w->widget(index));
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QStackedWidget_nativeCurrentIndex(JNIEnv* env, jclass, jlong handle) {
+    QStackedWidget* w = static_cast<QStackedWidget*>(requireHandle(env, handle));
+    return w ? w->currentIndex() : -1;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QStackedWidget_nativeSetCurrentIndex(JNIEnv* env, jclass, jlong handle, jint index) {
+    QStackedWidget* w = static_cast<QStackedWidget*>(requireHandle(env, handle));
+    if (w) w->setCurrentIndex(index);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QStackedWidget_nativeIndexOf(JNIEnv* env, jclass, jlong handle, jlong widgetHandle) {
+    QStackedWidget* w = static_cast<QStackedWidget*>(requireHandle(env, handle));
+    QWidget* c = static_cast<QWidget*>(requireHandle(env, widgetHandle));
+    return (w && c) ? w->indexOf(c) : -1;
+}
+
+}   // extern "C" (QStackedWidget)
+
+extern "C" {   // 回调异常处理器
+
+// ---------------------------------------------------------------------------
+// 回调异常处理器注册(v1.9.1):JQtCallbackErrors.setHandler(Consumer<Throwable>)
+// ---------------------------------------------------------------------------
+JNIEXPORT void JNICALL Java_org_jqt_JQtCallbackErrors_nativeSetHandler(JNIEnv* env, jclass, jobject handler) {
+    if (g_callbackErrorHandler != nullptr) {
+        env->DeleteGlobalRef(g_callbackErrorHandler);
+        g_callbackErrorHandler = nullptr;
+    }
+    if (handler != nullptr) g_callbackErrorHandler = env->NewGlobalRef(handler);
+}
+
+}   // extern "C" (回调异常处理器)
+
+extern "C" {   // QThread / QThreadPool:必须 C 链接(JNI 按名查找)
+
+// ---------------------------------------------------------------------------
+// QThread / QThreadPool(v1.9.1 P0-③):把 Java 任务放到 Qt 线程上跑
+// ---------------------------------------------------------------------------
+class JQtJavaRunner : public QThread {
+public:
+    JQtJavaRunner(JNIEnv* env, jobject runner) : m_runner(env->NewGlobalRef(runner)) {}
+    ~JQtJavaRunner() override {
+        if (m_runner) { JNIEnv* e = callbackEnv(); if (e) e->DeleteGlobalRef(m_runner); }
+    }
+protected:
+    void run() override {
+        JNIEnv* e = callbackEnv();
+        if (e == nullptr || m_runner == nullptr) return;
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(m_runner), "run", "()V");
+        if (mid) JQT_CALL_VOID(e, m_runner, mid);
+    }
+private:
+    jobject m_runner;
+};
+
+class JQtJavaRunnable : public QRunnable {
+public:
+    JQtJavaRunnable(JNIEnv* env, jobject runner) : m_runner(env->NewGlobalRef(runner)) {}
+    ~JQtJavaRunnable() override {
+        if (m_runner) { JNIEnv* e = callbackEnv(); if (e) e->DeleteGlobalRef(m_runner); }
+    }
+    void run() override {
+        JNIEnv* e = callbackEnv();
+        if (e == nullptr || m_runner == nullptr) return;
+        jmethodID mid = e->GetMethodID(e->GetObjectClass(m_runner), "run", "()V");
+        if (mid) JQT_CALL_VOID(e, m_runner, mid);
+    }
+private:
+    jobject m_runner;
+};
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QThread_nativeCreate(JNIEnv* env, jobject /*thiz*/, jobject runner) {
+    if (requireApp(env) == nullptr) return 0;
+    JQtJavaRunner* t = new JQtJavaRunner(env, runner);
+    return registerHandle(t, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QThread_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    JQtJavaRunner* t = static_cast<JQtJavaRunner*>(requireHandle(env, handle));
+    if (t) { t->wait(5000); delete t; }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QThread_nativeStart(JNIEnv* env, jobject, jlong handle) {
+    JQtJavaRunner* t = static_cast<JQtJavaRunner*>(requireHandle(env, handle));
+    if (t) t->start();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QThread_nativeIsRunning(JNIEnv* env, jobject, jlong handle) {
+    JQtJavaRunner* t = static_cast<JQtJavaRunner*>(requireHandle(env, handle));
+    return (t && t->isRunning()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QThread_nativeIsFinished(JNIEnv* env, jobject, jlong handle) {
+    JQtJavaRunner* t = static_cast<JQtJavaRunner*>(requireHandle(env, handle));
+    return (t && t->isFinished()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QThread_nativeWait(JNIEnv* env, jobject, jlong handle, jint ms) {
+    JQtJavaRunner* t = static_cast<JQtJavaRunner*>(requireHandle(env, handle));
+    return (t && t->wait(static_cast<unsigned long>(ms))) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QThread_nativeRequestInterruption(JNIEnv* env, jobject, jlong handle) {
+    JQtJavaRunner* t = static_cast<JQtJavaRunner*>(requireHandle(env, handle));
+    if (t) t->requestInterruption();
+}
+
+// ---- QThreadPool:全局线程池子集(QtConcurrent 的底座)----
+JNIEXPORT void JNICALL Java_org_jqt_QThreadPool_nativeRunAsync(JNIEnv* env, jclass, jobject runner) {
+    if (runner == nullptr || requireApp(env) == nullptr) return;
+    QThreadPool::globalInstance()->start(new JQtJavaRunnable(env, runner));
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QThreadPool_nativeMaxThreadCount(JNIEnv*, jclass) {
+    return QThreadPool::globalInstance()->maxThreadCount();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QThreadPool_nativeSetMaxThreadCount(JNIEnv*, jclass, jint n) {
+    if (n > 0) QThreadPool::globalInstance()->setMaxThreadCount(n);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QThreadPool_nativeActiveThreadCount(JNIEnv*, jclass) {
+    return QThreadPool::globalInstance()->activeThreadCount();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QThreadPool_nativeWaitForDone(JNIEnv*, jclass, jint ms) {
+    return QThreadPool::globalInstance()->waitForDone(ms) ? JNI_TRUE : JNI_FALSE;
+}
+
+}   // extern "C" (QThread/QThreadPool)
 extern "C" {   // QTimer:必须 C 链接,否则导出名被修饰,JNI 按名查找会失败
 // QTimer(v1.9.1 P0):定时器 + "后台线程 → Qt 主线程"编组(singleShot)
 // ---------------------------------------------------------------------------
