@@ -147,6 +147,12 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QPlainTextEdit>
 #include <QPainter>
 #include <QMessageBox>
+#if defined(JQT_HAVE_SQL_MODELS)
+#include <QSqlQueryModel>   // P1:SQL 模型
+#include <QSqlTableModel>
+#include <QSqlRecord>
+#include <QSqlError>
+#endif
 #if defined(JQT_HAVE_NETWORK)
 #include <QNetworkAccessManager>   // P0-⑤:qtbase 自带,默认启用
 #include <QNetworkReply>
@@ -7088,6 +7094,185 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
 // ---------------------------------------------------------------------------
+extern "C" {   // SQL 模型(P1)
+
+// ---------------------------------------------------------------------------
+// QSqlQueryModel / QSqlTableModel(v1.9.1 P1):把 SELECT 结果当表格用
+// ---------------------------------------------------------------------------
+// 记住每个模型上次的 SQL:QSqlQueryModel::query() 返回 const,无法直接重新 exec,
+// 刷新只能"重放 setQuery"。
+static std::unordered_map<long long, QString> g_sqlModelLastQuery;
+static std::unordered_map<long long, long long> g_sqlModelLastDb;
+
+static QSqlQueryModel* jqtSqlModel(JNIEnv* env, jlong handle) {
+    return static_cast<QSqlQueryModel*>(requireHandle(env, handle));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSqlQueryModel_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return registerHandle(new QSqlQueryModel(), /*javaOwned=*/true);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSqlTableModel_nativeCreateTable(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return registerHandle(new QSqlTableModel(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlQueryModel_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    if (m) delete m;
+    g_sqlModelLastQuery.erase(static_cast<long long>(handle));
+    g_sqlModelLastDb.erase(static_cast<long long>(handle));
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlQueryModel_nativeSetQuery(JNIEnv* env, jobject, jlong handle, jlong dbHandle, jstring jsql) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    if (m == nullptr || jsql == nullptr) return JNI_FALSE;
+    const char* c = env->GetStringUTFChars(jsql, nullptr);
+    const QString sql = QString::fromUtf8(c);
+    env->ReleaseStringUTFChars(jsql, c);
+    g_sqlModelLastQuery[static_cast<long long>(handle)] = sql;
+    g_sqlModelLastDb[static_cast<long long>(handle)] = static_cast<long long>(dbHandle);
+    if (dbHandle != 0) {
+        // 注意:QSqlDatabase 的句柄在独立 id 空间(g_sqlDbs,起始 0x7000),
+        // 必须用 jqtSqlDb 查表 —— 用通用 requireHandle 会抛 "native object already destroyed"。
+        QSqlDatabase* db = jqtSqlDb(env, dbHandle);
+        if (db != nullptr) { m->setQuery(sql, *db); return JNI_TRUE; }
+    }
+    m->setQuery(sql);
+    return JNI_TRUE;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSqlQueryModel_nativeRowCount(JNIEnv* env, jclass, jlong handle) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    return m ? m->rowCount() : 0;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QSqlQueryModel_nativeColumnCount(JNIEnv* env, jclass, jlong handle) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    return m ? m->columnCount() : 0;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlQueryModel_nativeData(JNIEnv* env, jclass, jlong handle, jint row, jint column) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    if (m == nullptr || row < 0 || column < 0 || row >= m->rowCount() || column >= m->columnCount()) {
+        return env->NewStringUTF("");
+    }
+    const QString v = m->record(row).value(column).toString();
+    return env->NewStringUTF(v.toUtf8().constData());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlQueryModel_nativeHeaderData(JNIEnv* env, jclass, jlong handle, jint column) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    if (m == nullptr || column < 0 || column >= m->columnCount()) return env->NewStringUTF("");
+    const QString v = m->headerData(column, Qt::Horizontal).toString();
+    return env->NewStringUTF(v.toUtf8().constData());
+}
+
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSqlQueryModel_nativeColumnNames(JNIEnv* env, jclass, jlong handle) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    const int n = m ? m->columnCount() : 0;
+    jclass strCls = env->FindClass("java/lang/String");
+    jobjectArray out = env->NewObjectArray(n, strCls, nullptr);
+    if (m == nullptr) return out;
+    for (int i = 0; i < n; i++) {
+        const QString v = m->record().fieldName(i);
+        jstring js = env->NewStringUTF(v.toUtf8().constData());
+        env->SetObjectArrayElement(out, i, js);
+        env->DeleteLocalRef(js);
+    }
+    return out;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlQueryModel_nativeLastError(JNIEnv* env, jclass, jlong handle) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    if (m == nullptr) return env->NewStringUTF("");
+    const QString e = m->lastError().text();
+    return env->NewStringUTF(e.toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlQueryModel_nativeRefresh(JNIEnv* env, jclass, jlong handle) {
+    QSqlQueryModel* m = jqtSqlModel(env, handle);
+    if (m == nullptr) return;
+    auto it = g_sqlModelLastQuery.find(static_cast<long long>(handle));
+    if (it == g_sqlModelLastQuery.end()) return;
+    const long long dbh = g_sqlModelLastDb.count(static_cast<long long>(handle))
+                        ? g_sqlModelLastDb[static_cast<long long>(handle)] : 0;
+    if (dbh != 0) {
+        QSqlDatabase* db = jqtSqlDb(env, dbh);
+        if (db != nullptr) { m->setQuery(it->second, *db); return; }
+    }
+    m->setQuery(it->second);
+}
+
+// ---- QSqlTableModel ----
+static QSqlTableModel* jqtSqlTable(JNIEnv* env, jlong handle) {
+    return static_cast<QSqlTableModel*>(requireHandle(env, handle));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSqlTableModel_nativeCreateTableWithDb(JNIEnv* env, jclass, jlong dbHandle) {
+    if (requireApp(env) == nullptr) return 0;
+    if (dbHandle != 0) {
+        QSqlDatabase* db = jqtSqlDb(env, dbHandle);
+        if (db != nullptr) return registerHandle(new QSqlTableModel(nullptr, *db), /*javaOwned=*/true);
+    }
+    return registerHandle(new QSqlTableModel(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlTableModel_nativeSetTable(JNIEnv* env, jobject, jlong handle, jstring jtable) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    if (m == nullptr || jtable == nullptr) return;
+    const char* c = env->GetStringUTFChars(jtable, nullptr);
+    m->setTable(QString::fromUtf8(c));
+    env->ReleaseStringUTFChars(jtable, c);
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QSqlTableModel_nativeTableName(JNIEnv* env, jclass, jlong handle) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    return env->NewStringUTF(m ? m->tableName().toUtf8().constData() : "");
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlTableModel_nativeSelect(JNIEnv* env, jclass, jlong handle) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    return (m && m->select()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlTableModel_nativeSetData(JNIEnv* env, jclass, jlong handle, jint row, jint column, jstring jvalue) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    if (m == nullptr) return JNI_FALSE;
+    const char* c = jvalue ? env->GetStringUTFChars(jvalue, nullptr) : nullptr;
+    const QString v = c ? QString::fromUtf8(c) : QString();
+    if (c) env->ReleaseStringUTFChars(jvalue, c);
+    return m->setData(m->index(row, column), v) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlTableModel_nativeSubmitAll(JNIEnv* env, jclass, jlong handle) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    return (m && m->submitAll()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSqlTableModel_nativeRevertAll(JNIEnv* env, jclass, jlong handle) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    if (m) m->revertAll();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlTableModel_nativeIsDirty(JNIEnv* env, jclass, jlong handle) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    return (m && m->isDirty()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlTableModel_nativeInsertRow(JNIEnv* env, jclass, jlong handle, jint position) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    return (m && m->insertRow(position)) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSqlTableModel_nativeRemoveRow(JNIEnv* env, jclass, jlong handle, jint row) {
+    QSqlTableModel* m = jqtSqlTable(env, handle);
+    return (m && m->removeRow(row)) ? JNI_TRUE : JNI_FALSE;
+}
+
+}   // extern "C" (SQL 模型)
+
 extern "C" {   // QNetworkAccessManager(P0-⑤)
 
 // ---------------------------------------------------------------------------

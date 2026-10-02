@@ -28,6 +28,9 @@ public class QSqlDatabase {
     public static final String DEFAULT_CONNECTION = "";
 
     private final long nativeHandle;
+
+    /** 包内访问:模型类需要把连接交给原生侧(QSqlQueryModel::setQuery(sql, db))。 */
+    long nativeHandle() { return nativeHandle; }
     private final String connectionName;
     private boolean disposed;
 

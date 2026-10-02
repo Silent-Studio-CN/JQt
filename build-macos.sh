@@ -67,7 +67,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
-    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -framework AppKit -framework Foundation -framework CoreFoundation
+    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS -framework AppKit -framework Foundation -framework CoreFoundation
 
 # ---- 3. Deploy license notices ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true
