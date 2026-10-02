@@ -80,6 +80,7 @@ $clArgs = @(
     "/I", (Join-Path $QtRoot "include\QtCore"),
     "/I", (Join-Path $QtRoot "include\QtPrintSupport"),
     "/I", (Join-Path $QtRoot "include\QtSql"),
+    "/I", (Join-Path $QtRoot "include\QtNetwork"),
     "/I", (Join-Path $QtRoot "include\QtSerialPort"),
     "/I", (Join-Path $Root "native"),
     (Join-Path $Root "native\jqt_bridge.cpp"),
