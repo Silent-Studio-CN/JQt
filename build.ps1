@@ -64,7 +64,7 @@ $gppArgs = @(
 # QtSvg 特性探测(v1.9.1):装了 qtsvg 就编进 QSvgRenderer,没装则跳过(Java isAvailable()=false)
 $svgLib = Join-Path $Kit "lib\libQt6Svg.a"
 $svgDll = Join-Path $Kit "bin\Qt6Svg.dll"
-$gppArgs += @("-DJQT_HAVE_NETWORK")   # QtNetwork 属 qtbase,始终可用
+$gppArgs += @("-DJQT_HAVE_NETWORK", "-DJQT_HAVE_SQL_MODELS")   # QtNetwork 属 qtbase,始终可用
 if ((Test-Path $svgLib) -or (Test-Path $svgDll)) {
     $gppArgs += @("-DJQT_HAVE_SVG", "-I", (Join-Path $Kit "include\QtSvg"), "-lQt6Svg")
     Write-Host "==> QtSvg found - QSvgRenderer enabled"
