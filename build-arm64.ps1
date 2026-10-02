@@ -71,7 +71,7 @@ Get-ChildItem (Join-Path $QtRoot "include\QtSerialPort") -Filter "*.h" -ErrorAct
 Copy-Item (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") (Join-Path $QtRoot "include\QtCore") -Force -ErrorAction SilentlyContinue
 Copy-Item (Join-Path $QtRoot "include\QtSerialPort\QSerialPortInfo") (Join-Path $QtRoot "include\QtCore") -Force -ErrorAction SilentlyContinue
 $clArgs = @(
-    "/nologo", "/std:c++17", "/O2", "/LD", "/EHsc", "/MD", "/W3", "/Zc:__cplusplus", "/permissive-",
+    "/nologo", "/std:c++17", "/DJQT_HAVE_NETWORK", "/DJQT_HAVE_SQL_MODELS", "/O2", "/LD", "/EHsc", "/MD", "/W3", "/Zc:__cplusplus", "/permissive-",
     "/I", (Join-Path $JDK "include"),
     "/I", (Join-Path $JDK "include\win32"),
     "/I", (Join-Path $QtRoot "include"),
