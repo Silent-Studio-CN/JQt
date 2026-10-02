@@ -60,6 +60,15 @@ $gppArgs = @(
     "-lQt6Widgets", "-lQt6Gui", "-lQt6Core", "-lQt6PrintSupport", "-lQt6Sql", "-lQt6OpenGLWidgets", "-lQt6OpenGL", "-lQt6SerialPort", "-lole32", "-luuid", "-loleaut32",
     "-static-libgcc", "-static-libstdc++"
 )
+# QtSvg 特性探测(v1.9.1):装了 qtsvg 就编进 QSvgRenderer,没装则跳过(Java isAvailable()=false)
+$svgLib = Join-Path $Kit "lib\libQt6Svg.a"
+$svgDll = Join-Path $Kit "bin\Qt6Svg.dll"
+if ((Test-Path $svgLib) -or (Test-Path $svgDll)) {
+    $gppArgs += @("-DJQT_HAVE_SVG", "-I", (Join-Path $Kit "include\QtSvg"), "-lQt6Svg")
+    Write-Host "==> QtSvg found - QSvgRenderer enabled"
+} else {
+    Write-Host "==> QtSvg not found - QSvgRenderer will report unavailable"
+}
 & "$Mingw\bin\g++.exe" @gppArgs
 if ($LASTEXITCODE -ne 0) { throw "g++ failed" }
 
