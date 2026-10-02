@@ -134,11 +134,20 @@ public class SmokeMultimedia {
               + "' 状态=" + badStatus.get() + ")",
               !badErr.get().isEmpty() || badStatus.get() == QMediaPlayer.MediaStatus.InvalidMedia);
 
+        // 收尾:显式停表并跑一小段事件循环,让多媒体后端线程退出。
+        // 否则 Windows 上会在进程退出时报 "QWaitCondition: Destroyed while threads are
+        // still waiting" 并以非 0 退出(断言全过但 CI 失败,实测踩过)。
+        player.stop();
+        bad.stop();
+        QTimer.singleShot(200, () -> {});
+        app.scheduleQuit(400);
+        app.exec();
+
         // 播放器可能仍占着文件(Windows 文件锁),删除失败不影响结论
         try { Files.deleteIfExists(wav); }
         catch (Exception e) { System.out.println("[media] 提示: 临时文件稍后由系统清理(" + e.getClass().getSimpleName() + ")"); }
         System.out.println("[media] pass=" + pass + " fail=" + fail);
         System.out.println("[media] " + (fail == 0 ? "ALL PASS ✅" : ("FAILED: " + fail)));
-        if (fail > 0) System.exit(1);
+        System.exit(fail > 0 ? 1 : 0);      // 显式定退出码,不受 Qt 收尾影响
     }
 }

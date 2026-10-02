@@ -22,6 +22,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y qt6-base-dev libgl1-mesa-dev g++ libqt6sql6-sqlite
+          # QtMultimedia 依赖音频库:缺 libpulse 会导致 libjqt.so 整体加载失败
+          # (UnsatisfiedLinkError: libpulse.so.0),不只是多媒体功能不可用
+          sudo apt-get install -y libpulse0 || true
+          sudo apt-get install -y libasound2t64 libasound2 || true
 
       - name: Install Qt 6.12.0 (manual 7z - aqt cannot parse new repo XML)
         run: |
