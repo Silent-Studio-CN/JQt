@@ -26,7 +26,7 @@ rm -f "$ROOT/.jqt_sources.txt"
 # ---- 2. Qt layout ----
 QT_BASE="${QT_BASE:?set QT_BASE to the Qt for macOS install dir}"
 QTLIB="$QT_BASE/lib"
-QTINC="$QTLIB/QtWidgets.framework/Headers $QTLIB/QtGui.framework/Headers $QTLIB/QtCore.framework/Headers $QTLIB/QtPrintSupport.framework/Headers $QTLIB/QtSql.framework/Headers $QTLIB/QtSerialPort.framework/Headers"
+QTINC="$QTLIB/QtWidgets.framework/Headers $QTLIB/QtGui.framework/Headers $QTLIB/QtCore.framework/Headers $QTLIB/QtPrintSupport.framework/Headers $QTLIB/QtSql.framework/Headers $QTLIB/QtSerialPort.framework/Headers $QTLIB/QtNetwork.framework/Headers"
 
 echo "QTINC=$QTINC"
 ls "$QTLIB/QtGui.framework/Headers/qevent.h" && echo "QtGui headers OK"
