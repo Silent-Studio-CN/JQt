@@ -159,6 +159,11 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #define JQT_HAVE_SQL_MODELS 1
 #endif
 
+#if defined(JQT_HAVE_MULTIMEDIA)
+#include <QMediaPlayer>   // P2:QtMultimedia(非 qtbase,需探测)
+#include <QAudioOutput>
+#include <QUrl>
+#endif
 #if defined(JQT_HAVE_CHARTS)
 #include <QChart>         // P2:QtCharts(非 qtbase,需探测)
 #include <QChartView>
@@ -7120,6 +7125,161 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
 // ---------------------------------------------------------------------------
+extern "C" {   // QtMultimedia(P2)
+
+// ---------------------------------------------------------------------------
+// QtMultimedia(v1.9.1 P2):QMediaPlayer + QAudioOutput
+//   QtMultimedia 不属于 qtbase -> JQT_HAVE_MULTIMEDIA 特性探测。
+//   信号(playbackStateChanged/mediaStatusChanged/durationChanged/positionChanged/
+//   errorOccurred)全部经 jqtConnectOnce 去重后转发到 Java。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QMediaPlayer_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_MULTIMEDIA
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_MULTIMEDIA
+static QMediaPlayer* jqtPlayer(JNIEnv* env, jlong handle) {
+    return static_cast<QMediaPlayer*>(requireHandle(env, handle));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QAudioOutput_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return registerHandle(new QAudioOutput(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAudioOutput_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QAudioOutput* o = static_cast<QAudioOutput*>(requireHandle(env, handle));
+    if (o) delete o;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAudioOutput_nativeSetVolume(JNIEnv* env, jclass, jlong handle, jdouble v) {
+    QAudioOutput* o = static_cast<QAudioOutput*>(requireHandle(env, handle));
+    if (o) o->setVolume(static_cast<float>(v));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QAudioOutput_nativeSetMuted(JNIEnv* env, jclass, jlong handle, jboolean m) {
+    QAudioOutput* o = static_cast<QAudioOutput*>(requireHandle(env, handle));
+    if (o) o->setMuted(m == JNI_TRUE);
+}
+
+// 统一取 Java 对象上的方法并调用
+static void jqtCall1(JNIEnv* e, jobject target, const char* name, const char* sig, jvalue arg) {
+    if (e == nullptr || target == nullptr) return;
+    jclass cls = e->GetObjectClass(target);
+    jmethodID mid = e->GetMethodID(cls, name, sig);
+    if (mid != nullptr) {
+        e->CallVoidMethodA(target, mid, &arg);
+        checkJniException(e);
+    }
+    e->DeleteLocalRef(cls);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QMediaPlayer_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return registerHandle(new QMediaPlayer(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QMediaPlayer* p = jqtPlayer(env, handle);
+    if (p) { p->stop(); delete p; }
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeConnectSignals(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QMediaPlayer.signals")) return;
+    QMediaPlayer* p = jqtPlayer(env, handle);
+    if (p == nullptr) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+
+    QObject::connect(p, &QMediaPlayer::playbackStateChanged, [gRef](QMediaPlayer::PlaybackState st) {
+        JNIEnv* e = callbackEnv();
+        jvalue v; v.i = static_cast<jint>(st);
+        jqtCall1(e, gRef, "nativeHandleStateChanged", "(I)V", v);
+    });
+    QObject::connect(p, &QMediaPlayer::mediaStatusChanged, [gRef](QMediaPlayer::MediaStatus st) {
+        JNIEnv* e = callbackEnv();
+        jvalue v; v.i = static_cast<jint>(st);
+        jqtCall1(e, gRef, "nativeHandleMediaStatusChanged", "(I)V", v);
+    });
+    QObject::connect(p, &QMediaPlayer::durationChanged, [gRef](qint64 ms) {
+        JNIEnv* e = callbackEnv();
+        jvalue v; v.j = static_cast<jlong>(ms);
+        jqtCall1(e, gRef, "nativeHandleDurationChanged", "(J)V", v);
+    });
+    QObject::connect(p, &QMediaPlayer::positionChanged, [gRef](qint64 ms) {
+        JNIEnv* e = callbackEnv();
+        jvalue v; v.j = static_cast<jlong>(ms);
+        jqtCall1(e, gRef, "nativeHandlePositionChanged", "(J)V", v);
+    });
+    QObject::connect(p, &QMediaPlayer::errorOccurred, [gRef](QMediaPlayer::Error, const QString& msg) {
+        JNIEnv* e = callbackEnv();
+        if (e == nullptr) return;
+        jstring js = e->NewStringUTF(msg.toUtf8().constData());
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleError", "(Ljava/lang/String;)V");
+        if (mid) { e->CallVoidMethod(gRef, mid, js); checkJniException(e); }
+        e->DeleteLocalRef(cls);
+        e->DeleteLocalRef(js);
+    });
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeSetAudioOutput(JNIEnv* env, jclass, jlong handle, jlong outHandle) {
+    QMediaPlayer* p = jqtPlayer(env, handle);
+    if (p == nullptr) return;
+    QAudioOutput* o = outHandle ? static_cast<QAudioOutput*>(requireHandle(env, outHandle)) : nullptr;
+    p->setAudioOutput(o);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeSetSource(JNIEnv* env, jclass, jlong handle, jstring jurl) {
+    QMediaPlayer* p = jqtPlayer(env, handle);
+    if (p == nullptr || jurl == nullptr) return;
+    const char* c = env->GetStringUTFChars(jurl, nullptr);
+    const QString u = QString::fromUtf8(c);
+    env->ReleaseStringUTFChars(jurl, c);
+    // 本地路径转 QUrl::fromLocalFile,http/ws 等已是 URL
+    p->setSource(u.contains("://") ? QUrl(u) : QUrl::fromLocalFile(u));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativePlay(JNIEnv* env, jclass, jlong handle) {
+    QMediaPlayer* p = jqtPlayer(env, handle);
+    if (p) p->play();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativePause(JNIEnv* env, jclass, jlong handle) {
+    QMediaPlayer* p = jqtPlayer(env, handle);
+    if (p) p->pause();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeStop(JNIEnv* env, jclass, jlong handle) {
+    QMediaPlayer* p = jqtPlayer(env, handle);
+    if (p) p->stop();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeSetPosition(JNIEnv* env, jclass, jlong handle, jlong ms) {
+    QMediaPlayer* p = jqtPlayer(env, handle);
+    if (p) p->setPosition(ms);
+}
+#else
+JNIEXPORT jlong JNICALL Java_org_jqt_QAudioOutput_nativeCreate(JNIEnv*, jclass) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QAudioOutput_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QAudioOutput_nativeSetVolume(JNIEnv*, jclass, jlong, jdouble) {}
+JNIEXPORT void JNICALL Java_org_jqt_QAudioOutput_nativeSetMuted(JNIEnv*, jclass, jlong, jboolean) {}
+JNIEXPORT jlong JNICALL Java_org_jqt_QMediaPlayer_nativeCreate(JNIEnv*, jclass) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeConnectSignals(JNIEnv*, jobject, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeSetAudioOutput(JNIEnv*, jclass, jlong, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeSetSource(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativePlay(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativePause(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeStop(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QMediaPlayer_nativeSetPosition(JNIEnv*, jclass, jlong, jlong) {}
+#endif
+
+}   // extern "C" (QtMultimedia)
+
 extern "C" {   // QtCharts(P2)
 
 // ---------------------------------------------------------------------------

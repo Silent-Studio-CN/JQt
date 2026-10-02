@@ -105,6 +105,17 @@ Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") | Out-Host
 # QtWebSockets 探测(非 qtbase;ARM64 包通常不带 -> 自动降级)。
 # 注意:编译标志必须插在 "/link" **之前** —— 追加到数组末尾会落进链接器段,
 # cl 会把包含目录当成 .obj 输入(LNK1181,实测踩过)。
+$mmLib = Join-Path $QtRoot "lib\Qt6Multimedia.lib"
+if (Test-Path $mmLib) {
+    $linkIdx3 = [Array]::IndexOf($clArgs, "/link")
+    if ($linkIdx3 -lt 0) { $linkIdx3 = $clArgs.Count }
+    $pre3 = @("/DJQT_HAVE_MULTIMEDIA", "/I", (Join-Path $QtRoot "include\QtMultimedia"))
+    $clArgs = $clArgs[0..($linkIdx3 - 1)] + $pre3 + $clArgs[$linkIdx3..($clArgs.Count - 1)]
+    $clArgs += @("/link", $mmLib)
+    Write-Host "==> QtMultimedia found - QMediaPlayer enabled"
+} else {
+    Write-Host "==> QtMultimedia not found - QMediaPlayer will report unavailable"
+}
 $chartLib = Join-Path $QtRoot "lib\Qt6Charts.lib"
 if (Test-Path $chartLib) {
     $linkIdx2 = [Array]::IndexOf($clArgs, "/link")
