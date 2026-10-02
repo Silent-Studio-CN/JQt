@@ -2,7 +2,7 @@
  * JQt Fluent Theme Template (self-authored)
  * %var% placeholders are filled by JQtApplication.setTheme().
  * ============================================================ */
-* { font-family: "Microsoft YaHei UI", "Segoe UI"; font-size: 13px; }
+* { font-family: %font-family%; font-size: %font-size%; }   /* J8:平台字体,由 QApplication 注入 */
 QWidget { background: %win-bg%; color: %fg%; }
 
 /* ---- 卡片 ---- */

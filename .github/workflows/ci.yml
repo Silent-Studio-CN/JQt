@@ -165,6 +165,22 @@ jobs:
           echo "smoke timer exit code: $CODE8"
           cat smoke_timer.txt
           if [ $CODE8 -ne 0 ]; then exit $CODE8; fi
+          # 新增冒烟:v1.9.1(P0 并发 / 回调异常 / QStackedWidget)
+          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked; do
+            QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class $C -AutoClose 1200 > "smoke_$C.txt" 2>&1
+            RC=$?
+            echo "smoke $C exit code: $RC"; cat "smoke_$C.txt"
+            if [ $RC -ne 0 ]; then exit $RC; fi
+          done
+
+      - name: Real-window smoke under Xvfb (J9 - offscreen 抓不到真窗口崩溃)
+        run: |
+          sudo apt-get install -y xvfb
+          cp lib/libjqt-6.12.0.so lib/libjqt.so
+          export QT_BASE=/opt/6.12.0/gcc_64
+          export QT_PLUGIN_PATH=/opt/6.12.0/gcc_64/plugins
+          # 用真实平台插件(xcb)创建/显示/移动/缩放窗口 —— J1 那类问题只有这里能抓
+          xvfb-run -a env QT_QPA_PLATFORM=xcb timeout 120 ./run-linux.sh -Class org.jqt.SmokeRealWindow -AutoClose 900
 
       - name: Bundle Qt runtime (Linux) + validate bundled launcher
         run: |
@@ -341,7 +357,7 @@ jobs:
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
-          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer")) {
+          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer",org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked")) {
             powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
             if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
           }
@@ -578,6 +594,16 @@ jobs:
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeSignalOnce -AutoClose 800
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeL2b2 -AutoClose 800
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeTimer -AutoClose 1500
+          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked; do
+            QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class $C -AutoClose 1200
+          done
+
+      - name: Guard -XstartOnFirstThread / absolute java in run-macos.sh (J1/J2 regression)
+        run: |
+          # macOS 真窗口必须在主线程:缺 -XstartOnFirstThread 会 NSWindow 崩溃(J1)
+          grep -q -- '-XstartOnFirstThread' run-macos.sh || { echo "run-macos.sh 缺少 -XstartOnFirstThread"; exit 1; }
+          # java 必须绝对路径,否则 SIP 会剥掉 DYLD_*(J2)
+          grep -q 'JAVA_HOME' run-macos.sh || { echo "run-macos.sh 未使用绝对 java 路径"; exit 1; }
 
       - name: Bundle Qt runtime (macOS) + validate bundled launcher
         run: |

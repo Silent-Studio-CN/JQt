@@ -5,7 +5,7 @@
 #
 # Prerequisites:
 #   Xcode Command Line Tools (clang++) and a JDK (JAVA_HOME set)
-#   Qt for macOS: aqt install-qt mac desktop 6.12.0 macos -O ~/Qt
+#   Qt for macOS: aqt install-qt mac desktop 6.12.0 clang_64 -O ~/Qt
 #   QT_BASE=$HOME/Qt/6.12.0/macos ./build-macos.sh
 # ============================================================================
 set -euo pipefail
