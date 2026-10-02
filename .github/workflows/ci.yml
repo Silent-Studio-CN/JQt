@@ -159,6 +159,12 @@ jobs:
           echo "smoke signal-once exit code: $CODE7"
           cat smoke_sig.txt
           if [ $CODE7 -ne 0 ]; then exit $CODE7; fi
+          # QTimer + 跨线程编组（v1.9.1 P0-①）
+          QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class org.jqt.SmokeTimer -AutoClose 1500 > smoke_timer.txt 2>&1
+          CODE8=$?
+          echo "smoke timer exit code: $CODE8"
+          cat smoke_timer.txt
+          if [ $CODE8 -ne 0 ]; then exit $CODE8; fi
 
       - name: Bundle Qt runtime (Linux) + validate bundled launcher
         run: |
@@ -335,7 +341,7 @@ jobs:
         run: |
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
-          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce")) {
+          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer")) {
             powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
             if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
           }
@@ -571,6 +577,7 @@ jobs:
           export QT_BASE="$HOME/Qt6120"
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeSignalOnce -AutoClose 800
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeL2b2 -AutoClose 800
+          QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeTimer -AutoClose 1500
 
       - name: Bundle Qt runtime (macOS) + validate bundled launcher
         run: |
