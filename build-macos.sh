@@ -59,6 +59,14 @@ if [ -d "$QTLIB/QtSerialPort.framework/Headers" ]; then
   cp "$LIB/sp_include/QtSerialPort/"QSerialPort "$LIB/sp_include/QtSerialPort/"QSerialPortInfo "$LIB/sp_include/QtSerialPort/"*.h "$QTLIB/QtCore.framework/Headers/" 2>/dev/null || true
   ls "$LIB/sp_include/QtSerialPort/" 2>&1 | head -5 || true
 fi
+if [ -d "$QTLIB/QtMultimedia.framework" ]; then
+  MM_FLAGS="-DJQT_HAVE_MULTIMEDIA -I$QTLIB/QtMultimedia.framework/Headers -framework QtMultimedia"
+  echo "==> QtMultimedia found - QMediaPlayer enabled"
+else
+  MM_FLAGS=""
+  echo "==> QtMultimedia not found - QMediaPlayer will report unavailable"
+fi
+
 if [ -d "$QTLIB/QtCharts.framework" ]; then
   CHART_FLAGS="-DJQT_HAVE_CHARTS -I$QTLIB/QtCharts.framework/Headers -framework QtCharts"
   echo "==> QtCharts found - QChart enabled"
@@ -83,7 +91,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" -I"$QTLIB/QtNetwork.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
-    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $WS_FLAGS $CHART_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
+    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $WS_FLAGS $CHART_FLAGS $MM_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
 
 # ---- 3. Deploy license notices ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true

@@ -65,6 +65,12 @@ $gppArgs = @(
 $svgLib = Join-Path $Kit "lib\libQt6Svg.a"
 $svgDll = Join-Path $Kit "bin\Qt6Svg.dll"
 $gppArgs += @("-DJQT_HAVE_NETWORK", "-DJQT_HAVE_SQL_MODELS")   # QtNetwork 属 qtbase,始终可用
+if ((Test-Path (Join-Path $Kit "lib\libQt6Multimedia.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Multimedia.dll"))) {
+    $gppArgs += @("-DJQT_HAVE_MULTIMEDIA", "-I", (Join-Path $Kit "include\QtMultimedia"), "-lQt6Multimedia")
+    Write-Host "==> QtMultimedia found - QMediaPlayer enabled"
+} else {
+    Write-Host "==> QtMultimedia not found - QMediaPlayer will report unavailable"
+}
 if ((Test-Path (Join-Path $Kit "lib\libQt6Charts.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Charts.dll"))) {
     $gppArgs += @("-DJQT_HAVE_CHARTS", "-I", (Join-Path $Kit "include\QtCharts"), "-lQt6Charts")
     Write-Host "==> QtCharts found - QChart enabled"
