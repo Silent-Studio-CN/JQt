@@ -102,10 +102,16 @@ Write-Host "=== QtSerialPort diag ==="
 Write-Host "incDir=$(Join-Path $QtRoot 'include\QtSerialPort')"
 Get-ChildItem (Join-Path $QtRoot "include\QtSerialPort") -ErrorAction SilentlyContinue | Select-Object -First 8 -ExpandProperty Name | Out-Host
 Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") | Out-Host
-# QtWebSockets 探测(非 qtbase;ARM64 包通常不带 -> 自动降级)
-if (Test-Path (Join-Path $QtRoot "lib\Qt6WebSockets.lib")) {
-    $clArgs += @("/DJQT_HAVE_WEBSOCKETS", "/I", (Join-Path $QtRoot "include\QtWebSockets"),
-                 "/link", (Join-Path $QtRoot "lib\Qt6WebSockets.lib"))
+# QtWebSockets 探测(非 qtbase;ARM64 包通常不带 -> 自动降级)。
+# 注意:编译标志必须插在 "/link" **之前** —— 追加到数组末尾会落进链接器段,
+# cl 会把包含目录当成 .obj 输入(LNK1181,实测踩过)。
+$wsLib = Join-Path $QtRoot "lib\Qt6WebSockets.lib"
+if (Test-Path $wsLib) {
+    $linkIdx = [Array]::IndexOf($clArgs, "/link")
+    if ($linkIdx -lt 0) { $linkIdx = $clArgs.Count }
+    $pre = @("/DJQT_HAVE_WEBSOCKETS", "/I", (Join-Path $QtRoot "include\QtWebSockets"))
+    $clArgs = $clArgs[0..($linkIdx - 1)] + $pre + $clArgs[$linkIdx..($clArgs.Count - 1)]
+    $clArgs += @("/link", $wsLib)
     Write-Host "==> QtWebSockets found - QWebSocket enabled"
 } else {
     Write-Host "==> QtWebSockets not found - QWebSocket will report unavailable"

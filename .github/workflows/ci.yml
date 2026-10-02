@@ -238,7 +238,7 @@ jobs:
           Write-Host "=== Updates.xml probe ==="
           curl.exe -s -o NUL -w 'HTTP %{http_code}\n' "https://download.qt.io/online/qtsdkrepository/windows_x86/desktop/qt6_6120/qt6_6120/Updates.xml"
           Write-Host "=== install-qt (with config) ==="
-          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_mingw --outputdir C:/Qt --archives qtbase -m qtserialport -m qtwebsockets *> aqt_qt.log
+          python -m aqt -c D:/aqt.ini install-qt windows desktop 6.8.3 win64_mingw --outputdir C:/Qt --archives qtbase -m qtserialport *> aqt_qt.log
           Write-Host "install-qt exit=$LASTEXITCODE"
           Get-Content aqt_qt.log -Tail 12
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -570,7 +570,7 @@ jobs:
 
       - name: Install Qt 6.8.3 for macOS (clang_64)
         run: |
-          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.8.3 clang_64 --outputdir $HOME/Qt683 -m qtserialport -m qtwebsockets
+          /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.8.3 clang_64 --outputdir $HOME/Qt683 -m qtserialport
           test -f "$HOME/Qt683/6.8.3/macos/lib/QtWidgets.framework/Headers/QWidget" || exit 1
 
       - name: Build libjqt.dylib (Qt 6.8.3)
