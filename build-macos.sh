@@ -59,6 +59,14 @@ if [ -d "$QTLIB/QtSerialPort.framework/Headers" ]; then
   cp "$LIB/sp_include/QtSerialPort/"QSerialPort "$LIB/sp_include/QtSerialPort/"QSerialPortInfo "$LIB/sp_include/QtSerialPort/"*.h "$QTLIB/QtCore.framework/Headers/" 2>/dev/null || true
   ls "$LIB/sp_include/QtSerialPort/" 2>&1 | head -5 || true
 fi
+if [ -d "$QTLIB/QtWebSockets.framework" ]; then
+  WS_FLAGS="-DJQT_HAVE_WEBSOCKETS -I$QTLIB/QtWebSockets.framework/Headers -framework QtWebSockets"
+  echo "==> QtWebSockets found - QWebSocket enabled"
+else
+  WS_FLAGS=""
+  echo "==> QtWebSockets not found - QWebSocket will report unavailable"
+fi
+
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
@@ -67,7 +75,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" -I"$QTLIB/QtNetwork.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
-    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS -framework AppKit -framework Foundation -framework CoreFoundation
+    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $WS_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
 
 # ---- 3. Deploy license notices ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true

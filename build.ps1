@@ -65,6 +65,12 @@ $gppArgs = @(
 $svgLib = Join-Path $Kit "lib\libQt6Svg.a"
 $svgDll = Join-Path $Kit "bin\Qt6Svg.dll"
 $gppArgs += @("-DJQT_HAVE_NETWORK", "-DJQT_HAVE_SQL_MODELS")   # QtNetwork 属 qtbase,始终可用
+if ((Test-Path (Join-Path $Kit "lib\libQt6WebSockets.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6WebSockets.dll"))) {
+    $gppArgs += @("-DJQT_HAVE_WEBSOCKETS", "-I", (Join-Path $Kit "include\QtWebSockets"), "-lQt6WebSockets")
+    Write-Host "==> QtWebSockets found - QWebSocket enabled"
+} else {
+    Write-Host "==> QtWebSockets not found - QWebSocket will report unavailable"
+}
 if ((Test-Path $svgLib) -or (Test-Path $svgDll)) {
     $gppArgs += @("-DJQT_HAVE_SVG", "-I", (Join-Path $Kit "include\QtSvg"), "-lQt6Svg")
     Write-Host "==> QtSvg found - QSvgRenderer enabled"

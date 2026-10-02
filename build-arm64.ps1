@@ -102,6 +102,14 @@ Write-Host "=== QtSerialPort diag ==="
 Write-Host "incDir=$(Join-Path $QtRoot 'include\QtSerialPort')"
 Get-ChildItem (Join-Path $QtRoot "include\QtSerialPort") -ErrorAction SilentlyContinue | Select-Object -First 8 -ExpandProperty Name | Out-Host
 Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") | Out-Host
+# QtWebSockets 探测(非 qtbase;ARM64 包通常不带 -> 自动降级)
+if (Test-Path (Join-Path $QtRoot "lib\Qt6WebSockets.lib")) {
+    $clArgs += @("/DJQT_HAVE_WEBSOCKETS", "/I", (Join-Path $QtRoot "include\QtWebSockets"),
+                 "/link", (Join-Path $QtRoot "lib\Qt6WebSockets.lib"))
+    Write-Host "==> QtWebSockets found - QWebSocket enabled"
+} else {
+    Write-Host "==> QtWebSockets not found - QWebSocket will report unavailable"
+}
 & cl.exe @clArgs
 if ($LASTEXITCODE -ne 0) { throw "cl.exe failed" }
 

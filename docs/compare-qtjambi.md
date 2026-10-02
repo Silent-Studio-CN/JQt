@@ -10,7 +10,7 @@
 | | JQt | QtJambi |
 |---|---|---|
 | 定位 | **手写 + 生成的精选绑定**,面向"Java 桌面小工具/内部工具" | **全量生成绑定**,面向"用 Java 做完整 Qt 应用" |
-| 类数 | **152 个 API 类**(另有 24 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
+| 类数 | **153 个 API 类**(另有 25 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
 | Qt 版本线 | 6.12.0(最新)+ 6.8.3 LTS | 6.12.0(最新)+ 历史各线 |
 | 广度差距 | —— | **约 20×**(核心类数比) |
 | 优势 | 纯 Java 值对象、显式所有权、精选 API、自带高层控件门面、单端口远程控制台配套 | 模块覆盖近乎完整(QML/Quick、Multimedia、WebEngine、Charts、Bluetooth…)、Maven Central 直发、生态成熟 |
@@ -36,7 +36,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'      # 1,174 个 native 
 
 | 指标 | 数值 |
 |---|---|
-| Java 源文件 | 176(API 152 + 冒烟 24) |
+| Java 源文件 | 178(API 153 + 冒烟 25) |
 | Java 行数 | 17,186 |
 | JNI 桥行数 | 11,497 |
 | jar 内 class | 205 |
@@ -108,16 +108,16 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **Charts** | ❌ | |
 | **3D** | ❌ | |
 | **Bluetooth / NFC / Positioning** | ❌ | |
-| **WebSockets / WebChannel** | ❌ | |
+| **WebSockets / WebChannel** | 🟡 | v1.9.1 P1:**WebSocket 客户端已支持**(`QWebSocket`:连接/文本/二进制/错误/关闭,`JQT_HAVE_WEBSOCKETS` 特性探测);WebChannel 仍无 |
 | **DBus** | 🌉 | 桥内部出现,未暴露 |
 | **Concurrent** | ❌ | |
 | **Designer 插件** | ❌ | |
 | **Help** | ❌ | |
 | **QTest** | ❌ | 我们用自研冒烟框架代替 |
 
-**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 22 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
-**13 项仍缺失**,另有 `DBus` 一项"桥内有、API 无"。命中率 **22/36 ≈ 61%**。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 进行中**:QSqlQueryModel/QSqlTableModel ✅(QStateMachine 需 QtStateMachine addon、QWebSocket 需 QtWebSockets,排在后面)。
+**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 23 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
+**12 项仍缺失**,另有 `DBus` 一项"桥内有、API 无"。命中率 **23/36 ≈ 64%**。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 进行中**:QSqlQueryModel/QSqlTableModel ✅、QWebSocket 客户端 ✅;剩 QStateMachine(需 QtStateMachine addon)与 QTest 兼容层。
 
 ---
 
@@ -158,7 +158,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | 项 | 说明 |
 |---|---|
 | **QStateMachine** | 状态机;比手写 if-else 稳 |
-| **QWebSocket(客户端)** | 与 `QNetwork` 同期做,复用其信号模式 |
+| **QWebSocket(客户端)** | ✅ 已完成(v1.9.1 P1) |
 | **DBus(暴露已有桥能力)** | 桥里已有,补 Java API 即可 |
 | **QSqlQueryModel/QSqlTableModel** | 现在只有 `QSqlDatabase/QSqlQuery`,做表格应用要手写映射 |
 | **QTest 兼容层** | 让外部项目能用标准测试写法(或用我们的冒烟框架包一层) |
