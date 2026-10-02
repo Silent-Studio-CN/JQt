@@ -159,6 +159,15 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #define JQT_HAVE_SQL_MODELS 1
 #endif
 
+#if defined(JQT_HAVE_CHARTS)
+#include <QChart>         // P2:QtCharts(非 qtbase,需探测)
+#include <QChartView>
+#include <QLineSeries>
+#include <QValueAxis>
+#include <QPixmap>
+#include <QImage>
+#include <QBuffer>
+#endif
 #if defined(JQT_HAVE_WEBSOCKETS)
 #include <QWebSocket>   // P1:QtWebSockets 模块(非 qtbase,需探测)
 #include <QAbstractSocket>
@@ -7111,6 +7120,189 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
 // ---------------------------------------------------------------------------
+extern "C" {   // QtCharts(P2)
+
+// ---------------------------------------------------------------------------
+// QtCharts(v1.9.1 P2):QChart / QLineSeries / QChartView
+//   QtCharts 不属于 qtbase -> JQT_HAVE_CHARTS 特性探测;
+//   QChartView::grab() 把图表渲染成图片,离屏也能出图 -> 冒烟可确定性断言。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QChart_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_CHARTS
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_CHARTS
+static QChart* jqtChart(JNIEnv* env, jlong handle) {
+    return static_cast<QChart*>(requireHandle(env, handle));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QLineSeries_nativeCreate(JNIEnv* env, jclass, jstring jname) {
+    if (requireApp(env) == nullptr) return 0;
+    QLineSeries* s = new QLineSeries();
+    if (jname != nullptr) {
+        const char* c = env->GetStringUTFChars(jname, nullptr);
+        s->setName(QString::fromUtf8(c));
+        env->ReleaseStringUTFChars(jname, c);
+    }
+    return registerHandle(s, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineSeries_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QLineSeries* s = static_cast<QLineSeries*>(requireHandle(env, handle));
+    if (s) delete s;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineSeries_nativeAppend(JNIEnv* env, jclass, jlong handle, jdouble x, jdouble y) {
+    QLineSeries* s = static_cast<QLineSeries*>(requireHandle(env, handle));
+    if (s) s->append(x, y);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QLineSeries_nativeCount(JNIEnv* env, jclass, jlong handle) {
+    QLineSeries* s = static_cast<QLineSeries*>(requireHandle(env, handle));
+    return s ? s->count() : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineSeries_nativeClear(JNIEnv* env, jclass, jlong handle) {
+    QLineSeries* s = static_cast<QLineSeries*>(requireHandle(env, handle));
+    if (s) s->clear();
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QLineSeries_nativeName(JNIEnv* env, jclass, jlong handle) {
+    QLineSeries* s = static_cast<QLineSeries*>(requireHandle(env, handle));
+    return env->NewStringUTF(s ? s->name().toUtf8().constData() : "");
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QLineSeries_nativeSetName(JNIEnv* env, jclass, jlong handle, jstring jname) {
+    QLineSeries* s = static_cast<QLineSeries*>(requireHandle(env, handle));
+    if (s == nullptr || jname == nullptr) return;
+    const char* c = env->GetStringUTFChars(jname, nullptr);
+    s->setName(QString::fromUtf8(c));
+    env->ReleaseStringUTFChars(jname, c);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QChart_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return registerHandle(new QChart(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QChart* c = jqtChart(env, handle);
+    if (c) delete c;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeSetTitle(JNIEnv* env, jclass, jlong handle, jstring jtitle) {
+    QChart* c = jqtChart(env, handle);
+    if (c == nullptr || jtitle == nullptr) return;
+    const char* t = env->GetStringUTFChars(jtitle, nullptr);
+    c->setTitle(QString::fromUtf8(t));
+    env->ReleaseStringUTFChars(jtitle, t);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeSetLegendVisible(JNIEnv* env, jclass, jlong handle, jboolean on) {
+    QChart* c = jqtChart(env, handle);
+    if (c) c->legend()->setVisible(on == JNI_TRUE);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeSetAnimationOptions(JNIEnv* env, jclass, jlong handle, jint options) {
+    QChart* c = jqtChart(env, handle);
+    if (c) c->setAnimationOptions(static_cast<QChart::AnimationOption>(options));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeAddSeries(JNIEnv* env, jclass, jlong handle, jlong seriesHandle) {
+    QChart* c = jqtChart(env, handle);
+    QLineSeries* s = static_cast<QLineSeries*>(requireHandle(env, seriesHandle));
+    if (c && s) c->addSeries(s);
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QChart_nativeSeriesCount(JNIEnv* env, jclass, jlong handle) {
+    QChart* c = jqtChart(env, handle);
+    return c ? c->series().size() : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeRemoveAllSeries(JNIEnv* env, jclass, jlong handle) {
+    QChart* c = jqtChart(env, handle);
+    if (c) c->removeAllSeries();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeCreateDefaultAxes(JNIEnv* env, jclass, jlong handle) {
+    QChart* c = jqtChart(env, handle);
+    if (c) c->createDefaultAxes();
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QChartView_nativeCreate(JNIEnv* env, jobject, jlong chartHandle) {
+    if (requireApp(env) == nullptr) return 0;
+    QChart* c = jqtChart(env, chartHandle);
+    if (c == nullptr) return 0;
+    return registerHandle(new QChartView(c), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChartView_nativeDispose(JNIEnv* env, jobject, jlong handle) {
+    QChartView* v = static_cast<QChartView*>(requireHandle(env, handle));
+    if (v) delete v;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QChartView_nativeSetRenderHint(JNIEnv* env, jobject, jlong handle, jint hint, jboolean on) {
+    QChartView* v = static_cast<QChartView*>(requireHandle(env, handle));
+    if (v) v->setRenderHint(static_cast<QPainter::RenderHint>(hint), on == JNI_TRUE);
+}
+
+// 离屏渲染成 PNG:QChartView::grab() 不要求窗口已显示
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QChartView_nativeToPng(JNIEnv* env, jobject, jlong handle) {
+    QChartView* v = static_cast<QChartView*>(requireHandle(env, handle));
+    if (v == nullptr) return nullptr;
+    if (v->size().isEmpty()) v->resize(640, 400);       // 未显式设置尺寸时给个默认
+    const QPixmap pm = v->grab();
+    QImage img = pm.toImage();
+    QByteArray png;
+    QBuffer buf(&png);
+    buf.open(QIODevice::WriteOnly);
+    img.save(&buf, "PNG");
+    buf.close();
+    jbyteArray out = env->NewByteArray(png.size());
+    env->SetByteArrayRegion(out, 0, png.size(), reinterpret_cast<const jbyte*>(png.constData()));
+    return out;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QChartView_nativeRenderWidth(JNIEnv* env, jobject, jlong handle) {
+    QChartView* v = static_cast<QChartView*>(requireHandle(env, handle));
+    return v ? v->size().width() : 0;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QChartView_nativeRenderHeight(JNIEnv* env, jobject, jlong handle) {
+    QChartView* v = static_cast<QChartView*>(requireHandle(env, handle));
+    return v ? v->size().height() : 0;
+}
+#else
+JNIEXPORT jlong JNICALL Java_org_jqt_QLineSeries_nativeCreate(JNIEnv*, jclass, jstring) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QLineSeries_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QLineSeries_nativeAppend(JNIEnv*, jclass, jlong, jdouble, jdouble) {}
+JNIEXPORT jint JNICALL Java_org_jqt_QLineSeries_nativeCount(JNIEnv*, jclass, jlong) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QLineSeries_nativeClear(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jstring JNICALL Java_org_jqt_QLineSeries_nativeName(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT void JNICALL Java_org_jqt_QLineSeries_nativeSetName(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT jlong JNICALL Java_org_jqt_QChart_nativeCreate(JNIEnv*, jclass) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeSetTitle(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeSetLegendVisible(JNIEnv*, jclass, jlong, jboolean) {}
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeSetAnimationOptions(JNIEnv*, jclass, jlong, jint) {}
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeAddSeries(JNIEnv*, jclass, jlong, jlong) {}
+JNIEXPORT jint JNICALL Java_org_jqt_QChart_nativeSeriesCount(JNIEnv*, jclass, jlong) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeRemoveAllSeries(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QChart_nativeCreateDefaultAxes(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jlong JNICALL Java_org_jqt_QChartView_nativeCreate(JNIEnv*, jobject, jlong) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QChartView_nativeDispose(JNIEnv*, jobject, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QChartView_nativeSetRenderHint(JNIEnv*, jobject, jlong, jint, jboolean) {}
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QChartView_nativeToPng(JNIEnv*, jobject, jlong) { return nullptr; }
+JNIEXPORT jint JNICALL Java_org_jqt_QChartView_nativeRenderWidth(JNIEnv*, jobject, jlong) { return 0; }
+JNIEXPORT jint JNICALL Java_org_jqt_QChartView_nativeRenderHeight(JNIEnv*, jobject, jlong) { return 0; }
+#endif
+
+}   // extern "C" (QtCharts)
+
 extern "C" {   // QWebSocket(P1)
 
 // ---------------------------------------------------------------------------

@@ -105,6 +105,17 @@ Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") | Out-Host
 # QtWebSockets 探测(非 qtbase;ARM64 包通常不带 -> 自动降级)。
 # 注意:编译标志必须插在 "/link" **之前** —— 追加到数组末尾会落进链接器段,
 # cl 会把包含目录当成 .obj 输入(LNK1181,实测踩过)。
+$chartLib = Join-Path $QtRoot "lib\Qt6Charts.lib"
+if (Test-Path $chartLib) {
+    $linkIdx2 = [Array]::IndexOf($clArgs, "/link")
+    if ($linkIdx2 -lt 0) { $linkIdx2 = $clArgs.Count }
+    $pre2 = @("/DJQT_HAVE_CHARTS", "/I", (Join-Path $QtRoot "include\QtCharts"))
+    $clArgs = $clArgs[0..($linkIdx2 - 1)] + $pre2 + $clArgs[$linkIdx2..($clArgs.Count - 1)]
+    $clArgs += @("/link", $chartLib)
+    Write-Host "==> QtCharts found - QChart enabled"
+} else {
+    Write-Host "==> QtCharts not found - QChart will report unavailable"
+}
 $wsLib = Join-Path $QtRoot "lib\Qt6WebSockets.lib"
 if (Test-Path $wsLib) {
     $linkIdx = [Array]::IndexOf($clArgs, "/link")
