@@ -91,6 +91,7 @@ $clArgs = @(
     (Join-Path $QtRoot "lib\Qt6Core.lib"),
     (Join-Path $QtRoot "lib\Qt6PrintSupport.lib"),
     (Join-Path $QtRoot "lib\Qt6Sql.lib"),
+    (Join-Path $QtRoot "lib\Qt6Network.lib"),
     (Join-Path $QtRoot "lib\Qt6SerialPort.lib"),
     "ole32.lib", "user32.lib", "dwmapi.lib", "shell32.lib", "gdi32.lib",
     "advapi32.lib", "ws2_32.lib", "winmm.lib", "netapi32.lib", "userenv.lib",
