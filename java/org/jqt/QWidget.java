@@ -46,6 +46,40 @@ public abstract class QWidget {
 
     private static native void nativeDispose(long handle);
 
+    // ==================== 事件回调（v1.9.1 P0-②）====================
+
+    private final java.util.List<java.util.function.Consumer<QEvent>> onEventHandlers =
+            new java.util.ArrayList<>();
+    private boolean eventConnected;
+
+    /**
+     * 注册事件回调（接收本控件的 Qt 事件，主线程投递）。
+     * <pre>
+     * win.onEvent(e -&gt; {
+     *     if (e.type() == QEvent.Type.Resize) System.out.println("缩放到 " + e.width() + "x" + e.height());
+     *     if (e.type() == QEvent.Type.KeyPress) System.out.println("键 " + e.key() + " 文本 " + e.text());
+     * });
+     * </pre>
+     * 首次注册时安装原生事件过滤器（惰性 + 去重）；事件不拦截，正常派发不受影响。
+     */
+    public QWidget onEvent(java.util.function.Consumer<QEvent> handler) {
+        onEventHandlers.add(handler);
+        if (!eventConnected) {
+            eventConnected = true;
+            nativeConnectEvents(nativeHandle);
+        }
+        return this;
+    }
+    private native void nativeConnectEvents(long handle);
+
+    /** 由 C++ 事件过滤器回调（JNI，Qt 主线程）。 */
+    void nativeHandleEvent(int type, String typeName, int a, int b, int c, int d, String text) {
+        QEvent ev = new QEvent(type, typeName, a, b, c, d, text);
+        for (java.util.function.Consumer<QEvent> h : onEventHandlers) {
+            h.accept(ev);
+        }
+    }
+
     /**
      * 设置控件级样式表（QSS），只影响本控件及其子控件。
      * 与 {@link QApplication#setStyleSheet(String)} 的全局样式可叠加（控件级优先）。

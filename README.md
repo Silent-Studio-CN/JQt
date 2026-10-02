@@ -60,8 +60,8 @@ is backed by a C++ `JQtWindowShell`).
 Grab the latest release zip (self-contained: jar + native lib + Qt runtime):
 
 ```bash
-# Windows: jqt-1.8.0-Emerge-Kit-windows-x64.zip → extract → cd lib
-java -Djava.library.path=. -cp "jqt-1.8.0-Emerge-Kit.jar;.." Hello
+# Windows: jqt-1.9.0-Qt612-Kit-windows-x64.zip → extract → cd lib
+java -Djava.library.path=. -cp "jqt-1.9.0-Qt612-Kit.jar;.." Hello
 # Linux / macOS: same pattern, or set LD_LIBRARY_PATH / DYLD_LIBRARY_PATH to lib/
 ```
 
@@ -104,7 +104,7 @@ dependencyResolutionManagement {
 ```gradle
 // build.gradle
 dependencies {
-    implementation 'com.github.Silent-Studio-CN:JQt:1.8.0-Emerge-Kit'
+    implementation 'com.github.Silent-Studio-CN:JQt:1.9.0-Qt612-Kit'
 }
 ```
 
@@ -164,22 +164,25 @@ channels — Maven Central uses the plain numeric version.
 
 | Channel | Version | Coordinate |
 |---------|---------|-----------|
-| GitHub Releases | `v1.8.0-Emerge-Kit` | release assets below |
+| GitHub Releases | `v1.9.0-Qt612-Kit` | release assets below |
 | Maven Central | `0.7.5` *(1.8.0 pending)* | `io.github.silent-xiaomiao:jqt:0.7.5` |
-| JitPack | `1.8.0-Emerge-Kit` | `com.github.Silent-Studio-CN:JQt:1.8.0-Emerge-Kit` |
+| JitPack | `1.9.0-Qt612-Kit` | `com.github.Silent-Studio-CN:JQt:1.9.0-Qt612-Kit` |
 
-Latest: [v1.8.0-Emerge-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v1.8.0-Emerge-Kit)
+Latest: [v1.9.0-Qt612-Kit](https://github.com/Silent-Studio-CN/JQt/releases/tag/v1.9.0-Qt612-Kit)
 
 | Asset | Platform |
 |-------|----------|
-| `jqt-1.8.0-Emerge-Kit.jar` | all (Java API) |
-| `jqt-1.8.0-Emerge-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.12.0 runtime) |
+| `jqt-1.9.0-Qt612-Kit.jar` | all (Java API) |
+| `jqt-1.9.0-Qt612-Kit-windows-x64.zip` | Windows x64 full package (Qt 6.12.0 runtime) |
+| `jqt-1.9.0-Qt612-Kit-{linux-x64,macos-x64}-qt-runtime.tar.gz` | 自带 Qt 运行库的包(含启动器,无需另装 Qt) |
+| `libjqt-linux-*.so` / `libjqt-macos-*.dylib` | Linux / macOS bare libs (6.12.0 + 6.8.3) |
 | `jqt-windows-6.12.0.dll` / `jqt-windows-6.8.3.dll` | Windows x64 bare libs (both Qt versions) |
 | `jqt-windows-arm64-6.12.0.dll` / `jqt-windows-arm64-6.8.3.dll` | Windows ARM64 |
 | `libjqt-linux-6.12.0.so` / `libjqt-linux-6.8.3.so` | Linux (both versions) |
 | `libjqt-macos-6.12.0.dylib` / `libjqt-macos-6.8.3.dylib` | macOS (both versions) |
 
-Release notes: [docs/releases/](docs/releases/) (per-version, v0.1.0 → v1.8.0).
+Release notes: [docs/releases/](docs/releases/) (per-version, v0.1.0 → v1.9.0).
+Engineering comparison with QtJambi: [docs/compare-qtjambi.md](docs/compare-qtjambi.md).
 
 ---
 

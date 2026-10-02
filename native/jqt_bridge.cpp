@@ -147,6 +147,9 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QPlainTextEdit>
 #include <QPainter>
 #include <QMessageBox>
+#if defined(JQT_HAVE_SVG)
+#include <QSvgRenderer>   // 仅在装了 qtsvg 时编译 P0-④
+#endif
 #include <QThread>
 #include <QThreadPool>
 #include <QRunnable>
@@ -7078,6 +7081,214 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
 // ---------------------------------------------------------------------------
+extern "C" {   // QSvgRenderer(P0-④)
+
+// ---------------------------------------------------------------------------
+// QSvgRenderer(v1.9.1 P0-④):QtSvg 模块。用 JQT_HAVE_SVG 特性探测 ——
+// 没装 qtsvg 的平台照样能编译,只是 nativeAvailable() 返回 false。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSvgRenderer_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_SVG
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_SVG
+static QSvgRenderer* jqtSvg(JNIEnv* env, jlong handle) {
+    return static_cast<QSvgRenderer*>(requireHandle(env, handle));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSvgRenderer_nativeCreateFromFile(JNIEnv* env, jclass, jstring jpath) {
+    if (jpath == nullptr) return 0;
+    const char* c = env->GetStringUTFChars(jpath, nullptr);
+    QSvgRenderer* r = new QSvgRenderer(QString::fromUtf8(c));
+    env->ReleaseStringUTFChars(jpath, c);
+    return registerHandle(r, /*javaOwned=*/true);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QSvgRenderer_nativeCreateFromData(JNIEnv* env, jclass, jbyteArray jdata) {
+    if (jdata == nullptr) return 0;
+    const jsize n = env->GetArrayLength(jdata);
+    QByteArray bytes(static_cast<int>(n), Qt::Uninitialized);
+    env->GetByteArrayRegion(jdata, 0, n, reinterpret_cast<jbyte*>(bytes.data()));
+    QSvgRenderer* r = new QSvgRenderer(bytes);
+    return registerHandle(r, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QSvgRenderer_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QSvgRenderer* r = jqtSvg(env, handle);
+    if (r) delete r;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSvgRenderer_nativeIsValid(JNIEnv* env, jclass, jlong handle) {
+    QSvgRenderer* r = jqtSvg(env, handle);
+    return (r && r->isValid()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jintArray JNICALL Java_org_jqt_QSvgRenderer_nativeDefaultSize(JNIEnv* env, jclass, jlong handle) {
+    QSvgRenderer* r = jqtSvg(env, handle);
+    jint values[2] = {0, 0};
+    if (r) {
+        const QSize sz = r->defaultSize();
+        values[0] = sz.width();
+        values[1] = sz.height();
+    }
+    jintArray out = env->NewIntArray(2);
+    env->SetIntArrayRegion(out, 0, 2, values);
+    return out;
+}
+
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QSvgRenderer_nativeRenderToPng(JNIEnv* env, jclass, jlong handle, jint w, jint h) {
+    QSvgRenderer* r = jqtSvg(env, handle);
+    if (r == nullptr || !r->isValid() || w <= 0 || h <= 0) return nullptr;
+    QImage img(w, h, QImage::Format_ARGB32);
+    img.fill(Qt::transparent);
+    QPainter p(&img);
+    p.setRenderHint(QPainter::Antialiasing, true);
+    r->render(&p);
+    p.end();
+    QByteArray png;
+    QBuffer buf(&png);
+    buf.open(QIODevice::WriteOnly);
+    img.save(&buf, "PNG");
+    buf.close();
+    jbyteArray out = env->NewByteArray(png.size());
+    env->SetByteArrayRegion(out, 0, png.size(), reinterpret_cast<const jbyte*>(png.constData()));
+    return out;
+}
+#else
+JNIEXPORT jlong JNICALL Java_org_jqt_QSvgRenderer_nativeCreateFromFile(JNIEnv*, jclass, jstring) { return 0; }
+JNIEXPORT jlong JNICALL Java_org_jqt_QSvgRenderer_nativeCreateFromData(JNIEnv*, jclass, jbyteArray) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QSvgRenderer_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QSvgRenderer_nativeIsValid(JNIEnv*, jclass, jlong) { return JNI_FALSE; }
+JNIEXPORT jintArray JNICALL Java_org_jqt_QSvgRenderer_nativeDefaultSize(JNIEnv* env, jclass, jlong) {
+    jint v[2] = {0, 0};
+    jintArray out = env->NewIntArray(2);
+    env->SetIntArrayRegion(out, 0, 2, v);
+    return out;
+}
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QSvgRenderer_nativeRenderToPng(JNIEnv*, jclass, jlong, jint, jint) { return nullptr; }
+#endif
+
+}   // extern "C" (QSvgRenderer)
+
+extern "C" {   // QEvent 事件转发(P0-②)
+
+// ---------------------------------------------------------------------------
+// QEvent 转发(v1.9.1 P0-②):事件过滤器 → Java 回调(主线程)
+// ---------------------------------------------------------------------------
+static QString jqtEventTypeName(int type) {
+    const QMetaObject& mo = QEvent::staticMetaObject;
+    int idx = mo.indexOfEnumerator("Type");
+    if (idx < 0) return QString::number(type);
+    QMetaEnum me = mo.enumerator(idx);
+    const char* k = me.valueToKey(type);
+    return k ? QString::fromUtf8(k) : QString::number(type);
+}
+
+class JQtEventForwarder : public QObject {
+public:
+    JQtEventForwarder(JNIEnv* env, jobject target) : m_target(env->NewGlobalRef(target)) {}
+    ~JQtEventForwarder() override {
+        if (m_target) { JNIEnv* e = callbackEnv(); if (e) e->DeleteGlobalRef(m_target); }
+    }
+protected:
+    bool eventFilter(QObject* /*obj*/, QEvent* ev) override {
+        JNIEnv* e = callbackEnv();
+        if (e == nullptr || m_target == nullptr || ev == nullptr) return false;
+        const int t = static_cast<int>(ev->type());
+        int a = 0, b = 0, c = 0, d = 0;
+        QString text;
+        switch (t) {
+            case QEvent::MouseButtonPress:
+            case QEvent::MouseButtonRelease:
+            case QEvent::MouseButtonDblClick:
+            case QEvent::MouseMove: {
+                QMouseEvent* me = static_cast<QMouseEvent*>(ev);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                const QPointF p = me->position();
+#else
+                const QPointF p = me->localPos();
+#endif
+                a = static_cast<int>(p.x());
+                b = static_cast<int>(p.y());
+                c = static_cast<int>(me->buttons());
+                d = static_cast<int>(me->button());
+                break;
+            }
+            case QEvent::KeyPress:
+            case QEvent::KeyRelease: {
+                QKeyEvent* ke = static_cast<QKeyEvent*>(ev);
+                a = ke->key();
+                b = ke->key();
+                c = static_cast<int>(ke->modifiers());
+                d = ke->isAutoRepeat() ? 1 : 0;
+                text = ke->text();
+                break;
+            }
+            case QEvent::Resize: {
+                QResizeEvent* re = static_cast<QResizeEvent*>(ev);
+                a = re->size().width();
+                b = re->size().height();
+                c = re->oldSize().width();
+                d = re->oldSize().height();
+                break;
+            }
+            case QEvent::Move: {
+                QMoveEvent* mo = static_cast<QMoveEvent*>(ev);
+                a = mo->pos().x();
+                b = mo->pos().y();
+                break;
+            }
+            case QEvent::Wheel: {
+                QWheelEvent* we = static_cast<QWheelEvent*>(ev);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+                const QPointF p = we->position();
+#else
+                const QPointF p = we->posF();
+#endif
+                a = static_cast<int>(p.x());
+                b = we->angleDelta().y();
+                c = static_cast<int>(we->buttons());
+                break;
+            }
+            default:
+                break;
+        }
+        jclass cls = e->GetObjectClass(m_target);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleEvent",
+                                       "(ILjava/lang/String;IIIILjava/lang/String;)V");
+        if (mid != nullptr) {
+            jstring jn = e->NewStringUTF(jqtEventTypeName(t).toUtf8().constData());
+            jstring jt = e->NewStringUTF(text.toUtf8().constData());
+            e->CallVoidMethod(m_target, mid, static_cast<jint>(t), jn,
+                              static_cast<jint>(a), static_cast<jint>(b),
+                              static_cast<jint>(c), static_cast<jint>(d), jt);
+            e->DeleteLocalRef(jn);
+            e->DeleteLocalRef(jt);
+            checkJniException(e);
+        }
+        e->DeleteLocalRef(cls);
+        return false;              // 不拦截:事件继续正常派发
+    }
+private:
+    jobject m_target;
+};
+
+JNIEXPORT void JNICALL Java_org_jqt_QWidget_nativeConnectEvents(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QWidget.events")) return;   // v1.9.1 去重
+    QWidget* w = static_cast<QWidget*>(requireHandle(env, handle));
+    if (w == nullptr) return;
+    // 过滤器挂在控件上(setParent),控件销毁时随之析构并释放 Java 全局引用
+    JQtEventForwarder* f = new JQtEventForwarder(env, thiz);
+    f->setParent(w);
+    w->installEventFilter(f);
+}
+
+}   // extern "C" (QEvent)
+
 extern "C" {   // QStackedWidget(J5)
 
 // ---------------------------------------------------------------------------
