@@ -159,6 +159,11 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #define JQT_HAVE_SQL_MODELS 1
 #endif
 
+#if defined(JQT_HAVE_WEBSOCKETS)
+#include <QWebSocket>   // P1:QtWebSockets 模块(非 qtbase,需探测)
+#include <QAbstractSocket>
+#include <QUrl>
+#endif
 #if defined(JQT_HAVE_SQL_MODELS)
 #include <QSqlQueryModel>   // P1:SQL 模型
 #include <QSqlTableModel>
@@ -7106,6 +7111,154 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
 // ---------------------------------------------------------------------------
+extern "C" {   // QWebSocket(P1)
+
+// ---------------------------------------------------------------------------
+// QWebSocket(v1.9.1 P1):WebSocket 客户端。QtWebSockets 不属于 qtbase,
+// 用 JQT_HAVE_WEBSOCKETS 特性探测 —— 没装的平台照样编译,Java isAvailable()=false。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebSocket_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_WEBSOCKETS
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_WEBSOCKETS
+static QWebSocket* jqtWs(JNIEnv* env, jlong handle) {
+    return static_cast<QWebSocket*>(requireHandle(env, handle));
+}
+
+static void jqtWsCall(JNIEnv* e, jobject target, const char* method, const char* sig,
+                      jstring arg = nullptr) {
+    if (e == nullptr || target == nullptr) return;
+    jclass cls = e->GetObjectClass(target);
+    jmethodID mid = e->GetMethodID(cls, method, sig);
+    if (mid != nullptr) {
+        if (arg != nullptr) e->CallVoidMethod(target, mid, arg);
+        else                e->CallVoidMethod(target, mid);
+        checkJniException(e);
+    }
+    e->DeleteLocalRef(cls);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QWebSocket_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    // 信号连接在 open() 时建立(那时才有 this 的 Java 引用),见 jqtWsConnect
+    return registerHandle(new QWebSocket(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebSocket_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QWebSocket* ws = jqtWs(env, handle);
+    if (ws) { ws->close(); delete ws; }
+}
+
+// 连接信号一次(幂等):把 this 的全局引用交给 lambda
+static void jqtWsConnect(JNIEnv* env, jobject thiz, QWebSocket* ws, jlong handle) {
+    jobject gRef = env->NewGlobalRef(thiz);
+    jqtForgetConnections(handle);                   // 允许换 URL 重连时重新绑定
+    if (!jqtConnectOnce(handle, "QWebSocket.signals")) { env->DeleteGlobalRef(gRef); return; }
+
+    QObject::connect(ws, &QWebSocket::connected, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jqtWsCall(e, gRef, "nativeHandleConnected", "()V");
+    });
+    QObject::connect(ws, &QWebSocket::disconnected, [gRef]() {
+        JNIEnv* e = callbackEnv();
+        jqtWsCall(e, gRef, "nativeHandleDisconnected", "()V");
+    });
+    QObject::connect(ws, &QWebSocket::textMessageReceived, [gRef](const QString& msg) {
+        JNIEnv* e = callbackEnv();
+        if (e == nullptr) return;
+        jstring js = e->NewStringUTF(msg.toUtf8().constData());
+        jqtWsCall(e, gRef, "nativeHandleTextMessage", "(Ljava/lang/String;)V", js);
+        e->DeleteLocalRef(js);
+    });
+    QObject::connect(ws, &QWebSocket::binaryMessageReceived, [gRef](const QByteArray& data) {
+        JNIEnv* e = callbackEnv();
+        if (e == nullptr) return;
+        jbyteArray arr = e->NewByteArray(data.size());
+        e->SetByteArrayRegion(arr, 0, data.size(), reinterpret_cast<const jbyte*>(data.constData()));
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleBinaryMessage", "([B)V");
+        if (mid) { e->CallVoidMethod(gRef, mid, arr); checkJniException(e); }
+        e->DeleteLocalRef(cls);
+        e->DeleteLocalRef(arr);
+    });
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
+    QObject::connect(ws, &QWebSocket::errorOccurred, [gRef](QAbstractSocket::SocketError) {
+#else
+    QObject::connect(ws, QOverload<QAbstractSocket::SocketError>::of(&QWebSocket::error),
+                     [gRef](QAbstractSocket::SocketError) {
+#endif
+        JNIEnv* e = callbackEnv();
+        if (e == nullptr) return;
+        // 描述从对象上取(QWebSocket::errorString())
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleError", "(Ljava/lang/String;)V");
+        if (mid) {
+            jstring js = e->NewStringUTF("websocket error");
+            e->CallVoidMethod(gRef, mid, js);
+            e->DeleteLocalRef(js);
+            checkJniException(e);
+        }
+        e->DeleteLocalRef(cls);
+    });
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebSocket_nativeOpen(JNIEnv* env, jobject thiz, jlong handle, jstring jurl) {
+    QWebSocket* ws = jqtWs(env, handle);
+    if (ws == nullptr || jurl == nullptr) return;
+    jqtWsConnect(env, thiz, ws, handle);
+    const char* c = env->GetStringUTFChars(jurl, nullptr);
+    ws->open(QUrl(QString::fromUtf8(c)));
+    env->ReleaseStringUTFChars(jurl, c);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebSocket_nativeSendText(JNIEnv* env, jclass, jlong handle, jstring jtext) {
+    QWebSocket* ws = jqtWs(env, handle);
+    if (ws == nullptr || jtext == nullptr || ws->state() != QAbstractSocket::ConnectedState) return JNI_FALSE;
+    const char* c = env->GetStringUTFChars(jtext, nullptr);
+    ws->sendTextMessage(QString::fromUtf8(c));
+    env->ReleaseStringUTFChars(jtext, c);
+    return JNI_TRUE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebSocket_nativeSendBinary(JNIEnv* env, jclass, jlong handle, jbyteArray jdata) {
+    QWebSocket* ws = jqtWs(env, handle);
+    if (ws == nullptr || ws->state() != QAbstractSocket::ConnectedState) return JNI_FALSE;
+    QByteArray payload;
+    if (jdata != nullptr) {
+        const jsize n = env->GetArrayLength(jdata);
+        payload.resize(static_cast<int>(n));
+        env->GetByteArrayRegion(jdata, 0, n, reinterpret_cast<jbyte*>(payload.data()));
+    }
+    ws->sendBinaryMessage(payload);
+    return JNI_TRUE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebSocket_nativeClose(JNIEnv* env, jclass, jlong handle) {
+    QWebSocket* ws = jqtWs(env, handle);
+    if (ws) ws->close();
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QWebSocket_nativeState(JNIEnv* env, jclass, jlong handle) {
+    QWebSocket* ws = jqtWs(env, handle);
+    return ws ? static_cast<jint>(ws->state()) : 0;
+}
+#else
+JNIEXPORT jlong JNICALL Java_org_jqt_QWebSocket_nativeCreate(JNIEnv*, jclass) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QWebSocket_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QWebSocket_nativeOpen(JNIEnv*, jobject, jlong, jstring) {}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebSocket_nativeSendText(JNIEnv*, jclass, jlong, jstring) { return JNI_FALSE; }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebSocket_nativeSendBinary(JNIEnv*, jclass, jlong, jbyteArray) { return JNI_FALSE; }
+JNIEXPORT void JNICALL Java_org_jqt_QWebSocket_nativeClose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jint JNICALL Java_org_jqt_QWebSocket_nativeState(JNIEnv*, jclass, jlong) { return 0; }
+#endif
+
+}   // extern "C" (QWebSocket)
+
 extern "C" {   // SQL 模型(P1)
 
 // ---------------------------------------------------------------------------
