@@ -39,7 +39,7 @@ QTLIB="$QT_BASE/lib"
 
 echo "==> Compiling native bridge (libjqt.so)"
 if ls "$QTLIB"/libQt6Quick.so* >/dev/null 2>&1; then
-  QML_FLAGS="-DJQT_HAVE_QML -I$QTINC/QtQuick -I$QTINC/QtQml -lQt6Quick -lQt6Qml"
+  QML_FLAGS="-DJQT_HAVE_QML -I$QTINC/QtQuick -I$QTINC/QtQml -I$QTINC/QtQmlIntegration -lQt6Quick -lQt6Qml"
   echo "==> QtQuick found - QQuickView enabled"
 else
   QML_FLAGS=""
