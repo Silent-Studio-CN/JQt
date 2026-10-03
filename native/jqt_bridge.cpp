@@ -159,6 +159,10 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #define JQT_HAVE_SQL_MODELS 1
 #endif
 
+#if defined(JQT_HAVE_POSITIONING)
+#include <QGeoCoordinate>   // P2:QtPositioning(非 qtbase,需探测)
+#include <cmath>
+#endif
 #if defined(JQT_HAVE_QML)
 #include <QQuickView>       // P2:QtQuick(非 qtbase,需探测)
 #include <QQuickItem>
@@ -504,7 +508,22 @@ static void checkJniException(JNIEnv* env) {
 // 句柄注册表 API
 // ----------------------------------------------------------------------------
 
+// 注册**值类型**（非 QObject，如 QGeoCoordinate）并返回句柄 ID。
+// 必须与 registerHandle 分开:后者会 static_cast<QObject*> 去接 destroyed 信号,
+// 对值类型等于把非 QObject 当 QObject 用 —— 实测在 Qt6Core 内
+// EXCEPTION_ACCESS_VIOLATION(读地址 0xffffffffffffffff)直接崩掉整个进程。
+static jlong registerValueHandle(void* ptr, bool javaOwned) {
+    const int64_t id = g_nextHandleId.fetch_add(1);
+    {
+        std::lock_guard<std::mutex> lock(g_handleMutex);
+        g_handles[id] = ptr;
+        g_javaOwned[id] = javaOwned;
+    }
+    return static_cast<jlong>(id);
+}
+
 // 注册对象并返回 Java 侧句柄 ID。javaOwned=true 表示归 Java 管理（GC 时回收）。
+// **只可用于 QObject 派生类型**;值类型请用 registerValueHandle。
 static jlong registerHandle(void* ptr, bool javaOwned) {
     const int64_t id = g_nextHandleId.fetch_add(1);
     {
@@ -7178,6 +7197,124 @@ JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeSetWindowModality(JNIEnv* env,
     if (d) d->setWindowModality(static_cast<Qt::WindowModality>(modality));
 }
 }   // extern "C" (QDialog modality)
+
+extern "C" {   // QtPositioning(P2)
+
+// ---------------------------------------------------------------------------
+// QtPositioning(v1.9.1 P2):QGeoCoordinate —— 纯几何计算(大圆距离/方位角/推算),
+//   不需要 GPS 或定位服务,因此可在无硬件环境(CI)确定性验证。
+//   QtPositioning 不属于 qtbase -> JQT_HAVE_POSITIONING 特性探测。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QGeoCoordinate_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_POSITIONING
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_POSITIONING
+static QGeoCoordinate* jqtCoord(JNIEnv* env, jlong handle) {
+    return static_cast<QGeoCoordinate*>(requireHandle(env, handle));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QGeoCoordinate_nativeCreate(JNIEnv* env, jclass,
+                                                                jdouble lat, jdouble lon,
+                                                                jdouble alt, jboolean threeD) {
+    if (requireApp(env) == nullptr) return 0;
+    QGeoCoordinate* c = nullptr;
+    if (std::isnan(lat) || std::isnan(lon)) {
+        c = new QGeoCoordinate();                     // 无效坐标
+    } else if (threeD == JNI_TRUE) {
+        c = new QGeoCoordinate(lat, lon, std::isnan(alt) ? 0.0 : alt);
+    } else {
+        c = new QGeoCoordinate(lat, lon);
+    }
+    // 值类型:不能走 registerHandle(它假定 QObject)
+    return registerValueHandle(c, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGeoCoordinate_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QGeoCoordinate* c = jqtCoord(env, handle);
+    if (c) delete c;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QGeoCoordinate_nativeIsValid(JNIEnv* env, jclass, jlong handle) {
+    QGeoCoordinate* c = jqtCoord(env, handle);
+    return (c && c->isValid()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QGeoCoordinate_nativeType(JNIEnv* env, jclass, jlong handle) {
+    QGeoCoordinate* c = jqtCoord(env, handle);
+    return c ? static_cast<jint>(c->type()) : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGeoCoordinate_nativeSetLatitude(JNIEnv* env, jclass, jlong handle, jdouble v) {
+    QGeoCoordinate* c = jqtCoord(env, handle);
+    if (c) c->setLatitude(v);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGeoCoordinate_nativeSetLongitude(JNIEnv* env, jclass, jlong handle, jdouble v) {
+    QGeoCoordinate* c = jqtCoord(env, handle);
+    if (c) c->setLongitude(v);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QGeoCoordinate_nativeSetAltitude(JNIEnv* env, jclass, jlong handle, jdouble v) {
+    QGeoCoordinate* c = jqtCoord(env, handle);
+    if (c) c->setAltitude(v);
+}
+
+JNIEXPORT jdouble JNICALL Java_org_jqt_QGeoCoordinate_nativeDistanceTo(JNIEnv* env, jclass, jlong handle, jlong otherHandle) {
+    QGeoCoordinate* a = jqtCoord(env, handle);
+    QGeoCoordinate* b = jqtCoord(env, otherHandle);
+    if (a == nullptr || b == nullptr) return 0.0;         // 与 Qt 契约一致:无效 -> 0
+    return static_cast<jdouble>(a->distanceTo(*b));       // Qt 对无效坐标返回 0
+}
+
+JNIEXPORT jdouble JNICALL Java_org_jqt_QGeoCoordinate_nativeAzimuthTo(JNIEnv* env, jclass, jlong handle, jlong otherHandle) {
+    QGeoCoordinate* a = jqtCoord(env, handle);
+    QGeoCoordinate* b = jqtCoord(env, otherHandle);
+    if (a == nullptr || b == nullptr) return 0.0;         // 与 Qt 契约一致:无效 -> 0
+    return static_cast<jdouble>(a->azimuthTo(*b));
+}
+
+JNIEXPORT jobject JNICALL Java_org_jqt_QGeoCoordinate_nativeAtDistanceAndAzimuth(JNIEnv* env, jobject thiz,
+                                                                                jlong handle, jdouble distance, jdouble azimuth) {
+    QGeoCoordinate* a = jqtCoord(env, handle);
+    if (a == nullptr) return nullptr;
+    const QGeoCoordinate r = a->atDistanceAndAzimuth(distance, azimuth);
+    jclass cls = env->GetObjectClass(thiz);
+    jmethodID ctor = env->GetMethodID(cls, "<init>", "(DDD)V");
+    jobject out = nullptr;
+    if (ctor != nullptr) {
+        out = env->NewObject(cls, ctor, static_cast<jdouble>(r.latitude()),
+                             static_cast<jdouble>(r.longitude()), static_cast<jdouble>(r.altitude()));
+    }
+    env->DeleteLocalRef(cls);
+    return out;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QGeoCoordinate_nativeToString(JNIEnv* env, jclass, jlong handle, jint format) {
+    QGeoCoordinate* c = jqtCoord(env, handle);
+    if (c == nullptr) return env->NewStringUTF("");
+    const QString s = c->toString(static_cast<QGeoCoordinate::CoordinateFormat>(format));
+    return env->NewStringUTF(s.toUtf8().constData());
+}
+#else
+JNIEXPORT jlong JNICALL Java_org_jqt_QGeoCoordinate_nativeCreate(JNIEnv*, jclass, jdouble, jdouble, jdouble, jboolean) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QGeoCoordinate_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QGeoCoordinate_nativeIsValid(JNIEnv*, jclass, jlong) { return JNI_FALSE; }
+JNIEXPORT jint JNICALL Java_org_jqt_QGeoCoordinate_nativeType(JNIEnv*, jclass, jlong) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QGeoCoordinate_nativeSetLatitude(JNIEnv*, jclass, jlong, jdouble) {}
+JNIEXPORT void JNICALL Java_org_jqt_QGeoCoordinate_nativeSetLongitude(JNIEnv*, jclass, jlong, jdouble) {}
+JNIEXPORT void JNICALL Java_org_jqt_QGeoCoordinate_nativeSetAltitude(JNIEnv*, jclass, jlong, jdouble) {}
+JNIEXPORT jdouble JNICALL Java_org_jqt_QGeoCoordinate_nativeDistanceTo(JNIEnv*, jclass, jlong, jlong) { return -1.0; }
+JNIEXPORT jdouble JNICALL Java_org_jqt_QGeoCoordinate_nativeAzimuthTo(JNIEnv*, jclass, jlong, jlong) { return -1.0; }
+JNIEXPORT jobject JNICALL Java_org_jqt_QGeoCoordinate_nativeAtDistanceAndAzimuth(JNIEnv*, jobject, jlong, jdouble, jdouble) { return nullptr; }
+JNIEXPORT jstring JNICALL Java_org_jqt_QGeoCoordinate_nativeToString(JNIEnv* env, jclass, jlong, jint) { return env->NewStringUTF(""); }
+#endif
+
+}   // extern "C" (QtPositioning)
 
 extern "C" {   // QtQuick(P2)
 

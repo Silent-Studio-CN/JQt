@@ -39,6 +39,14 @@ QTLIB="$QT_BASE/lib"
 
 echo "==> Compiling native bridge (libjqt.so)"
 # 同 macOS:QML 需要 QtQmlIntegration 的头,缺了就不要开(否则编译期报错)
+if ls "$QTLIB"/libQt6Positioning.so* >/dev/null 2>&1; then
+  GEO_FLAGS="-DJQT_HAVE_POSITIONING -I$QTINC/QtPositioning -lQt6Positioning"
+  echo "==> QtPositioning found - QGeoCoordinate enabled"
+else
+  GEO_FLAGS=""
+  echo "==> QtPositioning not found - QGeoCoordinate will report unavailable"
+fi
+
 if ls "$QTLIB"/libQt6Quick.so* >/dev/null 2>&1 && [ -f "$QTINC/QtQmlIntegration/qqmlintegration.h" ]; then
   QML_FLAGS="-DJQT_HAVE_QML -I$QTINC/QtQuick -I$QTINC/QtQml -I$QTINC/QtQmlIntegration -lQt6Quick -lQt6Qml"
   echo "==> QtQuick found - QQuickView enabled"
@@ -71,7 +79,7 @@ else
   echo "==> QtWebSockets not found - QWebSocket will report unavailable"
 fi
 
-g++ -std=c++17 -O2 -shared -fPIC     -o "$LIB/libjqt.so"     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux"     -I"$QTINC" -I"$QTINC/QtWidgets" -I"$QTINC/QtGui" -I"$QTINC/QtCore" -I"$QTINC/QtDBus" -I"$QTINC/QtPrintSupport" -I"$QTINC/QtSql" -I"$QTINC/QtOpenGLWidgets" -I"$QTINC/QtOpenGL" -I"$QTINC/QtSerialPort" -I"$QTINC/QtNetwork" -DJQT_HAVE_NETWORK -DJQT_HAVE_SQL_MODELS     -I"$NATIVE"     "$NATIVE/jqt_bridge.cpp"     -L"$QTLIB" -lQt6Widgets -lQt6Gui -lQt6Core -lQt6PrintSupport -lQt6Sql -lQt6OpenGLWidgets -lQt6OpenGL -lQt6SerialPort -lQt6DBus -lQt6Network $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS
+g++ -std=c++17 -O2 -shared -fPIC     -o "$LIB/libjqt.so"     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux"     -I"$QTINC" -I"$QTINC/QtWidgets" -I"$QTINC/QtGui" -I"$QTINC/QtCore" -I"$QTINC/QtDBus" -I"$QTINC/QtPrintSupport" -I"$QTINC/QtSql" -I"$QTINC/QtOpenGLWidgets" -I"$QTINC/QtOpenGL" -I"$QTINC/QtSerialPort" -I"$QTINC/QtNetwork" -DJQT_HAVE_NETWORK -DJQT_HAVE_SQL_MODELS     -I"$NATIVE"     "$NATIVE/jqt_bridge.cpp"     -L"$QTLIB" -lQt6Widgets -lQt6Gui -lQt6Core -lQt6PrintSupport -lQt6Sql -lQt6OpenGLWidgets -lQt6OpenGL -lQt6SerialPort -lQt6DBus -lQt6Network $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS
 
 # ---- 3. Deploy license notices (LGPL compliance) ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true

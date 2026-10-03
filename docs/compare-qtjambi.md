@@ -10,7 +10,7 @@
 | | JQt | QtJambi |
 |---|---|---|
 | 定位 | **手写 + 生成的精选绑定**,面向"Java 桌面小工具/内部工具" | **全量生成绑定**,面向"用 Java 做完整 Qt 应用" |
-| 类数 | **160 个 API 类**(另有 29 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
+| 类数 | **161 个 API 类**(另有 30 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
 | Qt 版本线 | 6.12.0(最新)+ 6.8.3 LTS | 6.12.0(最新)+ 历史各线 |
 | 广度差距 | —— | **约 20×**(核心类数比) |
 | 优势 | 纯 Java 值对象、显式所有权、精选 API、自带高层控件门面、单端口远程控制台配套 | 模块覆盖近乎完整(QML/Quick、Multimedia、WebEngine、Charts、Bluetooth…)、Maven Central 直发、生态成熟 |
@@ -36,7 +36,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'      # 1,174 个 native 
 
 | 指标 | 数值 |
 |---|---|
-| Java 源文件 | 189(API 160 + 冒烟 29) |
+| Java 源文件 | 191(API 161 + 冒烟 30) |
 | Java 行数 | 17,186 |
 | JNI 桥行数 | 11,497 |
 | jar 内 class | 205 |
@@ -107,7 +107,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **WebEngine / WebView** | ❌ | |
 | **Charts** | ✅ | v1.9.1 P2:`QChart` / `QLineSeries` / `QChartView`(含 `toPng()` 离屏渲染);`JQT_HAVE_CHARTS` 特性探测 |
 | **3D** | ❌ | |
-| **Bluetooth / NFC / Positioning** | ❌ | |
+| **Positioning** | 🟡 | v1.9.1 P2:`QGeoCoordinate`(大圆距离/方位角/`atDistanceAndAzimuth` 推算/6 种格式化);**纯几何计算,无需 GPS 即可确定性使用**。`QGeoPositionInfoSource`(真实定位)与 Bluetooth/NFC 未做 |
 | **WebSockets / WebChannel** | 🟡 | v1.9.1 P1:**WebSocket 客户端已支持**(`QWebSocket`:连接/文本/二进制/错误/关闭,`JQT_HAVE_WEBSOCKETS` 特性探测);WebChannel 仍无 |
 | **DBus** | 🌉 | 桥内部出现,未暴露 |
 | **Concurrent** | ❌ | |
@@ -115,9 +115,9 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **Help** | ❌ | |
 | **QTest** | ✅ | v1.9.1 P1:`JQtTest` 兼容层(QVERIFY/QVERIFY2/QCOMPARE/QFAIL/QSKIP + test*/init/cleanup 运行器,零原生依赖) |
 
-**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 27 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
-**8 项仍缺失**(另 1 项上游受阻、`DBus` 属"桥内有、API 无")。命中率 **27/36 ≈ 75%**。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡(QQuickView 可加载与离屏渲染);Designer/Help 待做。
+**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 28 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
+**7 项仍缺失**(另 1 项上游受阻、`DBus` 属"桥内有、API 无")。命中率 **28/36 ≈ 78%**。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡;**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低);Help 待评估。
 
 ---
 
