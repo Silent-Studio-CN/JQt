@@ -18,7 +18,7 @@
 |------|------|
 | Java | **JDK 17 或更高**（推荐 21+） |
 | 操作系统 | Windows 10/11 x64、Linux x64、macOS x64 |
-| 其他 | **无需**安装 C++ 编译器或 Qt SDK（发布包自带 Qt 运行库） |
+| 其他 | **写代码无需** C++ 编译器或 Qt SDK;运行时需 Qt 库 —— Windows 完整包自带,macOS/Linux 用 `*-qt-runtime.tar.gz` |
 
 ### 2. 下载与选择发布包
 
@@ -55,7 +55,9 @@ lib/
   set QT_QPA_PLATFORM_PLUGIN_PATH=%CD%\lib\platforms
   java -Djava.library.path=lib --enable-native-access=ALL-UNNAMED -cp "lib\jqt-0.1.0-alpha.jar;." Hello
   ```
-  > ⚠️ **新手必踩**：不设 `QT_QPA_PLATFORM_PLUGIN_PATH` 会报 `Could not find the Qt platform plugin "windows"`——
+  > ⚠️ **另一个坑**：必须用**环境变量**（`set X=...` / `export X=...`）。
+> 写成 Java 系统属性（`java -DQT_PLUGIN_PATH=...`）**Qt 原生代码读不到** —— 那只是 JVM 的属性表。
+> ⚠️ **新手必踩**：不设 `QT_QPA_PLATFORM_PLUGIN_PATH` 会报 `Could not find the Qt platform plugin "windows"`——
   > Java 进程中的 Qt **不会读取**包内的 qt.conf，必须显式指定 `<包目录>\platforms`。
   > Java 26 建议加 `--enable-native-access=ALL-UNNAMED`（`System::loadLibrary` 在 Java 26 是受限方法，将来会直接拦截）。
 - **Linux**：`-Djava.library.path=lib`，且 `LD_LIBRARY_PATH` 包含 `lib` 与 Qt 库目录：
@@ -212,7 +214,7 @@ window.setLayout(hbox);
 |------|-------------|
 | Java | **JDK 17+** (21+ recommended) |
 | OS | Windows 10/11 x64, Linux x64, macOS x64 |
-| Other | **No** C++ compiler or Qt SDK needed (runtime bundled) |
+| Other | **No** C++ compiler or Qt SDK needed to *write* code; Qt libs are required at runtime (bundled on Windows, `*-qt-runtime.tar.gz` elsewhere) |
 
 ### 2. Choose Your Package (GitHub Releases)
 

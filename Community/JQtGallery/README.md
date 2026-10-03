@@ -3,12 +3,12 @@
 Full-featured JQt demo: themes / widgets / motion / window / v0.5+ widgets.
 
 **Versioning convention (since v0.6.0):**
-- Root directory = latest version (currently v0.7.5 compatible)
+- Root directory = latest version (currently v1.9.0-Qt612-Kit compatible; 源兼容无需改代码)
 - Old versions archived in subdirectories: v5.0/
 
 | Version | Compatible JQt | Notes |
 |---------|---------------|-------|
-| root    | v0.7.5+        | Latest: v0.6 L1 + Exclusive Kit + Universal Kit + GPU + Serial + value types (60 classes) |
+| root    | v1.9.0+        | Latest: v0.6 L1 + Exclusive Kit + Universal Kit + GPU + Serial + value types (60 classes) |
 | v5.0/   | v0.5.x         | Five sections: theme/widgets/motion/window/v0.5 widgets, 16:9 window |
 
 ## Sections (pivot navigation)

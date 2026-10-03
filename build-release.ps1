@@ -48,7 +48,7 @@ New-Item -ItemType Directory -Force -Path $Pkg | Out-Null
 # Java API jar + native lib + Qt runtime (lib/ is self-contained) + docs
 Copy-Item (Join-Path $Dist "jqt-$Version.jar") $Pkg
 Copy-Item (Join-Path $Lib "jqt.dll") $Pkg
-Get-ChildItem $Lib -File | Where-Object { $_.Name -notmatch "^jqt\.dll$" -and $_.Name -notmatch "\.bak$" } | Copy-Item -Destination $Pkg
+Get-ChildItem $Lib -File | Where-Object { $_.Name -notmatch "^(jqt\.dll|libjqt\.(so|dylib))$" -and $_.Name -notmatch "\.bak$" } | Copy-Item -Destination $Pkg
 Get-ChildItem $Lib -Directory | Copy-Item -Destination $Pkg -Recurse
 
 # 文档（双语）

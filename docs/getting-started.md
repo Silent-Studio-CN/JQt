@@ -20,7 +20,9 @@
 | `jqt.dll`（Windows）/ `libjqt.so`（Linux）/ `libjqt.dylib`（macOS） | 对应平台发布包 |
 | Qt 运行库 | 发布包已包含（lib/ 自包含） |
 
-**不需要**安装 C++ 编译器或 Qt SDK。
+**不需要**安装 C++ 编译器或 Qt SDK 就能**写代码**。
+> 运行时需要 Qt 库:Windows 完整包自带;macOS/Linux 请用发布页的 `*-qt-runtime.tar.gz`
+> (含 Qt 运行库与启动器),或自行安装 Qt。
 
 ### 一键启动脚本（可选）
 
@@ -92,7 +94,10 @@ java -Djava.library.path=lib -cp jqt-0.1.0-alpha.jar Hello
 | `jqt.dll` (Windows) / `libjqt.so` (Linux) / `libjqt.dylib` (macOS) | matching platform package |
 | Qt runtime | included in the package (lib/ is self-contained) |
 
-**No** C++ compiler or Qt SDK required.
+**No** C++ compiler or Qt SDK is required to **write code**.
+> The Qt libraries are needed at runtime: the Windows zip bundles them, and
+> macOS/Linux users should use the `*-qt-runtime.tar.gz` bundle (Qt libs + launcher)
+> or install Qt themselves.
 
 ### Run in Three Steps
 

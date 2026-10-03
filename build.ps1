@@ -105,6 +105,15 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "==> [4/4] Deploying QPA platform plugin (qwindows)"
+# 补 qoffscreen 平台插件:用户侧常以 QT_QPA_PLATFORM=offscreen 跑无头模式,
+# 而 windeployqt 默认只带 qwindows(问题报告附录 B 实测)
+$offscreenSrc = Join-Path $Kit "plugins\platforms\qoffscreen.dll"
+if (Test-Path $offscreenSrc) {
+    Copy-Item $offscreenSrc (Join-Path $LibDir "platforms\") -Force
+    Write-Host "==> 已补 qoffscreen.dll"
+} else {
+    Write-Host "==> 未找到 qoffscreen.dll: $offscreenSrc"
+}
 $PlatformsDir = Join-Path $LibDir "plugins\platforms"
 New-Item -ItemType Directory -Force -Path $PlatformsDir | Out-Null
 Copy-Item (Join-Path $Kit "plugins\platforms\qwindows.dll") $PlatformsDir

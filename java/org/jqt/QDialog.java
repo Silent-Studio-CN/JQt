@@ -34,10 +34,31 @@ public class QDialog extends QWidget {
         return nativeExec(nativeHandle);
     }
 
-    /** 非模态显示（QDialog::open；不阻塞，窗口置顶显示）。 */
+    /**
+     * 以**窗口模态**显示（Qt {@code QDialog::open}）。
+     * <p><b>注意</b>：{@code open()} 不是"非模态"—— 它不阻塞调用者，但按 Qt 语义是
+     * {@code Qt::WindowModal}：**父窗口输入被阻塞**（Windows 上通过禁用父窗口实现，
+     * macOS 上渲染为 sheet，因此会有一次动画开销 ~280ms）。
+     * <p>实测：调用 {@code open()} 后 {@code isModal()} 为 true，且会**覆盖**先前的
+     * {@code setModal(false)}。真正的不阻塞且不限制父窗口请用 {@link #show()}。
+     * <p>模态级别可用 {@link #windowModality()} 精确查询。
+     */
     public void open() {
         nativeOpen(nativeHandle);
     }
+
+    /**
+     * 模态级别（Qt {@code Qt::WindowModality}）。
+     * <p>{@code 0}=NonModal · {@code 1}=WindowModal · {@code 2}=ApplicationModal。
+     * <p>布尔 {@link #isModal()} 无法区分"窗口模态"与"应用模态"，需要精确判断时用本方法
+     * （v1.9.1 新增，见问题报告 J14；对应 Qt 的 QWidget::windowModality）。
+     */
+    public int modality() { return nativeModality(nativeHandle); }
+    private native int nativeModality(long handle);
+
+    /** 设置模态级别（0=NonModal 1=WindowModal 2=ApplicationModal）。 */
+    public void setModality(int modality) { nativeSetModality(nativeHandle, modality); }
+    private native void nativeSetModality(long handle, int modality);
 
     /** 以 Accepted 结果关闭（QDialog::accept）。 */
     public void accept() {
