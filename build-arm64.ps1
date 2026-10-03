@@ -106,7 +106,8 @@ Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") | Out-Host
 # 注意:编译标志必须插在 "/link" **之前** —— 追加到数组末尾会落进链接器段,
 # cl 会把包含目录当成 .obj 输入(LNK1181,实测踩过)。
 $qmlLib = Join-Path $QtRoot "lib\Qt6Quick.lib"
-if (Test-Path $qmlLib) {
+$qmlIntegration = Join-Path $QtRoot "include\QtQmlIntegration\qqmlintegration.h"
+if ((Test-Path $qmlLib) -and (Test-Path $qmlIntegration)) {
     $linkIdx4 = [Array]::IndexOf($clArgs, "/link")
     if ($linkIdx4 -lt 0) { $linkIdx4 = $clArgs.Count }
     $pre4 = @("/DJQT_HAVE_QML", "/I", (Join-Path $QtRoot "include\QtQuick"), "/I", (Join-Path $QtRoot "include\QtQml"))
