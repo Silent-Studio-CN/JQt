@@ -60,7 +60,7 @@ if [ -d "$QTLIB/QtSerialPort.framework/Headers" ]; then
   ls "$LIB/sp_include/QtSerialPort/" 2>&1 | head -5 || true
 fi
 if [ -d "$QTLIB/QtQuick.framework" ]; then
-  QML_FLAGS="-DJQT_HAVE_QML -I$QTLIB/QtQuick.framework/Headers -I$QTLIB/QtQml.framework/Headers -framework QtQuick -framework QtQml"
+  QML_FLAGS="-DJQT_HAVE_QML -I$QTLIB/QtQuick.framework/Headers -I$QTLIB/QtQml.framework/Headers -I$QTLIB/QtQmlIntegration.framework/Headers -framework QtQuick -framework QtQml -framework QtQmlIntegration"
   echo "==> QtQuick found - QQuickView enabled"
 else
   QML_FLAGS=""
