@@ -642,6 +642,18 @@ jobs:
             QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class $C -AutoClose 1200
           done
 
+      - name: Real-window smoke (macOS, best effort)
+        run: |
+          # 真窗口(cocoa,不加 offscreen):这是唯一能直接命中 J1 类问题的路径。
+          # GitHub macOS runner 不一定有 GUI 会话,故按"尽力而为"处理:
+          # 失败只告警不失败作业 —— 硬防线在 Linux 的 xvfb-run + xcb 那一步。
+          export QT_BASE="$HOME/Qt6120"
+          if ./run-macos.sh -Class org.jqt.SmokeRealWindow -AutoClose 1200; then
+            echo "macOS 真窗口冒烟通过"
+          else
+            echo "::warning::macOS 真窗口冒烟未通过(CI 可能无 GUI 会话);J1/J2 仍由静态守卫覆盖"
+          fi
+
       - name: Guard -XstartOnFirstThread / absolute java in run-macos.sh (J1/J2 regression)
         run: |
           # macOS 真窗口必须在主线程:缺 -XstartOnFirstThread 会 NSWindow 崩溃(J1)

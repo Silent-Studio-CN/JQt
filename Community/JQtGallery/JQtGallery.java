@@ -1083,7 +1083,7 @@ public class JQtGallery {
         final int[] swIdx = {0};
         QStackedWidget swd;
         try {
-            swd = new QStackedWidget(0L);
+            swd = new QStackedWidget();   // v1.9.1:JQt 已补 native 创建入口,不再需要塞 0L
         } catch (Exception e) {
             swd = null;
         }

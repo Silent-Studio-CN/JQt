@@ -879,7 +879,35 @@ protected:
 // JQtApplication：QApplication 的封装
 // ----------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// 平台字体替换(J8):主题/QSS 里大量引用 Windows 字体(微软雅黑/Segoe UI),
+// 在 macOS/Linux 上缺字体 -> Qt 每次启动打印 "Populating font family aliases took N ms"
+// 并额外付出查找开销。这里用 QFont::insertSubstitution 把它们映射到平台自带字体,
+// **不必逐个改主题文件**(themes/qf/*.qss 有 200+ 处引用)。
+// ---------------------------------------------------------------------------
+static void jqtInstallFontSubstitutions() {
+#if !defined(_WIN32)
+    const QString cjk = QStringLiteral("Noto Sans CJK SC");
+#if defined(__APPLE__)
+    const QString ui = QStringLiteral("PingFang SC");
+#else
+    const QString ui = QStringLiteral("Noto Sans");
+#endif
+    const char* windowsFamilies[] = {
+        "Microsoft YaHei UI", "Microsoft YaHei", "Microsoft YaHei Light",
+        "Segoe UI", "Segoe UI Semibold", "Consolas", "MS Shell Dlg 2"
+    };
+    for (const char* fam : windowsFamilies) {
+        QFont::insertSubstitution(QString::fromUtf8(fam), fam == QByteArray("Consolas")
+                                  ? QStringLiteral("monospace") : cjk);
+    }
+    QFont::insertSubstitution(QStringLiteral("Microsoft YaHei UI"), ui);
+#endif
+    (void)&jqtInstallFontSubstitutions;
+}
+
 JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeCreateApp(JNIEnv* env, jobject thiz, jstring rhiBackend) {
+    jqtInstallFontSubstitutions();   // J8:平台字体映射
 #ifdef _WIN32
     SetUnhandledExceptionFilter(jqtCrashHandler);   // 崩溃日志（jqt-crash.log）
 #endif
@@ -7125,6 +7153,23 @@ JNIEXPORT jobjectArray JNICALL Java_org_jqt_QSerialPort_nativeAvailablePorts(JNI
 
 #if !defined(__ANDROID__) // qtserialport android 模块后续安装
 // ---------------------------------------------------------------------------
+extern "C" {   // QDialog modality(J13/J14)
+
+// ---------------------------------------------------------------------------
+// QDialog 模态级别(v1.9.1,J13/J14):open() 是**窗口模态**(window modal),
+// 不是"非模态";仅有布尔 isModal() 无法区分 窗口模态/应用模态,故补 modality()。
+// ---------------------------------------------------------------------------
+JNIEXPORT jint JNICALL Java_org_jqt_QDialog_nativeWindowModality(JNIEnv* env, jobject, jlong handle) {
+    QDialog* d = static_cast<QDialog*>(requireHandle(env, handle));
+    return d ? static_cast<jint>(d->windowModality()) : 0;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeSetWindowModality(JNIEnv* env, jobject, jlong handle, jint modality) {
+    QDialog* d = static_cast<QDialog*>(requireHandle(env, handle));
+    if (d) d->setWindowModality(static_cast<Qt::WindowModality>(modality));
+}
+}   // extern "C" (QDialog modality)
+
 extern "C" {   // QtMultimedia(P2)
 
 // ---------------------------------------------------------------------------
