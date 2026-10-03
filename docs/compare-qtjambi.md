@@ -10,7 +10,7 @@
 | | JQt | QtJambi |
 |---|---|---|
 | 定位 | **手写 + 生成的精选绑定**,面向"Java 桌面小工具/内部工具" | **全量生成绑定**,面向"用 Java 做完整 Qt 应用" |
-| 类数 | **159 个 API 类**(另有 28 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
+| 类数 | **160 个 API 类**(另有 29 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
 | Qt 版本线 | 6.12.0(最新)+ 6.8.3 LTS | 6.12.0(最新)+ 历史各线 |
 | 广度差距 | —— | **约 20×**(核心类数比) |
 | 优势 | 纯 Java 值对象、显式所有权、精选 API、自带高层控件门面、单端口远程控制台配套 | 模块覆盖近乎完整(QML/Quick、Multimedia、WebEngine、Charts、Bluetooth…)、Maven Central 直发、生态成熟 |
@@ -36,7 +36,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'      # 1,174 个 native 
 
 | 指标 | 数值 |
 |---|---|
-| Java 源文件 | 187(API 159 + 冒烟 28) |
+| Java 源文件 | 189(API 160 + 冒烟 29) |
 | Java 行数 | 17,186 |
 | JNI 桥行数 | 11,497 |
 | jar 内 class | 205 |
@@ -102,7 +102,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **QStateMachine 状态机** | ⛔ 上游受阻 | 本 SDK 路径下**拿不到 QtStateMachine**(无 DLL/无 cmake 配置,在线仓库也无该 addon);需 Qt 官方安装器勾选 "Qt State Machine" 才能实现 —— 已记录待上游模块可得再做 |
 | **QSvg 矢量渲染** | ✅ | v1.9.1 P0-④:`QSvgRenderer`(文件/字节 → `renderToPng`;缺 qtsvg 时构建特性探测自动跳过) |
 | **QNetwork 网络** | ✅ | v1.9.1 P0-⑤:`QNetworkAccessManager`(GET/POST + 管理器级 `onFinished` + 超时/UA);`QTcpSocket`/`QUdpSocket` 仍无 |
-| **QML / Quick** | ❌ | 无 `QQmlApplicationEngine`/`QQuickView`/`QQuickWidget` |
+| **QML / Quick** | 🟡 | v1.9.1 P2:`QQuickView`(加载 QML 文件/内联文本 + `grabToPng()` 离屏渲染,像素级验证通过);`QQmlApplicationEngine`/`QQuickWidget`/QML↔Java 互操作未做 |
 | **Multimedia** | 🟡 | v1.9.1 P2:`QMediaPlayer`(播放/暂停/停止/跳转/时长/位置/状态/错误信号)+ `QAudioOutput`(音量/静音);**已验证**:素材时长解析、状态机迁移、错误路径(时长 300ms 精确、缺失文件触发 "Could not open file")。`QVideoWidget`/摄像头/录制未做;真实出声依赖音频设备 |
 | **WebEngine / WebView** | ❌ | |
 | **Charts** | ✅ | v1.9.1 P2:`QChart` / `QLineSeries` / `QChartView`(含 `toPng()` 离屏渲染);`JQT_HAVE_CHARTS` 特性探测 |
@@ -115,9 +115,9 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **Help** | ❌ | |
 | **QTest** | ✅ | v1.9.1 P1:`JQtTest` 兼容层(QVERIFY/QVERIFY2/QCOMPARE/QFAIL/QSKIP + test*/init/cleanup 运行器,零原生依赖) |
 
-**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 26 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
-**9 项仍缺失**(另 1 项上游受阻、`DBus` 属"桥内有、API 无")。命中率 **26/36 ≈ 72%**。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡(播放链路已通,视频/录制未做);QML/Designer/Help 待做。
+**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 27 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
+**8 项仍缺失**(另 1 项上游受阻、`DBus` 属"桥内有、API 无")。命中率 **27/36 ≈ 75%**。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡(QQuickView 可加载与离屏渲染);Designer/Help 待做。
 
 ---
 
