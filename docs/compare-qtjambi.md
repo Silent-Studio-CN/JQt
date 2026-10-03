@@ -10,7 +10,7 @@
 | | JQt | QtJambi |
 |---|---|---|
 | 定位 | **手写 + 生成的精选绑定**,面向"Java 桌面小工具/内部工具" | **全量生成绑定**,面向"用 Java 做完整 Qt 应用" |
-| 类数 | **161 个 API 类**(另有 30 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
+| 类数 | **162 个 API 类**(另有 31 个冒烟类;jar 内 class 含内部类) | 核心 jar **2,881 个 class**;Maven Central 上 **1,088 个构件**(模块 × 平台原生库) |
 | Qt 版本线 | 6.12.0(最新)+ 6.8.3 LTS | 6.12.0(最新)+ 历史各线 |
 | 广度差距 | —— | **约 20×**(核心类数比) |
 | 优势 | 纯 Java 值对象、显式所有权、精选 API、自带高层控件门面、单端口远程控制台配套 | 模块覆盖近乎完整(QML/Quick、Multimedia、WebEngine、Charts、Bluetooth…)、Maven Central 直发、生态成熟 |
@@ -36,7 +36,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'      # 1,174 个 native 
 
 | 指标 | 数值 |
 |---|---|
-| Java 源文件 | 191(API 161 + 冒烟 30) |
+| Java 源文件 | 193(API 162 + 冒烟 31) |
 | Java 行数 | 17,186 |
 | JNI 桥行数 | 11,497 |
 | jar 内 class | 205 |
@@ -112,12 +112,12 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **DBus** | 🌉 | 桥内部出现,未暴露 |
 | **Concurrent** | ❌ | |
 | **Designer 插件** | ❌ | |
-| **Help** | ❌ | |
+| **Help** | 🟡 **部分(不计入命中)** | v1.9.1:`QHelpEngineCore` 只读查询路径可用(`setupData`/`error`/`registeredDocumentations`/`fileData`/`files`/`customValue`),`.qch` 可由 qhelpgenerator 现场生成且命名空间可读;**但本环境下集合写入失败**(`registerDocumentation`/`setCustomValue` 返回 false,`.qhc` 关闭后仍 0 字节)—— 写路径待查,故**不写成已支持**。复现:SmokeHelp 打印的告警段 |
 | **QTest** | ✅ | v1.9.1 P1:`JQtTest` 兼容层(QVERIFY/QVERIFY2/QCOMPARE/QFAIL/QSKIP + test*/init/cleanup 运行器,零原生依赖) |
 
 **汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 28 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
 **7 项仍缺失**(另 1 项上游受阻、`DBus` 属"桥内有、API 无")。命中率 **28/36 ≈ 78%**。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡;**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低);Help 待评估。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低);Help 待评估。
 
 ---
 
