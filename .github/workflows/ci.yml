@@ -68,6 +68,16 @@ jobs:
           rm -rf /tmp/qt683 /tmp/qtbase683.7z /tmp/icu683.7z
           test -f /opt/Qt683/6.8.3/gcc_64/bin/qmake || { echo "qmake missing"; exit 1; }
 
+      - name: Install QtTools (QtHelp) 6.12.0 - base package
+        run: |
+          curl -fsSL -o /tmp/qttools.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.linux_gcc_64/6.12.0-0-202609280346qttools-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
+          7z x -y -o/tmp/qttools /tmp/qttools.7z > /dev/null
+          sudo cp -a /tmp/qttools/lib/. /opt/6.12.0/gcc_64/lib/
+          [ -d /tmp/qttools/include ] && sudo cp -a /tmp/qttools/include/. /opt/6.12.0/gcc_64/include/
+          [ -d /tmp/qttools/bin ] && sudo cp -a /tmp/qttools/bin/. /opt/6.12.0/gcc_64/bin/
+          ls /opt/6.12.0/gcc_64/lib | grep -qi help || (echo "libQt6Help missing"; exit 1)
+          ls /opt/6.12.0/gcc_64/bin | grep -qi qhelpgenerator || echo "::warning::qhelpgenerator 未安装"
+
       - name: Install QtPositioning 6.12.0 (prebuilt addon)
         run: |
           curl -fsSL -o /tmp/qtpositioning.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtpositioning.linux_gcc_64/6.12.0-0-202609280346qtpositioning-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
@@ -213,7 +223,8 @@ jobs:
           if [ $CODE8 -ne 0 ]; then exit $CODE8; fi
           # 新增冒烟:v1.9.1(P0 并发 / 回调异常 / QStackedWidget)
           export QT_QUICK_BACKEND=software       # QtQuick 场景图软件后端
-          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokePositioning; do
+          export JQT_QHELP_GENERATOR=/opt/6.12.0/gcc_64/bin/qhelpgenerator
+          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokePositioning org.jqt.SmokeHelp; do
             QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class $C -AutoClose 1200 > "smoke_$C.txt" 2>&1
             RC=$?
             echo "smoke $C exit code: $RC"; cat "smoke_$C.txt"
@@ -410,7 +421,7 @@ jobs:
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_QUICK_BACKEND = "software"      # QtQuick 场景图需要软件后端(离屏无 GPU)
           $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
-          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer","org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked","org.jqt.SmokeEvent","org.jqt.SmokeNetwork","org.jqt.SmokeSqlModel","org.jqt.SmokeWebSocket","org.jqt.SmokeJQtTest","org.jqt.SmokeCharts","org.jqt.SmokeMultimedia","org.jqt.SmokeModality","org.jqt.SmokeQml","org.jqt.SmokePositioning")) {
+          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer","org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked","org.jqt.SmokeEvent","org.jqt.SmokeNetwork","org.jqt.SmokeSqlModel","org.jqt.SmokeWebSocket","org.jqt.SmokeJQtTest","org.jqt.SmokeCharts","org.jqt.SmokeMultimedia","org.jqt.SmokeModality","org.jqt.SmokeQml","org.jqt.SmokePositioning","org.jqt.SmokeHelp")) {
             powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
             if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
           }

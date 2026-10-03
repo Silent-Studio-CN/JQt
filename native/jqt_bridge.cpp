@@ -159,6 +159,10 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #define JQT_HAVE_SQL_MODELS 1
 #endif
 
+#if defined(JQT_HAVE_HELP)
+#include <QHelpEngineCore>   // P2:QtHelp(qttools,非 qtbase)
+#include <QUrl>
+#endif
 #if defined(JQT_HAVE_POSITIONING)
 #include <QGeoCoordinate>   // P2:QtPositioning(非 qtbase,需探测)
 #include <cmath>
@@ -7197,6 +7201,170 @@ JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeSetWindowModality(JNIEnv* env,
     if (d) d->setWindowModality(static_cast<Qt::WindowModality>(modality));
 }
 }   // extern "C" (QDialog modality)
+
+extern "C" {   // QtHelp(P2)
+
+// ---------------------------------------------------------------------------
+// QtHelp(v1.9.1 P2):QHelpEngineCore —— 帮助集合(.qhc)读写与文档查询。
+//   QtHelp 属于 qttools(非 qtbase) -> JQT_HAVE_HELP 特性探测。
+//   .qhc 由 QHelpEngineCore 自行创建;.qch 由 Qt 自带 qhelpgenerator 现场生成。
+//   API 按 Qt 6 头文件对齐:namespaceName/metaData 是 static;
+//   files() 在 Qt 6 需要三个参数(命名空间/过滤属性/扩展名)。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_HELP
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_HELP
+static QHelpEngineCore* jqtHelp(JNIEnv* env, jlong handle) {
+    return static_cast<QHelpEngineCore*>(requireHandle(env, handle));
+}
+
+static jobjectArray jqtStringList(JNIEnv* env, const QStringList& list) {
+    jclass strCls = env->FindClass("java/lang/String");
+    jobjectArray arr = env->NewObjectArray(list.size(), strCls, nullptr);
+    for (int i = 0; i < list.size(); ++i) {
+        jstring s = env->NewStringUTF(list.at(i).toUtf8().constData());
+        env->SetObjectArrayElement(arr, i, s);
+        env->DeleteLocalRef(s);
+    }
+    return arr;
+}
+
+static QString jqtJstring(JNIEnv* env, jstring js) {
+    if (js == nullptr) return QString();
+    const char* c = env->GetStringUTFChars(js, nullptr);
+    const QString out = QString::fromUtf8(c);
+    env->ReleaseStringUTFChars(js, c);
+    return out;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QHelpEngineCore_nativeCreate(JNIEnv* env, jclass, jstring jfile) {
+    if (requireApp(env) == nullptr) return 0;
+    return registerHandle(new QHelpEngineCore(jqtJstring(env, jfile)), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QHelpEngineCore_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    if (h) delete h;
+}
+
+// 显式关闭:QHelpEngineCore **在销毁时才把集合写到 .qhc** ——
+// 所以"注册文档 / 写自定义值"的效果,必须 close() 后重新打开才能读到(实测确认)。
+JNIEXPORT void JNICALL Java_org_jqt_QHelpEngineCore_nativeClose(JNIEnv* env, jclass, jlong handle) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    if (h) delete h;   // QObject::destroyed -> 句柄自动注销
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeSetupData(JNIEnv* env, jclass, jlong handle) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    return (h && h->setupData()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeError(JNIEnv* env, jclass, jlong handle) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    return env->NewStringUTF(h ? h->error().toUtf8().constData() : "");
+}
+
+// static:从 .qch 文件读出命名空间(不需要打开集合)
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeNamespaceName(JNIEnv* env, jclass, jstring jqch) {
+    return env->NewStringUTF(QHelpEngineCore::namespaceName(jqtJstring(env, jqch)).toUtf8().constData());
+}
+
+// static:读取 .qch 元数据(如 "title"/"version")
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeMetaData(JNIEnv* env, jclass, jstring jqch, jstring jname) {
+    const QVariant v = QHelpEngineCore::metaData(jqtJstring(env, jqch), jqtJstring(env, jname));
+    return env->NewStringUTF(v.toString().toUtf8().constData());
+}
+
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QHelpEngineCore_nativeRegisteredDocumentations(JNIEnv* env, jclass, jlong handle) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    return jqtStringList(env, h ? h->registeredDocumentations() : QStringList());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeDocumentationFileName(JNIEnv* env, jclass, jlong handle, jstring jns) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    return env->NewStringUTF(h ? h->documentationFileName(jqtJstring(env, jns)).toUtf8().constData() : "");
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeRegisterDocumentation(JNIEnv* env, jclass, jlong handle, jstring jqch) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    return (h && h->registerDocumentation(jqtJstring(env, jqch))) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeUnregisterDocumentation(JNIEnv* env, jclass, jlong handle, jstring jns) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    return (h && h->unregisterDocumentation(jqtJstring(env, jns))) ? JNI_TRUE : JNI_FALSE;
+}
+
+// Qt 6 的 files() 需要:命名空间 + 过滤属性列表 + 扩展名过滤
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QHelpEngineCore_nativeFiles(JNIEnv* env, jclass, jlong handle,
+                                                                       jstring jns, jobjectArray jattrs, jstring jext) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    if (h == nullptr) return jqtStringList(env, QStringList());
+    QStringList attrs;
+    if (jattrs != nullptr) {
+        const jsize n = env->GetArrayLength(jattrs);
+        for (jsize i = 0; i < n; ++i) {
+            jstring a = static_cast<jstring>(env->GetObjectArrayElement(jattrs, i));
+            attrs << jqtJstring(env, a);
+            env->DeleteLocalRef(a);
+        }
+    }
+    const QList<QUrl> urls = h->files(jqtJstring(env, jns), attrs, jqtJstring(env, jext));
+    QStringList out;
+    for (const QUrl& u : urls) out << u.toString();
+    return jqtStringList(env, out);
+}
+
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QHelpEngineCore_nativeFileData(JNIEnv* env, jclass, jlong handle, jstring jurl) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    if (h == nullptr) return env->NewByteArray(0);
+    const QByteArray data = h->fileData(QUrl(jqtJstring(env, jurl)));
+    jbyteArray out = env->NewByteArray(data.size());
+    env->SetByteArrayRegion(out, 0, data.size(), reinterpret_cast<const jbyte*>(data.constData()));
+    return out;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeSetCustomValue(JNIEnv* env, jclass, jlong handle, jstring jkey, jstring jvalue) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    return (h && h->setCustomValue(jqtJstring(env, jkey), jqtJstring(env, jvalue))) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeCustomValue(JNIEnv* env, jclass, jlong handle, jstring jkey) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    if (h == nullptr) return env->NewStringUTF("");
+    return env->NewStringUTF(h->customValue(jqtJstring(env, jkey)).toString().toUtf8().constData());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeRemoveCustomValue(JNIEnv* env, jclass, jlong handle, jstring jkey) {
+    QHelpEngineCore* h = jqtHelp(env, handle);
+    return (h && h->removeCustomValue(jqtJstring(env, jkey))) ? JNI_TRUE : JNI_FALSE;
+}
+#else
+JNIEXPORT jlong JNICALL Java_org_jqt_QHelpEngineCore_nativeCreate(JNIEnv*, jclass, jstring) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QHelpEngineCore_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QHelpEngineCore_nativeClose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeSetupData(JNIEnv*, jclass, jlong) { return JNI_FALSE; }
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeError(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeNamespaceName(JNIEnv* env, jclass, jstring) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeMetaData(JNIEnv* env, jclass, jstring, jstring) { return env->NewStringUTF(""); }
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QHelpEngineCore_nativeRegisteredDocumentations(JNIEnv* env, jclass, jlong) { return jqtStringList(env, QStringList()); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeDocumentationFileName(JNIEnv* env, jclass, jlong, jstring) { return env->NewStringUTF(""); }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeRegisterDocumentation(JNIEnv*, jclass, jlong, jstring) { return JNI_FALSE; }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeUnregisterDocumentation(JNIEnv*, jclass, jlong, jstring) { return JNI_FALSE; }
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QHelpEngineCore_nativeFiles(JNIEnv* env, jclass, jlong, jstring, jobjectArray, jstring) { return jqtStringList(env, QStringList()); }
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QHelpEngineCore_nativeFileData(JNIEnv* env, jclass, jlong, jstring) { return env->NewByteArray(0); }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeSetCustomValue(JNIEnv*, jclass, jlong, jstring, jstring) { return JNI_FALSE; }
+JNIEXPORT jstring JNICALL Java_org_jqt_QHelpEngineCore_nativeCustomValue(JNIEnv* env, jclass, jlong, jstring) { return env->NewStringUTF(""); }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeRemoveCustomValue(JNIEnv*, jclass, jlong, jstring) { return JNI_FALSE; }
+#endif
+
+}   // extern "C" (QtHelp)
 
 extern "C" {   // QtPositioning(P2)
 
