@@ -65,6 +65,12 @@ $gppArgs = @(
 $svgLib = Join-Path $Kit "lib\libQt6Svg.a"
 $svgDll = Join-Path $Kit "bin\Qt6Svg.dll"
 $gppArgs += @("-DJQT_HAVE_NETWORK", "-DJQT_HAVE_SQL_MODELS")   # QtNetwork 属 qtbase,始终可用
+if ((Test-Path (Join-Path $Kit "lib\libQt6Positioning.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Positioning.dll"))) {
+    $gppArgs += @("-DJQT_HAVE_POSITIONING", "-I", (Join-Path $Kit "include\QtPositioning"), "-lQt6Positioning")
+    Write-Host "==> QtPositioning found - QGeoCoordinate enabled"
+} else {
+    Write-Host "==> QtPositioning not found - QGeoCoordinate will report unavailable"
+}
 if (((Test-Path (Join-Path $Kit "lib\libQt6Quick.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Quick.dll"))) -and (Test-Path (Join-Path $Kit "include\QtQmlIntegration\qqmlintegration.h"))) {
     $gppArgs += @("-DJQT_HAVE_QML", "-I", (Join-Path $Kit "include\QtQuick"),
                   "-I", (Join-Path $Kit "include\QtQml"), "-I", (Join-Path $Kit "include\QtQmlIntegration"), "-lQt6Quick", "-lQt6Qml")

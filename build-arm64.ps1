@@ -105,6 +105,17 @@ Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") | Out-Host
 # QtWebSockets 探测(非 qtbase;ARM64 包通常不带 -> 自动降级)。
 # 注意:编译标志必须插在 "/link" **之前** —— 追加到数组末尾会落进链接器段,
 # cl 会把包含目录当成 .obj 输入(LNK1181,实测踩过)。
+$geoLib = Join-Path $QtRoot "lib\Qt6Positioning.lib"
+if (Test-Path $geoLib) {
+    $linkIdx5 = [Array]::IndexOf($clArgs, "/link")
+    if ($linkIdx5 -lt 0) { $linkIdx5 = $clArgs.Count }
+    $pre5 = @("/DJQT_HAVE_POSITIONING", "/I", (Join-Path $QtRoot "include\QtPositioning"))
+    $clArgs = $clArgs[0..($linkIdx5 - 1)] + $pre5 + $clArgs[$linkIdx5..($clArgs.Count - 1)]
+    $clArgs += @("/link", $geoLib)
+    Write-Host "==> QtPositioning found - QGeoCoordinate enabled"
+} else {
+    Write-Host "==> QtPositioning not found - QGeoCoordinate will report unavailable"
+}
 $qmlLib = Join-Path $QtRoot "lib\Qt6Quick.lib"
 $qmlIntegration = Join-Path $QtRoot "include\QtQmlIntegration\qqmlintegration.h"
 if ((Test-Path $qmlLib) -and (Test-Path $qmlIntegration)) {

@@ -62,6 +62,14 @@ fi
 # QtQuick 探测:除 QtQuick.framework 外还必须找得到 qqmlintegration.h ——
 # 否则 <QQmlComponent> 会把它 include 进来而报 "file not found"
 # (CI 的 6.8.3 macOS 树就是这种"半个 QML"状态)。
+if [ -d "$QTLIB/QtPositioning.framework" ]; then
+  GEO_FLAGS="-DJQT_HAVE_POSITIONING -I$QTLIB/QtPositioning.framework/Headers -framework QtPositioning"
+  echo "==> QtPositioning found - QGeoCoordinate enabled"
+else
+  GEO_FLAGS=""
+  echo "==> QtPositioning not found - QGeoCoordinate will report unavailable"
+fi
+
 if [ -d "$QTLIB/QtQuick.framework" ] && { [ -f "$QTLIB/QtQmlIntegration.framework/Headers/qqmlintegration.h" ] || [ -f "$QTLIB/QtQml.framework/Headers/QtQmlIntegration/qqmlintegration.h" ]; }; then
   QML_FLAGS="-DJQT_HAVE_QML -I$QTLIB/QtQuick.framework/Headers -I$QTLIB/QtQml.framework/Headers -I$QTLIB/QtQmlIntegration.framework/Headers -framework QtQuick -framework QtQml -framework QtQmlIntegration"
   echo "==> QtQuick found - QQuickView enabled"
@@ -102,7 +110,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" -I"$QTLIB/QtNetwork.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
-    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
+    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
 
 # ---- 3. Deploy license notices ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true
