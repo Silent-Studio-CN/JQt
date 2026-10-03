@@ -59,7 +59,10 @@ if [ -d "$QTLIB/QtSerialPort.framework/Headers" ]; then
   cp "$LIB/sp_include/QtSerialPort/"QSerialPort "$LIB/sp_include/QtSerialPort/"QSerialPortInfo "$LIB/sp_include/QtSerialPort/"*.h "$QTLIB/QtCore.framework/Headers/" 2>/dev/null || true
   ls "$LIB/sp_include/QtSerialPort/" 2>&1 | head -5 || true
 fi
-if [ -d "$QTLIB/QtQuick.framework" ]; then
+# QtQuick 探测:除 QtQuick.framework 外还必须找得到 qqmlintegration.h ——
+# 否则 <QQmlComponent> 会把它 include 进来而报 "file not found"
+# (CI 的 6.8.3 macOS 树就是这种"半个 QML"状态)。
+if [ -d "$QTLIB/QtQuick.framework" ] && { [ -f "$QTLIB/QtQmlIntegration.framework/Headers/qqmlintegration.h" ] || [ -f "$QTLIB/QtQml.framework/Headers/QtQmlIntegration/qqmlintegration.h" ]; }; then
   QML_FLAGS="-DJQT_HAVE_QML -I$QTLIB/QtQuick.framework/Headers -I$QTLIB/QtQml.framework/Headers -I$QTLIB/QtQmlIntegration.framework/Headers -framework QtQuick -framework QtQml -framework QtQmlIntegration"
   echo "==> QtQuick found - QQuickView enabled"
 else

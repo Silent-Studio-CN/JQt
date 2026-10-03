@@ -38,7 +38,8 @@ QTLIB="$QT_BASE/lib"
 [ -d "$QTLIB/x86_64-linux-gnu" ] && QTLIB="$QTLIB/x86_64-linux-gnu"
 
 echo "==> Compiling native bridge (libjqt.so)"
-if ls "$QTLIB"/libQt6Quick.so* >/dev/null 2>&1; then
+# 同 macOS:QML 需要 QtQmlIntegration 的头,缺了就不要开(否则编译期报错)
+if ls "$QTLIB"/libQt6Quick.so* >/dev/null 2>&1 && [ -f "$QTINC/QtQmlIntegration/qqmlintegration.h" ]; then
   QML_FLAGS="-DJQT_HAVE_QML -I$QTINC/QtQuick -I$QTINC/QtQml -I$QTINC/QtQmlIntegration -lQt6Quick -lQt6Qml"
   echo "==> QtQuick found - QQuickView enabled"
 else
