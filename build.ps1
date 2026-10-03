@@ -65,6 +65,13 @@ $gppArgs = @(
 $svgLib = Join-Path $Kit "lib\libQt6Svg.a"
 $svgDll = Join-Path $Kit "bin\Qt6Svg.dll"
 $gppArgs += @("-DJQT_HAVE_NETWORK", "-DJQT_HAVE_SQL_MODELS")   # QtNetwork 属 qtbase,始终可用
+if ((Test-Path (Join-Path $Kit "lib\libQt6Quick.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Quick.dll"))) {
+    $gppArgs += @("-DJQT_HAVE_QML", "-I", (Join-Path $Kit "include\QtQuick"),
+                  "-I", (Join-Path $Kit "include\QtQml"), "-lQt6Quick", "-lQt6Qml")
+    Write-Host "==> QtQuick found - QQuickView enabled"
+} else {
+    Write-Host "==> QtQuick not found - QQuickView will report unavailable"
+}
 if ((Test-Path (Join-Path $Kit "lib\libQt6Multimedia.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Multimedia.dll"))) {
     $gppArgs += @("-DJQT_HAVE_MULTIMEDIA", "-I", (Join-Path $Kit "include\QtMultimedia"), "-lQt6Multimedia")
     Write-Host "==> QtMultimedia found - QMediaPlayer enabled"

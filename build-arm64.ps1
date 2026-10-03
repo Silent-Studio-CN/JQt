@@ -105,6 +105,17 @@ Test-Path (Join-Path $QtRoot "include\QtSerialPort\QSerialPort") | Out-Host
 # QtWebSockets 探测(非 qtbase;ARM64 包通常不带 -> 自动降级)。
 # 注意:编译标志必须插在 "/link" **之前** —— 追加到数组末尾会落进链接器段,
 # cl 会把包含目录当成 .obj 输入(LNK1181,实测踩过)。
+$qmlLib = Join-Path $QtRoot "lib\Qt6Quick.lib"
+if (Test-Path $qmlLib) {
+    $linkIdx4 = [Array]::IndexOf($clArgs, "/link")
+    if ($linkIdx4 -lt 0) { $linkIdx4 = $clArgs.Count }
+    $pre4 = @("/DJQT_HAVE_QML", "/I", (Join-Path $QtRoot "include\QtQuick"), "/I", (Join-Path $QtRoot "include\QtQml"))
+    $clArgs = $clArgs[0..($linkIdx4 - 1)] + $pre4 + $clArgs[$linkIdx4..($clArgs.Count - 1)]
+    $clArgs += @("/link", $qmlLib, (Join-Path $QtRoot "lib\Qt6Qml.lib"))
+    Write-Host "==> QtQuick found - QQuickView enabled"
+} else {
+    Write-Host "==> QtQuick not found - QQuickView will report unavailable"
+}
 $mmLib = Join-Path $QtRoot "lib\Qt6Multimedia.lib"
 if (Test-Path $mmLib) {
     $linkIdx3 = [Array]::IndexOf($clArgs, "/link")

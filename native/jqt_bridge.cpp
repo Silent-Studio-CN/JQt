@@ -159,6 +159,15 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #define JQT_HAVE_SQL_MODELS 1
 #endif
 
+#if defined(JQT_HAVE_QML)
+#include <QQuickView>       // P2:QtQuick(非 qtbase,需探测)
+#include <QQuickItem>
+#include <QQmlComponent>
+#include <QQmlEngine>
+#include <QUrl>
+#include <QImage>
+#include <QBuffer>
+#endif
 #if defined(JQT_HAVE_MULTIMEDIA)
 #include <QMediaPlayer>   // P2:QtMultimedia(非 qtbase,需探测)
 #include <QAudioOutput>
@@ -7169,6 +7178,132 @@ JNIEXPORT void JNICALL Java_org_jqt_QDialog_nativeSetWindowModality(JNIEnv* env,
     if (d) d->setWindowModality(static_cast<Qt::WindowModality>(modality));
 }
 }   // extern "C" (QDialog modality)
+
+extern "C" {   // QtQuick(P2)
+
+// ---------------------------------------------------------------------------
+// QtQuick(v1.9.1 P2):QQuickView —— 加载 QML + 离屏渲染成图片
+//   QtQuick 不属于 qtbase -> JQT_HAVE_QML 特性探测。
+//   离屏环境需要 QT_QUICK_BACKEND=software(场景图默认要 OpenGL)。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QQuickView_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_QML
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_QML
+static QQuickView* jqtView(JNIEnv* env, jlong handle) {
+    return static_cast<QQuickView*>(requireHandle(env, handle));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QQuickView_nativeCreate(JNIEnv* env, jclass) {
+    if (requireApp(env) == nullptr) return 0;
+    return registerHandle(new QQuickView(), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtView(env, handle);
+    if (v) delete v;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeConnectStatus(JNIEnv* env, jobject thiz, jlong handle) {
+    if (!jqtConnectOnce(handle, "QQuickView.status")) return;
+    QQuickView* v = jqtView(env, handle);
+    if (v == nullptr) return;
+    jobject gRef = env->NewGlobalRef(thiz);
+    QObject::connect(v, &QQuickView::statusChanged, [gRef](QQuickView::Status st) {
+        JNIEnv* e = callbackEnv();
+        if (e == nullptr) return;
+        // 顺带把错误列表拼成字符串(出错时用户最需要它)
+        QString errs;
+        if (st == QQuickView::Error) {
+            // 视图对象从 gRef 拿不到,错误文本由 Java 侧在需要时另取;这里留空
+        }
+        jstring js = e->NewStringUTF(errs.toUtf8().constData());
+        jclass cls = e->GetObjectClass(gRef);
+        jmethodID mid = e->GetMethodID(cls, "nativeHandleStatusChanged", "(ILjava/lang/String;)V");
+        if (mid) { e->CallVoidMethod(gRef, mid, static_cast<jint>(st), js); checkJniException(e); }
+        e->DeleteLocalRef(cls);
+        e->DeleteLocalRef(js);
+    });
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeSetSource(JNIEnv* env, jclass, jlong handle, jstring jurl) {
+    QQuickView* v = jqtView(env, handle);
+    if (v == nullptr || jurl == nullptr) return;
+    const char* c = env->GetStringUTFChars(jurl, nullptr);
+    const QString u = QString::fromUtf8(c);
+    env->ReleaseStringUTFChars(jurl, c);
+    v->setSource(u.contains("://") || u.startsWith("qrc:") ? QUrl(u) : QUrl::fromLocalFile(u));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeSetSourceData(JNIEnv* env, jclass, jlong handle, jstring jqml) {
+    QQuickView* v = jqtView(env, handle);
+    if (v == nullptr || jqml == nullptr) return;
+    const char* c = env->GetStringUTFChars(jqml, nullptr);
+    const QByteArray bytes(c);
+    env->ReleaseStringUTFChars(jqml, c);
+    // 内联 QML 写进临时文件再 setSource —— 这是 QQuickView 最可靠的加载路径
+    // (直接用 QQmlComponent::setData 挂 contentItem 在离屏下常拿不到内容)
+    const QString path = QDir::tempPath() + QStringLiteral("/jqt-qml-")
+                       + QUuid::createUuid().toString(QUuid::WithoutBraces) + QStringLiteral(".qml");
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return;
+    f.write(bytes);
+    f.close();
+    v->setSource(QUrl::fromLocalFile(path));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeResize(JNIEnv* env, jclass, jlong handle, jint w, jint h) {
+    QQuickView* v = jqtView(env, handle);
+    if (v) v->resize(static_cast<int>(w), static_cast<int>(h));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeShow(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtView(env, handle);
+    if (v) v->show();
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeHide(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtView(env, handle);
+    if (v) v->hide();
+}
+
+// 离屏渲染:QQuickWindow::grabWindow() 把场景图渲成图片;
+// 未显示时先 show() 再 processEvents 才能拿到内容
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QQuickView_nativeGrabToPng(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtView(env, handle);
+    if (v == nullptr) return nullptr;
+    if (v->size().isEmpty()) v->resize(640, 480);
+    if (!v->isVisible()) v->show();
+    QCoreApplication::processEvents();          // 让场景图有机会建立
+    QCoreApplication::processEvents();
+    const QImage img = v->grabWindow();
+    QByteArray png;
+    QBuffer buf(&png);
+    buf.open(QIODevice::WriteOnly);
+    img.save(&buf, "PNG");
+    buf.close();
+    jbyteArray out = env->NewByteArray(png.size());
+    env->SetByteArrayRegion(out, 0, png.size(), reinterpret_cast<const jbyte*>(png.constData()));
+    return out;
+}
+#else
+JNIEXPORT jlong JNICALL Java_org_jqt_QQuickView_nativeCreate(JNIEnv*, jclass) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeConnectStatus(JNIEnv*, jobject, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeSetSource(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeSetSourceData(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeResize(JNIEnv*, jclass, jlong, jint, jint) {}
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeShow(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QQuickView_nativeHide(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QQuickView_nativeGrabToPng(JNIEnv*, jclass, jlong) { return nullptr; }
+#endif
+
+}   // extern "C" (QtQuick)
 
 extern "C" {   // QtMultimedia(P2)
 
