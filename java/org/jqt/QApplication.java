@@ -584,6 +584,14 @@ public class QApplication {
     public static long activeWindow() { return nativeActiveWindow(); }
     private static native long nativeActiveWindow();
 
+    /**
+     * 当前活动模态控件的**原生指针**（{@code QApplication::activeModalWidget}）。
+     * <p>窗口模态生效期间指向该对话框;无前台焦点会话时可能为 0。
+     * <p>注意返回的是 C++ 指针而非 JQt 句柄(与 {@link #activeWindow()} 同约定)。
+     */
+    public static long activeModalWidget() { return nativeActiveModalWidget(); }
+    private static native long nativeActiveModalWidget();
+
     /** 当前焦点控件（QApplication::focusWidget；返回句柄，无则 0）。 */
     public static long focusWidget() { return nativeFocusWidget(); }
     private static native long nativeFocusWidget();

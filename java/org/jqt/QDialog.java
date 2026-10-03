@@ -53,12 +53,12 @@ public class QDialog extends QWidget {
      * <p>布尔 {@link #isModal()} 无法区分"窗口模态"与"应用模态"，需要精确判断时用本方法
      * （v1.9.1 新增，见问题报告 J14；对应 Qt 的 QWidget::windowModality）。
      */
-    public int modality() { return nativeModality(nativeHandle); }
-    private native int nativeModality(long handle);
+    public int windowModality() { return nativeWindowModality(nativeHandle); }
+    private native int nativeWindowModality(long handle);
 
     /** 设置模态级别（0=NonModal 1=WindowModal 2=ApplicationModal）。 */
-    public void setModality(int modality) { nativeSetModality(nativeHandle, modality); }
-    private native void nativeSetModality(long handle, int modality);
+    public void setWindowModality(int modality) { nativeSetWindowModality(nativeHandle, modality); }
+    private native void nativeSetWindowModality(long handle, int modality);
 
     /** 以 Accepted 结果关闭（QDialog::accept）。 */
     public void accept() {

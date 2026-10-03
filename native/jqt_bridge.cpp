@@ -12081,6 +12081,13 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeActiveWindow(JNIEnv* env
     QWidget* w = QApplication::activeWindow();
     return w != nullptr ? reinterpret_cast<jlong>(w) : 0;
 }
+// 当前活动模态控件(v1.9.1,配合 J13/J14):窗口模态下即当前对话框;
+// 受前台焦点影响,无前台会话时可能为 0。
+JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeActiveModalWidget(JNIEnv* /*env*/, jclass) {
+    QWidget* w = QApplication::activeModalWidget();
+    return w ? reinterpret_cast<jlong>(w) : 0;   // 返回指针(QWidget.find 侧的约定见 Java 注释)
+}
+
 JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeFocusWidget(JNIEnv* env, jclass /*cls*/) {
     if (requireApp(env) == nullptr) return 0;
     QWidget* w = QApplication::focusWidget();

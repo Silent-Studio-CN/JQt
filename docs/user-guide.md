@@ -53,6 +53,12 @@ lib/
   ```powershell
   set PATH=%CD%\lib;%PATH%
   set QT_QPA_PLATFORM_PLUGIN_PATH=%CD%\lib\platforms
+
+> **模态三档**(v1.9.1):`dialog.windowModality()` 返回 `0=NonModal / 1=WindowModal / 2=ApplicationModal`。
+> `open()` 是 **窗口模态**(会阻塞父窗口输入),`show()` 才是真非模态;布尔 `isModal()` 无法区分
+> 窗口模态与应用模态,需要精确判断时用 `windowModality()`。
+> 实测(Qt 6,Windows):`open()` 后 `isModal()==true`、`windowModality()==1`,而**父窗口 `isEnabled()` 仍为 true** ——
+> Qt 的模态是在**事件分发层**拦截(`isBlockedByModal`),不是通过禁用父窗口实现,所以别用 `isEnabled()` 判断模态。
   java -Djava.library.path=lib --enable-native-access=ALL-UNNAMED -cp "lib\jqt-0.1.0-alpha.jar;." Hello
   ```
   > ⚠️ **另一个坑**：必须用**环境变量**（`set X=...` / `export X=...`）。

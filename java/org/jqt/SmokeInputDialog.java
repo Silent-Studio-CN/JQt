@@ -17,6 +17,24 @@ public class SmokeInputDialog {
         System.out.println("[idlg] start");
         QApplication app = new QApplication();
 
+        // ---- 模态级别 API（v1.9.1，问题报告 J13/J14）----
+        QDialog md = new QDialog("modal-probe", 0);
+        check("默认 windowModality = 0(NonModal，实际 " + md.windowModality() + ")",
+              md.windowModality() == 0);
+        check("默认 isModal = false", !md.isModal());
+        md.setWindowModality(1);                     // Qt::WindowModal
+        check("setWindowModality(1) 生效(实际 " + md.windowModality() + ")",
+              md.windowModality() == 1);
+        md.open();                                   // open() 是窗口模态
+        check("open() 后 isModal = true(窗口模态语义，实际 " + md.isModal() + ")", md.isModal());
+        check("open() 后 windowModality 仍为 1(实际 " + md.windowModality() + ")",
+              md.windowModality() == 1);
+        md.close();
+        md.setWindowModality(0);
+        md.show();                                   // show() 才是真非模态
+        check("show() 后 isModal = false(实际 " + md.isModal() + ")", !md.isModal());
+        md.close();
+
         QInputDialog dlg = new QInputDialog();
         dlg.setLabelText("积分数量");
         dlg.setOkButtonText("确认");
