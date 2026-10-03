@@ -7211,19 +7211,9 @@ extern "C" {   // QtHelp(P2)
 //   API 按 Qt 6 头文件对齐:namespaceName/metaData 是 static;
 //   files() 在 Qt 6 需要三个参数(命名空间/过滤属性/扩展名)。
 // ---------------------------------------------------------------------------
-JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeAvailable(JNIEnv*, jclass) {
-#ifdef JQT_HAVE_HELP
-    return JNI_TRUE;
-#else
-    return JNI_FALSE;
-#endif
-}
-
-#ifdef JQT_HAVE_HELP
-static QHelpEngineCore* jqtHelp(JNIEnv* env, jlong handle) {
-    return static_cast<QHelpEngineCore*>(requireHandle(env, handle));
-}
-
+// 下面两个 helper 在**启用与禁用分支**里都要用到,因此放在 #ifdef 之外 ——
+// 曾经放在 #ifdef 内部,导致"未装 QtHelp 的平台"(CI 的 6.8.3 线/macOS)
+// 编译失败,而本机(装了 QtHelp)完全看不出来:典型的"只在缺失平台暴露"的坑。
 static jobjectArray jqtStringList(JNIEnv* env, const QStringList& list) {
     jclass strCls = env->FindClass("java/lang/String");
     jobjectArray arr = env->NewObjectArray(list.size(), strCls, nullptr);
@@ -7241,6 +7231,19 @@ static QString jqtJstring(JNIEnv* env, jstring js) {
     const QString out = QString::fromUtf8(c);
     env->ReleaseStringUTFChars(js, c);
     return out;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QHelpEngineCore_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_HELP
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_HELP
+static QHelpEngineCore* jqtHelp(JNIEnv* env, jlong handle) {
+    return static_cast<QHelpEngineCore*>(requireHandle(env, handle));
 }
 
 JNIEXPORT jlong JNICALL Java_org_jqt_QHelpEngineCore_nativeCreate(JNIEnv* env, jclass, jstring jfile) {
