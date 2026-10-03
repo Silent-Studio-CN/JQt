@@ -49,14 +49,20 @@ public class SmokeHelp {
         return p;
     }
 
-    static String findGenerator() {
+    /** @return {路径, 是否可信};可信 = 由环境变量显式指定(必须是我们的 Qt 附带的工具) */
+    static String[] findGenerator() {
         String env = System.getenv("JQT_QHELP_GENERATOR");
-        if (env != null && !env.isEmpty() && new File(env).isFile()) return env;
+        if (env != null && !env.isEmpty()) {
+            if (new File(env).isFile()) return new String[] {env, "trusted"};
+            System.out.println("[help] 环境变量 JQT_QHELP_GENERATOR 指向的文件不存在: " + env);
+        }
+        // PATH 里找到的可能是发行版包装脚本(例如 Ubuntu 的 qtchooser),
+        // 它指向的未必是我们的 Qt —— 标记为不可信,失败时只告警不判失败。
         String exe = System.getProperty("os.name", "").toLowerCase().contains("win")
                    ? "qhelpgenerator.exe" : "qhelpgenerator";
         for (String dir : System.getenv().getOrDefault("PATH", "").split(File.pathSeparator)) {
             File f = new File(dir, exe);
-            if (f.isFile()) return f.getAbsolutePath();
+            if (f.isFile()) return new String[] {f.getAbsolutePath(), "untrusted"};
         }
         return null;
     }
@@ -88,12 +94,14 @@ public class SmokeHelp {
               help.fileData("qthelp://x/doc/a.html").length == 0);
 
         // ---- 现场生成 .qch:证明"不需要预置帮助资源" ----
-        String gen = findGenerator();
+        String[] found = findGenerator();
+        String gen = found == null ? null : found[0];
+        boolean trusted = found != null && "trusted".equals(found[1]);
         boolean haveQch = false;
         if (gen == null) {
             System.out.println("[help] SKIP 未找到 qhelpgenerator(可用环境变量 JQT_QHELP_GENERATOR 指定)");
         } else {
-            System.out.println("[help] qhelpgenerator: " + gen);
+            System.out.println("[help] qhelpgenerator: " + gen + (trusted ? "(env 指定)" : "(PATH 发现,不可信)"));
             Path qhp = writeQhp(dir, "org.jqt.smoke");
             Path qch = dir.resolve("smoke.qch");
             ProcessBuilder pb = new ProcessBuilder(gen, qhp.toString(), "-o", qch.toString());
@@ -104,7 +112,15 @@ public class SmokeHelp {
             System.out.println("[help] qhelpgenerator 退出码 " + rc
                              + (out.isBlank() ? "" : " | " + out.trim().split("\\r?\\n")[0]));
             haveQch = (rc == 0 && Files.exists(qch) && Files.size(qch) > 0);
-            check("qhelpgenerator 现场生成 .qch 成功(无需预置资源)", haveQch);
+            if (trusted) {
+                check("qhelpgenerator 现场生成 .qch 成功(无需预置资源)", haveQch);
+            } else if (!haveQch) {
+                // 发行版包装脚本/别的 Qt 失败,不是本库的问题 -> 告警并跳过
+                System.out.println("[help] SKIP PATH 里发现的 qhelpgenerator 不可用(退出码 " + rc
+                                 + "),改用环境变量 JQT_QHELP_GENERATOR 指定本 Qt 的工具");
+            } else {
+                check("PATH 发现的 qhelpgenerator 也生成了 .qch", true);
+            }
             if (haveQch) {
                 System.out.println("[help] .qch 大小 " + Files.size(qch) + " 字节");
                 check("static namespaceName(.qch) 读出 org.jqt.smoke(实际 "

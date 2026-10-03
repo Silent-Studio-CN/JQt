@@ -76,7 +76,9 @@ jobs:
           [ -d /tmp/qttools/include ] && sudo cp -a /tmp/qttools/include/. /opt/6.12.0/gcc_64/include/
           [ -d /tmp/qttools/bin ] && sudo cp -a /tmp/qttools/bin/. /opt/6.12.0/gcc_64/bin/
           ls /opt/6.12.0/gcc_64/lib | grep -qi help || (echo "libQt6Help missing"; exit 1)
-          ls /opt/6.12.0/gcc_64/bin | grep -qi qhelpgenerator || echo "::warning::qhelpgenerator 未安装"
+          ls /opt/6.12.0/gcc_64/bin | grep -qi qhelpgenerator \
+            && echo "qhelpgenerator: /opt/6.12.0/gcc_64/bin/qhelpgenerator" \
+            || echo "::warning::qhelpgenerator 未随 qttools 装入 /opt/6.12.0/gcc_64/bin"
 
       - name: Install QtPositioning 6.12.0 (prebuilt addon)
         run: |
@@ -223,7 +225,12 @@ jobs:
           if [ $CODE8 -ne 0 ]; then exit $CODE8; fi
           # 新增冒烟:v1.9.1(P0 并发 / 回调异常 / QStackedWidget)
           export QT_QUICK_BACKEND=software       # QtQuick 场景图软件后端
-          export JQT_QHELP_GENERATOR=/opt/6.12.0/gcc_64/bin/qhelpgenerator
+          # 只在本 Qt 的工具确实存在时才导出 —— 避免冒烟误用发行版包装脚本
+          if [ -x /opt/6.12.0/gcc_64/bin/qhelpgenerator ]; then
+            export JQT_QHELP_GENERATOR=/opt/6.12.0/gcc_64/bin/qhelpgenerator
+          else
+            echo "::warning::未找到本 Qt 的 qhelpgenerator,Help 冒烟将跳过 .qch 生成段"
+          fi
           for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokePositioning org.jqt.SmokeHelp; do
             QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class $C -AutoClose 1200 > "smoke_$C.txt" 2>&1
             RC=$?
