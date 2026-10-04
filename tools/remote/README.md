@@ -3,6 +3,37 @@
 > 这些脚本**部署到节点**;节点上的密钥/token 不进仓库。
 > 节点:`silent@192.168.211.7`(nginx `:8080` → 公网入口由隧道/sslh 转发)
 
+## 接口文档(在线看,无需下载)
+
+| 地址 | 说明 |
+|---|---|
+| `/docs/` | **在线接口文档**(Redoc 渲染;渲染器已自托管到 `/assets/redoc.standalone.js`,不依赖外网 CDN) |
+| `/openapi.yaml` | OpenAPI 3.1 原始文件(公开,`application/yaml`) |
+| `/openapi.json` | 同上,JSON 形式(便于 Postman/Apifox 导入) |
+
+文档内容:更新内容(1.0→1.4)+ **18 路径 / 19 操作** 的用法与含义 + 鉴权方式 + 错误码 +
+限流与上限 + SilentSafe 拦截提示格式与 `SS_ERR_ID_*` 编号。
+
+> 两个部署坑:① YAML 的 plain scalar 里出现 `: `(例如 `Authorization: Bearer`)会被当作
+> 嵌套映射,必须加引号;② nginx 需要空的 `types { }` 块才能让 `default_type` 生效,
+> 否则 `.yaml` 会以 `application/octet-stream` 返回(浏览器就会下载而不是显示)。
+
+## SilentSafe 拦截与封禁
+
+- 危险操作统一提示:
+  ```
+  [SilentSafe]: 您的行为<描述>根据服务器规则配置文件，已经被拦截。
+  [SilentSafe]  ErrCode: SS_ERR_ID_<编号>
+  ```
+- 规则表:`/opt/jhy-sandbox/silentsafe/rules.tsv`(标 `ban` 的规则会触发封禁)
+- **封禁**:先打印提示 → 记 `~/silentsafe-audit.log` → 停 2 秒 → 放触发文件
+  `/home/jhy/.silentsafe-trigger` → **宿主 systemd 路径单元**以 root 写
+  `/run/jhy-sandbox-ban` 并 SIGKILL 掉 uid 1001 的全部进程(踢下线);
+  封禁期内登录被拒,提示 `SS_ERR_ID_BAN` 与剩余秒数。
+- 沙箱内的 "root" 只是命名空间 root(宿主 uid 仍是她),写不了宿主 `/run` ——
+  封禁必须由宿主侧执行,这也正是用触发文件 + systemd 的原因。
+- 管理:`ss-ban status` / `ss-ban clear`(root)。
+
 ## 部署了什么
 
 | 组件 | 位置 | 说明 |
