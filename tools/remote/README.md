@@ -29,6 +29,10 @@ curl -s "https://<你的域名>/api/exec?cmd=uptime&token=$TOK"
 curl -s -X POST https://<你的域名>/api/exec \
      -H "Authorization: Bearer $TOK" --data-urlencode 'cmd=df -h'
 
+# 请求体直接就是命令(最贴近 "curl + 命令" 的直觉)
+curl -s -X POST https://<你的域名>/api/exec \
+     -H "Authorization: Bearer $TOK" --data-binary 'systemctl status nginx'
+
 # 只要输出(便于管道/重定向),退出码在响应头 X-JQt-Exit
 curl -s "https://<你的域名>/api/exec?cmd=ls%20-1&format=text&token=$TOK"
 curl -s "...&format=text&token=$TOK" | grep log
@@ -47,6 +51,23 @@ curl -s -X POST https://<你的域名>/api/exec -H "X-JQt-Token: $TOK" \
 **鉴权**:`?token=` / `Authorization: Bearer` / `X-JQt-Token` 三选一
 **返回**:`{"ok":bool,"exit":int,"stdout":str,"stderr":str,"ms":int,"truncated":bool}`
 **帮助**:`curl -s https://<域名>/api/exec/help`
+
+> 请求体解析规则:先按表单解析,**只有键里出现已知参数名(`cmd`/`cwd`/`timeout`/
+> `format`/`session`/`token`)才算表单**,否则整段请求体就是命令。
+> 这条是必需的 —— curl 的 `--data-binary` 默认 Content-Type 就是 form-urlencoded。
+
+## 登录跳转(2026-10-04 修复)
+
+**症状**:从 `/silent/` 登录后被踢回首页,而不是回到 `/silent/`。
+
+**两个原因**(都已修):
+1. `login.html` 里 `if(d.ok){ location.href='/' }` —— 写死跳首页,服务端返回的 `next` 没用上
+   → 现在记住来源入口(`location.pathname`,或 `?next=`)并跳回;
+2. 网关 `/api/login` 返回的 `next` 写死 `ALLOWED[user]`(=`/console/`)
+   → 新增 `safe_next(user, want)`:只允许 `/console/`、`/silent/`、`/account/` 前缀,
+   其余(根路径、`//evil.com`、外部 URL、`/api/...`)一律回落到默认入口 —— **防开放重定向**。
+
+验证脚本:`bash tools/remote/verify-login.sh`(白名单 9 用例 + 伪造合法 cookie 验证目的地)。
 
 ## token 管理(在节点上)
 
