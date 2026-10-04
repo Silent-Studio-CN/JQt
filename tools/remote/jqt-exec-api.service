@@ -1,0 +1,13 @@
+[Unit]
+Description=JQt remote terminal API (curl)
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/bin/jqt-exec-api.py
+Restart=always
+RestartSec=2
+User=root
+
+[Install]
+WantedBy=multi-user.target
