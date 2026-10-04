@@ -153,8 +153,10 @@ paths:
                 properties:
                   ok: { type: boolean }
                   user: { type: string }
+                  entry: { type: string, description: 该账号的入口路径（/console/ 或 /terminal/） }
               examples:
-                logged: { value: { ok: true, user: "silent" } }
+                admin: { value: { ok: true, user: "silent", entry: "/console/" } }
+                user: { value: { ok: true, user: "jhy", entry: "/terminal/" } }
                 anon: { value: { ok: false, user: "" } }
 
   /api/brand:
@@ -179,6 +181,7 @@ paths:
     get:
       tags: [状态与品牌]
       summary: 主机指标与服务状态
+      description: 该接口仅管理员（普通账号调用返回 403）
       description: 需要登录。返回主机名、内核、CPU、内存、磁盘、负载、服务状态、在线会话与品牌串。
       responses:
         "200":
@@ -371,6 +374,7 @@ paths:
     get:
       tags: [账号管理]
       summary: 审计日志与 fail2ban 摘要
+      description: 该接口仅管理员（普通账号调用返回 403）
       responses:
         "200":
           description: 最近登录/操作记录与封禁统计
@@ -416,6 +420,7 @@ paths:
     post:
       tags: [账号管理]
       summary: 注销所有在线会话
+      description: 该接口仅管理员（普通账号调用返回 403）
       description: 轮换签名密钥，使已下发的所有 Cookie 立即失效，并清除本机 Cookie。
       responses:
         "200":
@@ -431,6 +436,7 @@ paths:
     post:
       tags: [账号管理]
       summary: 设置品牌串
+      description: 该接口仅管理员（普通账号调用返回 403）
       description: 品牌串会同步到 HTTP `Server` 头、404 页面与站点页面标题（长度 ≤ 80）。
       requestBody:
         required: true
@@ -459,6 +465,7 @@ paths:
     post:
       tags: [账号管理]
       summary: 控制站点服务（启动/停止/重启）
+      description: 该接口仅管理员（普通账号调用返回 403）
       description: 仅允许白名单内的服务名与动作，避免误操作影响登录入口。
       requestBody:
         required: true
@@ -516,6 +523,34 @@ paths:
           content:
             text/html:
               schema: { type: string }
+
+  /terminal/:
+    get:
+      tags: [页面]
+      summary: 普通用户（jhy）的控制台（需登录）
+      description: |
+        与 `/console/` 同类的网页终端，但运行在**该受限用户自己的沙箱**里（独立 ttyd 实例）。
+        入口互相隔离：普通用户访问 `/console/`、`/silent/` 会被自动跳回本入口；
+        管理员访问 `/terminal/` 也会被跳回 `/console/`。
+      responses:
+        "200":
+          description: 终端页面或登录页
+          content:
+            text/html:
+              schema: { type: string }
+
+  /api/entry:
+    get:
+      tags: [认证]
+      summary: 跳转到当前账号的入口路径
+      description: |
+        已登录时 302 到本人入口（`/console/` 或 `/terminal/`），未登录时 302 到 `/login.html`。
+        nginx 在入口越权（403）时调用它自动纠正，避免"登录了却看到登录页"的死循环。
+      responses:
+        "302":
+          description: 跳转
+          headers:
+            Location: { schema: { type: string } }
 
   /account/:
     get:

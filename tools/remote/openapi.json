@@ -1,0 +1,1373 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SilentRemoveKit · 远程控制节点 API",
+    "version": "1.4.0",
+    "summary": "单端口多系统远程控制套件 —— 登录、状态、账号管理与 curl 直连终端",
+    "description": "SilentRemoveKit 把「网页终端 / 状态面板 / 账号管理 / 命令行接口」跑在同一个端口上\n（外部由 sslh + TLS 隧道按协议分流：浏览器走 HTTPS，终端走 SSH）。\n\n## 更新内容\n- **1.4.0**\n  - 新增 `POST/GET /api/exec` 终端接口：**curl 一条命令直接执行**，支持持久会话（`session`，`cd`/环境变量跨调用保留）、\n    文本输出模式（`format=text`，退出码在响应头 `X-JQt-Exit`）；逐 token 限流、审计日志、输出与超时上限。\n  - 新增 `/api/exec/sessions`、`/api/exec/help`。\n  - 新增 `/openapi.yaml`（本文件）与全套接口说明。\n  - 修复：从旧入口登录后不再被弹回首页 —— 登录会**回到来源入口**，并对跳转目标做白名单校验（防开放重定向）。\n  - 恢复旧入口 `/silent/`（与 `/console/` 等价，独立终端实例）；对外页面不展示该路径。\n  - 安全策略升级：危险操作统一拦截，提示中带 `ErrCode`；触发高危规则会**终止会话并封禁 5 分钟**（期间拒绝访问）。\n- **1.3.0** 登录（PAM）+ Cookie 校验；状态面板；`/account/` 管理页（改密、品牌、服务控制、审计）。\n- **1.2.0** 单端口分流（sslh）：HTTPS 与 SSH 共用一个公网端口。\n- **1.1.0** 品牌串下发（Server 头 / 404 页 / 页面同步）。\n- **1.0.0** 首页与网页终端（xterm.js + PTY）。\n\n## 鉴权方式（两套并存）\n1. **Cookie**（网页用）：`POST /api/login` 成功后下发 `jqt_auth`，有效期 8 小时；\n   除 `/_auth`（内部子请求）、`/api/login`、`/api/brand`、`/api/exec*` 之外的受保护路径都要求它。\n2. **Token**（命令行用）：`/api/exec` 系列专用，任选其一\n   `?token=<token>`、`Authorization: Bearer <token>`、`X-JQt-Token: <token>`。\n   token 由服务器 `/etc/jqt/api-tokens.json` 管理，可单独吊销。\n\n## 约定与限制\n- 响应统一 JSON：`{\"ok\": bool, ...}`；`ok=false` 时 `msg` 给出原因。\n- 错误码：`400` 参数错误 · `401` 未认证/token 无效 · `403` 明文 HTTP 被拒或越权 · `404` 未知接口 ·\n  `429` 触发限流或失败锁定 · `500` 服务器内部错误。\n- 限流：登录按 IP + 全局冷却；`/api/exec` 每 token 60 秒内最多 120 次。\n- 终端执行身份为受限用户；输出上限 512 KiB（超出 `truncated=true`）；单命令超时上限 300 秒（超时 `exit=124`）。\n- 审计：`/api/exec` 与登录/改密/服务操作都写日志（`/var/log/jqt/exec.log` 与系统日志）。\n\n## 安全策略（SilentSafe）\n服务器对危险操作统一拦截，提示固定格式：\n```\n[SilentSafe]: 您的行为<描述>根据服务器规则配置文件，已经被拦截。\n[SilentSafe]  ErrCode: SS_ERR_ID_<编号>\n```\n常用编号：`100` 破坏性删除 · `101` 磁盘/文件系统 · `102` 关机/内核模块 · `103` 防火墙 · `104` 账号权限 ·\n`105` 计划任务/系统服务 · `106` 容器虚拟化 · `108` 端口监听/扫描 · `109` 资源滥用。\n**触发 `100`（递归删除关键目录）等规则**时会先给出上述提示，随后**终止会话并封禁 300 秒**，\n封禁期内登录会被拒绝并提示 `SS_ERR_ID_BAN` 与剩余秒数。\n",
+    "contact": {
+      "name": "SilentStudio",
+      "url": "https://github.com/Silent-Studio-CN/JQt"
+    },
+    "license": {
+      "name": "私有部署 · 保留所有权利"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://<你的域名>",
+      "description": "公网入口（TLS 由隧道/sslh 终止）"
+    },
+    {
+      "url": "http://192.168.211.7:8080",
+      "description": "局域网直连（明文；仅内网可用，`/api/exec` 需 token 上开启 allow_http）"
+    }
+  ],
+  "tags": [
+    {
+      "name": "认证",
+      "description": "登录、登出、身份查询"
+    },
+    {
+      "name": "状态与品牌",
+      "description": "主机指标与品牌串"
+    },
+    {
+      "name": "终端执行",
+      "description": "curl 直连的命令执行接口（token 鉴权）"
+    },
+    {
+      "name": "账号管理",
+      "description": "改密、品牌下发、服务控制、审计（需 Cookie）"
+    },
+    {
+      "name": "页面",
+      "description": "静态页面与受保护的网页终端"
+    }
+  ],
+  "security": [
+    {
+      "cookieAuth": []
+    }
+  ],
+  "paths": {
+    "/api/login": {
+      "post": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "使用系统账号登录（PAM 校验）",
+        "description": "校验系统账号密码；成功后下发 Cookie `jqt_auth`（8 小时）。\n连续失败会按 IP 计数并触发临时锁定，全局失败过多时服务进入 15 分钟冷却。\n",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "user",
+                  "password"
+                ],
+                "properties": {
+                  "user": {
+                    "type": "string",
+                    "description": "系统账号名"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "系统密码"
+                  },
+                  "next": {
+                    "type": "string",
+                    "description": "登录后想去的站内路径（仅接受 /console/、/silent/、/account/ 前缀，其余回落默认入口）"
+                  }
+                }
+              },
+              "examples": {
+                "basic": {
+                  "value": "{ user: silent, password: \"******\" }"
+                },
+                "keepEntry": {
+                  "value": "{ user: silent, password: \"******\", next: /silent/ }"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "jqt_auth=<token>; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800"
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResult"
+                },
+                "examples": {
+                  "ok": {
+                    "value": "{ ok: true, next: \"/silent/\", user: \"silent\" }"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "description": "账号或密码错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "bad": {
+                    "value": {
+                      "ok": false,
+                      "msg": "账号或密码错误"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "失败次数过多或服务冷却中",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/logout": {
+      "get": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "退出登录（清除 Cookie）",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "已登出",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/whoami": {
+      "get": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "查询当前登录身份",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "身份信息（未登录时 ok=false）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "user": {
+                      "type": "string"
+                    },
+                    "entry": {
+                      "type": "string",
+                      "description": "该账号的入口路径（/console/ 或 /terminal/）"
+                    }
+                  }
+                },
+                "examples": {
+                  "admin": {
+                    "value": {
+                      "ok": true,
+                      "user": "silent",
+                      "entry": "/console/"
+                    }
+                  },
+                  "user": {
+                    "value": {
+                      "ok": true,
+                      "user": "jhy",
+                      "entry": "/terminal/"
+                    }
+                  },
+                  "anon": {
+                    "value": {
+                      "ok": false,
+                      "user": ""
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/brand": {
+      "get": {
+        "tags": [
+          "状态与品牌"
+        ],
+        "summary": "读取品牌串（公开）",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "品牌信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Brand"
+                },
+                "examples": {
+                  "line": {
+                    "value": {
+                      "line": "SilentRemoveKit - 更智能的多系统远程控制套件",
+                      "name": "SilentRemoveKit",
+                      "version": "更智能的多系统远程控制套件"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/status": {
+      "get": {
+        "tags": [
+          "状态与品牌"
+        ],
+        "summary": "主机指标与服务状态",
+        "description": "需要登录。返回主机名、内核、CPU、内存、磁盘、负载、服务状态、在线会话与品牌串。",
+        "responses": {
+          "200": {
+            "description": "指标",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/exec": {
+      "get": {
+        "tags": [
+          "终端执行"
+        ],
+        "summary": "执行一条命令（GET，最省事）",
+        "description": "以受限身份执行命令并返回结果。适合「curl + 命令」的用法：\n\n```bash\ncurl -s \"https://<域名>/api/exec?cmd=uptime&token=$TOK\"\ncurl -s \"https://<域名>/api/exec?cmd=ls%20-1&format=text&token=$TOK\" | grep log\ncurl -s \"https://<域名>/api/exec?cmd=cd%20/var/log&session=main&token=$TOK\"\n```\n",
+        "security": [
+          {
+            "apiToken": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Cmd"
+          },
+          {
+            "$ref": "#/components/parameters/Cwd"
+          },
+          {
+            "$ref": "#/components/parameters/Timeout"
+          },
+          {
+            "$ref": "#/components/parameters/Format"
+          },
+          {
+            "$ref": "#/components/parameters/Session"
+          },
+          {
+            "$ref": "#/components/parameters/TokenQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "执行完成（`ok` 表示退出码是否为 0）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecResult"
+                },
+                "examples": {
+                  "ok": {
+                    "value": {
+                      "ok": true,
+                      "exit": 0,
+                      "stdout": "up 3 days, 4:21\n",
+                      "stderr": "",
+                      "ms": 12,
+                      "cmd": "uptime -p",
+                      "session": "",
+                      "truncated": false
+                    }
+                  }
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "description": "`format=text` 时只返回 stdout，退出码见响应头 X-JQt-Exit"
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "description": "token 缺失或无效",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "noToken": {
+                    "value": {
+                      "ok": false,
+                      "msg": "缺少或无效的 token(见 /api/exec/help)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "明文 HTTP 被拒绝（token 未开启 allow_http）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "plain": {
+                    "value": "{ ok: false, msg: \"明文 HTTP 被拒绝;请用 https,或在 token 上设 allow_http=true\" }"
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "触发限流（每 token 60 秒 120 次）"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "终端执行"
+        ],
+        "summary": "执行一条命令（POST，命令与 token 都不进 URL）",
+        "description": "三种提交方式任选：\n\n```bash\n# 表单\ncurl -s -X POST https://<域名>/api/exec -H \"Authorization: Bearer $TOK\" \\\n     --data-urlencode 'cmd=df -h'\n\n# 请求体直接就是命令\ncurl -s -X POST https://<域名>/api/exec -H \"X-JQt-Token: $TOK\" \\\n     --data-binary 'systemctl status nginx'\n\n# JSON\ncurl -s -X POST https://<域名>/api/exec -H \"Authorization: Bearer $TOK\" \\\n     -H 'Content-Type: application/json' -d '{\"cmd\":\"free -m\",\"timeout\":10}'\n```\n解析规则：先按表单解析，**只有键里出现 `cmd`/`cwd`/`timeout`/`format`/`session`/`token`\n之一才当表单**，否则整段请求体就是命令（因为 curl 的 `--data-binary` 默认 Content-Type 就是表单）。\n",
+        "security": [
+          {
+            "apiToken": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TokenQuery"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExecRequest"
+              }
+            },
+            "text/plain": {
+              "schema": {
+                "type": "string",
+                "description": "直接作为命令执行"
+              },
+              "examples": {
+                "body": {
+                  "value": "df -h"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "执行完成",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "明文 HTTP 被拒绝",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "触发限流"
+          }
+        }
+      }
+    },
+    "/api/exec/sessions": {
+      "get": {
+        "tags": [
+          "终端执行"
+        ],
+        "summary": "列出持久会话",
+        "description": "`session=<名字>` 的命令跑在持久 shell 里（tmux 后端），`cd` 与环境变量在多次调用之间保留：\n\n```bash\ncurl -s \"https://<域名>/api/exec?cmd=cd%20/srv&session=main&token=$TOK\"\ncurl -s \"https://<域名>/api/exec?cmd=pwd&session=main&token=$TOK\"   # → /srv\ncurl -s \"https://<域名>/api/exec/sessions?token=$TOK\"\n```\n",
+        "security": [
+          {
+            "apiToken": []
+          },
+          {
+            "queryToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/TokenQuery"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "会话列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "sessions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "created": {
+                            "type": "integer",
+                            "description": "创建时间（epoch 秒）"
+                          },
+                          "windows": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "list": {
+                    "value": "{ ok: true, sessions: [ { name: \"main\", created: 1791121952, windows: 1 } ] }"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/exec/help": {
+      "get": {
+        "tags": [
+          "终端执行"
+        ],
+        "summary": "终端接口用法（纯文本，公开）",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "用法说明（含参数、示例、限制与 token 管理）",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/account": {
+      "get": {
+        "tags": [
+          "账号管理"
+        ],
+        "summary": "当前账号信息",
+        "description": "需要登录。返回用户名、UID、属组、家目录、Shell、密码状态、最近登录与可用入口。",
+        "responses": {
+          "200": {
+            "description": "账号信息",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "account": {
+                      "$ref": "#/components/schemas/Account"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/account/audit": {
+      "get": {
+        "tags": [
+          "账号管理"
+        ],
+        "summary": "审计日志与 fail2ban 摘要",
+        "description": "该接口仅管理员（普通账号调用返回 403）",
+        "responses": {
+          "200": {
+            "description": "最近登录/操作记录与封禁统计",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "log": {
+                      "type": "string",
+                      "description": "文本形式的审计尾部"
+                    },
+                    "fail2ban": {
+                      "type": "string",
+                      "description": "fail2ban 概览"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/account/password": {
+      "post": {
+        "tags": [
+          "账号管理"
+        ],
+        "summary": "修改登录密码",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "current",
+                  "new"
+                ],
+                "properties": {
+                  "current": {
+                    "type": "string"
+                  },
+                  "new": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "密码已更新",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                },
+                "examples": {
+                  "ok": {
+                    "value": {
+                      "ok": true,
+                      "msg": "密码已更新"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "当前密码不正确，或新密码与旧密码相同",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/account/logout-all": {
+      "post": {
+        "tags": [
+          "账号管理"
+        ],
+        "summary": "注销所有在线会话",
+        "description": "轮换签名密钥，使已下发的所有 Cookie 立即失效，并清除本机 Cookie。",
+        "responses": {
+          "200": {
+            "description": "已全部注销",
+            "headers": {
+              "Set-Cookie": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ok"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/account/brand": {
+      "post": {
+        "tags": [
+          "账号管理"
+        ],
+        "summary": "设置品牌串",
+        "description": "品牌串会同步到 HTTP `Server` 头、404 页面与站点页面标题（长度 ≤ 80）。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "line"
+                ],
+                "properties": {
+                  "line": "{ type: string, maxLength: 80 }"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "已应用",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "line": "{ type: string }",
+                    "msg": "{ type: string }"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/account/service": {
+      "post": {
+        "tags": [
+          "账号管理"
+        ],
+        "summary": "控制站点服务（启动/停止/重启）",
+        "description": "仅允许白名单内的服务名与动作，避免误操作影响登录入口。",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "action"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "服务名（白名单，如 nginx、sslh、jqt-auth、fail2ban 等）"
+                  },
+                  "action": {
+                    "type": "string",
+                    "enum": [
+                      "start",
+                      "stop",
+                      "restart"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作已发出（`state` 为动作后的状态）",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean"
+                    },
+                    "state": {
+                      "type": "string",
+                      "description": "active / inactive / failed …"
+                    },
+                    "msg": "{ type: string }"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "不允许的服务或动作",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/console/": {
+      "get": {
+        "tags": [
+          "页面"
+        ],
+        "summary": "网页终端（需登录）",
+        "description": "基于 xterm.js 的真终端（WebSocket 直连 PTY），针对手机做了输入优化。\n未登录访问会返回登录页（HTTP 200，页面内容为登录表单）。\n`GET` 之外还接受 WebSocket 升级请求（同一路径）。\n",
+        "responses": {
+          "200": {
+            "description": "终端页面或登录页",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/silent/": {
+      "get": {
+        "tags": [
+          "页面"
+        ],
+        "summary": "旧入口网页终端（需登录，等价于 /console/）",
+        "description": "与 `/console/` 等价的独立终端实例，供历史书签/脚本继续使用；对外页面不展示该路径。",
+        "responses": {
+          "200": {
+            "description": "终端页面或登录页",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/terminal/": {
+      "get": {
+        "tags": [
+          "页面"
+        ],
+        "summary": "普通用户（jhy）的控制台（需登录）",
+        "description": "与 `/console/` 同类的网页终端，但运行在**该受限用户自己的沙箱**里（独立 ttyd 实例）。\n入口互相隔离：普通用户访问 `/console/`、`/silent/` 会被自动跳回本入口；\n管理员访问 `/terminal/` 也会被跳回 `/console/`。\n",
+        "responses": {
+          "200": {
+            "description": "终端页面或登录页",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/entry": {
+      "get": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "跳转到当前账号的入口路径",
+        "description": "已登录时 302 到本人入口（`/console/` 或 `/terminal/`），未登录时 302 到 `/login.html`。\nnginx 在入口越权（403）时调用它自动纠正，避免\"登录了却看到登录页\"的死循环。\n",
+        "responses": {
+          "302": {
+            "description": "跳转",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/": {
+      "get": {
+        "tags": [
+          "页面"
+        ],
+        "summary": "账号与设置页（需登录）",
+        "responses": {
+          "200": {
+            "description": "管理页面",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi.yaml": {
+      "get": {
+        "tags": [
+          "页面"
+        ],
+        "summary": "本接口文档（OpenAPI 3.1）",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "OpenAPI 描述文件",
+            "content": {
+              "application/yaml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "jqt_auth",
+        "description": "网页登录后下发的会话 Cookie（8 小时有效）"
+      },
+      "apiToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "终端接口 token（也接受 `X-JQt-Token` 头）"
+      },
+      "queryToken": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "token",
+        "description": "终端接口 token（查询串形式；注意会留在 shell 历史与代理日志里）"
+      }
+    },
+    "parameters": {
+      "Cmd": {
+        "name": "cmd",
+        "in": "query",
+        "required": true,
+        "description": "要执行的命令（≤ 8000 字符）",
+        "schema": {
+          "type": "string"
+        },
+        "examples": {
+          "uptime": {
+            "value": "uptime -p"
+          }
+        }
+      },
+      "Cwd": {
+        "name": "cwd",
+        "in": "query",
+        "description": "工作目录（仅一次性模式；会话模式请用 `cd`）",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Timeout": {
+        "name": "timeout",
+        "in": "query",
+        "description": "超时秒数，默认 30，上限 300；超时返回 `exit=124`",
+        "schema": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 30
+        }
+      },
+      "Format": {
+        "name": "format",
+        "in": "query",
+        "description": "输出格式；`text` 时只返回 stdout",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "json",
+            "text"
+          ],
+          "default": "json"
+        }
+      },
+      "Session": {
+        "name": "session",
+        "in": "query",
+        "description": "持久会话名（`[A-Za-z0-9_-]{1,32}`）；同名复用，`cd`/环境变量保留",
+        "schema": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,32}$"
+        },
+        "examples": {
+          "main": {
+            "value": "main"
+          }
+        }
+      },
+      "TokenQuery": {
+        "name": "token",
+        "in": "query",
+        "description": "终端接口 token（也可用 `Authorization: Bearer` 或 `X-JQt-Token`）",
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "Ok": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "msg": "{ type: string }"
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": false
+          },
+          "msg": "{ type: string, description: 人类可读的原因 }"
+        }
+      },
+      "LoginResult": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "user": {
+            "type": "string"
+          },
+          "next": {
+            "type": "string",
+            "description": "登录后应跳转的站内路径（白名单校验后的结果）"
+          }
+        }
+      },
+      "Brand": {
+        "type": "object",
+        "properties": {
+          "line": "{ type: string, description: 完整品牌串 }",
+          "name": {
+            "type": "string",
+            "description": "品牌名（` - ` 之前）"
+          },
+          "version": {
+            "type": "string",
+            "description": "副标题（` - ` 之后）"
+          }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "kernel": {
+            "type": "string"
+          },
+          "os": {
+            "type": "string"
+          },
+          "python": {
+            "type": "string"
+          },
+          "cpu_count": {
+            "type": "integer"
+          },
+          "ip": {
+            "type": "string"
+          },
+          "uptime": {
+            "type": "object",
+            "properties": {
+              "seconds": {
+                "type": "integer"
+              }
+            }
+          },
+          "load": {
+            "type": "object",
+            "description": "1/5/15 分钟负载"
+          },
+          "memory": {
+            "type": "object",
+            "properties": {
+              "total_mb": {
+                "type": "integer"
+              },
+              "used_mb": {
+                "type": "integer"
+              },
+              "percent": {
+                "type": "integer"
+              }
+            }
+          },
+          "disk": {
+            "type": "object",
+            "properties": {
+              "total_gb": {
+                "type": "number"
+              },
+              "used_gb": {
+                "type": "number"
+              },
+              "percent": {
+                "type": "integer"
+              }
+            }
+          },
+          "services": {
+            "type": "object",
+            "description": "服务名 → 状态（active/inactive/failed）",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "logged_in": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "time": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "integer"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/Brand"
+          },
+          "user": {
+            "type": "string"
+          }
+        }
+      },
+      "Account": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "string"
+          },
+          "uid": {
+            "type": "string"
+          },
+          "groups": {
+            "type": "string"
+          },
+          "home": {
+            "type": "string"
+          },
+          "shell": {
+            "type": "string"
+          },
+          "password_status": {
+            "type": "string",
+            "description": "P=已设置 L=锁定 NP=无密码"
+          },
+          "password_changed": {
+            "type": "string"
+          },
+          "last_login": {
+            "type": "string"
+          },
+          "allowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "允许的入口前缀"
+          },
+          "brand": {
+            "$ref": "#/components/schemas/Brand"
+          }
+        }
+      },
+      "ExecRequest": {
+        "type": "object",
+        "required": [
+          "cmd"
+        ],
+        "properties": {
+          "cmd": {
+            "type": "string",
+            "description": "要执行的命令"
+          },
+          "cwd": {
+            "type": "string"
+          },
+          "timeout": {
+            "type": "integer",
+            "default": 30
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "json",
+              "text"
+            ],
+            "default": "json"
+          },
+          "session": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string",
+            "description": "也可放 Header：Authorization / X-JQt-Token"
+          }
+        }
+      },
+      "ExecResult": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "description": "退出码是否为 0"
+          },
+          "exit": {
+            "type": "integer",
+            "description": "退出码（超时=124，执行异常=125）"
+          },
+          "stdout": {
+            "type": "string"
+          },
+          "stderr": {
+            "type": "string"
+          },
+          "ms": {
+            "type": "integer",
+            "description": "耗时毫秒"
+          },
+          "cmd": {
+            "type": "string",
+            "description": "实际执行的命令"
+          },
+          "session": {
+            "type": "string",
+            "description": "会话名（一次性执行为空串）"
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "输出是否被 512 KiB 上限截断"
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "参数缺失或非法",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "noCmd": {
+                "value": {
+                  "ok": false,
+                  "msg": "缺少 cmd;示例 ?cmd=uptime"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "未认证或 token 无效",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "json401": {
+                "value": {
+                  "ok": false,
+                  "msg": "unauthorized"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-changelog": [
+    {
+      "version": "1.4.0",
+      "date": "2026-10-04",
+      "highlights": [
+        "curl 直连终端接口 /api/exec（含持久会话、文本输出、限流与审计）",
+        "登录跳转修复：回到来源入口，白名单校验防开放重定向",
+        "旧入口 /silent/ 恢复可用（页面不展示该路径）",
+        "SilentSafe 统一拦截 + 高危规则封禁 5 分钟",
+        "OpenAPI 文档（本文件）"
+      ]
+    },
+    {
+      "version": "1.3.0",
+      "date": "2026-10-01",
+      "highlights": [
+        "账号管理页：改密、注销全部会话、品牌下发、服务控制、审计",
+        "状态面板：主机指标与服务状态"
+      ]
+    }
+  ]
+}
