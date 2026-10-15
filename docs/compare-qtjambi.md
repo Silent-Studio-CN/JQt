@@ -132,19 +132,19 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 "CI 五作业全绿"不等于"每个模块在每个平台都验过"。实测最近一次成功 run
 (`37216151859`)的日志,下列冒烟是**跳过**的 —— 所以这些能力点**在对应平台上从未真正跑过**:
 
-| 平台 | 跳过的冒烟 | 原因 |
+| 平台 | 跳过的冒烟(类名已逐个核对) | 原因 |
 |---|---|---|
-| Linux x64 | `SmokeSvg` | QtSvg 未编译进 libjqt(该平台探测未命中) |
+| Linux x64 | `SmokeEvent`(其中 QSvgRenderer 那一项) | QtSvg 未编译进 libjqt(该平台探测未命中) |
 | Linux x64 | `SmokeSqlModel` | 平台无 SQLite 驱动插件 |
-| macOS x64 | `SmokeSvg` | 同上 |
+| macOS x64 | `SmokeEvent`(QSvgRenderer 那一项) | 同上 |
 | macOS x64 | `SmokeSqlModel` | 同上 |
 | macOS x64 | `SmokeQml` | 6.8.3 线缺 qtdeclarative |
-| macOS x64 / Windows ARM64 | `QOpenGLWidget` 相关 | 这两平台的 Qt 构建不含 OpenGLWidgets 模块 |
+| macOS x64 / Windows ARM64 | `SmokeV073`(QOpenGLWidget 那一项) | 这两平台的 Qt 构建不含 OpenGLWidgets 模块 |
 
 **因此**:`QSvg` 与 `SQL 模型` 目前**只有 Windows 线真跑过**;`QML` 在 macOS 只覆盖 6.12 线;
 `QOpenGLWidget` 在 macOS 与 Windows ARM64 不可用。要补齐需:Linux/macOS 侧把 qtsvg 编进库、
 部署 qsqlite 插件、给 6.8.3 线补 qtdeclarative。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 3/4**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低);Help 待评估。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 3/4**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(**QStateMachine 官方未分发该模块,已多路核实并记录**);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低)。
 
 ---
 
