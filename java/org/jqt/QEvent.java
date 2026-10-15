@@ -45,12 +45,32 @@ public final class QEvent {
         public static final int EnabledChange = 98;
         public static final int WindowTitleChange = 105;
         public static final int WindowIconChange = 101;
+        /** 状态机内部信号事件（Qt {@code QEvent::StateMachineSignal}）。 */
+        public static final int StateMachineSignal = 192;
+        /** 用户自定义事件起点（Qt {@code QEvent::User}）：直接用 {@code User + n}。 */
+        public static final int User = 1000;
     }
 
     private final int type;
     private final String typeName;
     private final int a, b, c, d;          // 类型相关负载(坐标/按键/尺寸/滚轮)
     private final String text;
+
+    /**
+     * 创建用户事件（P1 状态机配套）：类型请从 {@link Type#User} 起算。
+     * <pre>
+     * machine.postEvent(new QEvent(QEvent.Type.User + 1));
+     * </pre>
+     */
+    public QEvent(int type) {
+        this(type, type >= Type.User ? ("User+" + (type - Type.User)) : ("Type(" + type + ")"),
+                0, 0, 0, 0, "");
+    }
+
+    /** 创建用户事件并指定可读类型名（日志/断言用）。 */
+    public QEvent(int type, String typeName) {
+        this(type, typeName, 0, 0, 0, 0, "");
+    }
 
     QEvent(int type, String typeName, int a, int b, int c, int d, String text) {
         this.type = type;
