@@ -22,30 +22,34 @@
 
 ## 1. 硬数据(可复核)
 
-### 1.1 JQt(本机实测,1.9.0-Qt612-Kit)
+### 1.1 JQt（本机实测，当前开发树 = v1.9.0 + 未发布的 P0/P1/P2 批次）
 
 ```powershell
-# 规模
-(Get-ChildItem java -Recurse -Filter *.java).Count           # 170 个文件(148 API + 22 冒烟)
-(Get-Content java\org\jqt\*.java | Measure-Object -Line)     # 16,304 行
-(Get-Content native\jqt_bridge.cpp).Count                    # 10,987 行手写 JNI 桥
-jar tf dist\jqt-1.9.0-Qt612-Kit.jar | grep -c '\.class$'     # 205 个 class
-Select-String java\org\jqt\*.java -Pattern '^\s+public '     # 2,933 处公开成员声明
-Select-String java\org\jqt\*.java -Pattern '\bnative\b'      # 1,174 个 native 方法声明
+# 规模（全部可复核；本节数字由 tools/measure-hard-data.py 一次生成，避免文档自相矛盾）
+(Get-ChildItem java\org\jqt -Filter *.java).Count            # 202 个文件（169 API + 33 冒烟）
+(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 24,688 行（API 21,519 + 冒烟 3,169）
+(Get-Content native\jqt_bridge.cpp).Count                   # 12,851 行手写 JNI 桥
+Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,417 个 JNI 导出函数
+Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,360 处公开成员声明
+Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,313 个 native 方法声明
 ```
 
 | 指标 | 数值 |
 |---|---|
-| Java 源文件 | 194(API 162 + 冒烟 31) |
-| Java 行数 | 17,186 |
-| JNI 桥行数 | 11,497 |
-| jar 内 class | 205 |
-| 公开成员声明 | 2,933 |
-| native 方法声明 | 1,217 |
-| 信号/事件连接入口 | 44 `nativeConnect*`(8 个兼容空壳)+ 事件过滤器 + 全部经 `jqtConnectOnce()` 去重 |
-| Qt 版本线 | 6.12.0 / 6.8.3 LTS |
-| CI 平台 | Windows x64 · Windows ARM64 · Linux x64 · macOS x64(各双 Qt 版本) |
-| 冒烟 | 10 个(含 20 断言的信号投递确定性回归) |
+| API 类 | **169**（java/org/jqt 下非 Smoke 的 .java） |
+| 冒烟类 | **33**（其中 CI 里实际跑 **27** 个） |
+| Java 源文件合计 | 202（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
+| Java 行数 | **24,688**（API 21,519 + 冒烟 3,169） |
+| JNI 桥行数 | **12,851** |
+| JNI 导出函数 | **1,417** |
+| native 方法声明 | 1,313 |
+| 公开成员声明 | 3,360 |
+| 信号/事件连接入口 | 97 处 `nativeConnect*`（全部经 `jqtConnectOnce()` 去重） |
+| 可选模块特性宏 | 9 个：CHARTS / HELP / MULTIMEDIA / NETWORK / POSITIONING / QML / SQL_MODELS / SVG / WEBSOCKETS |
+| Qt 版本线 | **6.12.0**（当前最新）/ **6.8.3 LTS** |
+| CI 平台 | Windows x64 · Windows ARM64 · Linux x64 · macOS x64（各双 Qt 版本）；其中 win64 / arm64 / macOS 为**真机构建** |
+| 已发布包 | `jqt-1.9.0-Qt612-Kit.jar`（其后 30+ 提交未发布） |
+
 
 ### 1.2 QtJambi(取自 Maven Central 元数据,可复核)
 
@@ -99,7 +103,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | Sql | ✅ | `QSqlDatabase` `QSqlQuery` + **`QSqlQueryModel` / `QSqlTableModel`**(v1.9.1 P1:只读查询模型与可写表模型,支持显式绑定连接) |
 | PrintSupport | ✅ | `QPrinter` `QPageSize` `QPageLayout` `QPageRanges` |
 | SerialPort | ✅ | `QSerialPort`(CI 单独构建该模块) |
-| **QStateMachine 状态机** | ⛔ 官方未分发 | **Qt 6.12 文档里该模块存在**,但**官方任何我们能拿到的发行物里都没有它**:mingw 6.12(base+addons)✗ · MSVC 6.12 addons ✗ · Linux 6.12 base ✗ · macOS 官方 Qt 6.11.2(aqt 列出的 68 个模块含 webengine/webview,无 statemachine)✗ · Windows 官方 Qt 6.11.1 ✗ · `qtbase/src` 与 `qtdeclarative/src`(6.12 分支)✗ · 无 `qt/qtstatemachine` 仓库 ✗。**结论已修正**:不是"需要安装器勾选",而是官方不分发 —— 除非找到并自行编译源码,否则做不了 |
+| **QStateMachine 状态机** | ✅ **JQt 自研** | 官方**未分发**该模块(mingw/MSVC/Linux/macOS 各版本官方模块清单里都查不到,已多路核实),因此按 Qt 文档语义**自研纯 Java 实现**:`QStateMachine` / `QState` / `QFinalState` / `QHistoryState` / `QAbstractTransition` / `QEventTransition`(含并行状态、历史状态、错误状态、嵌套终态、跨线程 postEvent)。零原生依赖 → 五平台都会真跑,不存在 SKIP。三处刻意差异见 `QStateMachine` 类注释 |
 | **QSvg 矢量渲染** | ✅ | v1.9.1 P0-④:`QSvgRenderer`(文件/字节 → `renderToPng`;缺 qtsvg 时构建特性探测自动跳过) |
 | **QNetwork 网络** | ✅ | v1.9.1 P0-⑤:`QNetworkAccessManager`(GET/POST + 管理器级 `onFinished` + 超时/UA);`QTcpSocket`/`QUdpSocket` 仍无 |
 | **QML / Quick** | 🟡 | v1.9.1 P2:`QQuickView`(加载 QML 文件/内联文本 + `grabToPng()` 离屏渲染,像素级验证通过);`QQmlApplicationEngine`/`QQuickWidget`/QML↔Java 互操作未做 |
@@ -119,13 +123,13 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 
 | 口径 | 命中 | 说明 |
 |---|---|---|
-| **宽松**(✅ + 🟡 都算命中) | **28/36 ≈ 78%** | 🟡 项 = 只做了子集 |
-| **严格**(只算 ✅,🟡 不计) | **24/36 ≈ 67%** | 这才是"完整可用"的真实比例 |
+| **宽松**(✅ + 🟡 都算命中) | **29/36 ≈ 81%** | 🟡 项 = 只做了子集 |
+| **严格**(只算 ✅,🟡 不计) | **25/36 ≈ 69%** | 这才是"完整可用"的真实比例 |
 
 被计入宽松口径的 🟡 项共 **4 个**:`QML/Quick`(只有 QQuickView)、`Multimedia`(无视频/录制)、
 `Positioning`(只有纯几何坐标)、`WebSockets`(只有客户端);`Help` 已明确**不计入**任一命中。
 
-另:**7 项仍缺失**、`QStateMachine` 官方未分发、`DBus` 属"桥内有、API 无"。
+另:**6 项仍缺失**(WebEngine、3D、Concurrent、Bluetooth/NFC、QML 广度、Help 写入),`DBus` 属"桥内有、API 无"。
 
 ### 2.1 CI 覆盖真相(哪些其实在 SKIP)
 
@@ -144,7 +148,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 **因此**:`QSvg` 与 `SQL 模型` 目前**只有 Windows 线真跑过**;`QML` 在 macOS 只覆盖 6.12 线;
 `QOpenGLWidget` 在 macOS 与 Windows ARM64 不可用。要补齐需:Linux/macOS 侧把 qtsvg 编进库、
 部署 qsqlite 插件、给 6.8.3 线补 qtdeclarative。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 3/4**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(**QStateMachine 官方未分发该模块,已多路核实并记录**);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低)。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 4/4 已完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅、**QStateMachine ✅(官方未分发该模块,自研纯 Java 实现补齐)**;**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低)。
 
 ---
 
@@ -202,6 +206,12 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 3. **相对 QtJambi 的对比表**:本文档随每个版本更新,差异项只减不增
 
 ---
+
+## 4.1 平台表述约定
+
+Windows x64、Windows ARM64、macOS 三个平台的构建与验证，文档与提交信息里统一写作「**真机构建**」
+（这三条线跑在真实机器/真实 ARM 硬件上，不是容器）—— 如实记录，不加修饰词。
+需要时再补具体环境（Qt 版本、编译器、机器）。
 
 ## 5. 复现本文所有数字
 
