@@ -87,7 +87,11 @@ else
   echo "==> QtWebSockets not found - QWebSocket will report unavailable"
 fi
 
-g++ -std=c++17 -O2 -shared -fPIC     -o "$LIB/libjqt.so"     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux"     -I"$QTINC" -I"$QTINC/QtWidgets" -I"$QTINC/QtGui" -I"$QTINC/QtCore" -I"$QTINC/QtDBus" -I"$QTINC/QtPrintSupport" -I"$QTINC/QtSql" -I"$QTINC/QtOpenGLWidgets" -I"$QTINC/QtOpenGL" -I"$QTINC/QtSerialPort" -I"$QTINC/QtNetwork" -DJQT_HAVE_NETWORK -DJQT_HAVE_SQL_MODELS     -I"$NATIVE"     "$NATIVE/jqt_bridge.cpp"     -L"$QTLIB" -lQt6Widgets -lQt6Gui -lQt6Core -lQt6PrintSupport -lQt6Sql -lQt6OpenGLWidgets -lQt6OpenGL -lQt6SerialPort -lQt6DBus -lQt6Network $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS $HELP_FLAGS
+# QtDBus(v1.9.2 P1 收尾):qtbase 自带,链接早已存在(桥内屏保抑制/通知在用),
+# 这里只是再加上 -DJQT_HAVE_DBUS,把通用面(QDBusConnection/QDBusMessage)编进库。
+echo "==> QtDBus: assume available (qtbase) - QDBusConnection enabled"
+
+g++ -std=c++17 -O2 -shared -fPIC     -o "$LIB/libjqt.so"     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux"     -I"$QTINC" -I"$QTINC/QtWidgets" -I"$QTINC/QtGui" -I"$QTINC/QtCore" -I"$QTINC/QtDBus" -I"$QTINC/QtPrintSupport" -I"$QTINC/QtSql" -I"$QTINC/QtOpenGLWidgets" -I"$QTINC/QtOpenGL" -I"$QTINC/QtSerialPort" -I"$QTINC/QtNetwork" -DJQT_HAVE_NETWORK -DJQT_HAVE_SQL_MODELS -DJQT_HAVE_DBUS     -I"$NATIVE"     "$NATIVE/jqt_bridge.cpp"     -L"$QTLIB" -lQt6Widgets -lQt6Gui -lQt6Core -lQt6PrintSupport -lQt6Sql -lQt6OpenGLWidgets -lQt6OpenGL -lQt6SerialPort -lQt6DBus -lQt6Network $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS $HELP_FLAGS
 
 # ---- 3. Deploy license notices (LGPL compliance) ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true

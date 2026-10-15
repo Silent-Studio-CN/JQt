@@ -110,6 +110,16 @@ else
   echo "==> QtWebSockets not found - QWebSocket will report unavailable"
 fi
 
+# QtDBus(v1.9.2 P1 收尾):macOS 上 QtDBus.framework 在,但系统默认没有会话总线 ->
+# isAvailable()=true 而 isSessionBusConnected()=false,冒烟里分开记录。
+if [ -d "$QTLIB/QtDBus.framework" ]; then
+  DBUS_FLAGS="-DJQT_HAVE_DBUS -I$QTLIB/QtDBus.framework/Headers -framework QtDBus"
+  echo "==> QtDBus found - QDBusConnection enabled (无会话总线时连接状态为 false)"
+else
+  DBUS_FLAGS=""
+  echo "==> QtDBus not found - DBus API will report unavailable"
+fi
+
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
@@ -118,7 +128,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" -I"$QTLIB/QtNetwork.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
-    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS $HELP_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
+    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $DBUS_FLAGS $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS $HELP_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
 
 # ---- 3. Deploy license notices ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true

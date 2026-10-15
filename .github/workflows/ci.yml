@@ -231,12 +231,37 @@ jobs:
           else
             echo "::warning::未找到本 Qt 的 qhelpgenerator,Help 冒烟将跳过 .qch 生成段"
           fi
-          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokePositioning org.jqt.SmokeHelp; do
+          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeDBus org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokePositioning org.jqt.SmokeHelp; do
             QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class $C -AutoClose 1200 > "smoke_$C.txt" 2>&1
             RC=$?
             echo "smoke $C exit code: $RC"; cat "smoke_$C.txt"
             if [ $RC -ne 0 ]; then exit $RC; fi
           done
+
+      - name: Doc numbers match code (防假账闸门)
+        run: |
+          # 文档里写的能力点数/命中率/类数/行数/桥行数/JNI 数,一律与代码实测比对;
+          # 不一致直接红 —— 人不记得没关系,脚本记得。
+          python3 tools/check-doc-numbers.py
+
+      - name: Smoke DBus with a real session bus (v1.9.2 P1 收尾)
+        run: |
+          # 上面那轮 DBus 冒烟跑在"无会话总线"环境:验证的是错误路径与消息语义。
+          # 这一步用 dbus-run-session 起一个**真实总线**,把端到端调用(ListNames /
+          # NameHasOwner / GetId / 发信号)真跑一遍 —— 否则"DBus 能用了"就是空话。
+          command -v dbus-run-session >/dev/null 2>&1 || sudo apt-get install -y dbus
+          set -o pipefail
+          QT_QPA_PLATFORM=offscreen dbus-run-session -- timeout 90 ./run-linux.sh \
+              -Class org.jqt.SmokeDBus -AutoClose 1200 2>&1 | tee smoke_dbus_session.txt
+          grep -q "ALL PASS" smoke_dbus_session.txt || { echo "::error::DBus 冒烟未通过"; exit 1; }
+          # 关键:有真实总线时**不允许**再出现"端到端被跳过" —— 出现了就说明这一步是假的
+          if grep -q "SKIP 端到端调用" smoke_dbus_session.txt; then
+            echo "::error::有 dbus-run-session 却仍跳过端到端调用,DBus 并未真正验证"
+            exit 1
+          fi
+          grep -q "NameHasOwner(org.freedesktop.DBus) = true" smoke_dbus_session.txt \
+            || { echo "::error::参数编组的端到端断言未见通过"; exit 1; }
+          echo "DBus 端到端验证通过(真实会话总线)"
 
       - name: Real-window smoke under Xvfb (J9 - offscreen 抓不到真窗口崩溃)
         run: |
@@ -428,7 +453,7 @@ jobs:
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_QUICK_BACKEND = "software"      # QtQuick 场景图需要软件后端(离屏无 GPU)
           $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
-          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer","org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked","org.jqt.SmokeEvent","org.jqt.SmokeNetwork","org.jqt.SmokeSqlModel","org.jqt.SmokeWebSocket","org.jqt.SmokeJQtTest","org.jqt.SmokeStateMachine","org.jqt.SmokeCharts","org.jqt.SmokeMultimedia","org.jqt.SmokeModality","org.jqt.SmokeQml","org.jqt.SmokePositioning","org.jqt.SmokeHelp")) {
+          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer","org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked","org.jqt.SmokeEvent","org.jqt.SmokeNetwork","org.jqt.SmokeSqlModel","org.jqt.SmokeWebSocket","org.jqt.SmokeJQtTest","org.jqt.SmokeStateMachine","org.jqt.SmokeDBus","org.jqt.SmokeCharts","org.jqt.SmokeMultimedia","org.jqt.SmokeModality","org.jqt.SmokeQml","org.jqt.SmokePositioning","org.jqt.SmokeHelp")) {
             powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
             if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
           }
@@ -508,6 +533,13 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             Write-Host "=== SMOKE STATEMACHINE FAILED, tail of smoke_statemachine_log.txt ==="
             Get-Content smoke_statemachine_log.txt -Tail 40
+            exit $LASTEXITCODE
+          }
+          # DBus（ARM64 上 Qt6DBus.lib 可能不在包里 -> 探测不到时 API 报 unavailable,冒烟会走 SKIP 分支）
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeDBus -AutoClose 1000 *> smoke_dbus_log.txt
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=== SMOKE DBUS FAILED, tail of smoke_dbus_log.txt ==="
+            Get-Content smoke_dbus_log.txt -Tail 40
             exit $LASTEXITCODE
           }
           # JQtTest 兼容层（纯 Java，同样此前漏跑）
@@ -700,7 +732,7 @@ jobs:
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeL2b2 -AutoClose 800
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeTimer -AutoClose 1500
           export QT_QUICK_BACKEND=software       # QtQuick 场景图软件后端(离屏无 GPU)
-          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml; do
+          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeDBus org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml; do
             QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class $C -AutoClose 1500
           done
 
