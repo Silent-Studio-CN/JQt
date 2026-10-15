@@ -17,7 +17,7 @@ Desktop.ini
 *.suo
 
 # ===== verification screenshots =====
-*.png
+webview_shot.png
 !assets/deepseek-2.png
 aqtinstall.log
 dist/
@@ -34,7 +34,6 @@ _pq_*
 _jqt_diag.txt
 SilentStudioJQt*
 
-*.log
 
 # Community 编译产物（源码入仓库，产物本地生成）
 Community/**/out/
@@ -91,3 +90,10 @@ smoke_v072.*
 *.apk
 central-*.jar
 qml/
+
+# 并行任务的临时证据文件(CI 校验脚本/日志/抓图)
+.q3d_*
+*.log
+smoke_l1_test.txt
+tools/screen.png
+webview_shot.png

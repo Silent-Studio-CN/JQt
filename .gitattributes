@@ -1,0 +1,14 @@
+# 行尾约定(防 CRLF 复发)
+# 背景:本机 core.autocrlf=true,git 触碰工作区时会把 *.sh 变成 CRLF,
+# 而 bash 见到 `do\r` 会直接语法错(本地 bash -n 就这么挂过一次;CI 检出 LF blob 所以一直没事)。
+* text=auto
+*.sh   text eol=lf
+*.bash text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.java text eol=lf
+*.py   text eol=lf
+*.md   text eol=lf
+*.png  binary
+*.dll  binary
+*.7z   binary

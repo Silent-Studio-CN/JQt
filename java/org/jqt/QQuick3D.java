@@ -41,6 +41,34 @@ package org.jqt;
  * 或 {@code QSG_RHI_BACKEND=opengl}),要么只能渲染出空图 ——
  * {@link SmokeQuick3D} 对"加载成功但画面为空"按 SKIP 处理,不假通过。
  *
+ * <p><b>Windows 上确切结论(6.12.0 MinGW 实测,别再猜)</b>:{@code QT_QPA_PLATFORM=offscreen}
+ * <b>渲染不出 Quick 3D</b> —— offscreen 平台插件没有任何 GL/RHI 表面
+ * ({@code qoffscreen.dll} 只导入 Qt6Core/Qt6Gui,不链接 opengl32/D3D),Qt Quick 会直接退到
+ * 软件后端(日志:{@code qt.scenegraph.general: Loading backend software}),View3D 不显示任何东西;
+ * 强行 {@code QT_QUICK_BACKEND=rhi QSG_RHI_BACKEND=d3d11} 虽然建起了 D3D11 QRhi,但没有 HWND
+ * 建不了 swapchain({@code Failed to create D3D11 swapchain: COM error 0x80070005}),抓到的图是纯黑。
+ * 结论:<b>要证明 3D 真的渲染出来,必须用真窗口</b>({@code QT_QPA_PLATFORM=windows} 或干脆不设;
+ * 无独显时 D3D11 会走 WARP)。CI/无头场景要么给真窗口(Windows 计划任务/交互会话),
+ * 要么用 {@code QQuickRenderControl} 自己渲染到纹理 —— 后者 JQt 目前没有绑定。
+ *
+ * <p><b>部署两件套(缺一个就是"能探测但渲染不出来")</b>:
+ * <ol>
+ *   <li>把 Qt 安装目录的 {@code qml/QtQuick3D} 部署到运行期 QML 导入路径。
+ *       注意 Qt 6 的<b>可重定位前缀</b>是按 Qt6Core 动态库所在目录推导的:
+ *       运行期 Qt6Core 从 {@code lib/} 加载 ⇒ {@code QmlImportsPath} 就是 {@code lib/qml},
+ *       Qt 安装目录里的 qml/QtQuick3D 用户根本看不到(实测报
+ *       {@code module "QtQuick3D" is not installed})。构建脚本已拷到
+ *       {@code lib/qml/QtQuick3D}(打包布局)与仓库根 {@code qml/QtQuick3D}(开发/测试布局);</li>
+ *   <li>{@code qquick3dplugin.dll} 的依赖链
+ *       {@code Qt6Quick3D.dll → Qt6Quick3DRuntimeRender.dll → Qt6ShaderTools.dll} 必须都能加载。
+ *       Qt Shader Tools 是独立 addon(qtshadertools),官方 MinGW 在线安装器默认<b>不装</b>:
+ *       缺它时报 {@code Cannot load library ...qquick3dplugin.dll: 找不到指定的模块}
+ *       (MSVC 版 Qt6ShaderTools.dll 来自 QtCreator/PyQt6,与 MinGW 6.12 ABI 不兼容,不能借用)。
+ *       装法:在线安装器勾选 <i>Qt Shader Tools</i>,或取官方在线仓库的 MinGW 包
+ *       {@code qt.qt6.6120.addons.qtshadertools.win64_mingw} 解到 Qt 安装目录
+ *       (只需 {@code bin/Qt6ShaderTools.dll} 进 {@code lib/})。</li>
+ * </ol>
+ *
  * <pre>
  * // 用法一:先问能不能用,再决定是否建视图
  * if (QQuick3D.isAvailable()) {
@@ -171,12 +199,17 @@ public final class QQuick3D {
           .append(", QSG_RHI_BACKEND=").append(env("QSG_RHI_BACKEND")).append('\n');
         if (state == UNAVAILABLE) {
             sb.append("  不可用原因      : ").append(reason.isEmpty() ? "(无)" : reason).append('\n');
-            sb.append("  常见修法        : 1) 装 Qt Quick 3D 及其依赖 Qt Shader Tools(Qt6ShaderTools.dll);\n")
-              .append("                    2) 让 QML 导入路径含 Qt 的 qml 目录(QML2_IMPORT_PATH 或部署 qml/QtQuick3D);\n")
-              .append("                    3) 让 Qt6Quick3D*.dll 能被加载(PATH 或与 jqt.dll 同目录);\n")
+            sb.append("  常见修法        : 1) 装 Qt Quick 3D 及其依赖 Qt Shader Tools(qtshadertools,提供 Qt6ShaderTools.dll);\n")
+              .append("                    2) 让 QML 导入路径含 QtQuick3D(qml/QtQuick3D 拷到 lib/qml —— 运行期\n")
+              .append("                       Qt 的可重定位前缀就是 lib,Qt 安装目录里的 qml 不会被自动看到);\n")
+              .append("                    3) 让 Qt6Quick3D*.dll / Qt6ShaderTools.dll 能被加载(PATH 含 lib 或与 jqt.dll 同目录);\n")
               .append("                    4) 3D 渲染需 RHI(D3D11/OpenGL/Vulkan),软件后端 QT_QUICK_BACKEND=software 渲染不出画面。\n");
         } else if (state == AVAILABLE) {
-            sb.append("  提示            : 场景可加载;若抓图是空画面,请检查 RHI 后端(软件后端不支持 Quick 3D)。\n");
+            sb.append("  提示            : 场景可加载;若抓图是空画面,请检查 RHI 后端。\n")
+              .append("                    实测(Windows 6.12.0):QT_QPA_PLATFORM=offscreen 一定没有 3D —— 该平台插件\n")
+              .append("                    没有 GL/RHI 表面,Qt Quick 退到软件后端(Loading backend software);\n")
+              .append("                    QT_QUICK_BACKEND=software 同理。真渲染请用真窗口(QT_QPA_PLATFORM=windows,\n")
+              .append("                    默认 D3D11,无独显走 WARP)。\n");
         } else {
             sb.append("  说明            : ").append(reason.isEmpty() ? "(无)" : reason).append('\n');
         }

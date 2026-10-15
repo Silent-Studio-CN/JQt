@@ -92,6 +92,20 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #ifdef JQT_HAVE_WEBVIEW
 #include <QtWebView/QtWebView>
 #endif
+// WebView2 自研宿主(v1.9.3,Windows):官方 qtwebview 包(MinGW/MSVC 都实测过)**不含**
+// plugins/webview 后端插件,实例化 QML 的 WebView 元素会让 Qt qFatal 直接 fail-fast
+// (实测退出码 0xC0000409)。所以 Windows 上 QWebView 改走自己写的 WebView2(COM)宿主。
+// SDK 头由 build.ps1 探测(native/webview2/include/WebView2.h);该头里的 IID 全是
+// __declspec(selectany) 自带定义,**不需要链接任何 .lib**。
+#ifdef JQT_HAVE_WEBVIEW2
+#include <WebView2.h>
+// 注意:WebView2.h -> eventtoken.h -> rpc.h 会 #define interface struct(WIDL 生成物,给 C 用的)。
+// 这个宏会打破本文件里已有的 C++ 代码 —— 例如 QDBusMessage 的 m->interface()。
+// 那行在引入 WebView2 之前一直是好的,所以这里马上 undef,把状态恢复成原样。
+#ifdef interface
+#undef interface
+#endif
+#endif
 
 #include <QApplication>
 #include <QGuiApplication>
@@ -7929,6 +7943,675 @@ JNIEXPORT void JNICALL Java_org_jqt_QQuick3DView_nativeDispose(JNIEnv*, jclass, 
 
 }   // extern "C" (QtQuick3D)
 
+
+// ===========================================================================
+// WebView2 自研宿主(Windows,v1.9.3)
+//
+// 为什么自研(实测,不是推测):
+//   官方 6.12 的 qtwebview 包 —— MinGW 与 MSVC **两个版本都查过 7z 文件清单** ——
+//   只包含 Qt6WebView.dll / Qt6WebViewQuick.dll / 头文件 / QML 模块,
+//   **没有 plugins/webview/ 后端插件**。后果:实例化 QML 的 WebView 元素时 Qt 直接
+//   qFatal("No WebView plug-in found!"),进程 fail-fast(实测退出码 0xC0000409),
+//   连降级的机会都没有。所以 Windows 上 QWebView 不再走 QtWebView。
+//
+// 走通的路径(依据都写在 native/webview2/README.md):
+//   1. SDK 头 WebView2.h 来自 nuget.org 的 Microsoft.Web.WebView2 包(沙箱封了 github.com,
+//      但 nuget.org 可用)。**MinGW g++ 13.1 能直接编译它**,而且该头里的 IID 全部是
+//      `EXTERN_C __declspec(selectany) const IID IID_ICoreWebView2... = {...};` —— **自带定义**,
+//      于是**不链接任何 .lib**,也就绕开了 MSVC 专有的 WebView2LoaderStatic.lib
+//      (MinGW 的 ld 吃不下 MSVC 的 import lib)。vtable 顺序由官方头保证,不用手写接口声明。
+//   2. WebView2Loader.dll 用 LoadLibrary + GetProcAddress **动态**加载
+//      (只用到 CreateCoreWebView2EnvironmentWithOptions 与
+//       GetAvailableCoreWebView2BrowserVersionString 两个导出),所以 jqt.dll 对它没有硬链接依赖:
+//      没装运行时的机器上 jqt.dll 照样能加载,只是 isBackendAvailable() 返回 false。
+//      优先从 jqt.dll 同目录找(build.ps1 把 x64 的 loader 拷到 lib/),再退回系统搜索路径。
+//
+// 宿主窗口:
+//   自己 CreateWindowExW 建一个普通 Win32 顶层窗口(**不碰** JQt 已有的 QWidget/QWidgetNative,
+//   也不依赖 QPA 平台插件)。QApplication 的 Windows 事件派发器 QEventDispatcherWin32
+//   在 Qt 主线程上 GetMessage/DispatchMessage,会把本窗口的消息一并派发 —— 所以 WebView2 的
+//   异步回调(环境/控制器创建、CapturePreview)照常被驱动。离屏(QT_QPA_PLATFORM=offscreen)
+//   也一样:offscreen 平台插件不换事件派发器,而 WebView2 要的是**真实 HWND**,
+//   我们这儿自己建,所以离屏模式下 WebView2 仍然真的工作(这点与 QML 的 WebView 元素不同)。
+//
+// 控制器对齐:
+//   WM_SIZE 里把 client rect 直接喂给 ICoreWebView2Controller::put_Bounds(单位=物理像素),
+//   resize(w,h) 先 AdjustWindowRectEx 换算外框尺寸再 SetWindowPos,保证**客户区**正好 w×h。
+// ===========================================================================
+#if defined(_WIN32) && defined(JQT_HAVE_WEBVIEW2)
+
+namespace jqtwv2 {
+
+typedef HRESULT (STDMETHODCALLTYPE *PFN_CreateEnvWithOptions)(
+        PCWSTR, PCWSTR, ICoreWebView2EnvironmentOptions*,
+        ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler*);
+typedef HRESULT (STDMETHODCALLTYPE *PFN_GetAvailableVersion)(PCWSTR, LPWSTR*);
+
+static const wchar_t* const kJqtWv2Class = L"JQtWebView2HostWnd";
+
+/** 一个 WebView2 宿主:Win32 窗口 + controller + webview。
+ *  **不是 QObject** -> 句柄必须用 registerValueHandle 注册(用 registerHandle 会把非 QObject
+ *  当 QObject 去接 destroyed 信号,实测直接崩)。
+ *  引用计数:注册表持 1 份;每个在途的 COM 回调再各持 1 份,回调返回时释放 ——
+ *  这样 Java 侧提前 dispose 也不会让回调摸到已释放的内存。 */
+struct Host {
+    std::atomic<int> refs{1};
+    HWND hwnd = nullptr;
+    ICoreWebView2Controller* controller = nullptr;
+    ICoreWebView2* webview = nullptr;
+    bool ctlRequested = false;   // 已经向环境要过控制器
+    bool ctlDone = false;        // 控制器回调已回来(成功或失败)
+    bool ctlOk = false;
+    bool disposed = false;
+    bool capturing = false;      // grabToPng 重入保护
+    bool quitOnClose = false;    // 用户点窗口关闭时是否退出 QApplication(演示程序要;库默认不要)
+    QString errorText;           // 控制器阶段失败原因
+    QString requestedUrl;        // url() 在还没有 Source 时的回退值
+    enum PendingKind { PendingNone, PendingUrl, PendingHtml };
+    // 控制器就绪之前到达的导航请求先挂起(冒烟里 load() 往往早于控制器回调)
+    PendingKind pendingKind = PendingNone;
+    QString pendingValue;
+    int wantWidth = 480;
+    int wantHeight = 320;
+};
+
+static void hostAddRef(Host* h) { if (h != nullptr) h->refs.fetch_add(1); }
+static void hostRelease(Host* h) {
+    if (h != nullptr && h->refs.fetch_sub(1) == 1) delete h;
+}
+
+// ---- 进程级共享环境 -------------------------------------------------------
+// WebView2 官方建议:一个 ICoreWebView2Environment 挂多个 controller,而不是每个视图建一个环境
+// (同一 userDataFolder 建多个环境不是受支持的用法)。所以这里做进程级共享 + 引用计数。
+static ICoreWebView2Environment* g_env = nullptr;
+static int g_envHosts = 0;          // 已经/即将挂到该环境上的宿主数
+static bool g_envRequested = false; // 环境创建已经发起
+static bool g_envDone = false;      // 环境回调已回来
+static bool g_envOk = false;
+static QString g_envError;
+static QList<Host*> g_envWaiters;   // 等环境就绪的宿主(各持 1 份引用)
+
+static void startController(Host* host);
+
+static QString hrText(HRESULT hr) {
+    return QStringLiteral("0x%1").arg(static_cast<quint32>(hr), 8, 16, QLatin1Char('0'));
+}
+
+// ---- WebView2Loader.dll:动态加载 -----------------------------------------
+static HMODULE loaderModule() {
+    static HMODULE mod = nullptr;
+    static bool tried = false;
+    if (tried) return mod;
+    tried = true;
+    wchar_t self[MAX_PATH] = {};
+    HMODULE selfMod = nullptr;
+    if (GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS
+                           | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           reinterpret_cast<LPCWSTR>(&loaderModule), &selfMod) != 0
+        && selfMod != nullptr
+        && GetModuleFileNameW(selfMod, self, MAX_PATH) > 0) {
+        const QString dir = QString::fromWCharArray(self);
+        const int slash = dir.lastIndexOf(QLatin1Char('\\'));
+        if (slash >= 0) {
+            const QString cand = dir.left(slash + 1) + QStringLiteral("WebView2Loader.dll");
+            mod = LoadLibraryW(reinterpret_cast<const wchar_t*>(cand.utf16()));
+        }
+    }
+    if (mod == nullptr) {
+        mod = LoadLibraryW(L"WebView2Loader.dll");   // 退回系统搜索路径
+    }
+    return mod;
+}
+
+static PFN_CreateEnvWithOptions createEnvFn() {
+    HMODULE m = loaderModule();
+    if (m == nullptr) return nullptr;
+    return reinterpret_cast<PFN_CreateEnvWithOptions>(
+            GetProcAddress(m, "CreateCoreWebView2EnvironmentWithOptions"));
+}
+
+/** 运行时是否可用 = 能加载 WebView2Loader.dll + 能问出运行时版本号。
+ *  比"Qt 有没有 plugins/webview 目录"可靠得多(后者在官方包上恒为 false)。 */
+bool runtimeAvailable() {
+    HMODULE m = loaderModule();
+    if (m == nullptr) return false;
+    if (GetProcAddress(m, "CreateCoreWebView2EnvironmentWithOptions") == nullptr) return false;
+    auto getVer = reinterpret_cast<PFN_GetAvailableVersion>(
+            GetProcAddress(m, "GetAvailableCoreWebView2BrowserVersionString"));
+    if (getVer == nullptr) return false;
+    LPWSTR v = nullptr;
+    const HRESULT hr = getVer(nullptr, &v);
+    const QString ver = (v != nullptr) ? QString::fromWCharArray(v) : QString();
+    if (v != nullptr) CoTaskMemFree(v);
+    return SUCCEEDED(hr) && !ver.isEmpty();
+}
+
+QString runtimeVersion() {
+    HMODULE m = loaderModule();
+    if (m == nullptr) return QString();
+    auto getVer = reinterpret_cast<PFN_GetAvailableVersion>(
+            GetProcAddress(m, "GetAvailableCoreWebView2BrowserVersionString"));
+    if (getVer == nullptr) return QString();
+    LPWSTR v = nullptr;
+    const HRESULT hr = getVer(nullptr, &v);
+    const QString ver = (v != nullptr) ? QString::fromWCharArray(v) : QString();
+    if (v != nullptr) CoTaskMemFree(v);
+    return SUCCEEDED(hr) ? ver : QString();
+}
+
+// ---- COM 回调 ------------------------------------------------------------
+// MinGW 没有 WRL,这几个 handler 手写 IUnknown(纯样板,无逻辑)。
+class EnvHandler : public ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler {
+public:
+    ULONG m_ref = 1;
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        if (ppv == nullptr) return E_POINTER;
+        if (IsEqualIID(riid, IID_IUnknown)
+            || IsEqualIID(riid, IID_ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler)) {
+            *ppv = static_cast<ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&m_ref); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        const LONG r = InterlockedDecrement(&m_ref);
+        if (r == 0) delete this;
+        return r;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT errorCode, ICoreWebView2Environment* created) override;
+};
+
+class CtlHandler : public ICoreWebView2CreateCoreWebView2ControllerCompletedHandler {
+public:
+    ULONG m_ref = 1;
+    Host* host = nullptr;
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        if (ppv == nullptr) return E_POINTER;
+        if (IsEqualIID(riid, IID_IUnknown)
+            || IsEqualIID(riid, IID_ICoreWebView2CreateCoreWebView2ControllerCompletedHandler)) {
+            *ppv = static_cast<ICoreWebView2CreateCoreWebView2ControllerCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&m_ref); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        const LONG r = InterlockedDecrement(&m_ref);
+        if (r == 0) delete this;
+        return r;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT errorCode, ICoreWebView2Controller* created) override;
+};
+
+class CaptureHandler : public ICoreWebView2CapturePreviewCompletedHandler {
+public:
+    ULONG m_ref = 1;
+    bool done = false;
+    HRESULT hr = E_PENDING;
+    HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+        if (ppv == nullptr) return E_POINTER;
+        if (IsEqualIID(riid, IID_IUnknown)
+            || IsEqualIID(riid, IID_ICoreWebView2CapturePreviewCompletedHandler)) {
+            *ppv = static_cast<ICoreWebView2CapturePreviewCompletedHandler*>(this);
+            AddRef();
+            return S_OK;
+        }
+        *ppv = nullptr;
+        return E_NOINTERFACE;
+    }
+    ULONG STDMETHODCALLTYPE AddRef() override { return InterlockedIncrement(&m_ref); }
+    ULONG STDMETHODCALLTYPE Release() override {
+        const LONG r = InterlockedDecrement(&m_ref);
+        if (r == 0) delete this;
+        return r;
+    }
+    HRESULT STDMETHODCALLTYPE Invoke(HRESULT errorCode) override {
+        hr = errorCode;
+        done = true;
+        return S_OK;
+    }
+};
+
+// ---- 宿主窗口 ------------------------------------------------------------
+static void syncBounds(Host* host) {
+    if (host == nullptr || host->controller == nullptr || host->hwnd == nullptr) return;
+    RECT rc = {};
+    if (GetClientRect(host->hwnd, &rc)) {
+        host->controller->put_Bounds(rc);
+    }
+}
+
+/** 把宿主窗口调成"**客户区正好 w×h**"。
+ *  WebView2 的 controller bounds 直接取 client rect,所以客户区尺寸 = 画面尺寸。
+ *  坑:AdjustWindowRectEx() 是按**系统 DPI** 算标题栏/边框的,而 Qt 会把进程设成
+ *  per-monitor DPI aware —— 显示器 DPI 与系统 DPI 不一致时,第一次算出来的外框会差 1 个
+ *  像素(实测 resize(600,400) 得到 600x401)。所以这里量一次实际客户区再补差,
+ *  一次收敛,保证结果精确。 */
+static bool wv2Debug() {
+    static int cached = -1;
+    if (cached < 0) cached = qEnvironmentVariableIsSet("JQT_WV2_DEBUG") ? 1 : 0;
+    return cached == 1;
+}
+
+static void applyClientSize(Host* host, int w, int h) {
+    if (host == nullptr || host->hwnd == nullptr) return;
+    RECT want = { 0, 0, w, h };
+    const DWORD style = static_cast<DWORD>(GetWindowLongPtrW(host->hwnd, GWL_STYLE));
+    const DWORD exStyle = static_cast<DWORD>(GetWindowLongPtrW(host->hwnd, GWL_EXSTYLE));
+    AdjustWindowRectEx(&want, style, FALSE, exStyle);
+    SetWindowPos(host->hwnd, nullptr, 0, 0, want.right - want.left, want.bottom - want.top,
+                 SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    // 迭代收敛:每次量实际客户区,把差值补到**外框**尺寸上。最多 4 轮(正常 1 轮就够)。
+    for (int i = 0; i < 4; ++i) {
+        RECT rc = {};
+        if (!GetClientRect(host->hwnd, &rc)) break;
+        const int dw = w - static_cast<int>(rc.right - rc.left);
+        const int dh = h - static_cast<int>(rc.bottom - rc.top);
+        if (wv2Debug()) {
+            fprintf(stderr, "[jqt-wv2] applyClientSize round=%d want=%dx%d client=%ldx%ld delta=%dx%d\n",
+                    i, w, h, static_cast<long>(rc.right - rc.left),
+                    static_cast<long>(rc.bottom - rc.top), dw, dh);
+        }
+        if (dw == 0 && dh == 0) break;
+        RECT wr = {};
+        if (!GetWindowRect(host->hwnd, &wr)) break;
+        SetWindowPos(host->hwnd, nullptr, 0, 0,
+                     (wr.right - wr.left) + dw, (wr.bottom - wr.top) + dh,
+                     SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+    syncBounds(host);
+}
+
+static LRESULT CALLBACK hostWndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
+    Host* host = reinterpret_cast<Host*>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    switch (msg) {
+    case WM_SIZE:
+        // controller bounds 与宿主窗口客户区对齐
+        syncBounds(host);
+        return 0;
+    case WM_CLOSE:
+        // 默认:用户点关闭只是隐藏窗口(不销毁),Java 侧对象继续可用。
+        // 但演示程序希望"关窗即退出",所以给 Java 一个开关(setQuitOnClose)。
+        ShowWindow(hwnd, SW_HIDE);
+        if (host != nullptr && host->quitOnClose) {
+            QCoreApplication::quit();   // 让 QApplication::exec() 返回
+        }
+        return 0;
+    case WM_DESTROY:
+        return 0;   // **不能** PostQuitMessage:那会把整个 Qt 应用干掉
+    default:
+        break;
+    }
+    return DefWindowProcW(hwnd, msg, wp, lp);
+}
+
+static bool ensureWindowClass() {
+    static bool done = false;
+    static bool ok = false;
+    if (done) return ok;
+    done = true;
+    WNDCLASSEXW wc = {};
+    wc.cbSize = sizeof(wc);
+    wc.style = CS_HREDRAW | CS_VREDRAW;
+    wc.lpfnWndProc = &hostWndProc;
+    wc.hInstance = GetModuleHandleW(nullptr);
+    wc.hCursor = LoadCursorW(nullptr, MAKEINTRESOURCEW(32512));   // IDC_ARROW(宽字符版)
+    wc.hbrBackground = reinterpret_cast<HBRUSH>(static_cast<INT_PTR>(COLOR_WINDOW + 1));
+    wc.lpszClassName = kJqtWv2Class;
+    ok = (RegisterClassExW(&wc) != 0) || (GetLastError() == ERROR_CLASS_ALREADY_EXISTS);
+    return ok;
+}
+
+// ---- 环境 / 控制器 生命周期 ----------------------------------------------
+static void applyPending(Host* host) {
+    if (host == nullptr || host->webview == nullptr) return;
+    if (host->pendingKind == Host::PendingNone) return;
+    const Host::PendingKind kind = host->pendingKind;
+    const QString value = host->pendingValue;
+    host->pendingKind = Host::PendingNone;
+    host->pendingValue.clear();
+    if (kind == Host::PendingHtml) {
+        host->webview->NavigateToString(reinterpret_cast<const wchar_t*>(value.utf16()));
+    } else {
+        host->webview->Navigate(reinterpret_cast<const wchar_t*>(value.utf16()));
+    }
+}
+
+static void startController(Host* host) {
+    if (host == nullptr || host->disposed || host->ctlRequested) return;
+    if (g_env == nullptr) return;
+    host->ctlRequested = true;
+    ++g_envHosts;
+    CtlHandler* handler = new CtlHandler();
+    handler->host = host;
+    hostAddRef(host);   // 回调期间保命
+    const HRESULT hr = g_env->CreateCoreWebView2Controller(host->hwnd, handler);
+    if (FAILED(hr)) {
+        host->ctlDone = true;
+        host->ctlOk = false;
+        host->errorText = QStringLiteral("CreateCoreWebView2Controller 调用失败 hr=") + hrText(hr);
+        hostRelease(host);
+        host->ctlRequested = false;
+    }
+    handler->Release();   // WebView2 内部已 AddRef;丢掉我们这份
+}
+
+static void finishEnv(HRESULT errorCode, ICoreWebView2Environment* created) {
+    g_envDone = true;
+    g_envOk = SUCCEEDED(errorCode) && (created != nullptr);
+    if (g_envOk) {
+        g_env = created;
+        g_env->AddRef();   // 进程级持有
+    } else {
+        g_envError = QStringLiteral("WebView2 环境创建失败 hr=") + hrText(errorCode)
+                + QStringLiteral("(通常是没装 WebView2 运行时,或 userDataFolder 不可写)");
+    }
+    const QList<Host*> waiters = g_envWaiters;
+    g_envWaiters.clear();
+    for (Host* h : waiters) {
+        if (!h->disposed) {
+            if (g_envOk) startController(h);
+            else h->errorText = g_envError;
+        }
+        hostRelease(h);
+    }
+}
+
+HRESULT STDMETHODCALLTYPE EnvHandler::Invoke(HRESULT errorCode,
+                                             ICoreWebView2Environment* created) {
+    finishEnv(errorCode, created);
+    return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE CtlHandler::Invoke(HRESULT errorCode,
+                                             ICoreWebView2Controller* created) {
+    Host* h = host;
+    host = nullptr;
+    if (h == nullptr) return S_OK;
+    h->ctlDone = true;
+    if (h->disposed) {           // Java 侧已经先释放了:什么都不碰
+        hostRelease(h);
+        return S_OK;
+    }
+    if (SUCCEEDED(errorCode) && created != nullptr) {
+        h->controller = created;
+        h->controller->AddRef();
+        h->ctlOk = true;
+        syncBounds(h);
+        h->controller->put_IsVisible(TRUE);
+        ICoreWebView2* wv = nullptr;
+        if (SUCCEEDED(h->controller->get_CoreWebView2(&wv)) && wv != nullptr) {
+            h->webview = wv;     // COM 出参已 AddRef
+            ICoreWebView2Settings* st = nullptr;
+            if (SUCCEEDED(wv->get_Settings(&st)) && st != nullptr) {
+                st->put_AreDefaultContextMenusEnabled(FALSE);
+                st->Release();
+            }
+        }
+        applyPending(h);         // 补做控制器就绪前排队的那次导航
+    } else {
+        h->ctlOk = false;
+        h->errorText = QStringLiteral("CreateCoreWebView2Controller 失败 hr=") + hrText(errorCode);
+    }
+    hostRelease(h);
+    return S_OK;
+}
+
+static void requestEnvironment() {
+    g_envRequested = true;
+    // Qt 在 Windows 上已经 OleInitialize(STA);这里重复调用只会拿到 S_FALSE / RPC_E_CHANGED_MODE,
+    // 都无害。首调用(极少数路径)才真正生效。
+    CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+    const QString dataDir = QDir::tempPath() + QStringLiteral("/jqt_webview2_profile");
+    QDir().mkpath(dataDir);
+    EnvHandler* handler = new EnvHandler();
+    const HRESULT hr = createEnvFn()(nullptr,
+                                     reinterpret_cast<const wchar_t*>(dataDir.utf16()),
+                                     nullptr,   // 默认 ICoreWebView2EnvironmentOptions
+                                     handler);
+    if (FAILED(hr)) {
+        finishEnv(hr, nullptr);
+    }
+    handler->Release();
+}
+
+// ---- 对外操作 ------------------------------------------------------------
+Host* create(int w, int h) {
+    if (!runtimeAvailable()) return nullptr;
+    if (!ensureWindowClass()) return nullptr;
+    if (createEnvFn() == nullptr) return nullptr;
+    Host* host = new Host();
+    host->wantWidth = w > 0 ? w : 480;
+    host->wantHeight = h > 0 ? h : 320;
+    RECT want = { 0, 0, host->wantWidth, host->wantHeight };
+    AdjustWindowRectEx(&want, WS_OVERLAPPEDWINDOW, FALSE, 0);
+    host->hwnd = CreateWindowExW(0, kJqtWv2Class, L"JQt WebView", WS_OVERLAPPEDWINDOW,
+                                 CW_USEDEFAULT, CW_USEDEFAULT,
+                                 want.right - want.left, want.bottom - want.top,
+                                 nullptr, nullptr, GetModuleHandleW(nullptr), nullptr);
+    if (host->hwnd == nullptr) {
+        const DWORD err = GetLastError();
+        hostRelease(host);
+        Q_UNUSED(err);
+        return nullptr;
+    }
+    SetWindowLongPtrW(host->hwnd, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(host));
+    applyClientSize(host, host->wantWidth, host->wantHeight);   // 客户区精确 = wantWidth×wantHeight
+    // 注意:**先不 ShowWindow** —— 只有 Java 侧调 show() 才真显示(否则构造就弹窗,API 不礼貌)。
+    // WebView2 的 controller 在窗口隐藏时也能建、也能 Navigate;渲染/截图前调 show() 即可。
+    if (g_envOk) {
+        startController(host);
+    } else if (g_envDone && !g_envOk) {
+        host->errorText = g_envError;
+    } else {
+        g_envWaiters.append(host);
+        hostAddRef(host);
+        if (!g_envRequested) requestEnvironment();
+    }
+    return host;
+}
+
+bool isReady(Host* host) {
+    return host != nullptr && !host->disposed && host->ctlOk && host->webview != nullptr;
+}
+
+QString errorString(Host* host) {
+    if (host == nullptr || host->disposed) return QString();
+    if (!host->errorText.isEmpty()) return host->errorText;
+    if (host->ctlDone && !host->ctlOk) return QStringLiteral("WebView2 控制器不可用");
+    if (host->ctlRequested && !host->ctlDone) return QStringLiteral("WebView2 控制器创建中");
+    return QString();
+}
+
+void loadUrl(Host* host, const QString& url) {
+    if (host == nullptr || host->disposed) return;
+    host->requestedUrl = url;
+    if (host->webview != nullptr) {
+        host->webview->Navigate(reinterpret_cast<const wchar_t*>(url.utf16()));
+    } else {
+        host->pendingKind = Host::PendingUrl;
+        host->pendingValue = url;
+    }
+}
+
+void loadHtml(Host* host, const QString& html) {
+    if (host == nullptr || host->disposed) return;
+    // 用 NavigateToString:不用写临时文件,也不用担心 QML 字符串转义
+    if (host->webview != nullptr) {
+        host->webview->NavigateToString(reinterpret_cast<const wchar_t*>(html.utf16()));
+    } else {
+        host->pendingKind = Host::PendingHtml;
+        host->pendingValue = html;
+    }
+}
+
+QString currentUrl(Host* host) {
+    if (host == nullptr || host->disposed) return QString();
+    QString out;
+    if (host->webview != nullptr) {
+        LPWSTR src = nullptr;
+        if (SUCCEEDED(host->webview->get_Source(&src)) && src != nullptr) {
+            out = QString::fromWCharArray(src);
+            CoTaskMemFree(src);
+        }
+    }
+    if (out.isEmpty()) out = host->requestedUrl;
+    return out;
+}
+
+QString currentTitle(Host* host) {
+    if (host == nullptr || host->disposed || host->webview == nullptr) return QString();
+    LPWSTR title = nullptr;
+    if (SUCCEEDED(host->webview->get_DocumentTitle(&title)) && title != nullptr) {
+        const QString out = QString::fromWCharArray(title);
+        CoTaskMemFree(title);
+        return out;
+    }
+    return QString();
+}
+
+void resize(Host* host, int w, int h) {
+    if (host == nullptr || host->disposed) return;
+    host->wantWidth = w > 0 ? w : 1;
+    host->wantHeight = h > 0 ? h : 1;
+    applyClientSize(host, host->wantWidth, host->wantHeight);
+}
+
+void show(Host* host) {
+    if (host == nullptr || host->disposed) return;
+    if (host->hwnd != nullptr) {
+        ShowWindow(host->hwnd, SW_SHOW);
+        UpdateWindow(host->hwnd);
+        SetForegroundWindow(host->hwnd);
+    }
+    if (host->controller != nullptr) host->controller->put_IsVisible(TRUE);
+}
+
+/** 宿主窗口当前是否可见 —— show() 生效的**可验证**证据(直接读 Win32 状态)。 */
+bool isShown(Host* host) {
+    if (host == nullptr || host->disposed || host->hwnd == nullptr) return false;
+    return IsWindowVisible(host->hwnd) != 0;
+}
+
+void setWindowTitle(Host* host, const QString& title) {
+    if (host == nullptr || host->disposed || host->hwnd == nullptr || title.isEmpty()) return;
+    SetWindowTextW(host->hwnd, reinterpret_cast<const wchar_t*>(title.utf16()));
+}
+
+/** 用户点宿主窗口的关闭按钮时,是否顺便退出 QApplication。
+ *  库的默认行为是"只隐藏窗口"(对象继续可用);演示/独立应用才需要关窗即退出。 */
+void setQuitOnClose(Host* host, bool on) {
+    if (host == nullptr || host->disposed) return;
+    host->quitOnClose = on;
+}
+
+/** controller 的当前 bounds(物理像素)—— resize() 生效的**权威**证据。
+ *  注意别拿 CapturePreview 的图片尺寸当这个用:实测 WebView2 截出来的图有时比 bounds
+ *  多 1 个像素(600x400 的 bounds 截出 600x401),那是它自己的取整行为,不代表 bounds 没对齐。 */
+bool viewportSize(Host* host, int* outW, int* outH) {
+    if (host == nullptr || host->disposed || host->controller == nullptr) return false;
+    RECT r = {};
+    if (FAILED(host->controller->get_Bounds(&r))) return false;
+    if (outW != nullptr) *outW = static_cast<int>(r.right - r.left);
+    if (outH != nullptr) *outH = static_cast<int>(r.bottom - r.top);
+    return true;
+}
+
+/** CapturePreview 是异步的,而 grabToPng() 是同步签名 —— 这里抽消息泵等它完成。
+ *  保护:capturing 标志防重入;15s 超时。 */
+QByteArray grabPng(Host* host) {
+    QByteArray out;
+    if (host == nullptr || host->disposed || host->webview == nullptr || host->capturing) return out;
+    host->capturing = true;
+    IStream* stream = nullptr;
+    if (SUCCEEDED(CreateStreamOnHGlobal(nullptr, TRUE, &stream)) && stream != nullptr) {
+        CaptureHandler* cap = new CaptureHandler();
+        const HRESULT hr = host->webview->CapturePreview(
+                COREWEBVIEW2_CAPTURE_PREVIEW_IMAGE_FORMAT_PNG, stream, cap);
+        if (SUCCEEDED(hr)) {
+            if (wv2Debug()) {
+                RECT br = {};
+                RECT cr = {};
+                if (host->controller != nullptr) host->controller->get_Bounds(&br);
+                if (host->hwnd != nullptr) GetClientRect(host->hwnd, &cr);
+                fprintf(stderr, "[jqt-wv2] grabPng bounds=%ldx%ld client=%ldx%ld\n",
+                        static_cast<long>(br.right - br.left), static_cast<long>(br.bottom - br.top),
+                        static_cast<long>(cr.right - cr.left), static_cast<long>(cr.bottom - cr.top));
+            }
+            const DWORD deadline = GetTickCount() + 15000;
+            while (!cap->done && GetTickCount() < deadline) {
+                MSG msg;
+                while (PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE)) {
+                    TranslateMessage(&msg);
+                    DispatchMessageW(&msg);
+                }
+                Sleep(10);
+            }
+            if (cap->done && SUCCEEDED(cap->hr)) {
+                HGLOBAL hg = nullptr;
+                if (SUCCEEDED(GetHGlobalFromStream(stream, &hg)) && hg != nullptr) {
+                    const SIZE_T size = GlobalSize(hg);
+                    void* p = GlobalLock(hg);
+                    if (p != nullptr && size > 0) {
+                        out = QByteArray(static_cast<const char*>(p), static_cast<int>(size));
+                    }
+                    if (p != nullptr) GlobalUnlock(hg);
+                }
+            }
+        }
+        cap->Release();
+        stream->Release();
+    }
+    host->capturing = false;
+    return out;
+}
+
+void dispose(Host* host) {
+    if (host == nullptr || host->disposed) return;
+    host->disposed = true;
+    if (host->controller != nullptr) {
+        host->controller->Close();
+        host->controller->Release();
+        host->controller = nullptr;
+    }
+    if (host->webview != nullptr) {
+        host->webview->Release();
+        host->webview = nullptr;
+    }
+    if (host->hwnd != nullptr) {
+        DestroyWindow(host->hwnd);   // WebView2 的子窗口由 Close() 先拆掉了
+        host->hwnd = nullptr;
+    }
+    if (g_envHosts > 0) --g_envHosts;
+    if (g_envHosts == 0 && g_env != nullptr) {
+        // 最后一个宿主走了 -> 放掉共享环境(浏览器进程随之退出)。下次用会重新建。
+        g_env->Release();
+        g_env = nullptr;
+        g_envRequested = false;
+        g_envDone = false;
+        g_envOk = false;
+        g_envError.clear();
+    }
+    hostRelease(host);   // 注册表持有的那一份
+}
+
+}   // namespace jqtwv2
+
+#else   // 非 Windows 或没探测到 WebView2 SDK:整个自研宿主不参与编译
+
+namespace jqtwv2 {
+struct Host;
+inline bool runtimeAvailable() { return false; }
+inline QString runtimeVersion() { return QString(); }
+}   // namespace jqtwv2
+
+#endif  // _WIN32 && JQT_HAVE_WEBVIEW2
+
 extern "C" {   // QtWebView(P2,v1.9.2)
 
 // ---------------------------------------------------------------------------
@@ -7941,7 +8624,10 @@ extern "C" {   // QtWebView(P2,v1.9.2)
 //   HTML 通过临时文件加载,避免把 HTML 拼进 QML 字符串的转义坑。
 // ---------------------------------------------------------------------------
 JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeAvailable(JNIEnv*, jclass) {
-#ifdef JQT_HAVE_WEBVIEW
+#if defined(JQT_HAVE_WEBVIEW2)
+    // Windows 走自研 WebView2 宿主:不再依赖 qtwebview 模块,只要有 WebView2 SDK 编译进来就算可用。
+    return JNI_TRUE;
+#elif defined(JQT_HAVE_WEBVIEW)
     return JNI_TRUE;
 #else
     return JNI_FALSE;
@@ -7956,7 +8642,12 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeAvailable(JNIEnv*, jclass
  * macOS/iOS 的系统 WebView 后端编译在 QtWebView 内部,不需要插件目录,故视为可用。
  */
 JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeBackendAvailable(JNIEnv*, jclass) {
-#ifdef JQT_HAVE_WEBVIEW
+#if defined(JQT_HAVE_WEBVIEW2)
+    // 自研宿主:后端 = **本机 WebView2 运行时是否可用**,而不是"Qt 有没有 plugins/webview 目录"。
+    // 探测方式:LoadLibrary(WebView2Loader.dll) + GetAvailableCoreWebView2BrowserVersionString,
+    // 能拿到版本号才算真可用 —— 与 Qt 的插件目录完全无关。
+    return jqtwv2::runtimeAvailable() ? JNI_TRUE : JNI_FALSE;
+#elif defined(JQT_HAVE_WEBVIEW)
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     return JNI_TRUE;
 #else
@@ -7972,7 +8663,150 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeBackendAvailable(JNIEnv*,
 #endif
 }
 
-#ifdef JQT_HAVE_WEBVIEW
+#if defined(JQT_HAVE_WEBVIEW2)
+// ---------------------------------------------------------------------------
+// Windows 自研 WebView2 宿主(v1.9.3)—— QWebView 的 Windows 实现分支。
+// 与 QtWebView 分支**同样的 JNI 签名**,Java 侧无感切换(src/native/jqt_bridge.cpp 里
+// 用的是 registerValueHandle,因为 jqtwv2::Host 不是 QObject)。
+// ---------------------------------------------------------------------------
+static jqtwv2::Host* jqtWv2Host(JNIEnv* env, jlong handle) {
+    return static_cast<jqtwv2::Host*>(requireHandle(env, handle));
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QWebView_nativeCreate(JNIEnv* env, jclass, jint w, jint h) {
+    if (requireApp(env) == nullptr) return 0;
+    jqtwv2::Host* host = jqtwv2::create(w, h);
+    if (host == nullptr) return 0;
+    // **值类型句柄**:Host 不是 QObject,必须走 registerValueHandle ——
+    // registerHandle 会 static_cast<QObject*> 去接 destroyed 信号,对非 QObject 实测直接崩溃。
+    return registerValueHandle(host, /*javaOwned=*/true);
+}
+
+// 幂等释放:先从注册表摘除再拆(与 QQuick3DView dispose 同款),
+// 于是 Java Cleaner 之后拿着同一句柄再来时静默返回,不会重复释放、不会把异常丢进 Cleaner 线程。
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeDispose(JNIEnv*, jclass, jlong handle) {
+    jqtwv2::Host* host = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_handleMutex);
+        auto it = g_handles.find(static_cast<int64_t>(handle));
+        if (it == g_handles.end()) return;
+        auto oit = g_javaOwned.find(static_cast<int64_t>(handle));
+        if (oit == g_javaOwned.end() || !oit->second) return;
+        host = static_cast<jqtwv2::Host*>(it->second);
+        g_handles.erase(it);
+        g_javaOwned.erase(oit);
+    }
+    if (g_app != nullptr && QThread::currentThread() != g_app->thread()) {
+        // 非 Qt 主线程(典型:Java Cleaner 线程)。跨线程碰 HWND / COM 会出事 ->
+        // 补一份引用后排队到 GUI 线程再拆,防悬垂。
+        jqtwv2::hostAddRef(host);
+        QMetaObject::invokeMethod(g_app, [host]() {
+            jqtwv2::dispose(host);
+            jqtwv2::hostRelease(host);
+        }, Qt::QueuedConnection);
+        return;
+    }
+    jqtwv2::dispose(host);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeLoadUrl(JNIEnv* env, jclass, jlong handle, jstring jurl) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return;
+    QString url = jqtJstring(env, jurl);
+    if (url.isEmpty()) url = QStringLiteral("about:blank");
+    jqtwv2::loadUrl(host, url);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeLoadHtml(JNIEnv* env, jclass, jlong handle, jstring jhtml) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return;
+    jqtwv2::loadHtml(host, jqtJstring(env, jhtml));
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeUrl(JNIEnv* env, jclass, jlong handle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return env->NewStringUTF("");
+    return env->NewStringUTF(jqtwv2::currentUrl(host).toUtf8().constData());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeTitle(JNIEnv* env, jclass, jlong handle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return env->NewStringUTF("");
+    return env->NewStringUTF(jqtwv2::currentTitle(host).toUtf8().constData());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeIsReady(JNIEnv* env, jclass, jlong handle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    return jqtwv2::isReady(host) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeErrorString(JNIEnv* env, jclass, jlong handle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return env->NewStringUTF("");
+    return env->NewStringUTF(jqtwv2::errorString(host).toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeResize(JNIEnv* env, jclass, jlong handle, jint w, jint h) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return;
+    jqtwv2::resize(host, w, h);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeShow(JNIEnv* env, jclass, jlong handle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return;
+    jqtwv2::show(host);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeIsShown(JNIEnv* env, jclass, jlong handle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    return jqtwv2::isShown(host) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeSetWindowTitle(JNIEnv* env, jclass, jlong handle, jstring jtitle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return;
+    jqtwv2::setWindowTitle(host, jqtJstring(env, jtitle));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeSetQuitOnClose(JNIEnv* env, jclass, jlong handle, jboolean on) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return;
+    jqtwv2::setQuitOnClose(host, on == JNI_TRUE);
+}
+
+// controller 的 bounds(物理像素),返回 {w,h};拿不到返回 null。
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWebView_nativeViewportSize(JNIEnv* env, jclass, jlong handle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    int w = 0;
+    int h = 0;
+    if (!jqtwv2::viewportSize(host, &w, &h)) return nullptr;
+    jintArray arr = env->NewIntArray(2);
+    if (arr != nullptr) {
+        const jint vals[2] = { w, h };
+        env->SetIntArrayRegion(arr, 0, 2, vals);
+    }
+    return arr;
+}
+
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QWebView_nativeGrabToPng(JNIEnv* env, jclass, jlong handle) {
+    jqtwv2::Host* host = jqtWv2Host(env, handle);
+    if (host == nullptr) return nullptr;
+    const QByteArray png = jqtwv2::grabPng(host);
+    if (png.isEmpty()) return nullptr;
+    jbyteArray out = env->NewByteArray(png.size());
+    if (out != nullptr) {
+        env->SetByteArrayRegion(out, 0, png.size(), reinterpret_cast<const jbyte*>(png.constData()));
+    }
+    return out;
+}
+
+// 额外信息:WebView2 运行时版本(冒烟/诊断用;其它平台返回空串)。
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeRuntimeVersion(JNIEnv* env, jclass) {
+    return env->NewStringUTF(jqtwv2::runtimeVersion().toUtf8().constData());
+}
+
+#elif defined(JQT_HAVE_WEBVIEW)
 static QQuickView* jqtWebView(JNIEnv* env, jlong handle) {
     return static_cast<QQuickView*>(requireHandle(env, handle));
 }
@@ -8066,6 +8900,35 @@ JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeShow(JNIEnv* env, jclass, jlo
     if (v) v->show();
 }
 
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeIsShown(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtWebView(env, handle);
+    return (v && v->isVisible()) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeSetWindowTitle(JNIEnv* env, jclass, jlong handle, jstring jtitle) {
+    QQuickView* v = jqtWebView(env, handle);
+    if (v) v->setTitle(jqtJstring(env, jtitle));
+}
+
+// QtWebView 分支没有"关窗即退出"这个开关(QQuickView 的关闭走 Qt 自己的窗口协议)
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeSetQuitOnClose(JNIEnv*, jclass, jlong, jboolean) {}
+
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWebView_nativeViewportSize(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtWebView(env, handle);
+    if (v == nullptr) return nullptr;
+    jintArray arr = env->NewIntArray(2);
+    if (arr != nullptr) {
+        const jint vals[2] = { v->width(), v->height() };
+        env->SetIntArrayRegion(arr, 0, 2, vals);
+    }
+    return arr;
+}
+
+// 非 Windows 平台没有"自研 WebView2 运行时版本"这个概念 -> 空串
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeRuntimeVersion(JNIEnv* env, jclass) {
+    return env->NewStringUTF("");
+}
+
 JNIEXPORT jbyteArray JNICALL Java_org_jqt_QWebView_nativeGrabToPng(JNIEnv* env, jclass, jlong handle) {
     QQuickView* v = jqtWebView(env, handle);
     if (v == nullptr) return nullptr;
@@ -8092,6 +8955,11 @@ JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeIsReady(JNIEnv*, jclass, 
 JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeErrorString(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
 JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeResize(JNIEnv*, jclass, jlong, jint, jint) {}
 JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeShow(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeIsShown(JNIEnv*, jclass, jlong) { return JNI_FALSE; }
+JNIEXPORT jintArray JNICALL Java_org_jqt_QWebView_nativeViewportSize(JNIEnv*, jclass, jlong) { return nullptr; }
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeSetWindowTitle(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeSetQuitOnClose(JNIEnv*, jclass, jlong, jboolean) {}
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeRuntimeVersion(JNIEnv* env, jclass) { return env->NewStringUTF(""); }
 JNIEXPORT jbyteArray JNICALL Java_org_jqt_QWebView_nativeGrabToPng(JNIEnv*, jclass, jlong) { return nullptr; }
 
 #endif  // JQT_HAVE_WEBVIEW

@@ -61,6 +61,63 @@ if [ -d "$QT_BASE/plugins" ]; then
   echo "    plugins: $(find "$STAGE/qt/plugins" -type f | wc -l) 个文件"
 fi
 
+# ---- QML 模块:只带"需要的最小集合"(v1.9.3) ----
+# 为什么必须带:Qt 把 QtQuick/QtQml 编进了库的资源里(不需要文件),但 **QtQuick3D 是文件形态的
+# QML 模块** —— 不打进包里,发布包里的 `import QtQuick3D` 就报
+#   module "QtQuick3D" is not installed
+# (与 Windows 上 lib/qml 那一课同一个道理:Qt 6 的可重定位前缀 = Qt6Core 所在目录,
+#  启动器把 <包>/qt 放进库路径 ⇒ QmlImportsPath = <包>/qt/qml;启动器另外显式导出
+#  QML2_IMPORT_PATH 兜底。)
+# 取舍:**不**无脑拷整棵 qml/ 树(本机 6.12.0 实测 ~10.1 MB / 2292 文件),只带 QtQuick3D(含
+# qquick3dplugin 与各子模块 QtQuick3D.Helpers/Particles3D/Effects/...),再剪掉 Design Studio
+# 用的工具目录 designer/ ⇒ ~1.9 MB / 356 文件。子模块是独立 module,顶层 qmldir 不引用它们,
+# 所以剪枝不会影响 `import QtQuick3D` 本身。
+QML_MODULES=("QtQuick3D")
+QML_PRUNE=("designer")            # Qt Design Studio 编辑器插件,运行期用不到
+qml_files=0
+for m in "${QML_MODULES[@]}"; do
+  qmlsrc="$QT_BASE/qml/$m"
+  if [ ! -d "$qmlsrc" ]; then
+    echo "    !! 该 Qt 没有 qml/$m —— 包里 import $m 会失败(装 qtquick3d addon 后重跑本脚本)"
+    continue
+  fi
+  mkdir -p "$STAGE/qt/qml"
+  cp -R "$qmlsrc" "$STAGE/qt/qml/$m"
+  for ex in "${QML_PRUNE[@]}"; do
+    if [ -d "$STAGE/qt/qml/$m/$ex" ]; then
+      rm -rf "$STAGE/qt/qml/$m/$ex"
+      echo "    剪掉工具目录 qml/$m/$ex(运行期不需要)"
+    fi
+  done
+  if [ ! -f "$STAGE/qt/qml/$m/qmldir" ]; then
+    echo "    !! qml/$m/qmldir 缺失 —— 该模块在包里不可用" >&2
+  fi
+  n=$(find "$STAGE/qt/qml/$m" -type f | wc -l | tr -d ' ')
+  sz=$(du -sh "$STAGE/qt/qml/$m" | cut -f1)
+  echo "    qml/$m: $n 个文件 ($sz)"
+  qml_files=$((qml_files + n))
+done
+echo "    QML 模块合计: $qml_files 个文件"
+
+# ---- 断言 Quick3D 的 C++ 侧也在包里 ----
+# 插件链:qquick3dplugin -> Qt6Quick3D -> Qt6Quick3DRuntimeRender -> **Qt6ShaderTools**。
+# 它们本来靠上面的 QTPATTERNS 通配进来(Linux: libQt6*.so* / macOS: Qt*.framework),
+# 这里只做存在性检查 —— 免得哪天通配改了、包里少一环却没人知道(那正是"能探测但渲染不出来"的成因)。
+have_q3d=0
+have_st=0
+if [ "$OS" = "Darwin" ]; then
+  if [ -d "$STAGE/qt/QtQuick3D.framework" ] || ls "$STAGE/qt"/libQt6Quick3D*.dylib >/dev/null 2>&1; then have_q3d=1; fi
+  if [ -d "$STAGE/qt/QtShaderTools.framework" ] || ls "$STAGE/qt"/libQt6ShaderTools*.dylib >/dev/null 2>&1; then have_st=1; fi
+else
+  if ls "$STAGE/qt"/libQt6Quick3D*.so* >/dev/null 2>&1; then have_q3d=1; fi
+  if ls "$STAGE/qt"/libQt6ShaderTools*.so* >/dev/null 2>&1; then have_st=1; fi
+fi
+if [ "$have_q3d" = 1 ]; then echo "    Quick3D 运行库 : 在"; else echo "    Quick3D 运行库 : !! 缺"; fi
+if [ "$have_st" = 1 ]; then echo "    QtShaderTools  : 在"; else echo "    QtShaderTools  : !! 缺"; fi
+if [ "$have_q3d" != 1 ] || [ "$have_st" != 1 ]; then
+  echo "    !! 包里缺 Quick3D 运行库或 ShaderTools:装 qtquick3d + qtshadertools 两个 addon 后重跑" >&2
+fi
+
 cp "$ROOT/lib/$NATIVE_LIB" "$STAGE/lib/"
 [ -f "$ROOT/LGPL-3.0.txt" ] && cp "$ROOT/LGPL-3.0.txt" "$STAGE/licenses/"
 [ -f "$ROOT/THIRD-PARTY-NOTICES.md" ] && cp "$ROOT/THIRD-PARTY-NOTICES.md" "$STAGE/licenses/"
@@ -81,6 +138,8 @@ else JAVA="$(/usr/libexec/java_home 2>/dev/null)/bin/java"; fi
 export DYLD_FRAMEWORK_PATH="$HERE/qt:${DYLD_FRAMEWORK_PATH:-}"
 export DYLD_LIBRARY_PATH="$HERE/lib:$HERE/qt:${DYLD_LIBRARY_PATH:-}"
 export QT_PLUGIN_PATH="$HERE/qt/plugins:${QT_PLUGIN_PATH:-}"
+# QML 模块在 <包>/qt/qml(Qt 的可重定位前缀本来也能推出来 —— 这里显式给,省得靠推导)
+export QML2_IMPORT_PATH="$HERE/qt/qml:${QML2_IMPORT_PATH:-}"
 CLASS="${1:-org.jqt.JQtDemo}"; shift || true
 exec "$JAVA" -XstartOnFirstThread -Djava.library.path="$HERE/lib" \
   --enable-native-access=ALL-UNNAMED "$@" -cp "$HERE/lib/*:$HERE:$HERE/out:." "$CLASS"
@@ -97,6 +156,8 @@ else JAVA="$(command -v java || true)"; fi
 [ -x "$JAVA" ] || { echo "no JDK found - set JAVA_HOME" >&2; exit 1; }
 export LD_LIBRARY_PATH="$HERE/lib:$HERE/qt:${LD_LIBRARY_PATH:-}"
 export QT_PLUGIN_PATH="$HERE/qt/plugins:${QT_PLUGIN_PATH:-}"
+# QML 模块在 <包>/qt/qml(Qt 的可重定位前缀本来也能推出来 —— 这里显式给,省得靠推导)
+export QML2_IMPORT_PATH="$HERE/qt/qml:${QML2_IMPORT_PATH:-}"
 CLASS="${1:-org.jqt.JQtDemo}"; shift || true
 exec "$JAVA" -Djava.library.path="$HERE/lib" \
   --enable-native-access=ALL-UNNAMED "$@" -cp "$HERE/lib/*:$HERE:$HERE/out:." "$CLASS"
@@ -108,7 +169,10 @@ cat > "$STAGE/README-BUNDLE.md" <<EOF
 # JQt $VER — $PLATFORM 自带 Qt 运行库包
 
 - \`lib/$NATIVE_LIB\`  —— JQt 原生库
-- \`qt/\`                —— 打包进来的 Qt 运行库($copied 项)
+- \`qt/\`                —— 打包进来的 Qt 运行库($copied 项);Quick3D 的
+  \`QtQuick3D*.framework\`/\`libQt6Quick3D*.so*\` 与 \`QtShaderTools\` 也在其中
+- \`qt/qml/QtQuick3D\`   —— QtQuick3D 的 QML 模块(\`import QtQuick3D\` 靠它;Qt 只把
+  QtQuick/QtQml 编进库资源,Quick3D 必须带文件;$qml_files 个文件)
 - \`run-with-bundled-qt.sh\` —— 启动器:注入 Qt 库路径后启动 JVM
 - \`licenses/\`          —— LGPL-3.0 与 Qt 许可证
 
