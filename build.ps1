@@ -81,6 +81,25 @@ if ((Test-Path (Join-Path $Kit "lib\libQt6WebView.a")) -or (Test-Path (Join-Path
 } else {
     Write-Host "==> QtWebView not found - QWebView will report unavailable"
 }
+# WebView2 自研宿主探测(v1.9.3,Windows):官方 qtwebview 包**不含 plugins/webview 后端插件**
+# (MinGW 与 MSVC 两个包都实测过),实例化 QML 的 WebView 元素会让 Qt qFatal("No WebView plug-in found!")
+# 直接 fail-fast(实测退出码 0xC0000409)。所以 Windows 上 QWebView 改走 JQt 自己写的 WebView2(COM)宿主
+# (native/jqt_bridge.cpp 的 jqtwv2 命名空间),不再依赖 qtwebview 的后端插件。
+#   - SDK 头 native/webview2/include/WebView2.h 来自 nuget.org 的 Microsoft.Web.WebView2 包;
+#     **只 include 头,不链接任何 .lib** —— 该头里的 IID 全是 __declspec(selectany) 自带定义,
+#     正好绕开 MSVC 专有的 WebView2LoaderStatic.lib(MinGW 的 ld 吃不下 MSVC 的 import lib)。
+#   - WebView2Loader.dll 运行期用 LoadLibrary 动态加载,构建末段拷进 lib/。
+# 没有这个头就退回"Windows 上不可用",不影响其它平台编译。
+$wv2Header = Join-Path $NativeDir "webview2\include\WebView2.h"
+$wv2Loader = Join-Path $NativeDir "webview2\x64\WebView2Loader.dll"
+$HasWebView2 = ($env:OS -eq "Windows_NT") -and (Test-Path $wv2Header)
+if ($HasWebView2) {
+    $gppArgs += @("-DJQT_HAVE_WEBVIEW2", "-I", (Join-Path $NativeDir "webview2\include"))
+    Write-Host "==> WebView2 SDK found - Windows native WebView2 host enabled"
+} else {
+    Write-Host "==> WebView2 SDK not found - QWebView will report unavailable on Windows"
+    Write-Host "    (need native/webview2/include/WebView2.h; see native/webview2/README.md)"
+}
 # QtQuick3D 探测(v1.9.2 P2):Quick 3D 是 QML 模块,加载仍走 QQuickView -> 不链接 Qt6Quick3D,
 # JQT_HAVE_QUICK3D 只是"构建期看见过它"的信息位(status() 会打印);能不能用是运行期结论。
 if ((Test-Path (Join-Path $Kit "lib\libQt6Quick3D.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Quick3D.dll"))) {
@@ -148,18 +167,48 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 
-# 运行期要能 import QtQuick3D:windeployqt 不带 QML 模块,也不带 shadertools
+# 运行期要能 import QtQuick3D。两处都要做,而且顺序/位置都有讲究(本机 6.12.0 MinGW 实测):
+#  · QML 模块:windeployqt 不认 QML 模块,而 Qt 6 的"可重定位前缀"是按 **Qt6Core.dll 所在目录**
+#    推导的 —— 运行期 Qt6Core.dll 是从 lib 加载的,于是 QmlImportsPath 落在 lib/qml,
+#    Qt 安装目录里的 qml/QtQuick3D 对用户完全不可见(实测报 module "QtQuick3D" is not installed)。
+#    所以必须把整个模块拷进 lib/qml/QtQuick3D;仓库根 qml/ 也放一份供开发/测试(cwd)导入。
+#  · C++ 依赖链:qquick3dplugin.dll -> Qt6Quick3D.dll -> Qt6Quick3DRuntimeRender.dll
+#    -> **Qt6ShaderTools.dll**。Qt Shader Tools 是 addon(qtshadertools),官方 MinGW 在线安装器
+#    默认不装 -> 插件加载失败,报 "Cannot load library ...qquick3dplugin.dll: 找不到指定的模块"
+#    (本机实测就是这个原因,缺的不是 Quick3D 自己而是 ShaderTools)。
 $q3dQmlSrc = Join-Path $Kit "qml\QtQuick3D"
 if (Test-Path $q3dQmlSrc) {
-    New-Item -ItemType Directory -Force -Path (Join-Path $LibDir "qml\QtQuick3D") | Out-Null
-    Copy-Item (Join-Path $q3dQmlSrc "*") (Join-Path $LibDir "qml\QtQuick3D") -Recurse -Force
-    Write-Host "==> 已部署 QtQuick3D QML 模块(lib/qml/QtQuick3D)"
+    foreach ($dst in @((Join-Path $LibDir "qml\QtQuick3D"), (Join-Path $Root "qml\QtQuick3D"))) {
+        New-Item -ItemType Directory -Force -Path $dst | Out-Null
+        Copy-Item (Join-Path $q3dQmlSrc "*") $dst -Recurse -Force
+    }
+    Write-Host "==> 已部署 QtQuick3D QML 模块(lib/qml/QtQuick3D + qml/QtQuick3D)"
+} else {
+    Write-Host "==> 未找到 QtQuick3D QML 模块(该 Qt 未装 qtquick3d): $q3dQmlSrc"
 }
-foreach ($d in @("Qt6Quick3D.dll","Qt6Quick3DRuntimeRender.dll","Qt6Quick3DUtils.dll","Qt6Quick3DGlslParser.dll")) {
-    $src = Join-Path $Kit "bin\$d"; if (Test-Path $src) { Copy-Item $src $LibDir -Force }
+# Quick3D 的 DLL 全家桶(含各 QML 子模块插件 QtQuick3D.Helpers/Particles3D... 依赖的
+# Qt6Quick3DHelpers/Effects/Particles 等)+ ShaderTools。缺 ShaderTools 时整个 Quick3D 都不可用。
+$q3dDlls = @(Get-ChildItem (Join-Path $Kit "bin\Qt6Quick3D*.dll") -ErrorAction SilentlyContinue)
+# 子模块的间接依赖:QtQuick3D.SpatialAudio 的插件要 Qt6SpatialAudio + Qt6MultimediaQuick。
+foreach ($extra in @("Qt6SpatialAudio.dll","Qt6MultimediaQuick.dll","Qt6ShaderTools.dll")) {
+    $p = Join-Path $Kit "bin\$extra"
+    if (Test-Path $p) { $q3dDlls += Get-Item $p }
 }
-if (-not (Test-Path (Join-Path $Kit "bin\Qt6ShaderTools.dll"))) {
-    Write-Warning "Qt 里没有 Qt6ShaderTools.dll(qtshadertools)-> Quick3D 冒烟会 SKIP(本机 6.12.0 MinGW 实测就缺)"
+foreach ($d in $q3dDlls) { Copy-Item $d.FullName $LibDir -Force }
+Write-Host ("==> 已部署 Quick3D/ShaderTools 运行库 {0} 个: {1}" -f $q3dDlls.Count, (($q3dDlls | ForEach-Object { $_.Name }) -join ", "))
+# 自检:核心依赖链必须完整,否则 QtQuick3D 插件加载必失败(本机修的就是这个坑)
+$q3dChain = @("Qt6ShaderTools.dll","Qt6Quick3D.dll","Qt6Quick3DRuntimeRender.dll","Qt6Quick3DUtils.dll")
+$q3dMissing = @($q3dChain | Where-Object { -not (Test-Path (Join-Path $LibDir $_)) })
+if ($q3dMissing.Count -gt 0) {
+    Write-Warning ("Quick3D 依赖链不完整,缺: " + ($q3dMissing -join ", ") +
+                   " -> qquick3dplugin.dll 加载会失败(Quick3D 冒烟只能 SKIP)。" +
+                   " ShaderTools 装法:官方在线安装器勾选 Qt Shader Tools,或取在线仓库 MinGW 包 " +
+                   "qt.qt6.6120.addons.qtshadertools.win64_mingw 解到 " + $Kit)
+} else {
+    Write-Host "==> Quick3D 依赖链完整(qquick3dplugin -> Qt6Quick3D -> Qt6Quick3DRuntimeRender -> Qt6ShaderTools)"
+}
+if (-not (Test-Path (Join-Path $Kit "bin\Qt6QuickTimeline.dll"))) {
+    Write-Host "==> 提示: 未装 qtquicktimeline(Qt6QuickTimeline.dll)-> QtQuick3D.AssetUtils 子模块不可用(核心 Quick3D 不受影响)"
 }
 
 Write-Host "==> [4/4] Deploying QPA platform plugin (qwindows)"
@@ -183,6 +232,15 @@ if (Test-Path $wvQmlSrc) {
     }
 } else {
     Write-Host "==> 未找到 QtWebView QML 模块(该 Qt 未装 qtwebview)"
+}
+# WebView2 自研宿主(v1.9.3):WebView2Loader.dll 必须能被运行期找到。
+# native 侧用 LoadLibrary 动态加载它(优先 jqt.dll 同目录 -> 这里),所以 jqt.dll 对它没有硬链接依赖:
+# 没装 WebView2 运行时的机器上 jqt.dll 照样加载,只是 QWebView.isBackendAvailable() 返回 false。
+if ($HasWebView2 -and (Test-Path $wv2Loader)) {
+    Copy-Item $wv2Loader $LibDir -Force
+    Write-Host "==> 已部署 WebView2Loader.dll(x64,自研 WebView2 宿主用)"
+} elseif ($HasWebView2) {
+    Write-Warning "缺少 $wv2Loader -> Windows 上 QWebView 将报告不可用"
 }
 # 补 qoffscreen 平台插件:用户侧常以 QT_QPA_PLATFORM=offscreen 跑无头模式,
 # 而 windeployqt 默认只带 qwindows(问题报告附录 B 实测)

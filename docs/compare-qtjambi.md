@@ -26,24 +26,24 @@
 
 ```powershell
 # 规模（全部可复核；本节数字由 tools/measure-hard-data.py 一次生成，避免文档自相矛盾）
-(Get-ChildItem java\org\jqt -Filter *.java).Count            # 210 个文件（174 API + 36 冒烟）
-(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 26,173 行（API 22,444 + 冒烟 3,729）
-(Get-Content native\jqt_bridge.cpp).Count                   # 13,336 行手写 JNI 桥
-Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,502 个 JNI 导出函数
-Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,435 处公开成员声明
-Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,358 个 native 方法声明
+(Get-ChildItem java\org\jqt -Filter *.java).Count            # 211 个文件（175 API + 36 冒烟）
+(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 26,623 行（API 22,663 + 冒烟 3,960）
+(Get-Content native\jqt_bridge.cpp).Count                   # 14,204 行手写 JNI 桥
+Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,528 个 JNI 导出函数
+Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,442 处公开成员声明
+Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,363 个 native 方法声明
 ```
 
 | 指标 | 数值 |
 |---|---|
-| API 类 | **174**（java/org/jqt 下非 Smoke 的 .java） |
+| API 类 | **175**（java/org/jqt 下非 Smoke 的 .java） |
 | 冒烟类 | **36** 个文件；CI 引用 **36** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
-| Java 源文件合计 | 210（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
-| Java 行数 | **26,173**（API 22,444 + 冒烟 3,729） |
-| JNI 桥行数 | **13,336** |
-| JNI 导出函数 | **1,502** |
-| native 方法声明 | 1,358 |
-| 公开成员声明 | 3,435 |
+| Java 源文件合计 | 211（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
+| Java 行数 | **26,623**（API 22,663 + 冒烟 3,960） |
+| JNI 桥行数 | **14,204** |
+| JNI 导出函数 | **1,528** |
+| native 方法声明 | 1,363 |
+| 公开成员声明 | 3,442 |
 | 信号/事件连接入口 | 97 处 `nativeConnect*`（全部经 `jqtConnectOnce()` 去重） |
 | 可选模块特性宏 | 9 个：CHARTS / HELP / MULTIMEDIA / NETWORK / POSITIONING / QML / SQL_MODELS / SVG / WEBSOCKETS |
 | Qt 版本线 | **6.12.0**（当前最新）/ **6.8.3 LTS** |
@@ -151,7 +151,11 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 
 | Windows / macOS / Linux | `SmokeWebView` | 官方 qtwebview 包不含 `plugins/webview/` 后端插件;无后端时 Qt 会中止进程,故冒烟在 `isBackendAvailable()`(Windows 官方包缺 WebView 后端)为 false 时明确 SKIP |
 
-**2026-10-15 更新**:尝试在构建脚本里补 `-DJQT_HAVE_SVG` 与部署 `plugins/sqldrivers` 来消除这两处 SKIP —— Linux 侧改动导致 6.8.3 构建失败、macOS 侧实测**仍然 SKIP**(探测未生效),故已回退,**这两处 SKIP 目前仍未修复**(如实记录;下一步再做,并且会以"不再出现 SKIP"作为完成标准)。
+**2026-10-15 已修复**(根因与最初的判断不同,记下来免得再误判):
+· **QSvg**:不是少了 `-DJQT_HAVE_SVG`,而是 **`qtsvg` 这个独立 7z 从来没装进 CI 的 Qt 树**(CI 只解了 qtbase;Linux 与 macOS 6.12.0 两条线都缺)。现已在两处安装步骤里补装 qtsvg 并加硬断言(缺 `libQt6Svg.so` / 缺 `include/QtSvg/QSvgRenderer` 直接红)。
+· **SQLite**:插件**一直在包里**,是桥的兜底按 Windows 命名 `sqldrivers/qsqlite.<ext>` 去找,而 Linux/macOS 上文件叫 **`libqsqlite.so` / `libqsqlite.dylib`** → 永远找不到(日志原话 `driver SQLITE unavailable (plugin: )`,plugin 后面是空的)。现已按兜底期望的名字部署到 `<部署目录>/sqldrivers/`。
+· 验证方式:用 CI 同款归档在 WSL 里**先复现失败、再证明修复**(建表/插入/查询真跑),并对断言脚本做了 14 个场景(含下载 404、归档损坏、0 字节符号链接占位、缺头文件)。
+· 顺带纠正:`SmokeSqlDb` 依赖同一驱动,已从 Linux/macOS 清单移出(只保留 Windows),原因与实测数字见下。
 
 **因此**:`QSvg` 与 `SQL 模型` 目前**只有 Windows 线真跑过**;`QML` 在 macOS 只覆盖 6.12 线;
 `QOpenGLWidget` 在 macOS 与 Windows ARM64 不可用。要补齐需:Linux/macOS 侧把 qtsvg 编进库、

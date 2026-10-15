@@ -49,6 +49,25 @@ jobs:
           rm -rf /tmp/qt7z /tmp/qtbase.7z /tmp/icu.7z
           test -f /opt/6.12.0/gcc_64/bin/qmake || (echo "qmake missing"; find /opt/6.12.0 -maxdepth 3 -type d | head -20; exit 1)
 
+      - name: Install QtSvg 6.12.0 (qtsvg is a separate 7z inside the qtbase package dir)
+        run: |
+          # 取证:`qt.qt6.6120.linux_gcc_64/` 目录里 qtbase 与 qtsvg 是**两个独立 7z**
+          # (7z l 清单:qtsvg 那个提供 lib/libQt6Svg.so、lib/libQt6Svg.so.6.12.0、
+          #  lib/libQt6SvgWidgets.so.6.12.0、include/QtSvg/QSvgRenderer)。
+          # 以前只解 qtbase -> libQt6Svg.so 根本不存在,所以 QSvgRenderer 在 Linux 上
+          # 一直 SKIP —— 不是"没传 -DJQT_HAVE_SVG",是模块压根没装。
+          curl -fsSL -o /tmp/qtsvg6120.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.linux_gcc_64/6.12.0-0-202609280346qtsvg-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
+          rm -rf /tmp/qtsvg6120 && mkdir -p /tmp/qtsvg6120
+          7z x -y -o/tmp/qtsvg6120 /tmp/qtsvg6120.7z > /dev/null
+          sudo cp -a /tmp/qtsvg6120/lib/. /opt/6.12.0/gcc_64/lib/
+          if [ -d /tmp/qtsvg6120/include ]; then sudo cp -a /tmp/qtsvg6120/include/. /opt/6.12.0/gcc_64/include/; fi
+          if [ -d /tmp/qtsvg6120/plugins ]; then sudo cp -a /tmp/qtsvg6120/plugins/. /opt/6.12.0/gcc_64/plugins/; fi
+          rm -rf /tmp/qtsvg6120 /tmp/qtsvg6120.7z
+          # 就地断言:宁可在这里断,也不要让 QSvgRenderer 又悄悄 SKIP。
+          # 用 -s(跟随符号链接后必须非空)—— 万一 7z 没能建符号链接,这里会当场抓到。
+          test -s /opt/6.12.0/gcc_64/lib/libQt6Svg.so || { echo "libQt6Svg.so 缺失或为空(符号链接没建出来?)"; ls -la /opt/6.12.0/gcc_64/lib/libQt6Svg* 2>&1; exit 1; }
+          test -f /opt/6.12.0/gcc_64/include/QtSvg/QSvgRenderer || { echo "QtSvg 头文件缺失"; ls /opt/6.12.0/gcc_64/include | head -20; exit 1; }
+
       - name: Install Qt 6.8.3 (manual 7z - aqt cannot parse Linux XML)
         run: |
           mkdir -p /tmp/qt683/qt /tmp/qt683/icu
@@ -67,6 +86,21 @@ jobs:
           find /tmp/qt683/icu -name "libicu*" -exec sudo cp {} /opt/Qt683/6.8.3/gcc_64/lib/ \;
           rm -rf /tmp/qt683 /tmp/qtbase683.7z /tmp/icu683.7z
           test -f /opt/Qt683/6.8.3/gcc_64/bin/qmake || { echo "qmake missing"; exit 1; }
+
+      - name: Install QtSvg 6.8.3 (qtsvg is a separate 7z inside the qtbase package dir)
+        run: |
+          # 同 6.12.0:6.8.3 的 qtsvg 也在 qt.qt6.683.linux_gcc_64/ 目录下单独一个 7z
+          # (7z 清单实测:`6.8.3-0-202503201345qtsvg-Linux-RHEL_8_10-...7z` 提供
+          #  lib/libQt6Svg.so -> libQt6Svg.so.6.8.3 与 include/QtSvg/QSvgRenderer)。
+          curl -fsSL -o /tmp/qtsvg683.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_683/qt6_683/qt.qt6.683.linux_gcc_64/6.8.3-0-202503201345qtsvg-Linux-RHEL_8_10-GCC-Linux-RHEL_8_10-X86_64.7z"
+          rm -rf /tmp/qtsvg683 && mkdir -p /tmp/qtsvg683
+          7z x -y -o/tmp/qtsvg683 /tmp/qtsvg683.7z > /dev/null
+          sudo cp -a /tmp/qtsvg683/lib/. /opt/Qt683/6.8.3/gcc_64/lib/
+          if [ -d /tmp/qtsvg683/include ]; then sudo cp -a /tmp/qtsvg683/include/. /opt/Qt683/6.8.3/gcc_64/include/; fi
+          if [ -d /tmp/qtsvg683/plugins ]; then sudo cp -a /tmp/qtsvg683/plugins/. /opt/Qt683/6.8.3/gcc_64/plugins/; fi
+          rm -rf /tmp/qtsvg683 /tmp/qtsvg683.7z
+          test -s /opt/Qt683/6.8.3/gcc_64/lib/libQt6Svg.so || { echo "libQt6Svg.so 缺失或为空(符号链接没建出来?)"; ls -la /opt/Qt683/6.8.3/gcc_64/lib/libQt6Svg* 2>&1; exit 1; }
+          test -f /opt/Qt683/6.8.3/gcc_64/include/QtSvg/QSvgRenderer || { echo "QtSvg 头文件缺失"; ls /opt/Qt683/6.8.3/gcc_64/include | head -20; exit 1; }
 
       - name: Install QtTools (QtHelp) 6.12.0 - base package
         run: |
@@ -96,6 +130,32 @@ jobs:
           [ -d /tmp/qtdeclarative/include ] && sudo cp -a /tmp/qtdeclarative/include/. /opt/6.12.0/gcc_64/include/
           [ -d /tmp/qtdeclarative/qml ] && sudo cp -a /tmp/qtdeclarative/qml /opt/6.12.0/gcc_64/
           ls /opt/6.12.0/gcc_64/lib | grep -qi quick || (echo "libQt6Quick missing"; exit 1)
+
+      - name: Install QtQuick3D + Qt Shader Tools 6.12.0 (prebuilt addons)
+        run: |
+          # Quick 3D(v1.9.3)是 QML 模块(import QtQuick3D),但它的插件链要两个独立 addon:
+          #   qquick3dplugin -> libQt6Quick3D.so -> libQt6Quick3DRuntimeRender.so -> **libQt6ShaderTools.so**
+          # 少了 qtshadertools 就是 "Cannot load library .../qquick3dplugin.so"(与 Windows 同一个坑)。
+          # qtquick3d 自带 qml/QtQuick3D(QML 模块)与 libQt6Quick3D*.so;qtshadertools 提供
+          # libQt6ShaderTools.so——它**属于 qt.qt6.6120.addons.\* 目录**,不在 qtbase 里。
+          curl -fsSL -o /tmp/qtquick3d.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtquick3d.linux_gcc_64/6.12.0-0-202609280346qtquick3d-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
+          curl -fsSL -o /tmp/qtshadertools.7z "https://download.qt.io/online/qtsdkrepository/linux_x64/desktop/qt6_6120/qt6_6120/qt.qt6.6120.addons.qtshadertools.linux_gcc_64/6.12.0-0-202609280346qtshadertools-Linux-RHEL_9_6-GCC-Linux-RHEL_9_6-X86_64.7z"
+          7z x -y -o/tmp/qtquick3d /tmp/qtquick3d.7z > /dev/null
+          7z x -y -o/tmp/qtshadertools /tmp/qtshadertools.7z > /dev/null
+          sudo cp -a /tmp/qtquick3d/lib/. /opt/6.12.0/gcc_64/lib/
+          [ -d /tmp/qtquick3d/include ] && sudo cp -a /tmp/qtquick3d/include/. /opt/6.12.0/gcc_64/include/
+          # QML 模块必须按 7z 里的目录结构放进 <Qt前缀>/qml —— 否则运行期报
+          # "module \"QtQuick3D\" is not installed"(Qt 6 的可重定位前缀就是这里)
+          sudo mkdir -p /opt/6.12.0/gcc_64/qml
+          [ -d /tmp/qtquick3d/qml ] && sudo cp -a /tmp/qtquick3d/qml/. /opt/6.12.0/gcc_64/qml/
+          [ -d /tmp/qtquick3d/plugins ] && sudo cp -a /tmp/qtquick3d/plugins/. /opt/6.12.0/gcc_64/plugins/
+          sudo cp -a /tmp/qtshadertools/lib/. /opt/6.12.0/gcc_64/lib/
+          [ -d /tmp/qtshadertools/include ] && sudo cp -a /tmp/qtshadertools/include/. /opt/6.12.0/gcc_64/include/
+          ls /opt/6.12.0/gcc_64/lib | grep -qi shadertools || (echo "libQt6ShaderTools missing"; ls /tmp/qtshadertools/lib | head; exit 1)
+          # 两条硬前置:少了任何一个,Quick3D 只会"绿着 SKIP",所以这里必须红
+          ls /opt/6.12.0/gcc_64/lib | grep -qi quick3d || (echo "libQt6Quick3D missing"; ls /tmp/qtquick3d/lib | head; exit 1)
+          test -f /opt/6.12.0/gcc_64/qml/QtQuick3D/qmldir || { echo "qml/QtQuick3D/qmldir 没装进去"; find /tmp/qtquick3d -maxdepth 3 -type d | head -20; exit 1; }
+          echo "QtQuick3D + QtShaderTools 安装完成:$(ls /opt/6.12.0/gcc_64/lib | grep -ci quick3d) 个 Quick3D 库"
 
       - name: Install QtMultimedia 6.12.0 (prebuilt addon)
         run: |
@@ -237,6 +297,14 @@ jobs:
             echo "smoke $C exit code: $RC"; cat "smoke_$C.txt"
             if [ $RC -ne 0 ]; then exit $RC; fi
           done
+          # 硬断言(v1.9.2):QSvg 与 SQLite 在 Linux 上不许再 SKIP。
+          # 两段式断言(反向禁 SKIP + 正向要求看到实测断言行),详见 tools/smoke-assert-no-skip.sh;
+          # 这样"以后又退化回 SKIP"会直接让 CI 红,而不是继续绿着跳。
+          # 注意本 step 前面执行过 set +e,所以这里显式判断退出码。
+          if ! bash tools/smoke-assert-no-skip.sh Linux \
+                 "smoke_org.jqt.SmokeEvent.txt" "smoke_org.jqt.SmokeSqlModel.txt"; then
+            exit 1
+          fi
 
 
       - name: Doc numbers match code (防假账闸门)
@@ -281,6 +349,46 @@ jobs:
           export QT_PLUGIN_PATH=/opt/6.12.0/gcc_64/plugins
           # 用真实平台插件(xcb)创建/显示/移动/缩放窗口 —— J1 那类问题只有这里能抓
           xvfb-run -a env QT_QPA_PLATFORM=xcb timeout 120 ./run-linux.sh -Class org.jqt.SmokeRealWindow -AutoClose 900
+
+      - name: Quick 3D smoke under Xvfb (xcb + OpenGL, v1.9.3)
+        run: |
+          # Quick 3D 必须有 RHI:offscreen 平台插件没有 GL/RHI 表面,Qt Quick 退到软件后端,
+          # View3D 画不出来(Windows 实测;Linux 同理)。所以这里用 Xvfb + 真平台插件(xcb),
+          # 让 Qt Quick 走 OpenGL RHI(Mesa llvmpipe 软件光栅),把 3D 内容检查真跑一遍。
+          # **暂不加** JQT_Q3D_STRICT=1:llvmpipe 是否满足 Quick 3D 的 GL 要求还没在 CI 里验过,
+          # 先让它如实 SKIP/通过并留下日志(渲染成功会打印立方体/清屏色点数),下次再决定收紧。
+          sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils
+          chmod +x run-linux.sh
+          cp lib/libjqt-6.12.0.so lib/libjqt.so
+          export QT_BASE=/opt/6.12.0/gcc_64
+          export QT_PLUGIN_PATH=/opt/6.12.0/gcc_64/plugins
+          # 先把 GL 栈的实际能力记进日志 —— 判断"能不能渲染出 3D"就靠这行(llvmpipe 的 GL 版本)
+          # 显式给 Xvfb 24 位色深:默认值在部分版本里是 640x480x8,8 位屏拿不到可用的 GLX visual,
+          # Qt 会退回软件渲染 -> Quick3D 直接没画面(离屏"渲染不出来"最常见的成因之一)。
+          xvfb-run -a -s "-screen 0 1280x1024x24" glxinfo -B 2>&1 | grep -Ei "OpenGL (version|renderer)|direct rendering" || echo "::warning::glxinfo 拿不到 GL 信息(mesa-utils 缺失?)"
+          set +e
+          # 显式指定 OpenGL RHI:这台 runner 上没有 Vulkan 驱动,写明后端省得靠"Qt 当时的默认值";
+          # JQT_Q3D_WAIT_MS=2100 给慢机器 3 倍抓图窗口(同 Windows 那步的理由:llvmpipe 上首帧更慢),
+          # 同样**不放宽**任何断言(-AutoClose 只是兜底,冒烟自己 scheduleQuit)。
+          xvfb-run -a -s "-screen 0 1280x1024x24" env QT_QPA_PLATFORM=xcb QSG_RHI_BACKEND=opengl JQT_Q3D_WAIT_MS=2100 timeout 120 ./run-linux.sh -Class org.jqt.SmokeQuick3D -AutoClose 6000 > smoke_quick3d_xvfb.txt 2>&1
+          CODE=$?
+          echo "Quick3D 冒烟(xcb/Xvfb) exit code: $CODE"
+          cat smoke_quick3d_xvfb.txt
+          if [ $CODE -ne 0 ]; then
+            echo "::error::Quick3D 冒烟在 Xvfb 下失败(exit $CODE)"
+            exit $CODE
+          fi
+          # 正向证据:必须看到冒烟自己的结论行,否则"文件为空/没跑完"会被当成通过
+          if ! grep -q "\[q3d\] pass=" smoke_quick3d_xvfb.txt; then
+            echo "::error::没有 [q3d] pass= 结论行(冒烟没跑到结束?)"
+            exit 1
+          fi
+          if grep -q "立方体类暖色 #f59e0b : 0 点" smoke_quick3d_xvfb.txt; then
+            echo "::warning::Xvfb+llvmpipe 下没渲染出立方体(冒烟如实 SKIP,未计入 pass)—— 收紧断言前先看这条与上面的 GL 版本"
+          else
+            echo "Quick3D 在 Xvfb(xcb + OpenGL/llvmpipe)下真渲染出内容 ✅"
+            grep -E "图像尺寸|像素抽样|立方体类暖色|清屏类深蓝" smoke_quick3d_xvfb.txt || true
+          fi
 
       - name: Bundle Qt runtime (Linux) + validate bundled launcher
         run: |
@@ -432,6 +540,12 @@ jobs:
             "multimedia.7z"  = "qt.qt6.6120.addons.qtmultimedia.win64_mingw/6.12.0-0-202609280346qtmultimedia-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
             "declarative.7z" = "qt.qt6.6120.win64_mingw/6.12.0-0-202609280346qtdeclarative-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
             "positioning.7z" = "qt.qt6.6120.addons.qtpositioning.win64_mingw/6.12.0-0-202609280346qtpositioning-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
+            # Qt Quick 3D(v1.9.3):qtquick3d 是独立 addon(提供 bin/Qt6Quick3D*.dll 与 qml/QtQuick3D);
+            # 而它的插件链 qquick3dplugin -> Qt6Quick3D -> Qt6Quick3DRuntimeRender **-> Qt6ShaderTools**
+            # 还要 qtshadertools 这个 addon —— 官方 MinGW 在线安装器默认不装它,少一个就是
+            # "Cannot load library .../qquick3dplugin.dll: 找不到指定的模块"(本机 6.12.0 实测的根因)。
+            "quick3d.7z"     = "qt.qt6.6120.addons.qtquick3d.win64_mingw/6.12.0-0-202609280346qtquick3d-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
+            "shadertools.7z" = "qt.qt6.6120.addons.qtshadertools.win64_mingw/6.12.0-0-202609280346qtshadertools-Windows-Windows_11_24H2-Mingw-Windows-Windows_11_24H2-X86_64.7z"
           }
           New-Item -ItemType Directory -Force -Path C:/Qt/6.12.0/mingw_64 | Out-Null
           foreach ($k in $items.Keys) {
@@ -446,6 +560,10 @@ jobs:
           }
           if (-not (Test-Path "C:/Qt/6.12.0/mingw_64/bin/qmake.exe")) { throw "qmake.exe missing for Qt 6.12.0" }
           if (-not (Test-Path "C:/Qt/6.12.0/mingw_64/bin/Qt6SerialPort.dll")) { throw "Qt6SerialPort.dll missing for 6.12.0" }
+          # Quick 3D 的两条硬前置(v1.9.3):装不上就**直接红**,不能静默继续 ——
+          # 否则 Quick3D 冒烟会"绿着 SKIP"(v1.9.2 那 3 个 SKIP 就是这么来的)。
+          if (-not (Test-Path "C:/Qt/6.12.0/mingw_64/bin/Qt6ShaderTools.dll")) { throw "Qt6ShaderTools.dll missing for Qt 6.12.0 (qtshadertools addon 没解进去)" }
+          if (-not (Test-Path "C:/Qt/6.12.0/mingw_64/qml/QtQuick3D/qquick3dplugin.dll")) { throw "qml/QtQuick3D/qquick3dplugin.dll missing for Qt 6.12.0 (qtquick3d addon 没解进去)" }
           Copy-Item lib/jqt.dll lib/jqt-windows-6.8.3.dll -Force
 
       - name: Build jqt.dll (Qt 6.12.0)
@@ -467,6 +585,54 @@ jobs:
             powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
             if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
           }
+
+      - name: Quick 3D real-window smoke, strict (v1.9.3)
+        shell: pwsh
+        run: |
+          # 为什么必须单独一步:Quick 3D 要有 RHI + 能建 swapchain,而 offscreen 平台插件
+          # 没有任何 GL/RHI 表面 —— Qt Quick 会退到软件后端(日志 "Loading backend software"),
+          # View3D 什么都不画,上面那步 offscreen 里 Quick3D 的内容检查只能 SKIP(实测结论)。
+          # 这一步用**真窗口**(windows 平台插件;无独显时 D3D11 走 WARP 软件光栅)把
+          # 立方体/清屏色/尺寸三个像素断言真跑一遍。
+          # JQT_Q3D_STRICT=1:任何 SKIP 都算 FAIL —— 把"环境退化 -> 跳过 -> 绿"这条路堵死。
+          # 每个 step 环境独立:这里**故意不设** QT_QPA_PLATFORM / QT_QUICK_BACKEND。
+          $env:JQT_Q3D_STRICT = "1"
+          $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
+          $env:JQT_Q3D_PNG = "$PWD/smoke612_quick3d_window.png"
+          # CI runner 的 CPU 比开发机慢:冒烟默认在 show 后 700ms 抓图,而首帧(含 Quick3D 的
+          # 着色器/管线创建)可能晚于它 -> 抓到一帧"没有 3D"的画面 -> SKIP -> 严格模式下假阴性红。
+          # 这里给 3 倍窗口(2100 / 3150 / 4200ms)。**没有放宽任何断言**:STRICT、skip=0、
+          # 立方体像素三条全在,只是"多等一会儿再判"。
+          $env:JQT_Q3D_WAIT_MS = "2100"
+          # -AutoClose 只是兜底(实测 jqt.autoClose 只被 JQtDemo/JQtFluentDemo/JQtQfDemo 消费,
+          # 冒烟自己 scheduleQuit);写大一点,免得将来冒烟开始认它时把这 2100ms 的抓图切掉。
+          powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class org.jqt.SmokeQuick3D -AutoClose 6000 *> smoke612_quick3d_window.log
+          $code = $LASTEXITCODE
+          Get-Content smoke612_quick3d_window.log
+          if ($code -ne 0) { Write-Host "=== QUICK3D REAL-WINDOW SMOKE FAILED (exit $code) ==="; exit $code }
+          # 正向证据(两段式断言的反向一半由 JQT_Q3D_STRICT=1 承担):日志里必须真有
+          # "skip=0" 的结论行与立方体像素断言 —— 否则文件为空/冒烟没跑完也会"通过"。
+          if (-not (Select-String -Path smoke612_quick3d_window.log -Pattern "\[q3d\] pass=\d+ fail=0 skip=0" -Quiet)) {
+            Write-Host "::error::Quick3D 真窗口冒烟没有 skip=0 的通过结论(环境退化成了 SKIP?)"
+            exit 1
+          }
+          if (-not (Select-String -Path smoke612_quick3d_window.log -Pattern "\[q3d\] OK +立方体材质色 #f59e0b 像素 > 0" -Quiet)) {
+            Write-Host "::error::Quick3D 真窗口冒烟里没有立方体像素断言通过的证据"
+            exit 1
+          }
+          Select-String -Path smoke612_quick3d_window.log -Pattern "渲染环境|图像尺寸|立方体类暖色|清屏类深蓝|pass=" | ForEach-Object { $_.Line }
+          Write-Host "Quick3D 真窗口渲染验证通过(像素证据见上)"
+
+      - name: Upload Quick3D real-window evidence on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-quick3d-logs
+          # 这一步是"CI 上才失败"时唯一的现场:日志里有环境/GL/像素统计,PNG 是实际画面
+          path: |
+            smoke612_quick3d_window.log
+            smoke612_quick3d_window.png
+          if-no-files-found: ignore
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -685,6 +851,16 @@ jobs:
           curl -fsSL -o /tmp/qtmultimedia6120.7z "$base/qt.qt6.6120.addons.qtmultimedia.clang_64/6.12.0-0-202609280346qtmultimedia-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
           curl -fsSL -o /tmp/qtdeclarative6120.7z "$base/qt.qt6.6120.clang_64/6.12.0-0-202609280346qtdeclarative-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
           curl -fsSL -o /tmp/qtpositioning6120.7z "$base/qt.qt6.6120.addons.qtpositioning.clang_64/6.12.0-0-202609280346qtpositioning-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
+          # QtSvg 是 base 包(qt.qt6.6120.clang_64/)里**独立的一个 7z**,不是 qtbase 的一部分。
+          # 只解 qtbase -> 永远没有 lib/QtSvg.framework -> QSvgRenderer 在 macOS 上一直 SKIP。
+          # (7z 清单实测:qtsvg 那个 7z 里是 QtSvg.framework/Versions/A/QtSvg +
+          #  Versions/A/Headers/QSvgRenderer + Headers -> Versions/Current/Headers 符号链接。)
+          curl -fsSL -o /tmp/qtsvg6120.7z "$base/qt.qt6.6120.clang_64/6.12.0-0-202609280346qtsvg-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
+          # Qt Quick 3D + Qt Shader Tools(v1.9.3):与 Windows/Linux 同一套理由 ——
+          # qtquick3d 提供 QtQuick3D*.framework 与 qml/QtQuick3D,而插件链最后一环
+          # libQt6ShaderTools 在**另一个 addon**(qtshadertools)里,缺它插件加载必失败。
+          curl -fsSL -o /tmp/qtquick3d6120.7z "$base/qt.qt6.6120.addons.qtquick3d.clang_64/6.12.0-0-202609280346qtquick3d-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
+          curl -fsSL -o /tmp/qtshadertools6120.7z "$base/qt.qt6.6120.addons.qtshadertools.clang_64/6.12.0-0-202609280346qtshadertools-MacOS-MacOS_26-Clang-MacOS-MacOS_26-X86_64-ARM64.7z"
           mkdir -p "$HOME/Qt6120"
           7z x -y -o"$HOME/Qt6120" /tmp/qtbase6120.7z > /dev/null
           7z x -y -o"$HOME/Qt6120" /tmp/qtserialport6120.7z > /dev/null
@@ -693,8 +869,16 @@ jobs:
           7z x -y -o"$HOME/Qt6120" /tmp/qtmultimedia6120.7z > /dev/null
           7z x -y -o"$HOME/Qt6120" /tmp/qtdeclarative6120.7z > /dev/null
           7z x -y -o"$HOME/Qt6120" /tmp/qtpositioning6120.7z > /dev/null
-          rm -f /tmp/qtbase6120.7z /tmp/qtserialport6120.7z
+          7z x -y -o"$HOME/Qt6120" /tmp/qtsvg6120.7z > /dev/null
+          7z x -y -o"$HOME/Qt6120" /tmp/qtquick3d6120.7z > /dev/null
+          7z x -y -o"$HOME/Qt6120" /tmp/qtshadertools6120.7z > /dev/null
+          rm -f /tmp/qtbase6120.7z /tmp/qtserialport6120.7z /tmp/qtsvg6120.7z /tmp/qtquick3d6120.7z /tmp/qtshadertools6120.7z
           test -f "$HOME/Qt6120/lib/QtWidgets.framework/Headers/QWidget" || (echo "QtWidgets.framework missing"; find "$HOME/Qt6120" -maxdepth 3 -type d | head -20; exit 1)
+          # 就地断言:QtSvg.framework 的头必须真的在(-f 会跟随 Headers 符号链接)
+          test -f "$HOME/Qt6120/lib/QtSvg.framework/Headers/QSvgRenderer" || (echo "QtSvg.framework missing (qtsvg 7z 没装进去?)"; ls -la "$HOME/Qt6120/lib" | grep -i svg; exit 1)
+          # Quick 3D 的两条硬前置(v1.9.3):装不上就红,别让 Quick3D 在 macOS 上"绿着 SKIP"
+          test -f "$HOME/Qt6120/qml/QtQuick3D/qmldir" || (echo "qml/QtQuick3D/qmldir missing (qtquick3d 7z 没装进去?)"; find "$HOME/Qt6120/qml" -maxdepth 2 -type d 2>/dev/null | head -20; exit 1)
+          ls "$HOME/Qt6120/lib" | grep -qi shadertools || (echo "QtShaderTools.framework missing (qtshadertools 7z 没装进去?)"; ls "$HOME/Qt6120/lib" | head -30; exit 1)
 
       - name: Install aqt (for Qt 6.8.3)
         run: |
@@ -706,6 +890,9 @@ jobs:
         run: |
           /tmp/aqt-venv/bin/python -m aqt -c /tmp/aqt.ini install-qt mac desktop 6.8.3 clang_64 --outputdir $HOME/Qt683 -m qtserialport
           test -f "$HOME/Qt683/6.8.3/macos/lib/QtWidgets.framework/Headers/QWidget" || exit 1
+          # aqt 默认会把 qt.qt6.683.clang_64 整包(含 qtsvg)装上 —— 这里把这件事变成硬依赖:
+          # 哪天 aqt 默认档位变了,这一步会先红,而不是让 QSvgRenderer 在 6.8.3 上悄悄回到 SKIP。
+          test -f "$HOME/Qt683/6.8.3/macos/lib/QtSvg.framework/Headers/QSvgRenderer" || { echo "aqt 没装上 qtsvg"; exit 1; }
 
       - name: Build libjqt.dylib (Qt 6.8.3)
         run: |
@@ -742,10 +929,18 @@ jobs:
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeL2b2 -AutoClose 800
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeTimer -AutoClose 1500
           export QT_QUICK_BACKEND=software       # QtQuick 场景图软件后端(离屏无 GPU)
+          # macOS 的冒烟是 ./run-macos.sh -Class ... 直接输出到日志(不落文件),而下面的硬断言
+          # 要 grep,所以用 tee 同时落一份文件。set -o pipefail 保证 run-macos.sh 的失败
+          # 不会被 tee 的 0 退出码吞掉(不然等于把冒烟的失败检查关掉)。
+          set -o pipefail
           for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeDBus org.jqt.SmokeWebView org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokeFluent org.jqt.SmokeInputDialog org.jqt.SmokeVisible org.jqt.SmokeL2 org.jqt.SmokeL1fin; do
-            QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class $C -AutoClose 1500
+            QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class $C -AutoClose 1500 2>&1 | tee "smoke_macos_$C.txt"
 
           done
+          # 硬断言(v1.9.2):QSvg 与 SQLite 在 macOS 上不许再 SKIP —— 以后退化直接红。
+          # 与 Linux 共用同一份两段式断言脚本(反向禁 SKIP + 正向要求看到实测断言行)。
+          bash tools/smoke-assert-no-skip.sh macOS \
+               "smoke_macos_org.jqt.SmokeEvent.txt" "smoke_macos_org.jqt.SmokeSqlModel.txt"
 
       - name: Real-window smoke (macOS, best effort)
         run: |
