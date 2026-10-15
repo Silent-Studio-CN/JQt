@@ -245,10 +245,17 @@ jobs:
           python3 tools/check-doc-numbers.py
 
       - name: Smoke DBus with a real session bus (v1.9.2 P1 收尾)
+        timeout-minutes: 4
         run: |
           # 上面那轮 DBus 冒烟跑在"无会话总线"环境:验证的是错误路径与消息语义。
           # 这一步用 dbus-run-session 起一个**真实总线**,把端到端调用(ListNames /
           # NameHasOwner / GetId / 发信号)真跑一遍 —— 否则"DBus 能用了"就是空话。
+          # 注意:**每个 step 的环境不共享**,Qt 路径必须在这里重新导出,
+          # 否则 dbus-run-session 里会 UnsatisfiedLinkError(实测踩过:缺 libQt6SerialPort)。
+          chmod +x run-linux.sh
+          cp lib/libjqt-6.12.0.so lib/libjqt.so
+          export QT_BASE=/opt/6.12.0/gcc_64
+          export QT_PLUGIN_PATH=/opt/6.12.0/gcc_64/plugins
           command -v dbus-run-session >/dev/null 2>&1 || sudo apt-get install -y dbus
           set -o pipefail
           QT_QPA_PLATFORM=offscreen dbus-run-session -- timeout 90 ./run-linux.sh \
@@ -261,6 +268,8 @@ jobs:
           fi
           grep -q "NameHasOwner(org.freedesktop.DBus) = true" smoke_dbus_session.txt \
             || { echo "::error::参数编组的端到端断言未见通过"; exit 1; }
+          grep -q "列表里有 org.freedesktop.DBus" smoke_dbus_session.txt \
+            || { echo "::error::字符串数组(QStringList)读取断言未见通过"; exit 1; }
           echo "DBus 端到端验证通过(真实会话总线)"
 
       - name: Real-window smoke under Xvfb (J9 - offscreen 抓不到真窗口崩溃)
