@@ -37,7 +37,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,358 个 native �
 | 指标 | 数值 |
 |---|---|
 | API 类 | **174**（java/org/jqt 下非 Smoke 的 .java） |
-| 冒烟类 | **36** 个文件；CI 引用 **35** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
+| 冒烟类 | **36** 个文件；CI 引用 **36** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
 | Java 源文件合计 | 210（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
 | Java 行数 | **26,173**（API 22,444 + 冒烟 3,729） |
 | JNI 桥行数 | **13,336** |

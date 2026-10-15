@@ -231,7 +231,7 @@ jobs:
           else
             echo "::warning::未找到本 Qt 的 qhelpgenerator,Help 冒烟将跳过 .qch 生成段"
           fi
-          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeDBus org.jqt.SmokeWebView org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokePositioning org.jqt.SmokeHelp org.jqt.SmokeFluent org.jqt.SmokeInputDialog org.jqt.SmokeVisible org.jqt.SmokeSqlDb org.jqt.SmokeL2 org.jqt.SmokeL1fin; do
+          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeDBus org.jqt.SmokeWebView org.jqt.SmokeQuick3D org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokePositioning org.jqt.SmokeHelp org.jqt.SmokeFluent org.jqt.SmokeInputDialog org.jqt.SmokeVisible org.jqt.SmokeL2 org.jqt.SmokeL1fin; do
             QT_QPA_PLATFORM=offscreen timeout 90 ./run-linux.sh -Class $C -AutoClose 1200 > "smoke_$C.txt" 2>&1
             RC=$?
             echo "smoke $C exit code: $RC"; cat "smoke_$C.txt"
@@ -463,7 +463,7 @@ jobs:
           $env:QT_QPA_PLATFORM = "offscreen"
           $env:QT_QUICK_BACKEND = "software"      # QtQuick 场景图需要软件后端(离屏无 GPU)
           $env:QT_PLUGIN_PATH = "C:/Qt/6.12.0/mingw_64/plugins"
-          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer","org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked","org.jqt.SmokeEvent","org.jqt.SmokeNetwork","org.jqt.SmokeSqlModel","org.jqt.SmokeWebSocket","org.jqt.SmokeJQtTest","org.jqt.SmokeStateMachine","org.jqt.SmokeDBus","org.jqt.SmokeWebView","org.jqt.SmokeCharts","org.jqt.SmokeMultimedia","org.jqt.SmokeModality","org.jqt.SmokeQml","org.jqt.SmokePositioning","org.jqt.SmokeHelp","org.jqt.SmokeFluent","org.jqt.SmokeInputDialog","org.jqt.SmokeVisible","org.jqt.SmokeSqlDb","org.jqt.SmokeL2","org.jqt.SmokeL1fin")) {
+          foreach ($cls in @("org.jqt.SmokeL1","org.jqt.SmokeL2b1","org.jqt.SmokeL2b2","org.jqt.SmokeGenApi","org.jqt.SmokeSignalOnce","org.jqt.SmokeTimer","org.jqt.SmokeConcurrency","org.jqt.SmokeCallbackError","org.jqt.SmokeStacked","org.jqt.SmokeEvent","org.jqt.SmokeNetwork","org.jqt.SmokeSqlModel","org.jqt.SmokeWebSocket","org.jqt.SmokeJQtTest","org.jqt.SmokeStateMachine","org.jqt.SmokeDBus","org.jqt.SmokeWebView","org.jqt.SmokeQuick3D org.jqt.SmokeCharts","org.jqt.SmokeMultimedia","org.jqt.SmokeModality","org.jqt.SmokeQml","org.jqt.SmokePositioning","org.jqt.SmokeHelp","org.jqt.SmokeFluent","org.jqt.SmokeInputDialog","org.jqt.SmokeVisible","org.jqt.SmokeSqlDb","org.jqt.SmokeL2","org.jqt.SmokeL1fin")) {
             powershell -File run.ps1 -JDK "$env:JAVA_HOME" -Class $cls -AutoClose 1000 *> "smoke612_$cls.log"
             if ($LASTEXITCODE -ne 0) { Write-Host "=== SMOKE $cls FAILED on Qt 6.12.0 ==="; Get-Content "smoke612_$cls.log" -Tail 40; exit $LASTEXITCODE }
           }
@@ -742,7 +742,7 @@ jobs:
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeL2b2 -AutoClose 800
           QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeTimer -AutoClose 1500
           export QT_QUICK_BACKEND=software       # QtQuick 场景图软件后端(离屏无 GPU)
-          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeDBus org.jqt.SmokeWebView org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokeFluent org.jqt.SmokeInputDialog org.jqt.SmokeVisible org.jqt.SmokeSqlDb org.jqt.SmokeL2 org.jqt.SmokeL1fin; do
+          for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeDBus org.jqt.SmokeWebView org.jqt.SmokeQuick3D org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokeFluent org.jqt.SmokeInputDialog org.jqt.SmokeVisible org.jqt.SmokeL2 org.jqt.SmokeL1fin; do
             QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class $C -AutoClose 1500
 
           done
