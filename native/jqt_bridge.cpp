@@ -7624,8 +7624,15 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeStringAt(JNIEnv* env, 
     return env->NewStringUTF(m->arguments().at(i).toString().toUtf8().constData());
 }
 
-JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeIntAt(JNIEnv* env, jclass, jlong handle, jint i) {
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QDBusMessage_nativeStringListAt(JNIEnv* env, jclass, jlong handle, jint i) {
     QDBusMessage* m = jqtDbusMsg(env, handle);
+    // DBus 回复里数组很常见(例如 ListNames 返回一个 QStringList)—— 单独给个读取口,
+    // 否则只能拿 stringAt() 读,数组会得到空串(实测踩过:CI 上断言因此失败)。
+    if (!m || i < 0 || i >= m->arguments().size()) return jqtStringList(env, QStringList());
+    return jqtStringList(env, m->arguments().at(i).toStringList());
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeIntAt(JNIEnv* env, jclass, jlong handle, jint i) {    QDBusMessage* m = jqtDbusMsg(env, handle);
     if (!m || i < 0 || i >= m->arguments().size()) return 0;
     return static_cast<jint>(m->arguments().at(i).toInt());
 }
@@ -7678,6 +7685,7 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeMember(JNIEnv* env, jc
 JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeArgumentCount(JNIEnv*, jclass, jlong) { return 0; }
 JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeArgumentTypeAt(JNIEnv* env, jclass, jlong, jint) { return env->NewStringUTF(""); }
 JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeStringAt(JNIEnv* env, jclass, jlong, jint) { return env->NewStringUTF(""); }
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QDBusMessage_nativeStringListAt(JNIEnv* env, jclass, jlong, jint) { return jqtStringList(env, QStringList()); }
 JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeIntAt(JNIEnv*, jclass, jlong, jint) { return 0; }
 JNIEXPORT jdouble JNICALL Java_org_jqt_QDBusMessage_nativeDoubleAt(JNIEnv*, jclass, jlong, jint) { return 0.0; }
 JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusMessage_nativeBoolAt(JNIEnv*, jclass, jlong, jint) { return JNI_FALSE; }

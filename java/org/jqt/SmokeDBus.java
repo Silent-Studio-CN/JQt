@@ -105,11 +105,17 @@ public class SmokeDBus {
                     "/org/freedesktop/DBus", "org.freedesktop.DBus", "ListNames");
             check("ListNames 有回复且非错误", names != null && !names.isError());
             if (names != null && !names.isError()) {
-                List<String> all = names.argumentStrings();
-                System.out.println("[dbus] 总线服务数 = " + names.argumentCount()
+                System.out.println("[dbus] 参数数 = " + names.argumentCount()
                         + " 首个参数类型 = " + names.argumentTypeAt(0));
-                String joined = String.join(",", all);
-                check("ListNames 结果里有 org.freedesktop.DBus", joined.contains("org.freedesktop.DBus"));
+                // 注意:ListNames 返回的是**一个 QStringList**,不是 N 个字符串参数 ——
+                // 用 stringAt(0) 读会得到空串(CI 上就是这么红的),必须用 stringListAt。
+                List<String> busNames = names.stringListAt(0);
+                System.out.println("[dbus] 总线服务数 = " + busNames.size()
+                        + (busNames.isEmpty() ? "" : " 例:" + busNames.get(0)));
+                check("stringListAt(0) 读到服务名列表(非空)", !busNames.isEmpty());
+                check("列表里有 org.freedesktop.DBus", busNames.contains("org.freedesktop.DBus"));
+                check("stringAt(0) 读数组得到空串(记录该坑,避免误用)",
+                        names.stringAt(0).isEmpty() || busNames.contains(names.stringAt(0)));
             }
 
             // 带参数的真实调用:NameHasOwner("org.freedesktop.DBus") -> true

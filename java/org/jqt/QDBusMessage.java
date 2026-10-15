@@ -90,6 +90,17 @@ public final class QDBusMessage {
     /** 第 i 个参数按字符串读取。 */
     public String stringAt(int index) { return nativeStringAt(handle, index); }
 
+    /**
+     * 第 i 个参数按字符串数组读取（DBus 回复里数组很常见，例如 {@code ListNames} 返回一个 QStringList）。
+     * <p>用 {@link #stringAt(int)} 读数组只会得到空串 —— 实测踩过（CI 断言因此红过一次）。
+     */
+    public List<String> stringListAt(int index) {
+        String[] arr = nativeStringListAt(handle, index);
+        List<String> out = new ArrayList<>(arr == null ? 0 : arr.length);
+        if (arr != null) Collections.addAll(out, arr);
+        return Collections.unmodifiableList(out);
+    }
+
     /** 第 i 个参数按 int 读取。 */
     public int intAt(int index) { return nativeIntAt(handle, index); }
 
@@ -184,6 +195,7 @@ public final class QDBusMessage {
     private static native int nativeArgumentCount(long handle);
     private static native String nativeArgumentTypeAt(long handle, int index);
     private static native String nativeStringAt(long handle, int index);
+    private static native String[] nativeStringListAt(long handle, int index);
     private static native int nativeIntAt(long handle, int index);
     private static native double nativeDoubleAt(long handle, int index);
     private static native boolean nativeBoolAt(long handle, int index);
