@@ -27,23 +27,23 @@
 ```powershell
 # 规模（全部可复核；本节数字由 tools/measure-hard-data.py 一次生成，避免文档自相矛盾）
 (Get-ChildItem java\org\jqt -Filter *.java).Count            # 205 个文件（171 API + 34 冒烟）
-(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 25,122 行（API 21,801 + 冒烟 3,321）
-(Get-Content native\jqt_bridge.cpp).Count                   # 13,052 行手写 JNI 桥
-Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,470 个 JNI 导出函数
-Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,403 处公开成员声明
-Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,340 个 native 方法声明
+(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 25,140 行（API 21,813 + 冒烟 3,327）
+(Get-Content native\jqt_bridge.cpp).Count                   # 13,060 行手写 JNI 桥
+Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,472 个 JNI 导出函数
+Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,404 处公开成员声明
+Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,341 个 native 方法声明
 ```
 
 | 指标 | 数值 |
 |---|---|
 | API 类 | **171**（java/org/jqt 下非 Smoke 的 .java） |
-| 冒烟类 | **34** 个文件；CI 引用 **29** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
+| 冒烟类 | **34** 个文件；CI 引用 **28** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
 | Java 源文件合计 | 205（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
-| Java 行数 | **25,122**（API 21,801 + 冒烟 3,321） |
-| JNI 桥行数 | **13,052** |
-| JNI 导出函数 | **1,470** |
-| native 方法声明 | 1,340 |
-| 公开成员声明 | 3,403 |
+| Java 行数 | **25,140**（API 21,813 + 冒烟 3,327） |
+| JNI 桥行数 | **13,060** |
+| JNI 导出函数 | **1,472** |
+| native 方法声明 | 1,341 |
+| 公开成员声明 | 3,404 |
 | 信号/事件连接入口 | 97 处 `nativeConnect*`（全部经 `jqtConnectOnce()` 去重） |
 | 可选模块特性宏 | 9 个：CHARTS / HELP / MULTIMEDIA / NETWORK / POSITIONING / QML / SQL_MODELS / SVG / WEBSOCKETS |
 | Qt 版本线 | **6.12.0**（当前最新）/ **6.8.3 LTS** |
