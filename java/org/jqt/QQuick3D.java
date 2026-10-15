@@ -55,8 +55,9 @@ package org.jqt;
  * System.out.println("Quick3D qt=" + QQuick3D.qtVersion() + " " + QQuick3D.status());
  * </pre>
  *
- * <p><b>线程</b>:探测会创建 QQuickView(窗口对象),必须在 Qt GUI 线程调用,
- * 且需要先 {@code new QApplication()}。
+ * <p><b>线程与前置条件</b>:探测会创建 QQuickView(窗口对象),必须在 Qt GUI 线程调用;
+ * {@code new QApplication()} 之前调用也安全(结论为"未判定",见 {@link #isAvailable()}),
+ * 但真正的探测要等 QApplication 建好之后。
  *
  * @see QQuick3DView
  * @see QQuickView
@@ -110,10 +111,11 @@ public final class QQuick3D {
 
     /**
      * Qt 运行库版本(如 {@code "6.12.0"},取自 native {@code qVersion()});
-     * 仅供日志/问题定位。native 库没加载时会抛 {@link UnsatisfiedLinkError},
-     * 与其它 JQt 类一致。
+     * 仅供日志/问题定位。可在 {@code new QApplication()} 之前调用
+     * (内部会先触发 native 库加载,见 {@link #ensureNativeLoaded()})。
      */
     public static String qtVersion() {
+        ensureNativeLoaded();
         String v = nativeQtVersion();
         return v == null ? "" : v;
     }
@@ -126,9 +128,22 @@ public final class QQuick3D {
      * 该信息只用于日志与 {@link #status()}(便于确认构建脚本探测是否生效)。
      */
     public static boolean compiledIn() {
+        ensureNativeLoaded();
         return nativeCompiled();
     }
     private static native boolean nativeCompiled();
+
+    /**
+     * 保证 native 库已加载:JQt 的 native 库是在 {@link QApplication} 的静态初始化里
+     * {@code System.loadLibrary("jqt")} 装进来的(本项目既有约定,别的类都要求"先建 app")。
+     * 这里主动触发一次,于是 {@link #isAvailable()}/{@link #status()}/{@link #qtVersion()}
+     * 在 {@code new QApplication()} 之前调用也<b>不会</b>抛 {@link UnsatisfiedLinkError}
+     * (实测踩过:不触发就直接 {@code UnsatisfiedLinkError: QQuickView.nativeAvailable()})。
+     * 该方法本身不要求 app 存在(native 只回一个"g_app != nullptr")。
+     */
+    private static void ensureNativeLoaded() {
+        QApplication.isQtReady();
+    }
 
     /**
      * 人类可读状态:能否用、判断依据、不能用的原因(含 QML 错误原文与相关环境变量)。
@@ -162,6 +177,8 @@ public final class QQuick3D {
               .append("                    4) 3D 渲染需 RHI(D3D11/OpenGL/Vulkan),软件后端 QT_QUICK_BACKEND=software 渲染不出画面。\n");
         } else if (state == AVAILABLE) {
             sb.append("  提示            : 场景可加载;若抓图是空画面,请检查 RHI 后端(软件后端不支持 Quick 3D)。\n");
+        } else {
+            sb.append("  说明            : ").append(reason.isEmpty() ? "(无)" : reason).append('\n');
         }
         return sb.toString().stripTrailing();
     }
@@ -188,6 +205,7 @@ public final class QQuick3D {
 
     private static void probe() {
         if (state != UNKNOWN) return;                  // 已有确定结论:结论在一个进程内不会变
+        ensureNativeLoaded();
         synchronized (QQuick3D.class) {
             if (state != UNKNOWN) return;
             if (!QQuickView.isAvailable()) {

@@ -81,6 +81,14 @@ if ((Test-Path (Join-Path $Kit "lib\libQt6WebView.a")) -or (Test-Path (Join-Path
 } else {
     Write-Host "==> QtWebView not found - QWebView will report unavailable"
 }
+# QtQuick3D 探测(v1.9.2 P2):Quick 3D 是 QML 模块,加载仍走 QQuickView -> 不链接 Qt6Quick3D,
+# JQT_HAVE_QUICK3D 只是"构建期看见过它"的信息位(status() 会打印);能不能用是运行期结论。
+if ((Test-Path (Join-Path $Kit "lib\libQt6Quick3D.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Quick3D.dll"))) {
+    $gppArgs += @("-DJQT_HAVE_QUICK3D", "-I", (Join-Path $Kit "include\QtQuick3D"))
+    Write-Host "==> QtQuick3D found - QQuick3D enabled (可用性由运行期探测)"
+} else {
+    Write-Host "==> QtQuick3D not found - QQuick3D will report unavailable"
+}
 if ((Test-Path (Join-Path $Kit "lib\libQt6Help.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Help.dll"))) {
     $gppArgs += @("-DJQT_HAVE_HELP", "-I", (Join-Path $Kit "include\QtHelp"), "-lQt6Help")
     Write-Host "==> QtHelp found - QHelpEngineCore enabled"
@@ -137,6 +145,21 @@ if ($LASTEXITCODE -ne 0) {
     Write-Warning "windeployqt failed; copying Qt runtime manually"
     Copy-Item (Join-Path $Kit "bin\Qt6Core.dll"), (Join-Path $Kit "bin\Qt6Gui.dll"), (Join-Path $Kit "bin\Qt6Widgets.dll") $LibDir
     Copy-Item (Join-Path $Mingw "bin\libwinpthread-1.dll") $LibDir -ErrorAction SilentlyContinue
+}
+
+
+# 运行期要能 import QtQuick3D:windeployqt 不带 QML 模块,也不带 shadertools
+$q3dQmlSrc = Join-Path $Kit "qml\QtQuick3D"
+if (Test-Path $q3dQmlSrc) {
+    New-Item -ItemType Directory -Force -Path (Join-Path $LibDir "qml\QtQuick3D") | Out-Null
+    Copy-Item (Join-Path $q3dQmlSrc "*") (Join-Path $LibDir "qml\QtQuick3D") -Recurse -Force
+    Write-Host "==> 已部署 QtQuick3D QML 模块(lib/qml/QtQuick3D)"
+}
+foreach ($d in @("Qt6Quick3D.dll","Qt6Quick3DRuntimeRender.dll","Qt6Quick3DUtils.dll","Qt6Quick3DGlslParser.dll")) {
+    $src = Join-Path $Kit "bin\$d"; if (Test-Path $src) { Copy-Item $src $LibDir -Force }
+}
+if (-not (Test-Path (Join-Path $Kit "bin\Qt6ShaderTools.dll"))) {
+    Write-Warning "Qt 里没有 Qt6ShaderTools.dll(qtshadertools)-> Quick3D 冒烟会 SKIP(本机 6.12.0 MinGW 实测就缺)"
 }
 
 Write-Host "==> [4/4] Deploying QPA platform plugin (qwindows)"
