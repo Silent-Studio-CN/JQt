@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # build.ps1 - JQt one-click build
 #   1. javac compiles Java sources and generates JNI headers (javac -h)
 #   2. g++ compiles the native bridge into jqt.dll
@@ -65,6 +65,14 @@ $gppArgs = @(
 $svgLib = Join-Path $Kit "lib\libQt6Svg.a"
 $svgDll = Join-Path $Kit "bin\Qt6Svg.dll"
 $gppArgs += @("-DJQT_HAVE_NETWORK", "-DJQT_HAVE_SQL_MODELS")   # QtNetwork 属 qtbase,始终可用
+# QtDBus 特性探测(v1.9.2 P1 收尾):qtbase 自带(Android 无)。Windows 上模块在但默认没有会话总线,
+# 所以 isAvailable()=true 而 isSessionBusConnected()=false —— 冒烟里如实分开记录,不混为一谈。
+if ((Test-Path (Join-Path $Kit "lib\libQt6DBus.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6DBus.dll"))) {
+    $gppArgs += @("-DJQT_HAVE_DBUS", "-I", (Join-Path $Kit "include\QtDBus"), "-lQt6DBus")
+    Write-Host "==> QtDBus found - QDBusConnection enabled"
+} else {
+    Write-Host "==> QtDBus not found - DBus API will report unavailable"
+}
 if ((Test-Path (Join-Path $Kit "lib\libQt6Help.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Help.dll"))) {
     $gppArgs += @("-DJQT_HAVE_HELP", "-I", (Join-Path $Kit "include\QtHelp"), "-lQt6Help")
     Write-Host "==> QtHelp found - QHelpEngineCore enabled"

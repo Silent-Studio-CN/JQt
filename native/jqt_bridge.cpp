@@ -82,7 +82,9 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #endif
 // Android 是 __linux__ 但无 QtDBus 模块；__ANDROID__ 是 NDK clang 内置宏
 // （Q_OS_ANDROID 由 Qt 头定义，此处 include 在 Qt 头之前不可用）
-#if defined(__linux__) && !defined(__ANDROID__)
+// JQT_HAVE_DBUS:构建脚本探测到 QtDBus 时定义(v1.9.2 DBus 暴露);
+// Linux 保持原有行为(桥内屏保抑制/通知一直在用它),即使没传宏也照旧 include。
+#if defined(JQT_HAVE_DBUS) || (defined(__linux__) && !defined(__ANDROID__))
 #include <QtDBus>
 #endif
 
@@ -7486,6 +7488,205 @@ JNIEXPORT jstring JNICALL Java_org_jqt_QGeoCoordinate_nativeToString(JNIEnv* env
 #endif
 
 }   // extern "C" (QtPositioning)
+
+extern "C" {   // QtDBus(P1 收尾,v1.9.2)
+
+// ---------------------------------------------------------------------------
+// DBus 暴露(v1.9.2 P1 收尾):把桥里**已有**的 QtDBus 能力开放给 Java。
+//   桥内早就在用 QtDBus(屏保抑制 / 桌面通知,见 jqtInhibitScreensaver 等),但那部分是
+//   Linux 专用的内部实现;这里补的是通用面:QDBusConnection / QDBusMessage。
+//   QtDBus 属 qtbase(Android 无)-> JQT_HAVE_DBUS 特性探测;没探测到就 isAvailable()=false。
+//   注意:QDBusMessage 是**值类型** -> 必须 registerValueHandle(registerHandle 假定 QObject,会崩)。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusConnection_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_DBUS
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_DBUS
+static QDBusMessage* jqtDbusMsg(JNIEnv* env, jlong handle) {
+    return static_cast<QDBusMessage*>(requireHandle(env, handle));
+}
+
+static QDBusConnection jqtDbusConn(jboolean systemBus) {
+    return (systemBus == JNI_TRUE) ? QDBusConnection::systemBus() : QDBusConnection::sessionBus();
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusConnection_nativeIsConnected(JNIEnv*, jclass, jboolean systemBus) {
+    return jqtDbusConn(systemBus).isConnected() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusConnection_nativeName(JNIEnv* env, jclass, jboolean systemBus) {
+    return env->NewStringUTF(jqtDbusConn(systemBus).name().toUtf8().constData());
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QDBusMessage_nativeCreateMethodCall(JNIEnv* env, jclass,
+                                                                        jstring service, jstring path,
+                                                                        jstring iface, jstring method) {
+    if (requireApp(env) == nullptr) return 0;
+    QDBusMessage m = QDBusMessage::createMethodCall(jqtJstring(env, service), jqtJstring(env, path),
+                                                    jqtJstring(env, iface), jqtJstring(env, method));
+    return registerValueHandle(new QDBusMessage(m), /*javaOwned=*/true);
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QDBusMessage_nativeCreateSignal(JNIEnv* env, jclass,
+                                                                     jstring path, jstring iface,
+                                                                     jstring name) {
+    if (requireApp(env) == nullptr) return 0;
+    QDBusMessage m = QDBusMessage::createSignal(jqtJstring(env, path), jqtJstring(env, iface),
+                                               jqtJstring(env, name));
+    return registerValueHandle(new QDBusMessage(m), /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    if (m) delete m;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddString(JNIEnv* env, jclass, jlong handle, jstring v) {
+    if (QDBusMessage* m = jqtDbusMsg(env, handle)) m->setArguments(m->arguments() << QVariant(jqtJstring(env, v)));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddInt(JNIEnv* env, jclass, jlong handle, jint v) {
+    if (QDBusMessage* m = jqtDbusMsg(env, handle)) m->setArguments(m->arguments() << QVariant(static_cast<int>(v)));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddLong(JNIEnv* env, jclass, jlong handle, jlong v) {
+    if (QDBusMessage* m = jqtDbusMsg(env, handle)) m->setArguments(m->arguments() << QVariant(static_cast<qlonglong>(v)));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddDouble(JNIEnv* env, jclass, jlong handle, jdouble v) {
+    if (QDBusMessage* m = jqtDbusMsg(env, handle)) m->setArguments(m->arguments() << QVariant(static_cast<double>(v)));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddBool(JNIEnv* env, jclass, jlong handle, jboolean v) {
+    if (QDBusMessage* m = jqtDbusMsg(env, handle)) m->setArguments(m->arguments() << QVariant(v == JNI_TRUE));
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeType(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return m ? static_cast<jint>(m->type()) : 0;
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusMessage_nativeIsError(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return (m && m->type() == QDBusMessage::ErrorMessage) ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeErrorName(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return env->NewStringUTF(m ? m->errorName().toUtf8().constData() : "");
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeErrorMessage(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return env->NewStringUTF(m ? m->errorMessage().toUtf8().constData() : "");
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeService(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return env->NewStringUTF(m ? m->service().toUtf8().constData() : "");
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativePath(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return env->NewStringUTF(m ? m->path().toUtf8().constData() : "");
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeInterface(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return env->NewStringUTF(m ? m->interface().toUtf8().constData() : "");
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeMember(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return env->NewStringUTF(m ? m->member().toUtf8().constData() : "");
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeArgumentCount(JNIEnv* env, jclass, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    return m ? static_cast<jint>(m->arguments().size()) : 0;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeArgumentTypeAt(JNIEnv* env, jclass, jlong handle, jint i) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    if (!m || i < 0 || i >= m->arguments().size()) return env->NewStringUTF("");
+    const QVariant& v = m->arguments().at(i);
+    return env->NewStringUTF(QString::fromLatin1(v.typeName() ? v.typeName() : "").toUtf8().constData());
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeStringAt(JNIEnv* env, jclass, jlong handle, jint i) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    if (!m || i < 0 || i >= m->arguments().size()) return env->NewStringUTF("");
+    return env->NewStringUTF(m->arguments().at(i).toString().toUtf8().constData());
+}
+
+JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeIntAt(JNIEnv* env, jclass, jlong handle, jint i) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    if (!m || i < 0 || i >= m->arguments().size()) return 0;
+    return static_cast<jint>(m->arguments().at(i).toInt());
+}
+
+JNIEXPORT jdouble JNICALL Java_org_jqt_QDBusMessage_nativeDoubleAt(JNIEnv* env, jclass, jlong handle, jint i) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    if (!m || i < 0 || i >= m->arguments().size()) return 0.0;
+    return static_cast<jdouble>(m->arguments().at(i).toDouble());
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusMessage_nativeBoolAt(JNIEnv* env, jclass, jlong handle, jint i) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    if (!m || i < 0 || i >= m->arguments().size()) return JNI_FALSE;
+    return m->arguments().at(i).toBool() ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QDBusConnection_nativeCall(JNIEnv* env, jclass, jboolean systemBus, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    if (m == nullptr) return 0;
+    QDBusMessage reply = jqtDbusConn(systemBus).call(*m);
+    return registerValueHandle(new QDBusMessage(reply), /*javaOwned=*/true);
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusConnection_nativeSend(JNIEnv* env, jclass, jboolean systemBus, jlong handle) {
+    QDBusMessage* m = jqtDbusMsg(env, handle);
+    if (m == nullptr) return JNI_FALSE;
+    return jqtDbusConn(systemBus).send(*m) ? JNI_TRUE : JNI_FALSE;
+}
+
+#else   // !JQT_HAVE_DBUS —— 未探测到 QtDBus 时的空壳(Java 侧 isAvailable()=false)
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusConnection_nativeIsConnected(JNIEnv*, jclass, jboolean) { return JNI_FALSE; }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusConnection_nativeName(JNIEnv* env, jclass, jboolean) { return env->NewStringUTF(""); }
+JNIEXPORT jlong JNICALL Java_org_jqt_QDBusMessage_nativeCreateMethodCall(JNIEnv*, jclass, jstring, jstring, jstring, jstring) { return 0; }
+JNIEXPORT jlong JNICALL Java_org_jqt_QDBusMessage_nativeCreateSignal(JNIEnv*, jclass, jstring, jstring, jstring) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddString(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddInt(JNIEnv*, jclass, jlong, jint) {}
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddLong(JNIEnv*, jclass, jlong, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddDouble(JNIEnv*, jclass, jlong, jdouble) {}
+JNIEXPORT void JNICALL Java_org_jqt_QDBusMessage_nativeAddBool(JNIEnv*, jclass, jlong, jboolean) {}
+JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeType(JNIEnv*, jclass, jlong) { return 0; }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusMessage_nativeIsError(JNIEnv*, jclass, jlong) { return JNI_FALSE; }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeErrorName(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeErrorMessage(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeService(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativePath(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeInterface(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeMember(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeArgumentCount(JNIEnv*, jclass, jlong) { return 0; }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeArgumentTypeAt(JNIEnv* env, jclass, jlong, jint) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QDBusMessage_nativeStringAt(JNIEnv* env, jclass, jlong, jint) { return env->NewStringUTF(""); }
+JNIEXPORT jint JNICALL Java_org_jqt_QDBusMessage_nativeIntAt(JNIEnv*, jclass, jlong, jint) { return 0; }
+JNIEXPORT jdouble JNICALL Java_org_jqt_QDBusMessage_nativeDoubleAt(JNIEnv*, jclass, jlong, jint) { return 0.0; }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusMessage_nativeBoolAt(JNIEnv*, jclass, jlong, jint) { return JNI_FALSE; }
+JNIEXPORT jlong JNICALL Java_org_jqt_QDBusConnection_nativeCall(JNIEnv*, jclass, jboolean, jlong) { return 0; }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QDBusConnection_nativeSend(JNIEnv*, jclass, jboolean, jlong) { return JNI_FALSE; }
+
+#endif  // JQT_HAVE_DBUS
+
+}   // extern "C" (QtDBus)
 
 extern "C" {   // QtQuick(P2)
 

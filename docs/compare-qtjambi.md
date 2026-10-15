@@ -26,24 +26,24 @@
 
 ```powershell
 # 规模（全部可复核；本节数字由 tools/measure-hard-data.py 一次生成，避免文档自相矛盾）
-(Get-ChildItem java\org\jqt -Filter *.java).Count            # 202 个文件（169 API + 33 冒烟）
-(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 24,688 行（API 21,519 + 冒烟 3,169）
-(Get-Content native\jqt_bridge.cpp).Count                   # 12,851 行手写 JNI 桥
-Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,417 个 JNI 导出函数
-Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,360 处公开成员声明
-Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,313 个 native 方法声明
+(Get-ChildItem java\org\jqt -Filter *.java).Count            # 205 个文件（171 API + 34 冒烟）
+(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 25,122 行（API 21,801 + 冒烟 3,321）
+(Get-Content native\jqt_bridge.cpp).Count                   # 13,052 行手写 JNI 桥
+Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,470 个 JNI 导出函数
+Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,403 处公开成员声明
+Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,340 个 native 方法声明
 ```
 
 | 指标 | 数值 |
 |---|---|
-| API 类 | **169**（java/org/jqt 下非 Smoke 的 .java） |
-| 冒烟类 | **33** 个文件；CI 引用 **27** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
-| Java 源文件合计 | 202（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
-| Java 行数 | **24,688**（API 21,519 + 冒烟 3,169） |
-| JNI 桥行数 | **12,851** |
-| JNI 导出函数 | **1,417** |
-| native 方法声明 | 1,313 |
-| 公开成员声明 | 3,360 |
+| API 类 | **171**（java/org/jqt 下非 Smoke 的 .java） |
+| 冒烟类 | **34** 个文件；CI 引用 **29** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
+| Java 源文件合计 | 205（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
+| Java 行数 | **25,122**（API 21,801 + 冒烟 3,321） |
+| JNI 桥行数 | **13,052** |
+| JNI 导出函数 | **1,470** |
+| native 方法声明 | 1,340 |
+| 公开成员声明 | 3,403 |
 | 信号/事件连接入口 | 97 处 `nativeConnect*`（全部经 `jqtConnectOnce()` 去重） |
 | 可选模块特性宏 | 9 个：CHARTS / HELP / MULTIMEDIA / NETWORK / POSITIONING / QML / SQL_MODELS / SVG / WEBSOCKETS |
 | Qt 版本线 | **6.12.0**（当前最新）/ **6.8.3 LTS** |
@@ -113,7 +113,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **3D** | ❌ | |
 | **Positioning** | 🟡 | v1.9.1 P2:`QGeoCoordinate`(大圆距离/方位角/`atDistanceAndAzimuth` 推算/6 种格式化);**纯几何计算,无需 GPS 即可确定性使用**。`QGeoPositionInfoSource`(真实定位)与 Bluetooth/NFC 未做 |
 | **WebSockets / WebChannel** | 🟡 | v1.9.1 P1:**WebSocket 客户端已支持**(`QWebSocket`:连接/文本/二进制/错误/关闭,`JQT_HAVE_WEBSOCKETS` 特性探测);WebChannel 仍无 |
-| **DBus** | 🌉 | 桥内部出现,未暴露 |
+| **DBus** | ✅ | v1.9.2 P1 收尾:`QDBusConnection`(会话/系统总线连接状态、调用、发信号)+ `QDBusMessage`(方法调用/信号构造、参数编组、错误与回复读取);`JQT_HAVE_DBUS` 特性探测。此前标 🌉(桥内有 API 无)—— 现已暴露 |
 | **Concurrent** | ❌ | |
 | **Designer 插件** | ❌ | |
 | **Help** | 🟡 **部分(不计入命中)** | v1.9.1:`QHelpEngineCore` 只读查询路径可用(`setupData`/`error`/`registeredDocumentations`/`fileData`/`files`/`customValue`),`.qch` 可由 qhelpgenerator 现场生成且命名空间可读;**但本环境下集合写入失败**(`registerDocumentation`/`setCustomValue` 返回 false,`.qhc` 关闭后仍 0 字节)—— 写路径待查,故**不写成已支持**。复现:SmokeHelp 打印的告警段 |
@@ -124,10 +124,10 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 
 | 口径 | 命中 | 算法 |
 |---|---|---|
-| **宽松**(✅ + 🟡 计入命中) | **33/39 ≈ 85%** | 28 个 ✅ + 5 个 🟡(动画/QML/Multimedia/Positioning/WebSockets) |
-| **严格**(只算 ✅,🟡 不计) | **28/39 ≈ 72%** | 只有 28 个是"完整可用" |
+| **宽松**(✅ + 🟡 计入命中) | **34/39 ≈ 87%** | 29 个 ✅ + 5 个 🟡(动画/QML/Multimedia/Positioning/WebSockets) |
+| **严格**(只算 ✅,🟡 不计) | **29/39 ≈ 74%** | 只有 29 个是"完整可用" |
 
-分母 39 = ✅ 28 + 🟡 6(含 Help,明确不计入)+ ❌ 4 + 🌉 1。
+分母 39 = ✅ 29 + 🟡 6(含 Help,明确不计入)+ ❌ 4。
 **已补齐 P1**:`QStateMachine` 官方不分发 → JQt 自研纯 Java 实现(见该项说明与 `SmokeStateMachine`)。
 
 被计入宽松口径的 🟡 项共 **4 个**:`QML/Quick`(只有 QQuickView)、`Multimedia`(无视频/录制)、
@@ -152,7 +152,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 **因此**:`QSvg` 与 `SQL 模型` 目前**只有 Windows 线真跑过**;`QML` 在 macOS 只覆盖 6.12 线;
 `QOpenGLWidget` 在 macOS 与 Windows ARM64 不可用。要补齐需:Linux/macOS 侧把 qtsvg 编进库、
 部署 qsqlite 插件、给 6.8.3 线补 qtdeclarative。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 4/5**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅、**QStateMachine ✅(官方未分发该模块,自研纯 Java 实现补齐)**;**`DBus` 仍未暴露** —— 该项一直写着「桥里已有,补 Java API 即可」但没人做(桥内其实已在用 QtDBus:屏保抑制/桌面通知)。这是 P1 最后一项;**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低)。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 5/5 已完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅、**QStateMachine ✅(官方未分发该模块,自研纯 Java 实现)**、**DBus ✅(桥内 QtDBus 能力已暴露为 Java API)**;**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低)。
 
 ---
 
@@ -194,7 +194,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 |---|---|
 | **QStateMachine** | ✅ 已完成(自研纯 Java 实现;官方未分发该模块) |
 | **QWebSocket(客户端)** | ✅ 已完成(v1.9.1 P1) |
-| **DBus(暴露已有桥能力)** | ⏳ **未做**:桥内已在用 QtDBus(屏保抑制/桌面通知),待补 `QDBusConnection` / `QDBusMessage` 的 Java API |
+| **DBus(暴露已有桥能力)** | ✅ 已完成(v1.9.2):`QDBusConnection` / `QDBusMessage`;CI Linux 用 `dbus-run-session` 起真实总线做端到端验证 |
 | **QSqlQueryModel/QSqlTableModel** | 现在只有 `QSqlDatabase/QSqlQuery`,做表格应用要手写映射 |
 | **QTest 兼容层** | ✅ 已完成(v1.9.1 P1) |
 
@@ -205,7 +205,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 
 ### 度量方式(每个版本都要给数字)
 
-1. **能力点命中率**:用第 2 节矩阵的实际行数(当前 39 项),发布说明里给 `命中/总数`(当前 **33/39**,严格口径 **28/39**)
+1. **能力点命中率**:用第 2 节矩阵的实际行数(当前 39 项),发布说明里给 `命中/总数`(当前 **34/39**,严格口径 **29/39**)
 2. **类数与 native 方法数**:`jar tf | grep -c class`、`grep -c native`
 3. **相对 QtJambi 的对比表**:本文档随每个版本更新,差异项只减不增
 

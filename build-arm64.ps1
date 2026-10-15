@@ -1,4 +1,4 @@
-# ============================================================================
+﻿# ============================================================================
 # build-arm64.ps1 - build jqt.dll for Windows ARM64 (MSVC toolchain)
 #
 # Requires:
@@ -171,6 +171,19 @@ if (Test-Path $wsLib) {
     Write-Host "==> QtWebSockets found - QWebSocket enabled"
 } else {
     Write-Host "==> QtWebSockets not found - QWebSocket will report unavailable"
+}
+# QtDBus(v1.9.2 P1 收尾):qtbase 自带,但 ARM64 包未必带 Qt6DBus.lib -> 探测后再决定。
+# 注意:标志同样必须插在 "/link" 之前(否则 LNK1181,见上)。
+$dbusLib = Join-Path $QtRoot "lib\Qt6DBus.lib"
+if (Test-Path $dbusLib) {
+    $linkIdxD = [Array]::IndexOf($clArgs, "/link")
+    if ($linkIdxD -lt 0) { $linkIdxD = $clArgs.Count }
+    $preD = @("/DJQT_HAVE_DBUS", "/I", (Join-Path $QtRoot "include\QtDBus"))
+    $clArgs = $clArgs[0..($linkIdxD - 1)] + $preD + $clArgs[$linkIdxD..($clArgs.Count - 1)]
+    $clArgs += @("/link", $dbusLib)
+    Write-Host "==> QtDBus found - QDBusConnection enabled"
+} else {
+    Write-Host "==> QtDBus not found - DBus API will report unavailable"
 }
 & cl.exe @clArgs
 if ($LASTEXITCODE -ne 0) { throw "cl.exe failed" }
