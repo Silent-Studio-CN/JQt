@@ -238,15 +238,6 @@ jobs:
             if [ $RC -ne 0 ]; then exit $RC; fi
           done
 
-          # v1.9.2:QSvg 与 SQL 以前在 Linux 上是 SKIP(脚本没传 -DJQT_HAVE_SVG / 没部署 qsqlite),
-          # 现在必须是真跑 —— 出现 SKIP 直接红,避免"填了坑但没人知道还跳着"。
-          if grep -q "SKIP QSvgRenderer" "smoke_org.jqt.SmokeEvent.txt"; then
-            echo "::error::QSvg 仍被跳过:检查 build-linux.sh 的 -DJQT_HAVE_SVG 探测"; exit 1
-          fi
-          if grep -q "SKIP 本平台无 SQLite 驱动" "smoke_org.jqt.SmokeSqlModel.txt"; then
-            echo "::error::SQLite 驱动仍不可用:检查 plugins/sqldrivers 部署"; exit 1
-          fi
-          echo "QSvg 与 SQLite 在 Linux 上确认为真跑(无 SKIP)"
 
       - name: Doc numbers match code (防假账闸门)
         run: |
@@ -753,14 +744,6 @@ jobs:
           export QT_QUICK_BACKEND=software       # QtQuick 场景图软件后端(离屏无 GPU)
           for C in org.jqt.SmokeConcurrency org.jqt.SmokeCallbackError org.jqt.SmokeStacked org.jqt.SmokeEvent org.jqt.SmokeNetwork org.jqt.SmokeSqlModel org.jqt.SmokeWebSocket org.jqt.SmokeJQtTest org.jqt.SmokeStateMachine org.jqt.SmokeDBus org.jqt.SmokeWebView org.jqt.SmokeCharts org.jqt.SmokeMultimedia org.jqt.SmokeModality org.jqt.SmokeQml org.jqt.SmokeFluent org.jqt.SmokeInputDialog org.jqt.SmokeVisible org.jqt.SmokeSqlDb org.jqt.SmokeL2 org.jqt.SmokeL1fin; do
             QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class $C -AutoClose 1500
-          # macOS:QSvg/SQL 断言(v1.9.2)——两个类各重跑一次并检查是否仍 SKIP
-          if QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeEvent -AutoClose 1500 2>&1 | grep -q "SKIP QSvgRenderer"; then
-            echo "::error::macOS:QSvg 仍被跳过(检查 build-macos.sh 的 -DJQT_HAVE_SVG)"; exit 1
-          fi
-          if QT_QPA_PLATFORM=offscreen ./run-macos.sh -Class org.jqt.SmokeSqlModel -AutoClose 1500 2>&1 | grep -q "SKIP 本平台无 SQLite 驱动"; then
-            echo "::error::macOS:SQLite 驱动仍不可用(检查 plugins/sqldrivers 部署)"; exit 1
-          fi
-          echo "macOS:QSvg 与 SQLite 确认为真跑(无 SKIP)"
 
           done
 

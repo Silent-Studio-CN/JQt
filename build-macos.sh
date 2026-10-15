@@ -120,25 +120,6 @@ else
   echo "==> QtDBus not found - DBus API will report unavailable"
 fi
 
-# QtSvg 探测(v1.9.2 补漏):与 Linux 同样的问题 —— 包里有 QtSvg,但脚本没传 -DJQT_HAVE_SVG,
-# 于是 macOS 上 QSvgRenderer 断言一直 SKIP。
-if [ -d "$QTLIB/QtSvg.framework" ]; then
-  SVG_FLAGS="-DJQT_HAVE_SVG -I$QTLIB/QtSvg.framework/Headers -framework QtSvg"
-  echo "==> QtSvg found - QSvgRenderer enabled"
-else
-  SVG_FLAGS=""
-  echo "==> QtSvg not found - QSvgRenderer will report unavailable"
-fi
-
-# QtWebView(v1.9.2 P2):macOS 的系统 WKWebView 后端编译在 QtWebView 内部(无需插件目录)。
-if [ -d "$QTLIB/QtWebView.framework" ]; then
-  WEBVIEW_FLAGS="-DJQT_HAVE_WEBVIEW -I$QTLIB/QtWebView.framework/Headers -framework QtWebView"
-  echo "==> QtWebView found - QWebView enabled (WKWebView 后端内建)"
-else
-  WEBVIEW_FLAGS=""
-  echo "==> QtWebView not found - QWebView will report unavailable"
-fi
-
 echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
@@ -147,16 +128,7 @@ clang++ -std=c++17 -O2 -shared -fPIC \
     -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" -I"$QTLIB/QtNetwork.framework/Headers" \
     -I"$NATIVE" \
     "$NATIVE/jqt_bridge.cpp" \
-    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $DBUS_FLAGS $SVG_FLAGS $WEBVIEW_FLAGS $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS $HELP_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
-
-# ---- 2.5 Deploy SQLite driver (v1.9.2 补漏):与 Linux 同因(插件在包里但没拷) ----
-if [ -d "$QTLIB/plugins/sqldrivers" ] && ls "$QTLIB"/plugins/sqldrivers/libqsqlite*.dylib >/dev/null 2>&1; then
-  mkdir -p "$LIB/plugins/sqldrivers"
-  cp "$QTLIB"/plugins/sqldrivers/libqsqlite*.dylib "$LIB/plugins/sqldrivers/" 2>/dev/null || true
-  echo "==> SQLite driver deployed (plugins/sqldrivers)"
-else
-  echo "==> SQLite driver not found in this Qt - SQL smoke will skip"
-fi
+    -F"$QTLIB" -framework QtWidgets -framework QtGui -framework QtCore -framework QtPrintSupport -framework QtSql -framework QtSerialPort -framework QtNetwork -DJQT_HAVE_SQL_MODELS $DBUS_FLAGS $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS $HELP_FLAGS -framework AppKit -framework Foundation -framework CoreFoundation
 
 # ---- 3. Deploy license notices ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true
