@@ -37,7 +37,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,313 个 native �
 | 指标 | 数值 |
 |---|---|
 | API 类 | **169**（java/org/jqt 下非 Smoke 的 .java） |
-| 冒烟类 | **33**（其中 CI 里实际跑 **27** 个） |
+| 冒烟类 | **33** 个文件；CI 引用 **27** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
 | Java 源文件合计 | 202（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
 | Java 行数 | **24,688**（API 21,519 + 冒烟 3,169） |
 | JNI 桥行数 | **12,851** |
@@ -119,17 +119,21 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **Help** | 🟡 **部分(不计入命中)** | v1.9.1:`QHelpEngineCore` 只读查询路径可用(`setupData`/`error`/`registeredDocumentations`/`fileData`/`files`/`customValue`),`.qch` 可由 qhelpgenerator 现场生成且命名空间可读;**但本环境下集合写入失败**(`registerDocumentation`/`setCustomValue` 返回 false,`.qhc` 关闭后仍 0 字节)—— 写路径待查,故**不写成已支持**。复现:SmokeHelp 打印的告警段 |
 | **QTest** | ✅ | v1.9.1 P1:`JQtTest` 兼容层(QVERIFY/QVERIFY2/QCOMPARE/QFAIL/QSKIP + test*/init/cleanup 运行器,零原生依赖) |
 
-**汇总(v1.9.1 进展)**:36 个能力点 —— 命中率**必须给两个口径**(此前只给宽松口径,属虚高):
+**汇总(v1.9.2 进展)**:能力点按本节矩阵**实际行数**计算(早期文档写"36 项",分母早已漂移 —— 已改正)。
+**所有数字由 `tools/count-capability-points.py` 生成,可复算**:
 
-| 口径 | 命中 | 说明 |
+| 口径 | 命中 | 算法 |
 |---|---|---|
-| **宽松**(✅ + 🟡 都算命中) | **29/36 ≈ 81%** | 🟡 项 = 只做了子集 |
-| **严格**(只算 ✅,🟡 不计) | **25/36 ≈ 69%** | 这才是"完整可用"的真实比例 |
+| **宽松**(✅ + 🟡 计入命中) | **33/39 ≈ 85%** | 28 个 ✅ + 5 个 🟡(动画/QML/Multimedia/Positioning/WebSockets) |
+| **严格**(只算 ✅,🟡 不计) | **28/39 ≈ 72%** | 只有 28 个是"完整可用" |
+
+分母 39 = ✅ 28 + 🟡 6(含 Help,明确不计入)+ ❌ 4 + 🌉 1。
+**已补齐 P1**:`QStateMachine` 官方不分发 → JQt 自研纯 Java 实现(见该项说明与 `SmokeStateMachine`)。
 
 被计入宽松口径的 🟡 项共 **4 个**:`QML/Quick`(只有 QQuickView)、`Multimedia`(无视频/录制)、
 `Positioning`(只有纯几何坐标)、`WebSockets`(只有客户端);`Help` 已明确**不计入**任一命中。
 
-另:**6 项仍缺失**(WebEngine、3D、Concurrent、Bluetooth/NFC、QML 广度、Help 写入),`DBus` 属"桥内有、API 无"。
+另:**❌ 4 项缺失**(WebEngine / 3D / Concurrent / Designer 插件)、**🟡 6 项部分**(其中 `Help` 明确不计入命中)、**🌉 1 项**(DBus:桥内有、API 无)。
 
 ### 2.1 CI 覆盖真相(哪些其实在 SKIP)
 
@@ -201,7 +205,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 
 ### 度量方式(每个版本都要给数字)
 
-1. **能力点命中率**:用第 2 节的 36 项清单,发布说明里给 `命中/总数`(本轮 **16/36**)
+1. **能力点命中率**:用第 2 节矩阵的实际行数(当前 39 项),发布说明里给 `命中/总数`(当前 **33/39**,严格口径 **28/39**)
 2. **类数与 native 方法数**:`jar tf | grep -c class`、`grep -c native`
 3. **相对 QtJambi 的对比表**:本文档随每个版本更新,差异项只减不增
 
