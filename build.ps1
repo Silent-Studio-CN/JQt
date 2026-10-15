@@ -73,6 +73,14 @@ if ((Test-Path (Join-Path $Kit "lib\libQt6DBus.a")) -or (Test-Path (Join-Path $K
 } else {
     Write-Host "==> QtDBus not found - DBus API will report unavailable"
 }
+# QtWebView 特性探测(v1.9.2 P2):官方不给 MinGW 版 QtWebEngine,但给 qtwebview ->
+# 这就是"Java 里能显示网页"的现实路径(Windows 走系统 WebView2)。
+if ((Test-Path (Join-Path $Kit "lib\libQt6WebView.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6WebView.dll"))) {
+    $gppArgs += @("-DJQT_HAVE_WEBVIEW", "-I", (Join-Path $Kit "include\QtWebView"), "-lQt6WebView")
+    Write-Host "==> QtWebView found - QWebView enabled (Windows 用系统 WebView2)"
+} else {
+    Write-Host "==> QtWebView not found - QWebView will report unavailable"
+}
 if ((Test-Path (Join-Path $Kit "lib\libQt6Help.a")) -or (Test-Path (Join-Path $Kit "bin\Qt6Help.dll"))) {
     $gppArgs += @("-DJQT_HAVE_HELP", "-I", (Join-Path $Kit "include\QtHelp"), "-lQt6Help")
     Write-Host "==> QtHelp found - QHelpEngineCore enabled"
@@ -132,6 +140,27 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Host "==> [4/4] Deploying QPA platform plugin (qwindows)"
+# QtWebView 的 QML 模块(qml/QtWebView)不在 Qt 资源里,必须跟着走 ——
+# 否则 `import QtWebView` 报 "module is not installed"(实测踩过,而且 QML 不一定报错)。
+# 拷到仓库根 qml/ 与 lib/qml/ 两处:前者是开发/测试时的导入路径,后者是打包后的布局。
+$wvQmlSrc = Join-Path $Kit "qml\QtWebView"
+if (Test-Path $wvQmlSrc) {
+    foreach ($dst in @((Join-Path $Root "qml\QtWebView"), (Join-Path $LibDir "qml\QtWebView"))) {
+        New-Item -ItemType Directory -Force -Path $dst | Out-Null
+        Copy-Item (Join-Path $wvQmlSrc "*") $dst -Recurse -Force
+    }
+    Write-Host "==> 已部署 QtWebView QML 模块(qml/QtWebView + lib/qml/QtWebView)"
+    # 插件 qtwebviewquickplugin.dll 依赖 Qt6WebViewQuick.dll,而 windeployqt 不会带它
+    # (它只跟 Qt6WebView.dll)—— 少了它插件加载失败,报"找不到指定的模块"(实测踩过)。
+    $wvQuick = Join-Path $Kit "bin\Qt6WebViewQuick.dll"
+    if (Test-Path $wvQuick) {
+        Copy-Item $wvQuick $LibDir -Force
+        Copy-Item $wvQuick (Join-Path $Root "qml\QtWebView") -Force
+        Write-Host "==> 已补 Qt6WebViewQuick.dll(lib/ 与 qml/QtWebView/)"
+    }
+} else {
+    Write-Host "==> 未找到 QtWebView QML 模块(该 Qt 未装 qtwebview)"
+}
 # 补 qoffscreen 平台插件:用户侧常以 QT_QPA_PLATFORM=offscreen 跑无头模式,
 # 而 windeployqt 默认只带 qwindows(问题报告附录 B 实测)
 $offscreenSrc = Join-Path $Kit "plugins\platforms\qoffscreen.dll"

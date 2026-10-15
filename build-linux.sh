@@ -91,7 +91,37 @@ fi
 # 这里只是再加上 -DJQT_HAVE_DBUS,把通用面(QDBusConnection/QDBusMessage)编进库。
 echo "==> QtDBus: assume available (qtbase) - QDBusConnection enabled"
 
-g++ -std=c++17 -O2 -shared -fPIC     -o "$LIB/libjqt.so"     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux"     -I"$QTINC" -I"$QTINC/QtWidgets" -I"$QTINC/QtGui" -I"$QTINC/QtCore" -I"$QTINC/QtDBus" -I"$QTINC/QtPrintSupport" -I"$QTINC/QtSql" -I"$QTINC/QtOpenGLWidgets" -I"$QTINC/QtOpenGL" -I"$QTINC/QtSerialPort" -I"$QTINC/QtNetwork" -DJQT_HAVE_NETWORK -DJQT_HAVE_SQL_MODELS -DJQT_HAVE_DBUS     -I"$NATIVE"     "$NATIVE/jqt_bridge.cpp"     -L"$QTLIB" -lQt6Widgets -lQt6Gui -lQt6Core -lQt6PrintSupport -lQt6Sql -lQt6OpenGLWidgets -lQt6OpenGL -lQt6SerialPort -lQt6DBus -lQt6Network $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS $HELP_FLAGS
+# QtSvg 探测(v1.9.2 补漏):qtsvg 一直在 CI 里装了,但这个脚本从来没传 -DJQT_HAVE_SVG,
+# 导致 Linux 上 SmokeEvent 里的 QSvgRenderer 断言一直 SKIP(文档 2.1 节记的就是这件事)。
+if ls "$QTLIB"/libQt6Svg.so* >/dev/null 2>&1; then
+  SVG_FLAGS="-DJQT_HAVE_SVG -I$QTINC/QtSvg -lQt6Svg"
+  echo "==> QtSvg found - QSvgRenderer enabled"
+else
+  SVG_FLAGS=""
+  echo "==> QtSvg not found - QSvgRenderer will report unavailable"
+fi
+
+g++ -std=c++17 -O2 -shared -fPIC     -o "$LIB/libjqt.so"     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/linux"     -I"$QTINC" -I"$QTINC/QtWidgets" -I"$QTINC/QtGui" -I"$QTINC/QtCore" -I"$QTINC/QtDBus" -I"$QTINC/QtPrintSupport" -I"$QTINC/QtSql" -I"$QTINC/QtOpenGLWidgets" -I"$QTINC/QtOpenGL" -I"$QTINC/QtSerialPort" -I"$QTINC/QtNetwork" -DJQT_HAVE_NETWORK -DJQT_HAVE_SQL_MODELS -DJQT_HAVE_DBUS     -I"$NATIVE"     "$NATIVE/jqt_bridge.cpp"     -L"$QTLIB" -lQt6Widgets -lQt6Gui -lQt6Core -lQt6PrintSupport -lQt6Sql -lQt6OpenGLWidgets -lQt6OpenGL -lQt6SerialPort -lQt6DBus -lQt6Network $SVG_FLAGS $WEBVIEW_FLAGS $WS_FLAGS $CHART_FLAGS $MM_FLAGS $QML_FLAGS $GEO_FLAGS $HELP_FLAGS
+
+# QtWebView(v1.9.2 P2):Linux 上 QtWebView 依赖 QtWebEngine,官方包通常都不带 -> 多半不可用。
+if ls "$QTLIB"/libQt6WebView.so* >/dev/null 2>&1; then
+  WEBVIEW_FLAGS="-DJQT_HAVE_WEBVIEW -I$QTINC/QtWebView -lQt6WebView"
+  echo "==> QtWebView found - QWebView enabled"
+else
+  WEBVIEW_FLAGS=""
+  echo "==> QtWebView not found - QWebView will report unavailable"
+fi
+
+# ---- 2.5 Deploy SQLite driver (v1.9.2 补漏) ----
+# CI 的 Linux Qt 包装了 plugins/sqldrivers/libqsqlite.so,但从来没拷进 lib/ ->
+# SQL 冒烟一直 SKIP("本平台无 SQLite 驱动")。这里按 Windows 侧同样的布局部署。
+if [ -f "$QTLIB/plugins/sqldrivers/libqsqlite.so" ]; then
+  mkdir -p "$LIB/plugins/sqldrivers"
+  cp "$QTLIB/plugins/sqldrivers/libqsqlite.so" "$LIB/plugins/sqldrivers/" 2>/dev/null || true
+  echo "==> SQLite driver deployed (plugins/sqldrivers/libqsqlite.so)"
+else
+  echo "==> SQLite driver not found in this Qt - SQL smoke will skip"
+fi
 
 # ---- 3. Deploy license notices (LGPL compliance) ----
 cp "$ROOT/LGPL-3.0.txt" "$ROOT/THIRD-PARTY-NOTICES.md" "$ROOT/LICENSE.md" "$ROOT/LICENSE" "$LIB/" 2>/dev/null || true

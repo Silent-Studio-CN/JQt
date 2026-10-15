@@ -26,24 +26,24 @@
 
 ```powershell
 # 规模（全部可复核；本节数字由 tools/measure-hard-data.py 一次生成，避免文档自相矛盾）
-(Get-ChildItem java\org\jqt -Filter *.java).Count            # 205 个文件（171 API + 34 冒烟）
-(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 25,140 行（API 21,813 + 冒烟 3,327）
-(Get-Content native\jqt_bridge.cpp).Count                   # 13,060 行手写 JNI 桥
-Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,472 个 JNI 导出函数
-Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,404 处公开成员声明
-Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,341 个 native 方法声明
+(Get-ChildItem java\org\jqt -Filter *.java).Count            # 210 个文件（174 API + 36 冒烟）
+(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 26,155 行（API 22,426 + 冒烟 3,729）
+(Get-Content native\jqt_bridge.cpp).Count                   # 13,336 行手写 JNI 桥
+Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,502 个 JNI 导出函数
+Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,435 处公开成员声明
+Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,358 个 native 方法声明
 ```
 
 | 指标 | 数值 |
 |---|---|
-| API 类 | **171**（java/org/jqt 下非 Smoke 的 .java） |
-| 冒烟类 | **34** 个文件；CI 引用 **28** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
-| Java 源文件合计 | 205（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
-| Java 行数 | **25,140**（API 21,813 + 冒烟 3,327） |
-| JNI 桥行数 | **13,060** |
-| JNI 导出函数 | **1,472** |
-| native 方法声明 | 1,341 |
-| 公开成员声明 | 3,404 |
+| API 类 | **174**（java/org/jqt 下非 Smoke 的 .java） |
+| 冒烟类 | **36** 个文件；CI 引用 **35** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
+| Java 源文件合计 | 210（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
+| Java 行数 | **26,155**（API 22,426 + 冒烟 3,729） |
+| JNI 桥行数 | **13,336** |
+| JNI 导出函数 | **1,502** |
+| native 方法声明 | 1,358 |
+| 公开成员声明 | 3,435 |
 | 信号/事件连接入口 | 97 处 `nativeConnect*`（全部经 `jqtConnectOnce()` 去重） |
 | 可选模块特性宏 | 9 个：CHARTS / HELP / MULTIMEDIA / NETWORK / POSITIONING / QML / SQL_MODELS / SVG / WEBSOCKETS |
 | Qt 版本线 | **6.12.0**（当前最新）/ **6.8.3 LTS** |
@@ -108,7 +108,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **QNetwork 网络** | ✅ | v1.9.1 P0-⑤:`QNetworkAccessManager`(GET/POST + 管理器级 `onFinished` + 超时/UA);`QTcpSocket`/`QUdpSocket` 仍无 |
 | **QML / Quick** | 🟡 | v1.9.1 P2:`QQuickView`(加载 QML 文件/内联文本 + `grabToPng()` 离屏渲染,像素级验证通过);`QQmlApplicationEngine`/`QQuickWidget`/QML↔Java 互操作未做 |
 | **Multimedia** | 🟡 | v1.9.1 P2:`QMediaPlayer`(播放/暂停/停止/跳转/时长/位置/状态/错误信号)+ `QAudioOutput`(音量/静音);**已验证**:素材时长解析、状态机迁移、错误路径(时长 300ms 精确、缺失文件触发 "Could not open file")。`QVideoWidget`/摄像头/录制未做;真实出声依赖音频设备 |
-| **WebEngine / WebView** | ❌ | |
+| **WebEngine / WebView** | 🟡 **部分(不计入命中)** | `QWebView`(QtWebView 封装:load/loadHtml/url/title/isReady/grabToPng)已实现并有特性探测;**但官方 6.12 的 qtwebview 包在 Windows 上不含 `plugins/webview/` 后端插件**(MinGW 与 MSVC 包都实测过,只有 Qt6WebView/Qt6WebViewQuick + QML 模块),此时 Qt 会 `qFatal("No WebView plug-in found!")` 直接中止进程 —— 故 `QWebView.isBackendAvailable()` 为 false 时本类**拒绝构造**,冒烟如实 SKIP。macOS 的 WKWebView 后端内建(待真机确认);Linux 侧 QtWebView 依赖 QtWebEngine。**要 Windows 可用只能自研 WebView2(COM)宿主** —— 已记录为后续项 |
 | **Charts** | ✅ | v1.9.1 P2:`QChart` / `QLineSeries` / `QChartView`(含 `toPng()` 离屏渲染);`JQT_HAVE_CHARTS` 特性探测 |
 | **3D** | ❌ | |
 | **Positioning** | 🟡 | v1.9.1 P2:`QGeoCoordinate`(大圆距离/方位角/`atDistanceAndAzimuth` 推算/6 种格式化);**纯几何计算,无需 GPS 即可确定性使用**。`QGeoPositionInfoSource`(真实定位)与 Bluetooth/NFC 未做 |
@@ -148,6 +148,8 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | macOS x64 | `SmokeSqlModel` | 同上 |
 | macOS x64 | `SmokeQml` | 6.8.3 线缺 qtdeclarative |
 | macOS x64 / Windows ARM64 | `SmokeV073`(QOpenGLWidget 那一项) | 这两平台的 Qt 构建不含 OpenGLWidgets 模块 |
+
+| Windows / macOS / Linux | `SmokeWebView` | 官方 qtwebview 包不含 `plugins/webview/` 后端插件;无后端时 Qt 会中止进程,故冒烟在 `isBackendAvailable()`(Windows 官方包缺 WebView 后端)为 false 时明确 SKIP |
 
 **因此**:`QSvg` 与 `SQL 模型` 目前**只有 Windows 线真跑过**;`QML` 在 macOS 只覆盖 6.12 线;
 `QOpenGLWidget` 在 macOS 与 Windows ARM64 不可用。要补齐需:Linux/macOS 侧把 qtsvg 编进库、
