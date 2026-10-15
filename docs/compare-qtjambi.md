@@ -152,7 +152,7 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 **因此**:`QSvg` 与 `SQL 模型` 目前**只有 Windows 线真跑过**;`QML` 在 macOS 只覆盖 6.12 线;
 `QOpenGLWidget` 在 macOS 与 Windows ARM64 不可用。要补齐需:Linux/macOS 侧把 qtsvg 编进库、
 部署 qsqlite 插件、给 6.8.3 线补 qtdeclarative。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 4/4 已完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅、**QStateMachine ✅(官方未分发该模块,自研纯 Java 实现补齐)**;**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低)。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 4/5**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅、**QStateMachine ✅(官方未分发该模块,自研纯 Java 实现补齐)**;**`DBus` 仍未暴露** —— 该项一直写着「桥里已有,补 Java API 即可」但没人做(桥内其实已在用 QtDBus:屏保抑制/桌面通知)。这是 P1 最后一项;**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低)。
 
 ---
 
@@ -192,9 +192,9 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 
 | 项 | 说明 |
 |---|---|
-| **QStateMachine** | 状态机;比手写 if-else 稳 |
+| **QStateMachine** | ✅ 已完成(自研纯 Java 实现;官方未分发该模块) |
 | **QWebSocket(客户端)** | ✅ 已完成(v1.9.1 P1) |
-| **DBus(暴露已有桥能力)** | 桥里已有,补 Java API 即可 |
+| **DBus(暴露已有桥能力)** | ⏳ **未做**:桥内已在用 QtDBus(屏保抑制/桌面通知),待补 `QDBusConnection` / `QDBusMessage` 的 Java API |
 | **QSqlQueryModel/QSqlTableModel** | 现在只有 `QSqlDatabase/QSqlQuery`,做表格应用要手写映射 |
 | **QTest 兼容层** | ✅ 已完成(v1.9.1 P1) |
 
