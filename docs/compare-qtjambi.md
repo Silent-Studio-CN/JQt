@@ -36,7 +36,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'      # 1,174 个 native 
 
 | 指标 | 数值 |
 |---|---|
-| Java 源文件 | 193(API 162 + 冒烟 31) |
+| Java 源文件 | 194(API 162 + 冒烟 31) |
 | Java 行数 | 17,186 |
 | JNI 桥行数 | 11,497 |
 | jar 内 class | 205 |
@@ -95,11 +95,11 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | Widgets:对话框 | ✅ | `QFileDialog` `QMessageBox` `QColorDialog` `QFontDialog` `QInputDialog` |
 | Widgets:滚动 / 分割 / 堆叠 / 画布 | ✅ | `QScrollArea` `QSplitter` `QStackedWidget` `QCanvasWidget` |
 | OpenGL | ✅ | `QOpenGLWidget` |
-| 动画 | ✅ | `QPropertyAnimation` + JQt 动画门面(`JQtAnimation(s)` `JQtEasing` `JQtAnimationTheme`) |
+| 动画 | 🟡 | **JQt 动画门面**可用(`JQtAnimation(s)` `JQtEasing` `JQtAnimationTheme`);**Qt 的 `QPropertyAnimation` 没有暴露** —— 属性动画只能用门面或自己用 `QTimer` 拼(此前的 ✅ 是错的,已改正) |
 | Sql | ✅ | `QSqlDatabase` `QSqlQuery` + **`QSqlQueryModel` / `QSqlTableModel`**(v1.9.1 P1:只读查询模型与可写表模型,支持显式绑定连接) |
 | PrintSupport | ✅ | `QPrinter` `QPageSize` `QPageLayout` `QPageRanges` |
 | SerialPort | ✅ | `QSerialPort`(CI 单独构建该模块) |
-| **QStateMachine 状态机** | ⛔ 上游受阻 | 本 SDK 路径下**拿不到 QtStateMachine**(无 DLL/无 cmake 配置,在线仓库也无该 addon);需 Qt 官方安装器勾选 "Qt State Machine" 才能实现 —— 已记录待上游模块可得再做 |
+| **QStateMachine 状态机** | ⛔ 官方未分发 | **Qt 6.12 文档里该模块存在**,但**官方任何我们能拿到的发行物里都没有它**:mingw 6.12(base+addons)✗ · MSVC 6.12 addons ✗ · Linux 6.12 base ✗ · macOS 官方 Qt 6.11.2(aqt 列出的 68 个模块含 webengine/webview,无 statemachine)✗ · Windows 官方 Qt 6.11.1 ✗ · `qtbase/src` 与 `qtdeclarative/src`(6.12 分支)✗ · 无 `qt/qtstatemachine` 仓库 ✗。**结论已修正**:不是"需要安装器勾选",而是官方不分发 —— 除非找到并自行编译源码,否则做不了 |
 | **QSvg 矢量渲染** | ✅ | v1.9.1 P0-④:`QSvgRenderer`(文件/字节 → `renderToPng`;缺 qtsvg 时构建特性探测自动跳过) |
 | **QNetwork 网络** | ✅ | v1.9.1 P0-⑤:`QNetworkAccessManager`(GET/POST + 管理器级 `onFinished` + 超时/UA);`QTcpSocket`/`QUdpSocket` 仍无 |
 | **QML / Quick** | 🟡 | v1.9.1 P2:`QQuickView`(加载 QML 文件/内联文本 + `grabToPng()` 离屏渲染,像素级验证通过);`QQmlApplicationEngine`/`QQuickWidget`/QML↔Java 互操作未做 |
@@ -115,9 +115,36 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | **Help** | 🟡 **部分(不计入命中)** | v1.9.1:`QHelpEngineCore` 只读查询路径可用(`setupData`/`error`/`registeredDocumentations`/`fileData`/`files`/`customValue`),`.qch` 可由 qhelpgenerator 现场生成且命名空间可读;**但本环境下集合写入失败**(`registerDocumentation`/`setCustomValue` 返回 false,`.qhc` 关闭后仍 0 字节)—— 写路径待查,故**不写成已支持**。复现:SmokeHelp 打印的告警段 |
 | **QTest** | ✅ | v1.9.1 P1:`JQtTest` 兼容层(QVERIFY/QVERIFY2/QCOMPARE/QFAIL/QSKIP + test*/init/cleanup 运行器,零原生依赖) |
 
-**汇总(v1.9.1 进展)**:36 个能力点中 **JQt 命中 28 个**(v1.9.1 新增 QTimer / QThread / QEvent / QSvg / QNetwork),
-**7 项仍缺失**(另 1 项上游受阻、`DBus` 属"桥内有、API 无")。命中率 **28/36 ≈ 78%**。
-**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 完成**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低);Help 待评估。
+**汇总(v1.9.1 进展)**:36 个能力点 —— 命中率**必须给两个口径**(此前只给宽松口径,属虚高):
+
+| 口径 | 命中 | 说明 |
+|---|---|---|
+| **宽松**(✅ + 🟡 都算命中) | **28/36 ≈ 78%** | 🟡 项 = 只做了子集 |
+| **严格**(只算 ✅,🟡 不计) | **24/36 ≈ 67%** | 这才是"完整可用"的真实比例 |
+
+被计入宽松口径的 🟡 项共 **4 个**:`QML/Quick`(只有 QQuickView)、`Multimedia`(无视频/录制)、
+`Positioning`(只有纯几何坐标)、`WebSockets`(只有客户端);`Help` 已明确**不计入**任一命中。
+
+另:**7 项仍缺失**、`QStateMachine` 官方未分发、`DBus` 属"桥内有、API 无"。
+
+### 2.1 CI 覆盖真相(哪些其实在 SKIP)
+
+"CI 五作业全绿"不等于"每个模块在每个平台都验过"。实测最近一次成功 run
+(`37216151859`)的日志,下列冒烟是**跳过**的 —— 所以这些能力点**在对应平台上从未真正跑过**:
+
+| 平台 | 跳过的冒烟 | 原因 |
+|---|---|---|
+| Linux x64 | `SmokeSvg` | QtSvg 未编译进 libjqt(该平台探测未命中) |
+| Linux x64 | `SmokeSqlModel` | 平台无 SQLite 驱动插件 |
+| macOS x64 | `SmokeSvg` | 同上 |
+| macOS x64 | `SmokeSqlModel` | 同上 |
+| macOS x64 | `SmokeQml` | 6.8.3 线缺 qtdeclarative |
+| macOS x64 / Windows ARM64 | `QOpenGLWidget` 相关 | 这两平台的 Qt 构建不含 OpenGLWidgets 模块 |
+
+**因此**:`QSvg` 与 `SQL 模型` 目前**只有 Windows 线真跑过**;`QML` 在 macOS 只覆盖 6.12 线;
+`QOpenGLWidget` 在 macOS 与 Windows ARM64 不可用。要补齐需:Linux/macOS 侧把 qtsvg 编进库、
+部署 qsqlite 插件、给 6.8.3 线补 qtdeclarative。
+**P0 五项已全部完成**(QTimer ✅  QEvent ✅  QThread+并发子集 ✅  QSvg ✅  QNetwork 子集 ✅);**P1 3/4**:SQL 模型 ✅、QWebSocket 客户端 ✅、QTest 兼容层 ✅(QStateMachine 因上游 SDK 未提供模块而受阻,已记录);**P2 进行中**:Charts ✅、Multimedia 🟡、QML/Quick 🟡、Positioning 🟡、Help 🟡(只读可用/写入待查);**Designer 明确跳过**(Qt Designer 是 C++ 插件 API,Java 侧无插件宿主,价值极低);Help 待评估。
 
 ---
 
