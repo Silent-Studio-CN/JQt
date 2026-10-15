@@ -52,6 +52,8 @@ m = re.search(r"\| API 类 \| \*\*(\d+)\*\*", doc)
 if m: claims["API 类"] = int(m.group(1))
 m = re.search(r"\| 冒烟类 \| \*\*(\d+)\*\*", doc)
 if m: claims["冒烟类"] = int(m.group(1))
+m = re.search(r"CI 引用 \*\*(\d+)\*\* 个", doc)
+if m: claims["CI 引用冒烟"] = int(m.group(1))
 m = re.search(r"\| Java 源文件合计 \| (\d+)", doc)
 if m: claims["源文件"] = int(m.group(1))
 m = re.search(r"\| Java 行数 \| \*\*([\d,]+)\*\*", doc)
@@ -66,6 +68,8 @@ actual = {
     "宽松": (loose, total), "严格": (ok, total),
     "API 类": len(api), "冒烟类": len(smokes), "源文件": len(files),
     "Java 行数": java_lines, "桥行数": bridge_lines, "JNI 导出": jni,
+    "CI 引用冒烟": len(set(re.findall(r"org\.jqt\.(Smoke\w+)",
+                                      io.open(".github/workflows/ci.yml", encoding="utf-8").read()))),
 }
 bad = []
 print("文档数字 vs 代码实测:")
