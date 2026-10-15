@@ -88,6 +88,11 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QtDBus>
 #endif
 
+// QtWebView(v1.9.2 P2):官方不发 MinGW 版 QtWebEngine,但发 qtwebview。
+#ifdef JQT_HAVE_WEBVIEW
+#include <QtWebView/QtWebView>
+#endif
+
 #include <QApplication>
 #include <QGuiApplication>
 #include <QBuffer>
@@ -174,6 +179,7 @@ typedef void  (*JQtMsgSetMask)(id, SEL, unsigned long);   // setStyleMask:
 #include <QQuickItem>
 #include <QQmlComponent>
 #include <QQmlEngine>
+#include <QQmlError>        // P2:QQuick3D 用 QQuickView::errors() 取 QML 错误原文
 #include <QUrl>
 #include <QImage>
 #include <QBuffer>
@@ -964,12 +970,31 @@ JNIEXPORT jlong JNICALL Java_org_jqt_QApplication_nativeCreateApp(JNIEnv* env, j
         static int argc = 1;
         static char arg0[] = "jqt";
         static char* argv[] = { arg0, nullptr };
+#ifdef JQT_HAVE_WEBVIEW
+        // QtWebView 硬性要求:必须在 QGuiApplication **之前**初始化(否则 WebView 元素建不出来)。
+        QtWebView::initialize();
+#endif
         g_app = new QApplication(argc, argv);
         // 让 Qt 能找到 lib/sqldrivers 等插件：jpackage 应用目录（applicationDirPath）
         // 与开发/测试目录（cwd）都覆盖；否则 Qt 6.11 下 libraryPaths 不含安装目录，
         // QSqlDatabase::isDriverAvailable("SQLITE") 永远 false。
         QCoreApplication::addLibraryPath(QCoreApplication::applicationDirPath() + "/lib");
         QCoreApplication::addLibraryPath(QDir::currentPath() + "/lib");
+#ifdef JQT_HAVE_WEBVIEW
+        // QtWebView 的 QML 模块(qml/QtWebView)不在 Qt 的资源里,必须显式给导入路径 ——
+        // 否则 `import QtWebView` 解析失败,WebView 元素建不出来(而且 QML 不一定报错,很难查)。
+        // 实测:修复前 import 路径只有 appDir/qml 等,QtQuick 恰好内嵌所以没暴露这个问题。
+        const QString jqtQmlImports = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
+        // 组装导入路径:<已存在> + Qt 报告的路径 + 应用目录/cwd 下的 qml(QtWebView 模块由构建脚本拷贝到此)。
+        QStringList qmlPaths;
+        const QByteArray prev = qgetenv("QML2_IMPORT_PATH");
+        if (!prev.isEmpty()) qmlPaths << QString::fromLocal8Bit(prev);
+        if (!jqtQmlImports.isEmpty()) qmlPaths << jqtQmlImports;
+        qmlPaths << QCoreApplication::applicationDirPath() + "/qml"
+                 << QDir::currentPath() + "/qml";
+        qmlPaths.removeDuplicates();
+        qputenv("QML2_IMPORT_PATH", qmlPaths.join(QLatin1Char(';')).toUtf8());
+#endif
 #ifdef _WIN32
         // 全局触摸→鼠标合成（覆盖所有窗口含弹层）
         static JQtPointerFilter g_pointerFilter;
@@ -7821,6 +7846,257 @@ JNIEXPORT jbyteArray JNICALL Java_org_jqt_QQuickView_nativeGrabToPng(JNIEnv*, jc
 #endif
 
 }   // extern "C" (QtQuick)
+
+extern "C" {   // QtQuick3D(P2)
+
+// ---------------------------------------------------------------------------
+// QtQuick3D(v1.9.2 P2):Quick 3D 可用性探测 + QQuick3DView 的错误原文/释放
+//
+//   Quick 3D 的入口 View3D 本身就是 QML 类型(import QtQuick3D),承载它的仍是
+//   QQuickView —— 所以这里**不 include 任何 QtQuick3D 头、也不链 Qt6Quick3D**:
+//   只要 QtQuick/QtQml 在(JQT_HAVE_QML),Java 侧就能用 QQuickView 加载 3D 场景。
+//   (没有新的视图类型/值类型,所以也用不上 registerHandle/registerValueHandle。)
+//
+//   "能不能用"只能是**运行期**结论:QML 模块 QtQuick3D 有没有落在导入路径上、
+//   qquick3dplugin 的依赖(Qt6Quick3D.dll -> Qt6Quick3DRuntimeRender.dll ->
+//   Qt6ShaderTools.dll)全不全 —— 这些编译期宏都说明不了。
+//   JQT_HAVE_QUICK3D(构建脚本可选定义)只由 nativeCompiled() 作为信息报出来。
+// ---------------------------------------------------------------------------
+
+// Qt 运行库版本(qVersion 只依赖 QtCore):给日志/问题报告用
+JNIEXPORT jstring JNICALL Java_org_jqt_QQuick3D_nativeQtVersion(JNIEnv* env, jclass) {
+    return env->NewStringUTF(qVersion());
+}
+
+// 构建脚本是否 -DJQT_HAVE_QUICK3D:仅供 status() 打印,不参与可用性判定
+JNIEXPORT jboolean JNICALL Java_org_jqt_QQuick3D_nativeCompiled(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_QUICK3D
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_QML
+// 某个 QQuickView 句柄的 QML 错误原文(QQuickView::errors())。
+//   句柄来自 QQuickView/QQuick3DView 的 nativeHandle(),本来就是 QQuickView*。
+//   为什么必须新增:Java 侧 QQuickView.errors() 只在 statusChanged 回调里收到状态码,
+//   所以它几乎总是空串 —— 而 Quick 3D 不可用时用户最需要的恰恰是
+//   "module \"QtQuick3D\" is not installed" / "Cannot load library ...qquick3dplugin.dll"。
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QQuick3D_nativeQmlErrors(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = static_cast<QQuickView*>(requireHandle(env, handle));
+    if (v == nullptr) return jqtStringList(env, QStringList());
+    QStringList out;
+    const QList<QQmlError> errs = v->errors();
+    for (const QQmlError& e : errs) {
+        out << e.toString();
+    }
+    return jqtStringList(env, out);
+}
+
+// QQuick3DView.dispose():**幂等**释放。
+//   先从句柄注册表摘除再 delete(与 QWidget/QValidator 的 dispose 同款写法),
+//   于是基类 QQuickView 的 Cleaner 之后拿着同一句柄再调用时,native 侧直接静默返回 ——
+//   既不会重复 delete,也不会把 IllegalStateException 丢进 Cleaner 线程。
+//   delete 走队列(Qt 主线程执行),避免调用方从别的线程 dispose 时直接删窗口。
+JNIEXPORT void JNICALL Java_org_jqt_QQuick3DView_nativeDispose(JNIEnv*, jclass, jlong handle) {
+    QObject* obj = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(g_handleMutex);
+        auto it = g_handles.find(static_cast<int64_t>(handle));
+        if (it == g_handles.end()) {
+            return;  // 已释放/从未注册:静默(可重复调用)
+        }
+        auto oit = g_javaOwned.find(static_cast<int64_t>(handle));
+        if (oit == g_javaOwned.end() || !oit->second) {
+            return;  // 归 Qt 管理,不回收
+        }
+        obj = static_cast<QObject*>(it->second);
+        g_handles.erase(it);
+        g_javaOwned.erase(oit);
+    }
+    if (obj != nullptr && g_app != nullptr) {
+        QMetaObject::invokeMethod(g_app, [obj]() { delete obj; }, Qt::QueuedConnection);
+    }
+}
+#else
+// 没有 QtQuick:Quick 3D 必然不可用(它靠 QQuickView 承载)—— 空壳,Java 侧结论=false
+JNIEXPORT jobjectArray JNICALL Java_org_jqt_QQuick3D_nativeQmlErrors(JNIEnv* env, jclass, jlong) {
+    return jqtStringList(env, QStringList());
+}
+JNIEXPORT void JNICALL Java_org_jqt_QQuick3DView_nativeDispose(JNIEnv*, jclass, jlong) {}
+#endif
+
+}   // extern "C" (QtQuick3D)
+
+extern "C" {   // QtWebView(P2,v1.9.2)
+
+// ---------------------------------------------------------------------------
+// QtWebView:系统 WebView 封装(Windows=WebView2 / macOS=WKWebView / Linux=WebEngine)。
+//   Qt 官方不发 MinGW 版 QtWebEngine,但**发 qtwebview**;因此"能在 Java 里显示网页"
+//   这条路由它走 —— 用 QQuickView 载一段 QML,里面放 WebView 元素。
+//   两点硬约束(官方文档):
+//     1. QtWebView::initialize() 必须在 QGuiApplication 之前调用 -> 见 nativeCreateApp;
+//     2. WebView 不能与其它 QML 元素重叠(事件不进 Qt 事件系统)。
+//   HTML 通过临时文件加载,避免把 HTML 拼进 QML 字符串的转义坑。
+// ---------------------------------------------------------------------------
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_WEBVIEW
+    return JNI_TRUE;
+#else
+    return JNI_FALSE;
+#endif
+}
+
+/**
+ * 后端是否真的在。**实测结论**:官方 6.12 的 qtwebview 包(mingw 与 MSVC 都一样)
+ * 只带 Qt6WebView/Qt6WebViewQuick + QML 模块,**没有 plugins/webview/ 后端插件**;
+ * 这种环境下实例化 QML 的 WebView 元素会让 Qt 直接 abort(qFatal "No WebView plug-in found!",
+ * 进程 fail-fast,连降级机会都没有)—— 所以必须在建视图之前先探测,探测不到就拒绝创建。
+ * macOS/iOS 的系统 WebView 后端编译在 QtWebView 内部,不需要插件目录,故视为可用。
+ */
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeBackendAvailable(JNIEnv*, jclass) {
+#ifdef JQT_HAVE_WEBVIEW
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    return JNI_TRUE;
+#else
+    QStringList dirs = QCoreApplication::libraryPaths();
+    dirs << QLibraryInfo::path(QLibraryInfo::PluginsPath);
+    for (const QString& d : dirs) {
+        if (!d.isEmpty() && QDir(d + QStringLiteral("/webview")).exists()) return JNI_TRUE;
+    }
+    return JNI_FALSE;
+#endif
+#else
+    return JNI_FALSE;
+#endif
+}
+
+#ifdef JQT_HAVE_WEBVIEW
+static QQuickView* jqtWebView(JNIEnv* env, jlong handle) {
+    return static_cast<QQuickView*>(requireHandle(env, handle));
+}
+
+static QObject* jqtWebViewQml(JNIEnv* env, jlong handle) {
+    QQuickView* v = jqtWebView(env, handle);
+    if (v == nullptr || v->rootObject() == nullptr) return nullptr;
+    return v->rootObject()->findChild<QObject*>(QStringLiteral("jqtWebView"));
+}
+
+/** 把 QML 写到临时文件再 setSource(与 QML 冒烟同样做法:内联 QML 直接 setSource 会拿不到画面)。 */
+static bool jqtWebViewSetQml(QQuickView* v, const QString& webviewBody) {
+    if (v == nullptr) return false;
+    const QString qml = QStringLiteral(
+        "import QtQuick\n"
+        "import QtWebView\n"
+        "Item {\n"
+        "  WebView { objectName: \"jqtWebView\"; anchors.fill: parent; %1 }\n"
+        "}\n").arg(webviewBody);
+    const QString path = QDir::tempPath()
+            + QStringLiteral("/jqt_webview_%1.qml").arg(reinterpret_cast<quintptr>(v));
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return false;
+    f.write(qml.toUtf8());
+    f.close();
+    v->setSource(QUrl::fromLocalFile(path));
+    return true;
+}
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QWebView_nativeCreate(JNIEnv* env, jclass, jint w, jint h) {
+    if (requireApp(env) == nullptr) return 0;
+    QQuickView* v = new QQuickView();
+    v->resize(w > 0 ? w : 320, h > 0 ? h : 240);
+    return registerHandle(v, /*javaOwned=*/true);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeDispose(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtWebView(env, handle);
+    if (v) delete v;
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeLoadUrl(JNIEnv* env, jclass, jlong handle, jstring jurl) {
+    QString url = jqtJstring(env, jurl);
+    url.replace(QLatin1Char('\\'), QStringLiteral("\\\\")).replace(QLatin1Char('"'), QStringLiteral("\\\""));
+    jqtWebViewSetQml(jqtWebView(env, handle), QStringLiteral("url: \"%1\"").arg(url));
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeLoadHtml(JNIEnv* env, jclass, jlong handle, jstring jhtml) {
+    const QString html = jqtJstring(env, jhtml);
+    const QString path = QDir::tempPath()
+            + QStringLiteral("/jqt_webview_%1.html").arg(reinterpret_cast<quintptr>(jqtWebView(env, handle)));
+    QFile f(path);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) return;
+    f.write(html.toUtf8());
+    f.close();
+    jqtWebViewSetQml(jqtWebView(env, handle),
+                     QStringLiteral("url: \"%1\"").arg(QUrl::fromLocalFile(path).toString()));
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeUrl(JNIEnv* env, jclass, jlong handle) {
+    QObject* wv = jqtWebViewQml(env, handle);
+    return env->NewStringUTF(wv ? wv->property("url").toString().toUtf8().constData() : "");
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeTitle(JNIEnv* env, jclass, jlong handle) {
+    QObject* wv = jqtWebViewQml(env, handle);
+    return env->NewStringUTF(wv ? wv->property("title").toString().toUtf8().constData() : "");
+}
+
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeIsReady(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtWebView(env, handle);
+    return (v && v->status() == QQuickView::Ready && jqtWebViewQml(env, handle) != nullptr)
+            ? JNI_TRUE : JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeErrorString(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtWebView(env, handle);
+    if (v == nullptr) return env->NewStringUTF("");
+    QStringList errs;
+    for (const QQmlError& e : v->errors()) errs << e.toString();
+    return env->NewStringUTF(errs.join(QStringLiteral("; ")).toUtf8().constData());
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeResize(JNIEnv* env, jclass, jlong handle, jint w, jint h) {
+    QQuickView* v = jqtWebView(env, handle);
+    if (v) v->resize(w, h);
+}
+
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeShow(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtWebView(env, handle);
+    if (v) v->show();
+}
+
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QWebView_nativeGrabToPng(JNIEnv* env, jclass, jlong handle) {
+    QQuickView* v = jqtWebView(env, handle);
+    if (v == nullptr) return nullptr;
+    const QImage img = v->grabWindow();
+    if (img.isNull()) return nullptr;
+    QByteArray png;
+    QBuffer buf(&png);
+    buf.open(QIODevice::WriteOnly);
+    if (!img.save(&buf, "PNG")) return nullptr;
+    jbyteArray out = env->NewByteArray(png.size());
+    if (out) env->SetByteArrayRegion(out, 0, png.size(), reinterpret_cast<const jbyte*>(png.constData()));
+    return out;
+}
+
+#else   // !JQT_HAVE_WEBVIEW
+
+JNIEXPORT jlong JNICALL Java_org_jqt_QWebView_nativeCreate(JNIEnv*, jclass, jint, jint) { return 0; }
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeDispose(JNIEnv*, jclass, jlong) {}
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeLoadUrl(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeLoadHtml(JNIEnv*, jclass, jlong, jstring) {}
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeUrl(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeTitle(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT jboolean JNICALL Java_org_jqt_QWebView_nativeIsReady(JNIEnv*, jclass, jlong) { return JNI_FALSE; }
+JNIEXPORT jstring JNICALL Java_org_jqt_QWebView_nativeErrorString(JNIEnv* env, jclass, jlong) { return env->NewStringUTF(""); }
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeResize(JNIEnv*, jclass, jlong, jint, jint) {}
+JNIEXPORT void JNICALL Java_org_jqt_QWebView_nativeShow(JNIEnv*, jclass, jlong) {}
+JNIEXPORT jbyteArray JNICALL Java_org_jqt_QWebView_nativeGrabToPng(JNIEnv*, jclass, jlong) { return nullptr; }
+
+#endif  // JQT_HAVE_WEBVIEW
+
+}   // extern "C" (QtWebView)
 
 extern "C" {   // QtMultimedia(P2)
 

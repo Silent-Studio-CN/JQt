@@ -90,3 +90,4 @@ smoke_v072.*
 # ===== download/audit artifacts (never commit) =====
 *.apk
 central-*.jar
+qml/

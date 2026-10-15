@@ -185,6 +185,18 @@ if (Test-Path $dbusLib) {
 } else {
     Write-Host "==> QtDBus not found - DBus API will report unavailable"
 }
+# QtWebView(v1.9.2 P2):ARM64 包未必带;带了才启用(没有后端插件时 Java 侧会拒绝建视图)
+$wvLib = Join-Path $QtRoot "lib\Qt6WebView.lib"
+if (Test-Path $wvLib) {
+    $linkIdxW = [Array]::IndexOf($clArgs, "/link")
+    if ($linkIdxW -lt 0) { $linkIdxW = $clArgs.Count }
+    $preW = @("/DJQT_HAVE_WEBVIEW", "/I", (Join-Path $QtRoot "include\QtWebView"))
+    $clArgs = $clArgs[0..($linkIdxW - 1)] + $preW + $clArgs[$linkIdxW..($clArgs.Count - 1)]
+    $clArgs += @("/link", $wvLib)
+    Write-Host "==> QtWebView found - QWebView enabled"
+} else {
+    Write-Host "==> QtWebView not found - QWebView will report unavailable"
+}
 & cl.exe @clArgs
 if ($LASTEXITCODE -ne 0) { throw "cl.exe failed" }
 
