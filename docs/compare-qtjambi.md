@@ -27,7 +27,7 @@
 ```powershell
 # 规模（全部可复核；本节数字由 tools/measure-hard-data.py 一次生成，避免文档自相矛盾）
 (Get-ChildItem java\org\jqt -Filter *.java).Count            # 210 个文件（174 API + 36 冒烟）
-(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 26,155 行（API 22,426 + 冒烟 3,729）
+(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 26,173 行（API 22,444 + 冒烟 3,729）
 (Get-Content native\jqt_bridge.cpp).Count                   # 13,336 行手写 JNI 桥
 Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,502 个 JNI 导出函数
 Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,435 处公开成员声明
@@ -39,7 +39,7 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,358 个 native �
 | API 类 | **174**（java/org/jqt 下非 Smoke 的 .java） |
 | 冒烟类 | **36** 个文件；CI 引用 **35** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
 | Java 源文件合计 | 210（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
-| Java 行数 | **26,155**（API 22,426 + 冒烟 3,729） |
+| Java 行数 | **26,173**（API 22,444 + 冒烟 3,729） |
 | JNI 桥行数 | **13,336** |
 | JNI 导出函数 | **1,502** |
 | native 方法声明 | 1,358 |
@@ -150,6 +150,8 @@ curl -s https://repo1.maven.org/maven2/io/qtjambi/qtjambi/maven-metadata.xml    
 | macOS x64 / Windows ARM64 | `SmokeV073`(QOpenGLWidget 那一项) | 这两平台的 Qt 构建不含 OpenGLWidgets 模块 |
 
 | Windows / macOS / Linux | `SmokeWebView` | 官方 qtwebview 包不含 `plugins/webview/` 后端插件;无后端时 Qt 会中止进程,故冒烟在 `isBackendAvailable()`(Windows 官方包缺 WebView 后端)为 false 时明确 SKIP |
+
+**2026-10-15 更新**:尝试在构建脚本里补 `-DJQT_HAVE_SVG` 与部署 `plugins/sqldrivers` 来消除这两处 SKIP —— Linux 侧改动导致 6.8.3 构建失败、macOS 侧实测**仍然 SKIP**(探测未生效),故已回退,**这两处 SKIP 目前仍未修复**(如实记录;下一步再做,并且会以"不再出现 SKIP"作为完成标准)。
 
 **因此**:`QSvg` 与 `SQL 模型` 目前**只有 Windows 线真跑过**;`QML` 在 macOS 只覆盖 6.12 线;
 `QOpenGLWidget` 在 macOS 与 Windows ARM64 不可用。要补齐需:Linux/macOS 侧把 qtsvg 编进库、
