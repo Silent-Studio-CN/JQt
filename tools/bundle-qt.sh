@@ -24,7 +24,8 @@ OS="$(uname -s)"
 
 case "$OS" in
   Darwin)
-    NATIVE_LIB="libjqt.dylib"; PLATFORM="macos-x64"; QTDIR="$QT_BASE/lib"
+    NATIVE_LIB="libjqt.dylib"; # 架构自适应:Apple Silicon 上是 arm64,Intel 上是 x64(真机实测:写死 macos-x64 会让 arm64 产物自称 x64)。
+PLATFORM="macos-$(uname -m | sed 's/x86_64/x64/' | sed 's/aarch64/arm64/' | sed 's/arm64/arm64/')"; QTDIR="$QT_BASE/lib"
     # 整套 Qt 框架都带上:只带子集会让动态链接器回落到系统 Qt,出现
     # "libQt6DBus.so.6: undefined symbol" 这类混版问题
     QTPATTERNS=("Qt*.framework")
