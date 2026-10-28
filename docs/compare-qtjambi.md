@@ -27,10 +27,10 @@
 ```powershell
 # 规模（全部可复核；本节数字由 tools/measure-hard-data.py 一次生成，避免文档自相矛盾）
 (Get-ChildItem java\org\jqt -Filter *.java).Count            # 211 个文件（175 API + 36 冒烟）
-(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 26,623 行（API 22,663 + 冒烟 3,960）
+(Get-Content java\org\jqt\*.java | Measure-Object -Line)    # 26,646 行（API 22,686 + 冒烟 3,960）
 (Get-Content native\jqt_bridge.cpp).Count                   # 14,204 行手写 JNI 桥
 Select-String native\jqt_bridge.cpp -Pattern 'JNIEXPORT'    # 1,528 个 JNI 导出函数
-Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,442 处公开成员声明
+Select-String java\org\jqt\*.java -Pattern '^\s+public '    # 3,443 处公开成员声明
 Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,363 个 native 方法声明
 ```
 
@@ -39,11 +39,11 @@ Select-String java\org\jqt\*.java -Pattern '\bnative\b'     # 1,363 个 native �
 | API 类 | **175**（java/org/jqt 下非 Smoke 的 .java） |
 | 冒烟类 | **36** 个文件；CI 引用 **36** 个，**6 个仅手动跑**（SmokeFluent / SmokeInputDialog / SmokeL1fin / SmokeL2 / SmokeSqlDb / SmokeVisible）—— 要么补进 CI，要么删掉，不留「看着像覆盖其实没跑」的账 |
 | Java 源文件合计 | 211（API + 冒烟；旧文档把两者混成"源文件数"，口径不清 → 已拆开） |
-| Java 行数 | **26,623**（API 22,663 + 冒烟 3,960） |
+| Java 行数 | **26,646**（API 22,686 + 冒烟 3,960） |
 | JNI 桥行数 | **14,204** |
 | JNI 导出函数 | **1,528** |
 | native 方法声明 | 1,363 |
-| 公开成员声明 | 3,442 |
+| 公开成员声明 | 3,443 |
 | 信号/事件连接入口 | 97 处 `nativeConnect*`（全部经 `jqtConnectOnce()` 去重） |
 | 可选模块特性宏 | 9 个：CHARTS / HELP / MULTIMEDIA / NETWORK / POSITIONING / QML / SQL_MODELS / SVG / WEBSOCKETS |
 | Qt 版本线 | **6.12.0**（当前最新）/ **6.8.3 LTS** |
