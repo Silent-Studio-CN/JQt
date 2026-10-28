@@ -194,6 +194,8 @@ echo "==> Compiling native bridge (libjqt.dylib)"
 clang++ -std=c++17 -O2 -shared -fPIC \
     -o "$LIB/libjqt.dylib" \
     -install_name @rpath/libjqt.dylib \
+    -Wl,-rpath,@loader_path/../Frameworks \
+    -Wl,-rpath,@loader_path \
     -I"$JAVA_HOME/include" -I"$JAVA_HOME/include/darwin" \
     -I"$QTLIB/QtWidgets.framework/Headers" -I"$QTLIB/QtGui.framework/Headers" -I"$QTLIB/QtCore.framework/Headers" -I"$QTLIB/QtPrintSupport.framework/Headers" -I"$QTLIB/QtSql.framework/Headers" -I"$LIB/sp_include" -I"$QTLIB/QtSerialPort.framework/Headers" -I"$QTLIB/QtNetwork.framework/Headers" \
     -I"$NATIVE" \
