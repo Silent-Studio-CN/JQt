@@ -236,6 +236,9 @@ JAVA_ARGS=(
     "-cp" "$CP"
 )
 [ "$JQT_OS" = "windows" ] && JAVA_ARGS+=("-Djava.library.path=$(native_path "$LIB")")
+# macOS: Qt 的 Cocoa 插件必须在**进程主线程**初始化，而 JVM 的 main 线程不是。
+# 不加这个参数会在 QApplication 构造时 SIGABRT（setting the main menu on a non-main thread）。
+[ "$JQT_OS" = "macos" ] && JAVA_ARGS+=("-XstartOnFirstThread")
 [ -n "$AUTOCLOSE" ] && JAVA_ARGS+=("-Djqt.autoClose=$AUTOCLOSE")
 [ -n "$ANIMTHEME" ] && JAVA_ARGS+=("-Djqt.animTheme=$ANIMTHEME")
 [ -n "$QSS" ] && JAVA_ARGS+=("-Djqt.qss=$QSS")

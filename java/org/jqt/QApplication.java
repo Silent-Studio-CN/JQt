@@ -422,6 +422,21 @@ public class QApplication {
         renderTheme();
     }
 
+    /**
+     * 主题模板里 %font-family% 的取值（平台默认中文界面字体）。
+     * 模板刻意不写死字体，由应用注入；缺变量会让整张 QSS 解析失败。
+     */
+    public static String platformFontFamily() {
+        String os = System.getProperty("os.name", "").toLowerCase();
+        if (os.contains("mac")) {
+            return "PingFang SC";
+        }
+        if (os.contains("win")) {
+            return "Microsoft YaHei UI";
+        }
+        return "Noto Sans CJK SC";
+    }
+
     /** 重新渲染当前模板主题（变量替换 + 应用；自定义主题色在主题切换后保留）。 */
     private void renderTheme() {
         if (themeTemplatePath == null || themeVars == null) {
@@ -434,6 +449,14 @@ public class QApplication {
                 vars.put("accent", currentAccent);
                 vars.put("accent-hover", lighten(currentAccent, 0.12));
                 themeVars = vars;
+            }
+            // 模板第 5 行要求 font-family / font-size。缺这两个变量时生成的 QSS 非法，
+            // Qt 会丢弃**整份**样式表（现象：切主题毫无反应，只有日志在更新），所以必须兜底。
+            if (!themeVars.containsKey("font-family")) {
+                themeVars.put("font-family", platformFontFamily());
+            }
+            if (!themeVars.containsKey("font-size")) {
+                themeVars.put("font-size", "13px");
             }
             String qss = new String(Files.readAllBytes(Paths.get(themeTemplatePath)), StandardCharsets.UTF_8);
             for (java.util.Map.Entry<String, String> e : themeVars.entrySet()) {

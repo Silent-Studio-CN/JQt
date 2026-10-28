@@ -54,6 +54,9 @@ public class JQtGallery {
     static void renderTheme(String name, Map<String, String> vars, boolean light) {
         themeName = name;
         currentVars = new HashMap<>(vars);
+        // 模板里的 %font-family% / %font-size% 没人注入就会让整张 QSS 报废（Qt 丢弃整份样式表）
+        currentVars.putIfAbsent("font-family", QApplication.platformFontFamily());
+        currentVars.putIfAbsent("font-size", "13px");
         currentLight = light;
         String tpl = readThemeTemplate();
         if (tpl.isEmpty()) {
